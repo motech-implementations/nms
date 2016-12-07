@@ -9,6 +9,7 @@ import org.motechproject.nms.api.web.exception.NotFoundException;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.service.WhitelistService;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.Service;
@@ -107,6 +108,18 @@ public class BaseController {
             return false;
         }
         if (value >= 0) {
+            return true;
+        }
+        errors.append(String.format(INVALID, fieldName));
+        return false;
+    }
+
+    protected static boolean validateDeactivationReason(StringBuilder errors, String fieldName, String value) {
+        if (!validateFieldPresent(errors, fieldName, value)) {
+            return false;
+        }
+        DeactivationReason reason = DeactivationReason.valueOf(value);
+        if (reason.equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED) || reason.equals(DeactivationReason.LOW_LISTENERSHIP)) {
             return true;
         }
         errors.append(String.format(INVALID, fieldName));

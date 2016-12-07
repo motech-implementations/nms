@@ -364,7 +364,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 }
             }
             return false;
-        } catch (MultipleSubscriberException m){
+        } catch (MultipleSubscriberException m) {
             LOGGER.error(m.toString());
             return true;
         }

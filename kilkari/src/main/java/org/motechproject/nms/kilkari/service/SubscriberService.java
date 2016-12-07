@@ -8,6 +8,7 @@ import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 
 /**
  * Service interface for managing Kilkari subscribers
@@ -82,7 +83,7 @@ public interface SubscriberService {
      * Deactivate all Subscriptions of a given callingNumber on MOHFW request
      * @param callingNumber
      */
-    void deactivateAllSubscriptionsForSubscriber(long callingNumber);
+    void deactivateAllSubscriptionsForSubscriber(long callingNumber, DeactivationReason deactivationReason);
 
     /**
      * Get the Kilkari subscriber with the specified mother id OID.

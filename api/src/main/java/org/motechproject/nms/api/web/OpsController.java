@@ -8,6 +8,7 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
 import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.imi.service.CdrFileService;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -210,17 +211,19 @@ public class OpsController extends BaseController {
             method = RequestMethod.DELETE)
     @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public void deactivationRequest(@RequestParam(value = "msisdn") Long msisdn) {
+    public void deactivationRequest(@RequestParam(value = "msisdn") Long msisdn, @RequestParam(value = "deactivationReason") String deactivationReason) {
         log("REQUEST: /ops/deactivationRequest", String.format(
                 "callingNumber=%s",
                 LogHelper.obscure(msisdn)));
         StringBuilder failureReasons = new StringBuilder();
         validateField10Digits(failureReasons, contactNumber, msisdn);
         validateFieldPositiveLong(failureReasons, contactNumber, msisdn);
+        validateDeactivationReason(failureReasons, "deactivationReason", deactivationReason);
         if (failureReasons.length() > 0) {
             throw new IllegalArgumentException(failureReasons.toString());
         }
-        subscriberService.deactivateAllSubscriptionsForSubscriber(msisdn);
+        DeactivationReason reason = DeactivationReason.valueOf(deactivationReason);
+        subscriberService.deactivateAllSubscriptionsForSubscriber(msisdn, reason);
     }
 
     @RequestMapping("/getScores")

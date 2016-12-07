@@ -524,7 +524,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         Subscriber subscriberMCTS = subscriberDataService.findByNumber(6000000000L);
         Set<Subscription> subscriptionsMCTS = ( Set<Subscription> ) subscriberDataService.getDetachedField(subscriberMCTS, "subscriptions");
         for (Subscription subscriptionMCTS : subscriptionsMCTS) {
-            Assert.assertTrue(subscriptionMCTS.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED));
+            Assert.assertTrue(subscriptionMCTS.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED) || subscriptionMCTS.getDeactivationReason().equals(DeactivationReason.LOW_LISTENERSHIP));
             Assert.assertTrue(subscriptionMCTS.getStatus().equals(SubscriptionStatus.DEACTIVATED));
         }
         transactionManager.commit(status);
@@ -532,10 +532,12 @@ public class OpsControllerBundleIT extends BasePaxIT {
     }
 
 
-    private void testDeactivationRequestByMsisdn(Long msisdn, int status) throws IOException, InterruptedException, URISyntaxException {
+    private void testDeactivationRequestByMsisdn(Long msisdn, String deactivationReason, int status) throws IOException, InterruptedException, URISyntaxException {
         StringBuilder sb = new StringBuilder(deactivationRequest);
         sb.append("?");
         sb.append(String.format("msisdn=%s", msisdn.toString()));
+        sb.append("&");
+        sb.append(String.format("deactivationReason=%s", deactivationReason));
         HttpDelete httpRequest = new HttpDelete(sb.toString());
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, status, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
     }
@@ -553,10 +555,10 @@ public class OpsControllerBundleIT extends BasePaxIT {
     @Test
     public void testDeactivateSpecificValidMsisdn() throws IOException, InterruptedException, URISyntaxException {
         createSubscriberHelper();
-        testDeactivationRequestByMsisdn(5000000000L, HttpStatus.SC_OK);
-        testDeactivationRequestByMsisdn(5000000000L, HttpStatus.SC_OK);   // Test deactivation of same number again
+        testDeactivationRequestByMsisdn(5000000000L, "WEEKLY_CALLS_NOT_ANSWERED", HttpStatus.SC_OK);
+        testDeactivationRequestByMsisdn(5000000000L, "WEEKLY_CALLS_NOT_ANSWERED", HttpStatus.SC_OK);   // Test deactivation of same number again
         testDeactivationSubscriptionAuditService(5000000000L, SubscriptionOrigin.IVR, 1);
-        testDeactivationRequestByMsisdn(6000000000L, HttpStatus.SC_OK);
+        testDeactivationRequestByMsisdn(6000000000L, "LOW_LISTENERSHIP", HttpStatus.SC_OK);
         testDeactivationSubscriptionAuditService(6000000000L, SubscriptionOrigin.MCTS_IMPORT, 2);
         testifAllSubscriberDectivated();
         testReactivationDisabledAfterDeactivation(5000000000L);
@@ -565,12 +567,17 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testDeactivateSpecificValidNotInDatabaseMsisdn() throws IOException, InterruptedException, URISyntaxException {
-        testDeactivationRequestByMsisdn(7000000000L, HttpStatus.SC_BAD_REQUEST);
+        testDeactivationRequestByMsisdn(7000000000L, "LOW_LISTENERSHIP", HttpStatus.SC_BAD_REQUEST);
     }
 
     @Test
     public void testDeactivateSpecificInValidMsisdn() throws IOException, InterruptedException, URISyntaxException {
-        testDeactivationRequestByMsisdn(1000-00L, HttpStatus.SC_BAD_REQUEST);
+        testDeactivationRequestByMsisdn(1000-00L, "LOW_LISTENERSHIP", HttpStatus.SC_BAD_REQUEST);
+    }
+
+    @Test
+    public void testDeactivateSpecificInValidDeactivationReason() throws IOException, InterruptedException, URISyntaxException {
+        testDeactivationRequestByMsisdn(5000000000L, "DEACTIVATED_BY_USER", HttpStatus.SC_BAD_REQUEST);
     }
 
     private void testReactivationDisabledAfterDeactivation(long msisdn) throws IOException, InterruptedException, URISyntaxException {
