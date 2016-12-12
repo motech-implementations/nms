@@ -382,7 +382,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     @Override
-    public void deactivateAllSubscriptionsForSubscriber(long callingNumber) {
+    public void deactivateAllSubscriptionsForSubscriber(long callingNumber, DeactivationReason deactivationReason) {
         LOGGER.info("Recieved Release Number {} for Deactivation.", callingNumber);
         Subscriber subscriberByMsisdn = this.getSubscriber(callingNumber);
         if (subscriberByMsisdn == null) {
@@ -395,7 +395,7 @@ public class SubscriberServiceImpl implements SubscriberService {
             if ((subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION) || (subscription.getStatus() == SubscriptionStatus.ACTIVE) || (subscription.getStatus() == SubscriptionStatus.HOLD)) {
                 try {
                     LOGGER.info("Deactivating Subscription with Id {} for msisdn.", subscription.getSubscriptionId());
-                    subscriptionService.deactivateSubscription(subscription, DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED);
+                    subscriptionService.deactivateSubscription(subscription, deactivationReason);
                     deactivationSubscriptionAuditRecordDataService.create(new DeactivationSubscriptionAuditRecord(subscription.getSubscriptionId(), subscriberByMsisdn.getId(), subscription.getOrigin(), callingNumber, subscription.getStatus(), AuditStatus.SUCCESS, ""));
                     counter++;
                 } catch (Exception e) {
@@ -417,10 +417,10 @@ public class SubscriberServiceImpl implements SubscriberService {
         BlockedMsisdnRecord record = blockedMsisdnRecordDataService.findByNumber(callingNumber);
         //TODO: we can use createOrUpdate method of MotechDataService once the bug is fixed.
         if (record == null) {
-            blockedMsisdnRecordDataService.create(new BlockedMsisdnRecord(callingNumber, DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED));
+            blockedMsisdnRecordDataService.create(new BlockedMsisdnRecord(callingNumber, deactivationReason));
             LOGGER.info("Added callingNumber {} to BlockedMsisdnRecord.", callingNumber);
         } else {
-            record.setDeactivationReason(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED);
+            record.setDeactivationReason(deactivationReason);
             blockedMsisdnRecordDataService.update(record);
             LOGGER.info("Updated existing BlockedMsisdnRecord for callingNumber {}", callingNumber);
         }
