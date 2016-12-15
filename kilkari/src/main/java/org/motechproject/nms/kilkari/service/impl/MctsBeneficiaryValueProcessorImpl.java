@@ -8,6 +8,7 @@ import org.joda.time.format.DateTimeParser;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.exception.InvalidReferenceDateException;
+import org.motechproject.nms.kilkari.exception.InvalidRegistrationIdException;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
@@ -101,4 +102,78 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
         return Long.parseLong(msisdn);
     }
 
+    @Override
+    public Long getCaseNoByString(String value) {
+
+        if (value == null) {
+            return null;
+        }
+        return Long.parseLong(value);
+    }
+
+    @Override
+    public MctsMother getOrCreateRchMotherInstance(String rchId, String mctsId) {
+
+        MctsMother motherByMctsId = null;
+        MctsMother motherByRchId = mctsMotherDataService.findByRchId(rchId);
+        if (mctsId != null) {
+            motherByMctsId = mctsMotherDataService.findByBeneficiaryId(mctsId);
+        }
+
+        if (motherByRchId == null) {
+            if (motherByMctsId == null) {
+                motherByRchId = new MctsMother(rchId, mctsId);
+                return motherByRchId;
+            } else {
+                motherByMctsId.setRchId(rchId);   // Ajai -this will update rchId if its not null..Is that fine?
+                return motherByMctsId;
+            }
+        } else {
+            if (motherByMctsId == null) {
+                if (mctsId != null) {
+                    motherByRchId.setBeneficiaryId(mctsId);
+                }
+                return motherByRchId;
+            } else {
+                if ((motherByRchId.getBeneficiaryId() != motherByMctsId.getBeneficiaryId()) && (motherByRchId.getRchId() != motherByMctsId.getRchId())) {
+                    throw new InvalidRegistrationIdException("Invalid record");
+                } else {
+                    return motherByRchId;
+                }
+            }
+        }
+    }
+
+    @Override
+    public MctsChild getOrCreateRchChildInstance(String rchId, String mctsId) {
+
+        MctsChild childByMctsId = null;
+        MctsChild childByRchId = mctsChildDataService.findByRchId(rchId);
+        if (mctsId != null) {
+            childByMctsId = mctsChildDataService.findByBeneficiaryId(mctsId);
+        }
+
+        if (childByRchId == null) {
+            if (childByMctsId == null) {
+                childByRchId = new MctsChild(rchId, mctsId);
+                return childByRchId;
+            } else {
+                childByMctsId.setRchId(rchId);   // Ajai -this will update rchId if its not null..Is that fine?
+                return childByMctsId;
+            }
+        } else {
+            if (childByMctsId == null) {
+                if (mctsId != null) {
+                    childByRchId.setBeneficiaryId(mctsId);
+                }
+                return childByRchId;
+            } else {
+                if ((childByRchId.getBeneficiaryId() != childByMctsId.getBeneficiaryId()) && (childByRchId.getRchId() != childByMctsId.getRchId())) {
+                    throw new InvalidRegistrationIdException("Invalid record");
+                } else {
+                    return childByRchId;
+                }
+            }
+        }
+    }
 }

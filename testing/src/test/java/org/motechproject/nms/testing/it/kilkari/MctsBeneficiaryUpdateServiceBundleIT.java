@@ -4,16 +4,7 @@ import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
-import org.motechproject.nms.kilkari.domain.MctsChild;
-import org.motechproject.nms.kilkari.domain.MctsMother;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionError;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
@@ -303,7 +294,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         String dobString = getDateString(dob);
         Reader reader = createChildDataReader("21\t3\t\t\t\t\t1234567891\tBaby1 of Shanti Ekka\t9876543210\t"+oldMsisdn+"\t"
                 + dobString + "\t");
-        mctsBeneficiaryImportService.importChildData(reader);
+        mctsBeneficiaryImportService.importChildData(reader, BeneficiaryImportOrigin.MCTS);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         assertEquals(1, subscriberDataService.findByNumber(oldMsisdn).getActiveAndPendingSubscriptions().size());

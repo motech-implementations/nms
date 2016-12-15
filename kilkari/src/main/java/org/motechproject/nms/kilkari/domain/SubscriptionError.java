@@ -13,7 +13,10 @@ public class SubscriptionError {
     private long contactNumber;
 
     @Field
-    private String beneficiaryId;
+    private String beneficiaryId; //mcts
+
+    @Field
+    private String rchId;
 
     @Field
     private SubscriptionRejectionReason rejectionReason;
@@ -24,26 +27,42 @@ public class SubscriptionError {
     @Field
     private String rejectionMessage;
 
+    @Field
+    private BeneficiaryImportOrigin importOrigin;
+
     public SubscriptionError(long contactNumber, SubscriptionRejectionReason rejectionReason,
-                             SubscriptionPackType packType) {
-        this(contactNumber, rejectionReason, packType, null);
+                             SubscriptionPackType packType, BeneficiaryImportOrigin importOrigin) {
+        this(contactNumber, rejectionReason, packType, null, importOrigin);
     }
 
     public SubscriptionError(long contactNumber, SubscriptionRejectionReason rejectionReason,
-                             SubscriptionPackType packType, String rejectionMessage) {
+                             SubscriptionPackType packType, String rejectionMessage, BeneficiaryImportOrigin importOrigin) {
         this.contactNumber = contactNumber;
         this.rejectionReason = rejectionReason;
         this.packType = packType;
         this.rejectionMessage = rejectionMessage;
+        this.importOrigin = importOrigin;
     }
 
     public SubscriptionError(long contactNumber, String beneficiaryId, SubscriptionRejectionReason rejectionReason,
-                             SubscriptionPackType packType, String rejectionMessage) {
+                             SubscriptionPackType packType, String rejectionMessage, BeneficiaryImportOrigin importOrigin) {
         this.contactNumber = contactNumber;
         this.beneficiaryId = beneficiaryId;
         this.rejectionReason = rejectionReason;
         this.packType = packType;
         this.rejectionMessage = rejectionMessage;
+        this.importOrigin = importOrigin;
+    }
+
+    public SubscriptionError(long contactNumber, String beneficiaryId, String rchId, SubscriptionRejectionReason rejectionReason,
+                             SubscriptionPackType packType, String rejectionMessage, BeneficiaryImportOrigin importOrigin) {
+        this.contactNumber = contactNumber;
+        this.beneficiaryId = beneficiaryId;
+        this.rchId = rchId;
+        this.rejectionReason = rejectionReason;
+        this.packType = packType;
+        this.rejectionMessage = rejectionMessage;
+        this.importOrigin = importOrigin;
     }
 
     public long getContactNumber() {
@@ -84,5 +103,21 @@ public class SubscriptionError {
 
     public void setRejectionMessage(String rejectionMessage) {
         this.rejectionMessage = rejectionMessage;
+    }
+
+    public String getRchId() {
+        return rchId;
+    }
+
+    public void setRchId(String rchId) {
+        this.rchId = rchId;
+    }
+
+    public BeneficiaryImportOrigin getImportOrigin() {
+        return importOrigin;
+    }
+
+    public void setImportOrigin(BeneficiaryImportOrigin importOrigin) {
+        this.importOrigin = importOrigin;
     }
 }

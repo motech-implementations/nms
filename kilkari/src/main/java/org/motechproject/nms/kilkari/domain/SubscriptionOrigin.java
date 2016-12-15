@@ -5,9 +5,16 @@ package org.motechproject.nms.kilkari.domain;
  */
 public enum SubscriptionOrigin {
     IVR,
-    MCTS_IMPORT;
+    MCTS_IMPORT,
+    RCH_IMPORT;
 
     public final String getCode() {
-        return this == IVR ? "I" : "M";
+        if (this == IVR) {
+            return "I";
+        } else if (this == MCTS_IMPORT) {
+            return "M";
+        } else {
+            return "R";
+        }
     }
 }

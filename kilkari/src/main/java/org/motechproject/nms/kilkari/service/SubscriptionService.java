@@ -4,6 +4,7 @@ import org.joda.time.DateTime;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.mds.annotations.InstanceLifecycleListener;
 import org.motechproject.mds.annotations.InstanceLifecycleListenerType;
+import org.motechproject.nms.kilkari.domain.BeneficiaryImportOrigin;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
@@ -49,7 +50,7 @@ public interface SubscriptionService {
      * @return The created subscription, or null if no subscription was created
      */
     Subscription createSubscription(long callingNumber, Language language, Circle circle,
-                                    SubscriptionPack subscriptionPack, SubscriptionOrigin mode);
+                                    SubscriptionPack subscriptionPack, SubscriptionOrigin mode, BeneficiaryImportOrigin importOrigin);
 
     /**
      * Get the subscription for the specified subscription ID

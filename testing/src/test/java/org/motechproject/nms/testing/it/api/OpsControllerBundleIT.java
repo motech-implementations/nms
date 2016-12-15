@@ -499,13 +499,13 @@ public class OpsControllerBundleIT extends BasePaxIT {
         subscriberIVR = subscriberDataService.update(subscriberIVR);
 
        subscriptionService.createSubscription(subscriberIVR.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
-                sh.pregnancyPack(), SubscriptionOrigin.IVR);
+                sh.pregnancyPack(), SubscriptionOrigin.IVR, null);
 
         Subscriber subscriberMCTS = subscriberDataService.create(new Subscriber(6000000000L));
         subscriberMCTS.setLastMenstrualPeriod(DateTime.now().plusWeeks(70));
         subscriberMCTS = subscriberDataService.update(subscriberMCTS);
         subscriptionService.createSubscription(subscriberMCTS.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
-                sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+                sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT, BeneficiaryImportOrigin.MCTS);
         transactionManager.commit(status);
     }
 
@@ -581,7 +581,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
         Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
         Subscription subscription = subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
-                sh.pregnancyPack(), SubscriptionOrigin.IVR);
+                sh.pregnancyPack(), SubscriptionOrigin.IVR, null);
         Assert.assertNull(subscription);
         transactionManager.commit(status);
     }

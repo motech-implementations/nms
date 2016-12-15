@@ -5,6 +5,7 @@ import org.junit.runner.RunWith;
 import org.motechproject.mds.filter.Filter;
 import org.motechproject.mds.filter.Filters;
 import org.motechproject.metrics.service.Timer;
+import org.motechproject.nms.kilkari.domain.BeneficiaryImportOrigin;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
@@ -105,7 +106,7 @@ public class BundleIT extends BasePaxIT {
         transactionManager.commit(status);
 
         timer.reset();
-        mctsBeneficiaryImportService.importMotherData(new InputStreamReader(new FileInputStream(file)));
+        mctsBeneficiaryImportService.importMotherData((new InputStreamReader(new FileInputStream(file))), BeneficiaryImportOrigin.MCTS);
         getLogger().debug("Imported {}", timer.frequency(TEST_COUNT));
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -115,7 +116,7 @@ public class BundleIT extends BasePaxIT {
         transactionManager.commit(status);
 
         timer.reset();
-        mctsBeneficiaryImportService.importChildData(new InputStreamReader(new FileInputStream(file)));
+        mctsBeneficiaryImportService.importChildData((new InputStreamReader(new FileInputStream(file))), BeneficiaryImportOrigin.MCTS);
         getLogger().debug("Imported {}", timer.frequency(TEST_COUNT));
     }
 }
