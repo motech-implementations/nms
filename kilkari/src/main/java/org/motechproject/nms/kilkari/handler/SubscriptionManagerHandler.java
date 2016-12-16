@@ -73,8 +73,7 @@ public class SubscriptionManagerHandler {
             LOGGER.error("***ERROR*** no subscription cap defined, using hardcoded default {}", KilkariConstants.DEFAULT_MAX_ACTIVE_SUBSCRIPTION_CAP);
             maxActiveSubscriptions = KilkariConstants.DEFAULT_MAX_ACTIVE_SUBSCRIPTION_CAP;
         }
-
-        subscriptionService.purgeOldInvalidSubscriptions();
+        
         subscriptionService.completePastDueSubscriptions();
 
         Timer timer = new Timer();
