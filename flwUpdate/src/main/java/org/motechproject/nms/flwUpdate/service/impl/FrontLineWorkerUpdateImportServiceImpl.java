@@ -132,7 +132,7 @@ public class FrontLineWorkerUpdateImportServiceImpl implements FrontLineWorkerUp
                                     csvImporter.getRowNumber()));
                 }
 
-                Long oldMsisdn = (Long) record.get(MSISDN);
+                Long oldMsisdn = flw.getContactNumber();
                 flw.setContactNumber(msisdn);
                 frontLineWorkerService.update(flw);
                 mobileAcademyService.updateMsisdn(flw.getId(), oldMsisdn, msisdn);

@@ -17,7 +17,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.mtraining.domain.ActivityState;
 import org.motechproject.mtraining.domain.Bookmark;
+import org.motechproject.mtraining.repository.ActivityDataService;
 import org.motechproject.mtraining.service.BookmarkService;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
 import org.motechproject.nms.flw.domain.FlwError;
@@ -29,6 +31,10 @@ import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.repository.*;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
+import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
+import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
@@ -137,10 +143,17 @@ public class OpsControllerBundleIT extends BasePaxIT {
     BlockedMsisdnRecordDataService blockedMsisdnRecordDataService;
     @Inject
     DeactivationSubscriptionAuditRecordDataService deactivationSubscriptionAuditRecordDataService;
+    @Inject
+    ActivityDataService activityDataService;
+    @Inject
+    MobileAcademyService maService;
+    @Inject
+    CompletionRecordDataService completionRecordDataService;
 
 
     private RegionHelper rh;
     private SubscriptionHelper sh;
+    private static final String VALID_CALL_ID = "1234567890123456789012345";
 
     @Inject
     BookmarkService bookmarkService;
@@ -591,5 +604,51 @@ public class OpsControllerBundleIT extends BasePaxIT {
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
         Assert.assertNull(subscription);
         transactionManager.commit(status);
+    }
+
+    // Test whether MSISDN is updated in Bookmark, Activity and Course Completion Records along with Flw
+    @Test
+    public void testMaMsisdnUpdate() throws IOException, InterruptedException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        stateDataService.create(state);
+        transactionManager.commit(status);
+        AddFlwRequest addFlwRequest = getAddRequestASHA();
+        HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, addFlwRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+
+        MaBookmark bookmark = new MaBookmark(9876543210L, VALID_CALL_ID, null, null);
+        maService.setBookmark(bookmark);
+        assertNotNull(maService.getBookmark(9876543210L, VALID_CALL_ID));
+        assertEquals(1, activityDataService.findRecordsForUserByState("9876543210", ActivityState.STARTED).size());
+
+        bookmark.setBookmark("COURSE_COMPLETED");
+        Map<String, Integer> scores = new HashMap<>();
+        for (int i = 1; i < 12; i++) {
+            scores.put(String.valueOf(i), 3);
+        }
+        bookmark.setScoresByChapter(scores);
+        maService.setBookmark(bookmark);
+        CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(9876543210L);
+        assertNotNull(cr);
+
+        // Update Msisdn and verify MA records
+        AddFlwRequest request = new AddFlwRequest();
+        request.setContactNumber(7896543210L);
+        request.setName("Chinkoo Devi");
+        request.setMctsFlwId("123");
+        request.setStateId(state.getCode());
+        request.setDistrictId(district.getCode());
+        request.setType("ASHA");
+        httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, request);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+
+        assertNull(maService.getBookmark(9876543210L, VALID_CALL_ID));
+        assertNotNull(maService.getBookmark(7896543210L, VALID_CALL_ID));
+
+        assertEquals(0, activityDataService.findRecordsForUserByState("9876543210", ActivityState.STARTED).size());
+        assertEquals(1, activityDataService.findRecordsForUserByState("7896543210", ActivityState.STARTED).size());
+
+        assertNull(completionRecordDataService.findRecordByCallingNumber(9876543210L));
+        assertNotNull(completionRecordDataService.findRecordByCallingNumber(7896543210L));
     }
 }
