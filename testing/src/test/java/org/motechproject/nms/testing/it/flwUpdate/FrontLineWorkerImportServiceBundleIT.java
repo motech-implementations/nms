@@ -8,6 +8,8 @@ import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.mtraining.domain.ActivityState;
+import org.motechproject.mtraining.repository.ActivityDataService;
 import org.motechproject.nms.csv.domain.CsvAuditRecord;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.repository.CsvAuditRecordDataService;
@@ -16,6 +18,10 @@ import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
+import org.motechproject.nms.mobileacademy.dto.MaBookmark;
+import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
+import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
@@ -59,9 +65,11 @@ import java.io.StringReader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createCircle;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
@@ -106,6 +114,12 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     VillageService villageService;
     @Inject
     FrontLineWorkerImportService frontLineWorkerImportService;
+    @Inject
+    ActivityDataService activityDataService;
+    @Inject
+    MobileAcademyService maService;
+    @Inject
+    CompletionRecordDataService completionRecordDataService;
 
     @Inject
     private CsvAuditRecordDataService csvAuditRecordDataService;
@@ -114,6 +128,8 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     PlatformTransactionManager transactionManager;
 
     public static final String SUCCESS = "Success";
+    private static final String VALID_CALL_ID = "1234567890123456789012345";
+
     @Before
     public void setUp() {
         testingService.clearDatabase();
@@ -563,5 +579,46 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         flw.setInvalidationDate(DateTime.now().minusYears(1));
         frontLineWorkerService.update(flw);
         frontLineWorkerService.delete(flw);
+    }
+
+    // Test whether MSISDN is updated in Bookmark, Activity and Course Completion Records along with Flw
+    @Test
+    public void testMsisdnUpdateInMa() throws Exception {
+        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11\t18-08-2016\tASHA");
+        frontLineWorkerImportService.importData(reader);
+
+        FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(1234567890L);
+        assertFLW(flw, "#0", 1234567890L, "FLW 0", "District 11", "L1");
+
+        MaBookmark bookmark = new MaBookmark(1234567890L, VALID_CALL_ID, null, null);
+        maService.setBookmark(bookmark);
+        assertNotNull(maService.getBookmark(1234567890L, VALID_CALL_ID));
+        assertEquals(1, activityDataService.findRecordsForUserByState("1234567890", ActivityState.STARTED).size());
+
+        bookmark.setBookmark("COURSE_COMPLETED");
+        Map<String, Integer> scores = new HashMap<>();
+        for (int i = 1; i < 12; i++) {
+            scores.put(String.valueOf(i), 3);
+        }
+        bookmark.setScoresByChapter(scores);
+        maService.setBookmark(bookmark);
+        CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(1234567890L);
+        assertNotNull(cr);
+
+        // Update Msisdn
+        reader = createReaderWithHeaders("#0\t9876543210\tFLW 0\t11\t18-08-2016\tASHA");
+        frontLineWorkerImportService.importData(reader);
+
+        flw = frontLineWorkerDataService.findByContactNumber(9876543210L);
+        assertFLW(flw, "#0", 9876543210L, "FLW 0", "District 11", "L1");
+
+        assertNull(maService.getBookmark(1234567890L, VALID_CALL_ID));
+        assertNotNull(maService.getBookmark(9876543210L, VALID_CALL_ID));
+
+        assertEquals(0, activityDataService.findRecordsForUserByState("1234567890", ActivityState.STARTED).size());
+        assertEquals(1, activityDataService.findRecordsForUserByState("9876543210", ActivityState.STARTED).size());
+
+        assertNull(completionRecordDataService.findRecordByCallingNumber(1234567890L));
+        assertNotNull(completionRecordDataService.findRecordByCallingNumber(9876543210L));
     }
 }

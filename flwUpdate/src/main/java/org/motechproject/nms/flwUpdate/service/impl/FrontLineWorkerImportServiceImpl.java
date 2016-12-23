@@ -108,9 +108,9 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             LocalDate mctsUpdatedDateNic = (LocalDate) record.get(FlwConstants.UPDATED_ON);
             //It updated_date_nic from mcts is not null,then it's not a new record. Compare it with the record from database and update
             if (mctsUpdatedDateNic != null && (flw.getUpdatedDateNic() == null || mctsUpdatedDateNic.isAfter(flw.getUpdatedDateNic()) || mctsUpdatedDateNic.isEqual(flw.getUpdatedDateNic()))) {
+                Long oldMsisdn = flw.getContactNumber();
                 FrontLineWorker flwInstance = updateFlw(flw, record, location);
                 frontLineWorkerService.update(flwInstance);
-                Long oldMsisdn = flw.getContactNumber();
                 Long newMsisdn = (Long) record.get(FlwConstants.CONTACT_NO);
                 if (!oldMsisdn.equals(newMsisdn)) {
                     mobileAcademyService.updateMsisdn(flwInstance.getId(), oldMsisdn, newMsisdn);
@@ -122,7 +122,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    public boolean createUpdate(Map<String, Object> flw) {
+    public boolean createUpdate(Map<String, Object> flw) { //NOPMD NcssMethodCount
 
         long stateId = (long) flw.get(FlwConstants.STATE_ID);
         long districtId = (long) flw.get(FlwConstants.DISTRICT_ID);
@@ -165,8 +165,9 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                 // making design decision that flw will lose all progress when phone number is changed. Usage and tracking is not
                 // worth the effort & we don't really know that its the same flw
                 LOGGER.debug("Updating phone number for flw");
+                long existingContactNumber = existingFlwByMctsFlwId.getContactNumber();
                 FrontLineWorker flwInstance = FlwMapper.updateFlw(existingFlwByMctsFlwId, flw, location);
-                updateFlwMaMsisdn(flwInstance, existingFlwByMctsFlwId.getContactNumber(), contactNumber);
+                updateFlwMaMsisdn(flwInstance, existingContactNumber, contactNumber);
                 return true;
             } else if (existingFlwByMctsFlwId == null && existingFlwByNumber != null) {
 
