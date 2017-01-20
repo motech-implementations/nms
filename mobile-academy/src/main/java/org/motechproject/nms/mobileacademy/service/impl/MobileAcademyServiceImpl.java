@@ -16,13 +16,13 @@ import org.motechproject.mtraining.domain.Bookmark;
 import org.motechproject.mtraining.repository.ActivityDataService;
 import org.motechproject.mtraining.service.ActivityService;
 import org.motechproject.mtraining.service.BookmarkService;
-import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
+import org.motechproject.nms.mobileacademy.domain.CourseCompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.domain.MtrainingModuleActivityRecordAudit;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.dto.MaCourse;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
-import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
+import org.motechproject.nms.mobileacademy.repository.CourseCompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.mobileacademy.repository.MtrainingModuleActivityRecordAuditDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
@@ -83,7 +83,8 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     /**
      * Completion record data service
      */
-    private CompletionRecordDataService completionRecordDataService;
+
+    private CourseCompletionRecordDataService courseCompletionRecordDataService;
 
     /**
      * Activity record data service
@@ -118,8 +119,8 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     public MobileAcademyServiceImpl(BookmarkService bookmarkService,
                                     ActivityService activityService,
                                     NmsCourseDataService nmsCourseDataService,
-                                    CompletionRecordDataService completionRecordDataService,
                                     ActivityDataService activityDataService,
+                                    CourseCompletionRecordDataService courseCompletionRecordDataService,
                                     EventRelay eventRelay,
                                     MtrainingModuleActivityRecordAuditDataService mtrainingModuleActivityRecordAuditDataService,
                                     @Qualifier("maSettings") SettingsFacade settingsFacade,
@@ -127,12 +128,12 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         this.bookmarkService = bookmarkService;
         this.activityService = activityService;
         this.nmsCourseDataService = nmsCourseDataService;
-        this.completionRecordDataService = completionRecordDataService;
         this.activityDataService = activityDataService;
         this.eventRelay = eventRelay;
         this.settingsFacade = settingsFacade;
         this.alertService = alertService;
         this.mtrainingModuleActivityRecordAuditDataService = mtrainingModuleActivityRecordAuditDataService;
+        this.courseCompletionRecordDataService = courseCompletionRecordDataService;
         bootstrapCourse();
     }
 
@@ -253,19 +254,16 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     @Override
     public void triggerCompletionNotification(Long callingNumber) {
 
-        final CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(callingNumber);
-
-        // No completion record found, fail notification
-        if (cr == null) {
+        List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByCallingNumber(callingNumber);
+        if (ccrs == null || ccrs.isEmpty()) {
             throw new CourseNotCompletedException(String.format(NOT_COMPLETE, String.valueOf(callingNumber)));
         }
 
-        // reset notification status on the completion record and try again
+        final CourseCompletionRecord ccr = ccrs.get(ccrs.size()-1);
 
-        if (cr.isSentNotification()) {
-            LOGGER.debug("Found existing completion record, resetting and trying again");
-            cr.setSentNotification(false);
-            completionRecordDataService.update(cr);
+        if (ccr.isSentNotification()) {
+            LOGGER.error("Notification has already been sent.");
+            return;
         }
 
         // If this is running inside a transaction (which it probably always will), then send the event after
@@ -275,11 +273,11 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
                 @Override
                 public void afterCommit() {
-                    sendEvent(cr.getCallingNumber());
+                    sendEvent(ccr.getCallingNumber());
                 }
             });
         } else {
-            sendEvent(cr.getCallingNumber());
+            sendEvent(ccr.getCallingNumber());
         }
     }
 
@@ -353,29 +351,20 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     private void evaluateCourseCompletion(Long callingNumber, Map<String, Integer> scores) {
 
         int totalScore = getTotalScore(scores);
-        if (getTotalScore(scores) < PASS_SCORE) {
-            // nothing to do
+        CourseCompletionRecord ccr = new CourseCompletionRecord(callingNumber, totalScore, scores.toString());
+        courseCompletionRecordDataService.create(ccr);
+
+        if (totalScore < PASS_SCORE) {
             LOGGER.debug("User with calling number: " + LogHelper.obscure(callingNumber) + " failed with score: " + totalScore);
+            ccr.setPassed(false);
+            courseCompletionRecordDataService.update(ccr);
             return;
-        }
-
-        // We know that they completed the course here. Start post-processing
-        CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(callingNumber);
-
-        if (cr == null) {
-            LOGGER.debug("No existing completion record. Creating new record");
-            cr = new CompletionRecord(callingNumber, totalScore);
-            completionRecordDataService.create(cr);
         } else {
-            LOGGER.debug("Found existing completion record, updating it");
-            int completionCount = cr.getCompletionCount();
-            cr.setCompletionCount(completionCount + 1);
-            cr.setScore(totalScore);
-            completionRecordDataService.update(cr);
+            // we updated the completion record. Start event message to trigger notification workflow
+            ccr.setPassed(true);
+            courseCompletionRecordDataService.update(ccr);
+            triggerCompletionNotification(callingNumber);
         }
-
-        // we updated the completion record. Start event message to trigger notification workflow
-        triggerCompletionNotification(callingNumber);
     }
 
     /**
@@ -497,12 +486,15 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
 
         // Update Msisdn  In nms_ma_completion_records
         LOGGER.debug("Fetching Completion records for Msisdn {}.", oldCallingNumber);
-        CompletionRecord completionRecord = completionRecordDataService.findRecordByCallingNumber(oldCallingNumber);
-        if (null == completionRecord) {
-            LOGGER.debug("No CompletionRecord exists with given Msisdn");
+        List<CourseCompletionRecord> courseCompletionRecords = courseCompletionRecordDataService.findByCallingNumber(oldCallingNumber);
+        if (null == courseCompletionRecords || courseCompletionRecords.isEmpty()) {
+            LOGGER.debug("No CourseCompletionRecord exists with given Msisdn");
         } else {
-            completionRecord.setCallingNumber(newCallingNumber);
-            completionRecordDataService.update(completionRecord);
+            for (CourseCompletionRecord courseCompletionRecord : courseCompletionRecords
+                 ) {
+                courseCompletionRecord.setCallingNumber(newCallingNumber);
+                courseCompletionRecordDataService.update(courseCompletionRecord);
+            }
             LOGGER.debug("Updated MSISDN {} to {} in Completion record", oldCallingNumber, newCallingNumber);
         }
 
