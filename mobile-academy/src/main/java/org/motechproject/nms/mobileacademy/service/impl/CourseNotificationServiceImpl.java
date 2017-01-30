@@ -10,8 +10,8 @@ import org.motechproject.mtraining.service.ActivityService;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.imi.service.SmsNotificationService;
-import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
-import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
+import org.motechproject.nms.mobileacademy.domain.CourseCompletionRecord;
+import org.motechproject.nms.mobileacademy.repository.CourseCompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.service.CourseNotificationService;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
@@ -25,6 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * This handles all the integration pieces between MA and sms module to trigger and handle notifications
@@ -49,7 +51,6 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
     /**
      * Data service with course completion info
      */
-    private CompletionRecordDataService completionRecordDataService;
 
     /**
      * SMS bridge used to talk to IMI
@@ -65,6 +66,8 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
      * Used to get flw information
      */
     private FrontLineWorkerService frontLineWorkerService;
+
+    private CourseCompletionRecordDataService courseCompletionRecordDataService;
 
     /**
      * Used to get detached field
@@ -87,16 +90,15 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
     private AlertService alertService;
 
     @Autowired
-    public CourseNotificationServiceImpl(CompletionRecordDataService completionRecordDataService,
-                                         SmsNotificationService smsNotificationService,
+    public CourseNotificationServiceImpl(SmsNotificationService smsNotificationService,
                                          @Qualifier("maSettings") SettingsFacade settingsFacade,
                                          ActivityService activityService,
                                          MotechSchedulerService schedulerService,
+                                         CourseCompletionRecordDataService courseCompletionRecordDataService,
                                          AlertService alertService,
                                          FrontLineWorkerService frontLineWorkerService,
                                          DistrictDataService districtDataService) {
 
-        this.completionRecordDataService = completionRecordDataService;
         this.smsNotificationService = smsNotificationService;
         this.settingsFacade = settingsFacade;
         this.schedulerService = schedulerService;
@@ -104,6 +106,7 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
         this.activityService = activityService;
         this.frontLineWorkerService = frontLineWorkerService;
         this.districtDataService = districtDataService;
+        this.courseCompletionRecordDataService = courseCompletionRecordDataService;
     }
 
     @MotechListener(subjects = { COURSE_COMPLETED_SUBJECT })
@@ -114,22 +117,23 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
             LOGGER.debug("Handling course completion notification event");
             Long callingNumber = (Long) event.getParameters().get(CALLING_NUMBER);
 
-            CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(callingNumber);
-            if (cr == null) {
+            List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByCallingNumber(callingNumber);
+            if (ccrs == null || ccrs.isEmpty()) {
                 // this should never be possible since the event dispatcher upstream adds the record
                 LOGGER.error("No completion record found for callingNumber: " + callingNumber);
                 return;
             }
 
+            CourseCompletionRecord ccr = ccrs.get(ccrs.size()-1);
+
             if (event.getParameters().containsKey(RETRY_FLAG)) {
                 LOGGER.debug("Handling retry for SMS notification");
-                cr.setNotificationRetryCount(cr.getNotificationRetryCount() + 1);
+                ccr.setNotificationRetryCount(ccr.getNotificationRetryCount() + 1);
             }
 
-            String smsContent = buildSmsContent(callingNumber);
-            cr = completionRecordDataService.findRecordByCallingNumber(callingNumber); //refetch since this might have been updated
-            cr.setSentNotification(smsNotificationService.sendSms(callingNumber, smsContent));
-            completionRecordDataService.update(cr);
+            String smsContent = buildSmsContent(callingNumber, ccr);
+            ccr.setSentNotification(smsNotificationService.sendSms(callingNumber, smsContent));
+            courseCompletionRecordDataService.update(ccr);
         } catch (IllegalStateException se) {
             LOGGER.error("Unable to send sms notification. Stack: " + se.toString());
             alertService.create("SMS Content", "MA SMS", se.getMessage(), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
@@ -145,31 +149,31 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
         String callingNumber = (String) event.getParameters().get(ADDRESS);
         int startIndex = callingNumber.indexOf(':') + 2;
         callingNumber = callingNumber.substring(startIndex);
-        CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(
-                Long.parseLong(callingNumber));
+        List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByCallingNumber(Long.parseLong(callingNumber));
 
-        if (cr == null) {
+        if (ccrs == null || ccrs.isEmpty()) {
             // this should never be possible since the event dispatcher upstream adds the record
             LOGGER.error("No completion record found for callingNumber: " + callingNumber);
             return;
         }
+        CourseCompletionRecord ccr = ccrs.get(ccrs.size()-1);
 
         // read properties
         String deliveryStatus = (String) event.getParameters().get(DELIVERY_STATUS);
         DateTime currentTime = DateTime.now();
-        DateTime nextRetryTime = cr.getModificationDate().plusDays(1);
+        DateTime nextRetryTime = ccr.getModificationDate().plusDays(1);
 
         // update completion record and status
-        cr.setLastDeliveryStatus(deliveryStatus);
-        completionRecordDataService.update(cr);
+        ccr.setLastDeliveryStatus(deliveryStatus);
+        courseCompletionRecordDataService.update(ccr);
 
         // handle sms failures and retry
         if (DELIVERY_IMPOSSIBLE.equals(deliveryStatus) &&
-                cr.getNotificationRetryCount() < Integer.parseInt(settingsFacade.getProperty(SMS_RETRY_COUNT))) {
+                ccr.getNotificationRetryCount() < Integer.parseInt(settingsFacade.getProperty(SMS_RETRY_COUNT))) {
 
             try {
                 Long msisdn = Long.parseLong(callingNumber);
-                String smsContent = buildSmsContent(msisdn);
+                String smsContent = buildSmsContent(msisdn, ccr);
                 MotechEvent retryEvent = new MotechEvent(COURSE_COMPLETED_SUBJECT);
                 retryEvent.getParameters().put(CALLING_NUMBER, msisdn);
                 retryEvent.getParameters().put(SMS_CONTENT, smsContent);
@@ -201,10 +205,9 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
      * @param callingNumber calling number of the flw
      * @return localized sms content based on flw preferences or national default otherwise
      */
-    private String buildSmsContent(Long callingNumber) {
+    private String buildSmsContent(Long callingNumber, CourseCompletionRecord ccr) {
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
-        CompletionRecord completionRecord = completionRecordDataService.findRecordByCallingNumber(callingNumber);
         String locationCode = "XX"; // unknown location id
         String smsLanguageProperty = null;
 
@@ -245,8 +248,8 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
 
         int attempts = activityService.getCompletedActivityForUser(callingNumber.toString()).size();
         String smsReferenceNumber = locationCode + callingNumber + attempts;
-        completionRecord.setSmsReferenceNumber(smsReferenceNumber);
-        completionRecordDataService.update(completionRecord);
+        ccr.setSmsReferenceNumber(smsReferenceNumber);
+        courseCompletionRecordDataService.update(ccr);
         return smsContent + smsReferenceNumber;
     }
 }
