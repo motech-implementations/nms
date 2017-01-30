@@ -5,6 +5,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Weeks;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.motechproject.commons.date.util.DateUtil;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.event.listener.annotations.MotechListener;
@@ -375,7 +376,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
 
             if (Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(KilkariConstants.THREE_MONTHS),
-                    DateTime.now(), pack)) {
+                    DateUtil.now(), pack)) {
                 return false;
             }
 
