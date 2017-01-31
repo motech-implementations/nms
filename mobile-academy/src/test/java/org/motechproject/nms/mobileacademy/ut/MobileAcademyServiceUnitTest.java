@@ -342,7 +342,7 @@ public class MobileAcademyServiceUnitTest {
         when(courseCompletionRecordDataService.findByCallingNumber(anyLong())).thenReturn(records);
         mobileAcademyService.triggerCompletionNotification(1234567890L);
         mobileAcademyService.triggerCompletionNotification(1234567890L);
-        assertTrue(ccr.isSentNotification());
+        assertFalse(ccr.isSentNotification());
     }
 
     @Test

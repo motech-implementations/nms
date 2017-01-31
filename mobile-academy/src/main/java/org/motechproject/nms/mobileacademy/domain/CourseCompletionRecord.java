@@ -46,7 +46,7 @@ public class CourseCompletionRecord extends MdsEntity {
 
 
     public CourseCompletionRecord(long callingNumber, int score, String chapterWiseScores) {
-        this(callingNumber, score, chapterWiseScores, true);
+        this(callingNumber, score, chapterWiseScores, false);
     }
 
     public CourseCompletionRecord(long callingNumber, int score, String chapterWiseScores, boolean sentNotification) {
