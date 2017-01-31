@@ -17,6 +17,8 @@ import org.motechproject.nms.api.web.contract.BadRequest;
 import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
+import org.motechproject.nms.api.web.domain.AnonymousCallAudit;
+import org.motechproject.nms.api.web.repository.AnonymousCallAuditDataService;
 import org.motechproject.nms.flw.domain.CallDetailRecord;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
@@ -149,6 +151,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Inject
     PlatformTransactionManager transactionManager;
+
+    @Inject
+    AnonymousCallAuditDataService anonymousCallAuditDataService;
 
     public static final Long WHITELIST_CONTACT_NUMBER = 1111111111l;
     public static final Long NOT_WHITELIST_CONTACT_NUMBER = 9000000000l;
@@ -3783,6 +3788,77 @@ public class UserControllerBundleIT extends BasePaxIT {
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
                 httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_FORBIDDEN, response.getStatusLine().getStatusCode());
+    }
+
+    /** To verify if the anonymous call audit is done if an anonymous user
+     * attempted to call - two users are tested.
+     */
+
+    @Test
+    public void verifyAnonymousCallAuditRecord() throws IOException, InterruptedException{
+        // add FLW with Anonymous status
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1200000000l);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        flw.setStatus(FrontLineWorkerStatus.ANONYMOUS);
+        flw.setInvalidationDate(DateTime.now().minusDays(50));
+        frontLineWorkerDataService.create(flw);
+
+        // add another FLW with Anonymous status
+        FrontLineWorker flw1 = new FrontLineWorker("Aisha Bibi", 1234567899l);
+        flw1.setLanguage(rh.tamilLanguage());
+        flw1.setDistrict(rh.southDelhiDistrict());
+        flw1.setState(rh.delhiState());
+        flw1.setStatus(FrontLineWorkerStatus.ANONYMOUS);
+        flw1.setInvalidationDate(DateTime.now().minusDays(50));
+        frontLineWorkerDataService.create(flw1);
+
+
+        // service deployed in Karnataka State
+        deployedServiceDataService.create(new DeployedService(rh.karnatakaState(), Service.MOBILE_ACADEMY));
+        // service deployed in Delhi State
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.MOBILE_ACADEMY));
+
+        // invoke get user detail API for first flw user
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, VALID_CALL_ID // callId
+        );
+
+        // invoke get user detail API for second flw user
+        HttpGet httpGet1 = createHttpGet(true, "mobileacademy", // service
+                true, "1234567899", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, VALID_CALL_ID // callId
+        );
+
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+
+        // checking if record is created for first flw anonymous call
+        assertEquals(anonymousCallAuditDataService.count(),1l);
+        assertEquals(HttpStatus.SC_FORBIDDEN, response.getStatusLine().getStatusCode());
+
+        HttpResponse response1 = SimpleHttpClient.httpRequestAndResponse(
+                httpGet1, ADMIN_USERNAME, ADMIN_PASSWORD);
+
+        // checking if record is created for first flw anonymous call
+        assertEquals(anonymousCallAuditDataService.count(),2l);
+        assertEquals(HttpStatus.SC_FORBIDDEN, response1.getStatusLine().getStatusCode());
+
+        HttpResponse response2 = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+
+        // checking if record is created for first flw's second anonymous call
+        assertEquals(anonymousCallAuditDataService.count(),3l);
+        assertEquals(anonymousCallAuditDataService.findByNumber(1200000000l).size(), 2);
+        assertEquals(HttpStatus.SC_FORBIDDEN, response2.getStatusLine().getStatusCode());
+
     }
 
     /**

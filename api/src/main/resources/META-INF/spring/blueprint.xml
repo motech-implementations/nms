@@ -13,6 +13,11 @@
 
     <tx:annotation-driven transaction-manager="transactionManager"/>
 
+    <osgi:reference id="flwStatusUpdateAuditDataService"
+                    interface="org.motechproject.nms.flw.repository.FlwStatusUpdateAuditDataService" />
+
+    <osgi:reference id="anonymousCallAuditDataService" interface="org.motechproject.nms.api.web.repository.AnonymousCallAuditDataService"/>
+
     <osgi:reference id="transactionManager" interface="org.springframework.transaction.PlatformTransactionManager"/>
 
     <osgi:reference id="subscriberService" interface="org.motechproject.nms.kilkari.service.SubscriberService"/>

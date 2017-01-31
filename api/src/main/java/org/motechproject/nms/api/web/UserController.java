@@ -1,10 +1,13 @@
 package org.motechproject.nms.api.web;
 
+import org.motechproject.commons.date.util.DateUtil;
 import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.api.web.contract.UserResponse;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
+import org.motechproject.nms.api.web.domain.AnonymousCallAudit;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
 import org.motechproject.nms.api.web.exception.NotDeployedException;
+import org.motechproject.nms.api.web.repository.AnonymousCallAuditDataService;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.domain.ServiceUsage;
@@ -64,6 +67,10 @@ public class UserController extends BaseController {
     @Autowired
     private StateService stateService;
 
+    @Autowired
+    private AnonymousCallAuditDataService anonymousCallAuditDataService;
+
+
     /**
      * 2.2.1 Get User Details API
      * IVR shall invoke this API when to retrieve details specific to the user identified by callingNumber.
@@ -80,7 +87,7 @@ public class UserController extends BaseController {
      */
     @RequestMapping("/{serviceName}/user") // NO CHECKSTYLE Cyclomatic Complexity
     @ResponseBody
-    @Transactional
+    @Transactional(noRollbackFor = NotAuthorizedException.class)
     public UserResponse getUserDetails(@PathVariable String serviceName,
                              @RequestParam(required = false) Long callingNumber,
                              @RequestParam(required = false) String operator,
@@ -259,7 +266,7 @@ public class UserController extends BaseController {
 
         if (MOBILE_ACADEMY.equals(serviceName)) {
             // make sure that flw is authorized to use MA
-            restrictAnonymousMAUserCheck(flw);
+            restrictAnonymousMAUserCheck(flw, callingNumber, circle);
         }
 
         if (flw != null) {
@@ -285,7 +292,7 @@ public class UserController extends BaseController {
         return user;
     }
 
-    private void restrictAnonymousMAUserCheck(FrontLineWorker flw) {
+    private void restrictAnonymousMAUserCheck(FrontLineWorker flw, Long callingNumber, Circle circle) {
 
         if (flw == null || flw.getStatus() == FrontLineWorkerStatus.ANONYMOUS ||
                 flw.getMctsFlwId() == null || flw.getMctsFlwId().isEmpty()) {
@@ -293,7 +300,17 @@ public class UserController extends BaseController {
             // if flw is null here, we don't already have a record from MCTS. return 403
             // We might have a non-null flw with anonymous status from earlier calls, if so, still return 403 and
             // force them to come through MCTS
+
+            createAnonymousCallAuditRecordData(callingNumber, circle);
             throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
+        }
+    }
+
+    private void createAnonymousCallAuditRecordData(Long callingNumber, Circle circle) {
+        if (circle == null) {
+            anonymousCallAuditDataService.create(new AnonymousCallAudit(DateUtil.now(), null, callingNumber));
+        } else {
+            anonymousCallAuditDataService.create(new AnonymousCallAudit(DateUtil.now(), circle.getName(), callingNumber));
         }
     }
 

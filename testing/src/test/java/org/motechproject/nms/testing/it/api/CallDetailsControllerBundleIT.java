@@ -14,11 +14,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.api.web.contract.FlwUserResponse;
-import org.motechproject.nms.flw.domain.CallContent;
-import org.motechproject.nms.flw.domain.CallDetailRecord;
-import org.motechproject.nms.flw.domain.FrontLineWorker;
-import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
+import org.motechproject.nms.flw.domain.*;
 import org.motechproject.nms.flw.repository.CallDetailRecordDataService;
+import org.motechproject.nms.flw.repository.FlwStatusUpdateAuditDataService;
 import org.motechproject.nms.flw.service.CallDetailRecordService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.props.domain.DeployedService;
@@ -94,6 +92,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     DistrictDataService districtDataService;
     @Inject
     DistrictService districtService;
+    @Inject
+    FlwStatusUpdateAuditDataService flwStatusUpdateAuditDataService;
 
     @Inject
     PlatformTransactionManager transactionManager;
@@ -2548,7 +2548,7 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
     }
 
     /**
-     * To verift that status of flw must be set to "Active" when user call first time and
+     * To verify that status of flw must be set to "Active" when user call first time and
      * its information exists in NMS DB and status as "Inactive"
      */
     @Test
@@ -2622,9 +2622,99 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         assertEquals(FrontLineWorkerStatus.ACTIVE, flw.getStatus());
     }
 
+    /**
+     * To verify that the flw status update audit record is created
+     * along with the change of status of a flw from INACTIVE to ACTIVE
+     * upon calling for first time.
+     *
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    @Test
+    public void verifyFT514() throws IOException, InterruptedException{
+
+        rh.newDelhiDistrict();
+        rh.delhiCircle();
+        deployedServiceDataService.create(new DeployedService(rh.delhiState(),
+                Service.MOBILE_ACADEMY));
+
+        FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1200000001L);
+        flw.setLanguage(rh.hindiLanguage());
+        flw.setDistrict(rh.newDelhiDistrict());
+        flw.setState(rh.delhiState());
+        flw.setStatus(FrontLineWorkerStatus.INACTIVE);
+        flw.setMctsFlwId("mcts_id");
+        frontLineWorkerService.add(flw);
+
+        // invoke get user detail API
+        StringBuilder sb = new StringBuilder(String.format("http://localhost:%d/api/", TestContext.getJettyPort()));
+        String sep = "";
+        sb.append(String.format("%s/", "mobileacademy"));
+        sb.append("user?");
+        sb.append(String.format("callingNumber=%s", "1200000001"));
+        sep = "&";
+        sb.append(String.format("%scallId=%s", sep, VALID_CALL_ID));
+        HttpGet httpGet = new HttpGet(sb.toString());
+
+        String expectedJsonResponse = createFlwUserResponseJson(null, // defaultLanguageLocationCode
+                rh.hindiLanguage().getCode(), // locationCode
+                new ArrayList<String>(), // allowedLanguageLocationCodes
+                0L, // currentUsageInPulses=updated
+                0L, // endOfUsagePromptCounter=updated
+                false, // welcomePromptFlag
+                -1, // maxAllowedUsageInPulses=State capping
+                2 // maxAllowedEndOfUsagePrompt
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet,
+                ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+
+        ArrayList<String> array = new ArrayList<>();
+        array.add(createContentJson(/* type */ true, "lesson",
+                /* mkCardCode */ false, null,
+                /* contentName */ true, "Chapter-01lesson-04",
+                /* contentFile */ true, "ch1_l4.wav",
+                /* startTime */ true, 1200000000l,
+                /* endTime */ true, 1222222221l,
+                /* completionFlag */ true, true,
+                /* correctAnswerEntered */false, null));
+        array.add(createContentJson(/* type */ true, "question",
+                /* mkCardCode */ false, null,
+                /* contentName */ true, "chapter-01question-01",
+                /* contentFile */ true, "ch1_q1.wav",
+                /* startTime */ true, 1200000000l,
+                /* endTime */ true, 1222222221l,
+                /* completionFlag */ true, true,
+        /* correctAnswerEntered */true, false));
+        HttpPost httpPost = createCallDetailsPost("mobileacademy",
+                /* callingNumber */ true, 1200000001l,
+                /* callId */ true, VALID_CALL_ID,
+                /* operator */ true, "A",
+                /* circle */ true, "AP",
+                /* callStartTime */ true, 1422879843l,
+                /* callEndTime */ true, 1422879903l,
+                /* callDurationInPulses */ true, 60,
+        /* endOfUsagePromptCounter */true, 1,
+                /* welcomeMessagePromptFlag */ false, null,
+                /* callStatus */ true, 1,
+        /* callDisconnectReason */true, 2,
+                /* content */ true, Joiner.on(",").join(array));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ADMIN_USERNAME, ADMIN_PASSWORD));
+
+        flw = frontLineWorkerService.getByContactNumber(1200000001l);
+        assertEquals(FrontLineWorkerStatus.ACTIVE, flw.getStatus());
+        assertEquals(flwStatusUpdateAuditDataService.count(), 1l);
+        assertEquals(flwStatusUpdateAuditDataService.findByUpdateStatusType(UpdateStatusType.INACTIVE_TO_ACTIVE).size(), 1);
+
+    }
+
     // Test with no content
     // Test with empty content
-    // Test witn invalid callingNumber
+    // Test with invalid callingNumber
     // Test with null callingNumber
     // Test with no flw for callingNumber
     // Test with invalid callId

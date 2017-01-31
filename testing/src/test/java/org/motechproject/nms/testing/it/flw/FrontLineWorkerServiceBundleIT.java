@@ -10,8 +10,11 @@ import org.junit.runner.RunWith;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.mds.ex.JdoListenerInvocationException;
+import org.motechproject.nms.flw.domain.FlwStatusUpdateAudit;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
+import org.motechproject.nms.flw.domain.UpdateStatusType;
+import org.motechproject.nms.flw.repository.FlwStatusUpdateAuditDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
 import org.motechproject.nms.flw.repository.WhitelistStateDataService;
@@ -36,8 +39,13 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +89,10 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     WhitelistStateDataService whitelistStateDataService;
     @Inject
     TestingService testingService;
+    @Inject
+    FlwStatusUpdateAuditDataService flwStatusUpdateAuditDataService;
+    @Inject
+    PlatformTransactionManager transactionManager;
 
 
     private State sampleState;
@@ -384,5 +396,65 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         flw = frontLineWorkerService.getById(flw.getId());
         assertEquals(FrontLineWorkerStatus.INVALID, flw.getStatus());
         assertNull(flw.getContactNumber());
+    }
+
+    /**
+     * To verify that status of Active flw to "Invalid" and
+     * the status of Anonymous flw to "Active" is audited properly
+     */
+    @Test
+    public void verifyFT518() {
+        createLanguageLocationData();
+
+        // Creating a Active flw user and updating his status to Invalid
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        District district = districtService.findByStateAndCode(sampleState, 1L);
+        Language language = languageService.getForCode("50");
+        FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
+        flw.setState(sampleState);
+        flw.setDistrict(district);
+        flw.setLanguage(language);
+        frontLineWorkerService.add(flw);
+        transactionManager.commit(status);
+
+        flw = frontLineWorkerService.getByContactNumber(2111111111L);
+        flw.setStatus(FrontLineWorkerStatus.INVALID);
+        flw.setInvalidationDate(new DateTime().withDate(2011, 8, 1));
+        frontLineWorkerService.update(flw);
+        assertEquals(flwStatusUpdateAuditDataService.count(), 1l);
+
+
+        // Creating a Anonymous flw user and updating his status to Active
+
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        District district1 = districtService.findByStateAndCode(sampleState, 1L);
+        Language language1 = languageService.getForCode("50");
+        FrontLineWorker flw1 = new FrontLineWorker(2111111112L);
+        flw1.setState(sampleState);
+        flw1.setDistrict(district1);
+        flw1.setLanguage(language1);
+        frontLineWorkerService.add(flw1);
+        transactionManager.commit(status);
+
+        flw1 = frontLineWorkerService.getByContactNumber(2111111112L);
+        flw1.setName("Test Worker1");
+        frontLineWorkerService.update(flw1);
+        assertEquals(flwStatusUpdateAuditDataService.count(), 2l);
+
+        // Changing the status previous updated Active user to Invalid
+        FrontLineWorker flw2 = frontLineWorkerService.getByContactNumber(2111111112L);
+        flw2.setStatus(FrontLineWorkerStatus.INVALID);
+        frontLineWorkerService.update(flw2);
+        assertEquals(flwStatusUpdateAuditDataService.count(), 3l);
+
+        List<FlwStatusUpdateAudit> flwStatusUpdateAuditList3;
+        flwStatusUpdateAuditList3 = flwStatusUpdateAuditDataService.findByUpdateStatusType(UpdateStatusType.ACTIVE_TO_INVALID);
+        assertEquals(flwStatusUpdateAuditList3.size(), 2);
+
+        List<FlwStatusUpdateAudit> flwStatusUpdateAuditList4;
+        flwStatusUpdateAuditList4 = flwStatusUpdateAuditDataService.findByUpdateStatusType(UpdateStatusType.ANONYMOUS_TO_ACTIVE);
+        assertEquals(flwStatusUpdateAuditList4.size(), 1);
+
+
     }
 }
