@@ -4,8 +4,6 @@ import org.motechproject.mds.annotations.Lookup;
 import org.motechproject.mds.annotations.LookupField;
 import org.motechproject.mds.service.MotechDataService;
 import org.motechproject.nms.flw.domain.FlwStatusUpdateAudit;
-import org.motechproject.nms.flw.domain.UpdateStatusType;
-
 import java.util.List;
 
 /**
@@ -20,6 +18,5 @@ public interface FlwStatusUpdateAuditDataService extends MotechDataService<FlwSt
     List<FlwStatusUpdateAudit> findByContactNumber(@LookupField(name = "contactNumber") Long contactNumber);
 
     @Lookup
-    List<FlwStatusUpdateAudit> findByUpdateStatusType(@LookupField(name = "updateStatusType") UpdateStatusType updateStatusType);
-
+    List<FlwStatusUpdateAudit> findByMcstsFlwId (@LookupField(name = "mctsFlwId") String mctsFlwId);
 }

@@ -399,8 +399,8 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     }
 
     /**
-     * To verify that status of Active flw to "Invalid" and
-     * the status of Anonymous flw to "Active" is audited properly
+     * To verify that status of "Active" flw to "Invalid" and
+     * the status of "Anonymous" flw to "Active" is audited properly
      */
     @Test
     public void verifyFT518() {
@@ -414,6 +414,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         flw.setState(sampleState);
         flw.setDistrict(district);
         flw.setLanguage(language);
+        flw.setMctsFlwId("mcts_id");
         frontLineWorkerService.add(flw);
         transactionManager.commit(status);
 
@@ -433,6 +434,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         flw1.setState(sampleState);
         flw1.setDistrict(district1);
         flw1.setLanguage(language1);
+        flw1.setMctsFlwId("mcts_id1");
         frontLineWorkerService.add(flw1);
         transactionManager.commit(status);
 
@@ -448,12 +450,12 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         assertEquals(flwStatusUpdateAuditDataService.count(), 3l);
 
         List<FlwStatusUpdateAudit> flwStatusUpdateAuditList3;
-        flwStatusUpdateAuditList3 = flwStatusUpdateAuditDataService.findByUpdateStatusType(UpdateStatusType.ACTIVE_TO_INVALID);
-        assertEquals(flwStatusUpdateAuditList3.size(), 2);
+        flwStatusUpdateAuditList3 = flwStatusUpdateAuditDataService.findByMcstsFlwId(flw.getMctsFlwId());
+        assertEquals(flwStatusUpdateAuditList3.size(), 1);
 
         List<FlwStatusUpdateAudit> flwStatusUpdateAuditList4;
-        flwStatusUpdateAuditList4 = flwStatusUpdateAuditDataService.findByUpdateStatusType(UpdateStatusType.ANONYMOUS_TO_ACTIVE);
-        assertEquals(flwStatusUpdateAuditList4.size(), 1);
+        flwStatusUpdateAuditList4 = flwStatusUpdateAuditDataService.findByMcstsFlwId(flw1.getMctsFlwId());
+        assertEquals(flwStatusUpdateAuditList4.size(), 2);
 
 
     }

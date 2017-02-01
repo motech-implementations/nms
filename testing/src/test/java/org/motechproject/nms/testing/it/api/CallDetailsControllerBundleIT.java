@@ -2708,7 +2708,8 @@ public class CallDetailsControllerBundleIT extends BasePaxIT {
         flw = frontLineWorkerService.getByContactNumber(1200000001l);
         assertEquals(FrontLineWorkerStatus.ACTIVE, flw.getStatus());
         assertEquals(flwStatusUpdateAuditDataService.count(), 1l);
-        assertEquals(flwStatusUpdateAuditDataService.findByUpdateStatusType(UpdateStatusType.INACTIVE_TO_ACTIVE).size(), 1);
+        List<FlwStatusUpdateAudit> flwStatusUpdateAuditList = flwStatusUpdateAuditDataService.findByMcstsFlwId(flw.getMctsFlwId());
+        assertEquals(flwStatusUpdateAuditList.size(), 1);
 
     }
 

@@ -301,16 +301,9 @@ public class UserController extends BaseController {
             // We might have a non-null flw with anonymous status from earlier calls, if so, still return 403 and
             // force them to come through MCTS
 
-            createAnonymousCallAuditRecordData(callingNumber, circle);
+            String circleName = circle == null ? null : circle.getName();
+            anonymousCallAuditDataService.create(new AnonymousCallAudit(DateUtil.now(), circleName, callingNumber));
             throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
-        }
-    }
-
-    private void createAnonymousCallAuditRecordData(Long callingNumber, Circle circle) {
-        if (circle == null) {
-            anonymousCallAuditDataService.create(new AnonymousCallAudit(DateUtil.now(), null, callingNumber));
-        } else {
-            anonymousCallAuditDataService.create(new AnonymousCallAudit(DateUtil.now(), circle.getName(), callingNumber));
         }
     }
 
