@@ -11,5 +11,6 @@ public enum SubscriptionRejectionReason {
     INVALID_LMP,
     MISSING_MSISDN,
     WEEKLY_CALLS_NOT_ANSWERED,
-    ACTIVE_CHILD_PRESENT;
+    ACTIVE_CHILD_PRESENT,
+    INVALID_CASE_NO;
 }

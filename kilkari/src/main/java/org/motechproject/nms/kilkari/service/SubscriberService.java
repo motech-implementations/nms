@@ -3,6 +3,7 @@ package org.motechproject.nms.kilkari.service;
 import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.InstanceLifecycleListener;
 import org.motechproject.mds.annotations.InstanceLifecycleListenerType;
+import org.motechproject.nms.kilkari.domain.BeneficiaryImportOrigin;
 import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
@@ -58,7 +59,7 @@ public interface SubscriberService {
      * @param lmp the reference date for the mother (last menstrual period)
      * @return New or updated subscription, null if the creation/update fails
      */
-    Subscription updateMotherSubscriber(Long msisdn, MctsMother mother, DateTime lmp);
+    Subscription updateMotherSubscriber(Long msisdn, MctsMother mother, DateTime lmp, BeneficiaryImportOrigin beneficiaryImportOrigin);
 
     /**
      * Update the child subscriber with the msisdn and child object
@@ -67,7 +68,7 @@ public interface SubscriberService {
      * @param dob the reference date for the child (date of birth)
      * @return New or updated subscription, null if creation/update fails
      */
-    Subscription updateChildSubscriber(Long msisdn, MctsChild child, DateTime dob);
+    Subscription updateChildSubscriber(Long msisdn, MctsChild child, DateTime dob, BeneficiaryImportOrigin beneficiaryImportOrigin);
 
     /**
      * Lifecycle listener that verifies a subscriber can only be deleted if all of their subscriptions have

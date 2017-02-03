@@ -21,4 +21,10 @@ public interface MctsBeneficiaryValueProcessor {
     DateTime getDateByString(String value);
 
     Long getMsisdnByString(String value);
+
+    Long getCaseNoByString(String value);
+
+    MctsMother getOrCreateRchMotherInstance(String rchId, String mctsId);
+
+    MctsChild getOrCreateRchChildInstance(String rchId, String mctsId);
 }

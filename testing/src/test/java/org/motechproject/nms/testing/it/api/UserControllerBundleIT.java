@@ -1530,7 +1530,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // create subscriber
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, rh.hindiLanguage()));
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(), delhiCircle,
-                sh.childPack(), SubscriptionOrigin.IVR);
+                sh.childPack(), SubscriptionOrigin.IVR, null);
         transactionManager.commit(status);
 
         HttpGet httpGet = createHttpGet(
@@ -1578,7 +1578,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, rh.hindiLanguage()));
         subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(), delhiCircle,
-                sh.childPack(), SubscriptionOrigin.IVR);
+                sh.childPack(), SubscriptionOrigin.IVR, null);
         transactionManager.commit(status);
 
         HttpGet httpGet = createHttpGet(

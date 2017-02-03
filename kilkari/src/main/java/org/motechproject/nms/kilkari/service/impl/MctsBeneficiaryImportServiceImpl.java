@@ -9,6 +9,7 @@ import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetString;
+import org.motechproject.nms.kilkari.domain.BeneficiaryImportOrigin;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
@@ -87,7 +88,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
      */
     @Override
     @Transactional
-    public int importMotherData(Reader reader) throws IOException {
+    public int importMotherData(Reader reader, BeneficiaryImportOrigin beneficiaryImportOrigin) throws IOException {
         pregnancyPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.PREGNANCY);
         int count = 0;
         /**
@@ -97,9 +98,22 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         int rejectedWithException = 0;
 
         BufferedReader bufferedReader = new BufferedReader(reader);
+        Map<String, CellProcessor> cellProcessorMapper;
+        String id;
+        String contactNumber;
+
+        if (beneficiaryImportOrigin.equals(BeneficiaryImportOrigin.MCTS)) {
+            cellProcessorMapper = this.getMotherProcessorMapping();
+            id = KilkariConstants.BENEFICIARY_ID;
+            contactNumber = KilkariConstants.MSISDN;
+        } else {
+            cellProcessorMapper = this.getRchMotherProcessorMapping();
+            id = KilkariConstants.RCH_ID;
+            contactNumber = KilkariConstants.MOBILE_NO;
+        }
 
         CsvMapImporter csvImporter = new CsvImporterBuilder()
-                .setProcessorMapping(getMotherProcessorMapping())
+                .setProcessorMapping(cellProcessorMapper)
                 .setPreferences(CsvPreference.TAB_PREFERENCE)
                 .createAndOpen(bufferedReader);
 
@@ -107,16 +121,16 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             Map<String, Object> record;
             Timer timer = new Timer("mom", "moms");
             while (null != (record = csvImporter.read())) {
-                MctsMother mother = (MctsMother) record.get(KilkariConstants.BENEFICIARY_ID);
-                LOGGER.debug("Started import for msisdn {} beneficiary_id {}", record.get(KilkariConstants.MSISDN), mother.getBeneficiaryId());
+                MctsMother mother = (MctsMother) record.get(id);
+                LOGGER.debug("Started import for msisdn {} beneficiary_id {}", record.get(contactNumber), mother.getBeneficiaryId());  // TODO: change mother id to valid one
                 try {
-                    importMotherRecord(record);
+                    importMotherRecord(record, beneficiaryImportOrigin);  // TODO: valid method
                     count++;
                     if (count % KilkariConstants.PROGRESS_INTERVAL == 0) {
                         LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
                     }
                 } catch (RuntimeException e) {
-                    LOGGER.error("Error at msisdn {} beneficiary_id {}", record.get(KilkariConstants.MSISDN), mother.getBeneficiaryId(), e);
+                    LOGGER.error("Error at msisdn {} beneficiary_id {}", record.get(contactNumber), mother.getBeneficiaryId(), e);  // TODO: change mother id to valid one
                     rejectedWithException++;
                 }
             }
@@ -125,7 +139,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             LOGGER.debug(KilkariConstants.REJECTED, timer.frequency(rejectedWithException));
 
         } catch (ConstraintViolationException e) {
-            throw new CsvImportDataException(String.format("MCTS mother import error, constraints violated: %s",
+            throw new CsvImportDataException(String.format("Mother import error, constraints violated: %s",
                     ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
         }
 
@@ -133,7 +147,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     }
 
     @Transactional
-    public int importChildData(Reader reader) throws IOException {
+    public int importChildData(Reader reader, BeneficiaryImportOrigin beneficiaryImportOrigin) throws IOException {
         childPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.CHILD);
         int count = 0;
         /**
@@ -143,9 +157,22 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         int rejectedWithException = 0;
 
         BufferedReader bufferedReader = new BufferedReader(reader);
+        Map<String, CellProcessor> cellProcessorMapper;
+        String id;
+        String contactNumber;
+
+        if (beneficiaryImportOrigin.equals(BeneficiaryImportOrigin.MCTS)) {
+            cellProcessorMapper = this.getChildProcessorMapping();
+            id = KilkariConstants.BENEFICIARY_ID;
+            contactNumber = KilkariConstants.MSISDN;
+        } else {
+            cellProcessorMapper = this.getRchChildProcessorMapping();
+            id = KilkariConstants.RCH_ID;   // TODO: change it once we set id
+            contactNumber = KilkariConstants.MOBILE_NO;
+        }
 
         CsvMapImporter csvImporter = new CsvImporterBuilder()
-                .setProcessorMapping(getChildProcessorMapping())
+                .setProcessorMapping(cellProcessorMapper)
                 .setPreferences(CsvPreference.TAB_PREFERENCE)
                 .createAndOpen(bufferedReader);
 
@@ -153,16 +180,16 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             Map<String, Object> record;
             Timer timer = new Timer("kid", "kids");
             while (null != (record = csvImporter.read())) {
-                MctsChild child = (MctsChild) record.get(KilkariConstants.BENEFICIARY_ID);
-                LOGGER.debug("Started import for msisdn {} beneficiary_id {}", record.get(KilkariConstants.MSISDN), child.getBeneficiaryId());
+                MctsChild child = (MctsChild) record.get(id);              // TODO: better to add beneficiaryID to mapper in MCTS
+                LOGGER.debug("Started import for msisdn {} beneficiary_id {}", record.get(contactNumber), child.getBeneficiaryId());
                 try {
-                    importChildRecord(record);
+                    importChildRecord(record, beneficiaryImportOrigin);  // TODO: change to valid method
                     count++;
                     if (count % KilkariConstants.PROGRESS_INTERVAL == 0) {
                         LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
                     }
                 } catch (RuntimeException e) {
-                    LOGGER.error("Error at msisdn {} beneficiary_id {}", record.get(KilkariConstants.MSISDN), child.getBeneficiaryId(), e);
+                    LOGGER.error("Error at msisdn {} beneficiary_id {}", record.get(contactNumber), child.getBeneficiaryId(), e);
                     rejectedWithException++;
                 }
             }
@@ -171,7 +198,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             LOGGER.debug(KilkariConstants.REJECTED, timer.frequency(rejectedWithException));
 
         } catch (ConstraintViolationException e) {
-            throw new CsvImportDataException(String.format("MCTS child import error, constraints violated: %s",
+            throw new CsvImportDataException(String.format("Child import error, constraints violated: %s",
                     ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
         }
 
@@ -180,30 +207,49 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
-    public boolean importMotherRecord(Map<String, Object> record) {
+    public boolean importMotherRecord(Map<String, Object> record, BeneficiaryImportOrigin beneficiaryImportOrigin) { //NOPMD NcssMethodCount
         if (pregnancyPack == null) {
             pregnancyPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.PREGNANCY);
         }
 
-        MctsMother mother = (MctsMother) record.get(KilkariConstants.BENEFICIARY_ID);
+        MctsMother mother;
+        Long msisdn;
+        Boolean abortion;
+        Boolean stillBirth;
+        LocalDate lastUpdatedDateNic;
+        String beneficiaryId;
+
+        if (beneficiaryImportOrigin.equals(BeneficiaryImportOrigin.MCTS)) {
+            mother = (MctsMother) record.get(KilkariConstants.BENEFICIARY_ID);
+            msisdn = (Long) record.get(KilkariConstants.MSISDN);
+            abortion = (Boolean) record.get(KilkariConstants.ABORTION);
+            stillBirth = (Boolean) record.get(KilkariConstants.STILLBIRTH);
+            lastUpdatedDateNic = (LocalDate) record.get(KilkariConstants.LAST_UPDATE_DATE);
+            beneficiaryId = mother.getBeneficiaryId();
+        } else {
+            beneficiaryId = (String) record.get(KilkariConstants.RCH_ID);  // TODO: Customize variable once u finalize on subscriptionerror
+            String mctsId = (String) record.get(KilkariConstants.MCTS_ID);
+            mother = mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance(beneficiaryId, mctsId);
+            msisdn = (Long) record.get(KilkariConstants.MOBILE_NO);
+            abortion = (Boolean) record.get(KilkariConstants.ABORTION_TYPE);
+            stillBirth = (Boolean) record.get(KilkariConstants.DELIVERY_OUTCOMES);
+            lastUpdatedDateNic = (LocalDate) record.get(KilkariConstants.EXECUTION_DATE);
+        }
+
         String name = (String) record.get(KilkariConstants.BENEFICIARY_NAME);
-        Long msisdn = (Long) record.get(KilkariConstants.MSISDN);
         DateTime lmp = (DateTime) record.get(KilkariConstants.LMP);
         DateTime motherDOB = (DateTime) record.get(KilkariConstants.MOTHER_DOB);
-        Boolean abortion = (Boolean) record.get(KilkariConstants.ABORTION);
-        Boolean stillBirth = (Boolean) record.get(KilkariConstants.STILLBIRTH);
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
-        LocalDate mctsUpdatedDateNic = (LocalDate) record.get(KilkariConstants.LAST_UPDATE_DATE);
 
         // validate msisdn
-        if (!validateMsisdn(msisdn, SubscriptionPackType.PREGNANCY)) {
+        if (!validateMsisdn(msisdn, SubscriptionPackType.PREGNANCY, beneficiaryImportOrigin)) {
             return false;
         }
 
         // validate lmp date. We do not sanitize for lmp in the future to be in sync with MCTS data
         // NOTE: getId is a way to see if this is a new user. We only accept new users if they
         // have 12 weeks left in the pack. For existing users, their lmp could be updated to an earlier date
-        if (mother.getId() == null && !validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn)) {
+        if (mother.getId() == null && !validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryImportOrigin)) {
             return false;
         }
 
@@ -212,30 +258,41 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             MctsBeneficiaryUtils.setLocationFields(locationService.getLocations(record), mother);
         } catch (InvalidLocationException le) {
             LOGGER.error(le.toString());
-            subscriptionErrorDataService.create(new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_LOCATION,
-                    SubscriptionPackType.PREGNANCY, le.getMessage()));
+            subscriptionErrorDataService.create(new SubscriptionError(msisdn, beneficiaryId, SubscriptionRejectionReason.INVALID_LOCATION,
+                    SubscriptionPackType.PREGNANCY, le.getMessage(), beneficiaryImportOrigin));
             return false;
         }
 
         //validate if it's an updated record compared to one from database
-        if (mother.getUpdatedDateNic() != null && (mctsUpdatedDateNic == null || mother.getUpdatedDateNic().isAfter(mctsUpdatedDateNic))) {
-            subscriptionErrorDataService.create(new SubscriptionError(msisdn, mother.getBeneficiaryId(),
-                    SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY, "Updated Record exits"));
-            return false;
-        }
-
-        //validate if an ACTIVE child is already present for the mother. If yes, ignore the update
-        if (childAlreadyPresent(mother.getBeneficiaryId())) {
-            subscriptionErrorDataService.create(new SubscriptionError(msisdn, mother.getBeneficiaryId(),
-                    SubscriptionRejectionReason.ACTIVE_CHILD_PRESENT, SubscriptionPackType.PREGNANCY, "Active child is present for this mother."));
+        if (mother.getUpdatedDateNic() != null && (lastUpdatedDateNic == null || mother.getUpdatedDateNic().isAfter(lastUpdatedDateNic))) {
+            subscriptionErrorDataService.create(new SubscriptionError(msisdn, beneficiaryId,
+                    SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY, "Updated Record exits", beneficiaryImportOrigin));
             return false;
         }
 
         mother.setName(name);
         mother.setDateOfBirth(motherDOB);
-        mother.setUpdatedDateNic(mctsUpdatedDateNic);
+        mother.setUpdatedDateNic(lastUpdatedDateNic);
 
-        Subscription subscription = subscriberService.updateMotherSubscriber(msisdn, mother, lmp);
+        if (beneficiaryImportOrigin.equals(BeneficiaryImportOrigin.MCTS)) {
+            //validate if an ACTIVE child is already present for the mother. If yes, ignore the update
+            if (childAlreadyPresent(mother.getBeneficiaryId())) {
+                subscriptionErrorDataService.create(new SubscriptionError(msisdn, beneficiaryId,
+                        SubscriptionRejectionReason.ACTIVE_CHILD_PRESENT, SubscriptionPackType.PREGNANCY, "Active child is present for this mother.", beneficiaryImportOrigin));
+                return false;
+            }
+        } else {
+            Long caseNo = (Long) record.get(KilkariConstants.CASE_NO);
+            if ((mother.getId() != null) && !caseNoValidation(mother, caseNo)) {  // TODO: just one or different rejection reasons?
+                subscriptionErrorDataService.create(new SubscriptionError(msisdn, beneficiaryId,
+                        SubscriptionRejectionReason.INVALID_CASE_NO, SubscriptionPackType.PREGNANCY, "Not a valid Case no to enable multiple Pregnancy", beneficiaryImportOrigin));
+                return false;
+            }
+            mother.setCaseNo(caseNo);
+        }
+
+        Subscription subscription = subscriberService.updateMotherSubscriber(msisdn, mother, lmp, beneficiaryImportOrigin);
+
         // We rejected the update/create for the subscriber
         if (subscription == null) {
             return false;
@@ -258,28 +315,44 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
-    public boolean importChildRecord(Map<String, Object> record) {
+    public boolean importChildRecord(Map<String, Object> record, BeneficiaryImportOrigin beneficiaryImportOrigin) {  //NOPMD NcssMethodCount
         if (childPack == null) {
             childPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.CHILD);
         }
 
-        MctsChild child = (MctsChild) record.get(KilkariConstants.BENEFICIARY_ID);
+        MctsChild child;
+        MctsMother mother;
+        Long msisdn;
+        LocalDate lastUpdatedDateNic;
+        String beneficiaryId;
+
+        if (beneficiaryImportOrigin.equals(BeneficiaryImportOrigin.MCTS)) {
+            child = (MctsChild) record.get(KilkariConstants.BENEFICIARY_ID);
+            msisdn = (Long) record.get(KilkariConstants.MSISDN);
+            mother = (MctsMother) record.get(KilkariConstants.MOTHER_ID);
+            lastUpdatedDateNic = (LocalDate) record.get(KilkariConstants.LAST_UPDATE_DATE);
+            beneficiaryId = child.getBeneficiaryId();
+        } else {
+            beneficiaryId = (String) record.get(KilkariConstants.RCH_ID);
+            child = mctsBeneficiaryValueProcessor.getOrCreateRchChildInstance(beneficiaryId, (String) record.get(KilkariConstants.MCTS_ID));
+            mother = mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance((String) record.get(KilkariConstants.RCH_MOTHER_ID), (String) record.get(KilkariConstants.MCTS_MOTHER_ID));
+            msisdn = (Long) record.get(KilkariConstants.MOBILE_NO);
+            lastUpdatedDateNic = (LocalDate) record.get(KilkariConstants.EXECUTION_DATE);
+        }
+
         String name = (String) record.get(KilkariConstants.BENEFICIARY_NAME);
-        Long msisdn = (Long) record.get(KilkariConstants.MSISDN);
-        MctsMother mother = (MctsMother) record.get(KilkariConstants.MOTHER_ID);
         DateTime dob = (DateTime) record.get(KilkariConstants.DOB);
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
-        LocalDate mctsUpdatedDateNic = (LocalDate) record.get(KilkariConstants.LAST_UPDATE_DATE);
 
         // validate msisdn
-        if (!validateMsisdn(msisdn, SubscriptionPackType.CHILD)) {
+        if (!validateMsisdn(msisdn, SubscriptionPackType.CHILD, beneficiaryImportOrigin)) {
             return false;
         }
 
         // validate dob. We do not sanitize for dob in the future to be in sync with MCTS data
         // NOTE: getId is a way to check for new user. We only accept new children if they have 12 weeks left
         // in the pack. Existing children could have their dob udpated to an earlier date
-        if (child.getId() == null && !validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn)) {
+        if (child.getId() == null && !validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, beneficiaryImportOrigin)) {
             return false;
         }
 
@@ -288,23 +361,23 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             MctsBeneficiaryUtils.setLocationFields(locationService.getLocations(record), child);
         } catch (InvalidLocationException le) {
             LOGGER.error(le.toString());
-            subscriptionErrorDataService.create(new SubscriptionError(msisdn, child.getBeneficiaryId(),
-                    SubscriptionRejectionReason.INVALID_LOCATION, SubscriptionPackType.CHILD, le.getMessage()));
+            subscriptionErrorDataService.create(new SubscriptionError(msisdn, beneficiaryId,
+                    SubscriptionRejectionReason.INVALID_LOCATION, SubscriptionPackType.CHILD, le.getMessage(), beneficiaryImportOrigin));
             return false;
         }
 
         //validate if it's an updated record compared to one from database
-        if (child.getUpdatedDateNic() != null && (mctsUpdatedDateNic == null || child.getUpdatedDateNic().isAfter(mctsUpdatedDateNic))) {
-            subscriptionErrorDataService.create(new SubscriptionError(msisdn, child.getBeneficiaryId(),
-                    SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD, "Updated Record exits"));
+        if (child.getUpdatedDateNic() != null && (lastUpdatedDateNic == null || child.getUpdatedDateNic().isAfter(lastUpdatedDateNic))) {
+            subscriptionErrorDataService.create(new SubscriptionError(msisdn, beneficiaryId,
+                    SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD, "Updated Record exits", beneficiaryImportOrigin));
             return false;
         }
 
         child.setName(name);
         child.setMother(mother);
-        child.setUpdatedDateNic(mctsUpdatedDateNic);
+        child.setUpdatedDateNic(lastUpdatedDateNic);
 
-        Subscription childSubscription = subscriberService.updateChildSubscriber(msisdn, child, dob);
+        Subscription childSubscription = subscriberService.updateChildSubscriber(msisdn, child, dob, beneficiaryImportOrigin);
         // child subscription create/update was rejected
         if (childSubscription == null) {
             return false;
@@ -312,15 +385,23 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         // a new child subscription was created -- deactivate mother's pregnancy subscription if she has one
         Subscriber subscriber = childSubscription.getSubscriber();
+        MctsMother childMother = subscriber.getMother();
+        String existingMotherId;
+        String newMotherId;
 
-        if ((mother != null) && (mother.equals(subscriber.getMother()))) {
-
+        if (beneficiaryImportOrigin.equals(BeneficiaryImportOrigin.MCTS)) {
+            existingMotherId = (childMother != null) ? childMother.getBeneficiaryId() : null;
+            newMotherId = (mother != null) ? mother.getBeneficiaryId() : null;
+        } else {
+            existingMotherId = (childMother != null) ? childMother.getRchId() : null;
+            newMotherId = (mother != null) ? mother.getRchId() : null;
+        }
+        if ((mother != null) && ((existingMotherId != null) && newMotherId.equals(existingMotherId))) {  // TODO: (mother != null) and (mother.equals(subscriber.getMother())) replaced with this
             Subscription pregnancySubscription = subscriptionService.getActiveSubscription(subscriber,
                     SubscriptionPackType.PREGNANCY);
             if (pregnancySubscription != null) {
                 subscriptionService.deactivateSubscription(pregnancySubscription, DeactivationReason.LIVE_BIRTH);
             }
-
         }
 
         if ((death != null) && death) {
@@ -330,13 +411,95 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return true;
     }
 
-    private boolean validateMsisdn(Long msisdn, SubscriptionPackType packType) {
+    private boolean validateMsisdn(Long msisdn, SubscriptionPackType packType, BeneficiaryImportOrigin importOrigin) {
         if (msisdn == null) {
             subscriptionErrorDataService.create(
-                    new SubscriptionError(-1, SubscriptionRejectionReason.MISSING_MSISDN, packType));
+                    new SubscriptionError(-1, SubscriptionRejectionReason.MISSING_MSISDN, packType, importOrigin));
             return false;
         }
 
+        return true;
+    }
+
+    private boolean validateReferenceDate(DateTime referenceDate, SubscriptionPackType packType, Long msisdn, BeneficiaryImportOrigin importOrigin) {
+
+        if (referenceDate == null) {
+            subscriptionErrorDataService.create(
+                    new SubscriptionError(msisdn,
+                            (packType == SubscriptionPackType.PREGNANCY) ?
+                                    SubscriptionRejectionReason.MISSING_LMP :
+                                    SubscriptionRejectionReason.MISSING_DOB,
+                            packType, importOrigin));
+            return false;
+        }
+
+        if (packType == SubscriptionPackType.PREGNANCY) {
+            String referenceDateValidationError = pregnancyPack.isReferenceDateValidForPack(referenceDate);
+            if (!referenceDateValidationError.isEmpty()) {
+                subscriptionErrorDataService.create(
+                        new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_LMP, SubscriptionPackType.PREGNANCY, referenceDateValidationError, importOrigin));
+                return false;
+            }
+        } else { // childPack
+            String referenceDateValidationError = childPack.isReferenceDateValidForPack(referenceDate);
+            if (!referenceDateValidationError.isEmpty()) {
+                subscriptionErrorDataService.create(
+                        new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_DOB, SubscriptionPackType.CHILD, referenceDateValidationError, importOrigin));
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean multiPregnancyCheck(MctsMother mother, Boolean match) {
+        Subscriber subscriber = subscriberService.getSubscriberByBeneficiary(mother);
+        if (subscriber == null) {
+            return (!match);  //Reject
+        } else {
+            Subscription subscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY);
+            if (subscription == null) {
+                return (!match);
+            } else {
+                if (!match) {
+                    LOGGER.error("Cant update CaseNo when we have active Subscription for the older one for RchId {}", mother.getRchId());
+                }
+                return match;
+            }
+        }
+    }
+
+    private boolean caseNoValidation(MctsMother mother, Long caseNo) {
+        Long existingCaseNo = mother.getCaseNo();
+        Boolean matches;
+
+        if (existingCaseNo == null) {
+            if (caseNo == null) {
+                // Both caseNo matches
+                matches = true;
+                multiPregnancyCheck(mother, matches);
+            } else {
+                // Reject if there is any active Subscription else Update mother details.
+                matches = false;
+                multiPregnancyCheck(mother, matches);
+            }
+        } else {
+            if (caseNo == null) {
+                return false;
+            } else {
+                if (existingCaseNo == caseNo) {
+                    // Both caseNo matches
+                    matches = true;
+                    multiPregnancyCheck(mother, matches);
+                } else if (existingCaseNo < caseNo) {
+                    // Reject if there is any active Subscription else Update mother details.
+                    matches = false;
+                    multiPregnancyCheck(mother, matches);
+                } else {
+                    return false;
+                }
+            }
+        }
         return true;
     }
 
@@ -370,41 +533,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
     }
 
-    private boolean validateReferenceDate(DateTime referenceDate, SubscriptionPackType packType, Long msisdn) {
-
-        if (referenceDate == null) {
-            subscriptionErrorDataService.create(
-                    new SubscriptionError(msisdn,
-                            (packType == SubscriptionPackType.PREGNANCY) ?
-                                    SubscriptionRejectionReason.MISSING_LMP :
-                                    SubscriptionRejectionReason.MISSING_DOB,
-                            packType));
-            return false;
-        }
-
-        if (packType == SubscriptionPackType.PREGNANCY) {
-            String referenceDateValidationError = pregnancyPack.isReferenceDateValidForPack(referenceDate);
-            if (!referenceDateValidationError.isEmpty()) {
-                subscriptionErrorDataService.create(
-                        new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_LMP, SubscriptionPackType.PREGNANCY, referenceDateValidationError));
-                return false;
-            }
-        } else { // childPack
-            String referenceDateValidationError = childPack.isReferenceDateValidForPack(referenceDate);
-            if (!referenceDateValidationError.isEmpty()) {
-                subscriptionErrorDataService.create(
-                        new SubscriptionError(msisdn, SubscriptionRejectionReason.INVALID_DOB, SubscriptionPackType.CHILD, referenceDateValidationError));
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     private Map<String, CellProcessor> getMotherProcessorMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
 
         MctsBeneficiaryUtils.getBeneficiaryLocationMapping(mapping);
+        getMctsRchMotherMapping(mapping);
 
         mapping.put(KilkariConstants.BENEFICIARY_ID, new GetInstanceByString<MctsMother>() {
             @Override
@@ -412,23 +545,10 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 return mctsBeneficiaryValueProcessor.getOrCreateMotherInstance(value);
             }
         });
-        mapping.put(KilkariConstants.BENEFICIARY_NAME, new GetString());
         mapping.put(KilkariConstants.MSISDN, new Optional(new GetInstanceByString<Long>() {
             @Override
             public Long retrieve(String value) {
                 return mctsBeneficiaryValueProcessor.getMsisdnByString(value);
-            }
-        }));
-        mapping.put(KilkariConstants.LMP, new Optional(new GetInstanceByString<DateTime>() {
-            @Override
-            public DateTime retrieve(String value) {
-                return mctsBeneficiaryValueProcessor.getDateByString(value);
-            }
-        }));
-        mapping.put(KilkariConstants.MOTHER_DOB, new Optional(new GetInstanceByString<DateTime>() {
-            @Override
-            public DateTime retrieve(String value) {
-                return mctsBeneficiaryValueProcessor.getDateByString(value);
             }
         }));
         mapping.put(KilkariConstants.ABORTION, new Optional(new GetInstanceByString<Boolean>() {
@@ -443,12 +563,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 return mctsBeneficiaryValueProcessor.getStillBirthFromString(value);
             }
         }));
-        mapping.put(KilkariConstants.DEATH, new Optional(new GetInstanceByString<Boolean>() {
-            @Override
-            public Boolean retrieve(String value) {
-                return mctsBeneficiaryValueProcessor.getDeathFromString(value);
-            }
-        }));
         mapping.put(KilkariConstants.LAST_UPDATE_DATE, new Optional(new GetInstanceByString<LocalDate>() {
             @Override
             public LocalDate retrieve(String value) {
@@ -458,10 +572,75 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return mapping;
     }
 
+    private Map<String, CellProcessor> getRchMotherProcessorMapping() {
+        Map<String, CellProcessor> mapping = new HashMap<>();
+
+        MctsBeneficiaryUtils.getBeneficiaryLocationMapping(mapping);
+        getMctsRchMotherMapping(mapping);
+
+        mapping.put(KilkariConstants.RCH_ID, new Optional(new GetString()));
+        mapping.put(KilkariConstants.MCTS_ID, new Optional(new GetString()));
+        mapping.put(KilkariConstants.MOBILE_NO, new Optional(new GetInstanceByString<Long>() {
+            @Override
+            public Long retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getMsisdnByString(value);
+            }
+        }));
+        mapping.put(KilkariConstants.ABORTION_TYPE, new Optional(new GetInstanceByString<Boolean>() {
+            @Override
+            public Boolean retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getAbortionDataFromString(value);
+            }
+        }));
+        mapping.put(KilkariConstants.DELIVERY_OUTCOMES, new Optional(new GetInstanceByString<Boolean>() {
+            @Override
+            public Boolean retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getStillBirthFromString(value);
+            }
+        }));
+        mapping.put(KilkariConstants.EXECUTION_DATE, new Optional(new GetInstanceByString<LocalDate>() {
+            @Override
+            public LocalDate retrieve(String value) {
+                return (LocalDate) mctsBeneficiaryValueProcessor.getDateByString(value).toLocalDate();
+            }
+        }));
+        mapping.put(KilkariConstants.CASE_NO, new Optional(new GetInstanceByString<Long>() {
+            @Override
+            public Long retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getCaseNoByString(value);
+            }
+        }));
+        return mapping;
+    }
+
+    private void getMctsRchMotherMapping(Map<String, CellProcessor> mapping) {
+
+        mapping.put(KilkariConstants.BENEFICIARY_NAME, new GetString());
+        mapping.put(KilkariConstants.LMP, new Optional(new GetInstanceByString<DateTime>() {
+            @Override
+            public DateTime retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getDateByString(value);
+            }
+        }));
+        mapping.put(KilkariConstants.MOTHER_DOB, new Optional(new GetInstanceByString<DateTime>() {
+            @Override
+            public DateTime retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getDateByString(value);
+            }
+        }));
+        mapping.put(KilkariConstants.DEATH, new Optional(new GetInstanceByString<Boolean>() {
+            @Override
+            public Boolean retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getDeathFromString(value);
+            }
+        }));
+    }
+
     private Map<String, CellProcessor> getChildProcessorMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
 
         MctsBeneficiaryUtils.getBeneficiaryLocationMapping(mapping);
+        getMctsRchChildMapping(mapping);
 
         mapping.put(KilkariConstants.BENEFICIARY_ID, new GetInstanceByString<MctsChild>() {
             @Override
@@ -469,7 +648,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 return mctsBeneficiaryValueProcessor.getChildInstanceByString(value);
             }
         });
-        mapping.put(KilkariConstants.BENEFICIARY_NAME, new Optional(new GetString()));
         mapping.put(KilkariConstants.MOTHER_ID, new Optional(new GetInstanceByString<MctsMother>() {
             @Override
             public MctsMother retrieve(String value) {
@@ -482,6 +660,43 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 return mctsBeneficiaryValueProcessor.getMsisdnByString(value);
             }
         }));
+        mapping.put(KilkariConstants.LAST_UPDATE_DATE, new Optional(new GetInstanceByString<LocalDate>() {
+            @Override
+            public LocalDate retrieve(String value) {
+                return (LocalDate) mctsBeneficiaryValueProcessor.getDateByString(value).toLocalDate();
+            }
+        }));
+        return mapping;
+    }
+
+    private Map<String, CellProcessor> getRchChildProcessorMapping() {
+        Map<String, CellProcessor> mapping = new HashMap<>();
+
+        MctsBeneficiaryUtils.getBeneficiaryLocationMapping(mapping);
+        getMctsRchChildMapping(mapping);
+
+        mapping.put(KilkariConstants.RCH_ID, new Optional(new GetString()));
+        mapping.put(KilkariConstants.RCH_MOTHER_ID, new Optional(new GetString()));
+        mapping.put(KilkariConstants.MCTS_ID, new Optional(new GetString()));
+        mapping.put(KilkariConstants.MCTS_MOTHER_ID, new Optional(new GetString()));
+        mapping.put(KilkariConstants.MOBILE_NO, new Optional(new GetInstanceByString<Long>() {
+            @Override
+            public Long retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getMsisdnByString(value);
+            }
+        }));
+        mapping.put(KilkariConstants.EXECUTION_DATE, new Optional(new GetInstanceByString<LocalDate>() {
+            @Override
+            public LocalDate retrieve(String value) {
+                return (LocalDate) mctsBeneficiaryValueProcessor.getDateByString(value).toLocalDate();
+            }
+        }));
+        return mapping;
+    }
+
+    private void getMctsRchChildMapping(Map<String, CellProcessor> mapping) {
+
+        mapping.put(KilkariConstants.BENEFICIARY_NAME, new GetString());
         mapping.put(KilkariConstants.DOB, new Optional(new GetInstanceByString<DateTime>() {
             @Override
             public DateTime retrieve(String value) {
@@ -494,12 +709,5 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 return mctsBeneficiaryValueProcessor.getDeathFromString(value);
             }
         }));
-        mapping.put(KilkariConstants.LAST_UPDATE_DATE, new Optional(new GetInstanceByString<LocalDate>() {
-            @Override
-            public LocalDate retrieve(String value) {
-                return (LocalDate) mctsBeneficiaryValueProcessor.getDateByString(value).toLocalDate();
-            }
-        }));
-        return mapping;
     }
 }

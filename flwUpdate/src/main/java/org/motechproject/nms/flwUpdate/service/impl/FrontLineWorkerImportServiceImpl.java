@@ -19,6 +19,7 @@ import org.motechproject.nms.flw.repository.FlwErrorDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.flw.utils.FlwMapper;
+import org.motechproject.nms.flwUpdate.domain.CsvImportType;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.props.service.LogHelper;
@@ -69,22 +70,37 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
      */
     @Override
     @Transactional
-    public void importData(Reader reader) throws IOException {
+    public void importData(Reader reader, CsvImportType csvImportType) throws IOException {
         BufferedReader bufferedReader = new BufferedReader(reader);
 
-        State state = importHeader(bufferedReader);
+        State state = null;
+        Map<String, CellProcessor> cellProcessorMapper;
+        String flwType;
+
+        if (csvImportType.equals(CsvImportType.MCTS)) {
+            cellProcessorMapper = this.getProcessorMapping();
+            flwType = FlwConstants.TYPE;
+            state = importHeader(bufferedReader);
+        } else {
+            cellProcessorMapper = this.getRchFlwProcessorMapping();
+            flwType = FlwConstants.FLW_TYPE;
+        }
 
         CsvMapImporter csvImporter = new CsvImporterBuilder()
-                .setProcessorMapping(getProcessorMapping())
+                .setProcessorMapping(cellProcessorMapper)
                 .setPreferences(CsvPreference.TAB_PREFERENCE)
                 .createAndOpen(bufferedReader);
         try {
             Map<String, Object> record;
             while (null != (record = csvImporter.read())) {
-                String designation = (String) record.get(FlwConstants.TYPE);
+                String designation = (String) record.get(flwType);
                 designation = (designation != null) ? designation.trim() : designation;
                 if (FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation)) {
-                    importFrontLineWorker(record, state);
+                    if (csvImportType.equals(CsvImportType.MCTS)) {
+                        importFrontLineWorkerMcts(record, state);
+                    } else {
+                        importFrontLineWorkerRch(record);
+                    }
                 }
             }
         } catch (ConstraintViolationException e) {
@@ -96,7 +112,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
 
     @Override
     @Transactional
-    public void importFrontLineWorker(Map<String, Object> record, State state) throws InvalidLocationException, FlwExistingRecordException {
+    public void importFrontLineWorkerMcts(Map<String, Object> record, State state) throws InvalidLocationException, FlwExistingRecordException {
         FrontLineWorker flw = flwFromRecord(record, state);
 
         record.put(FlwConstants.STATE_ID, state.getCode());
@@ -116,8 +132,122 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                     mobileAcademyService.updateMsisdn(flwInstance.getId(), oldMsisdn, newMsisdn);
                 }
             } else {
-                throw new FlwExistingRecordException("Updated record exists in the database");
+                throw new FlwExistingRecordException(FlwConstants.FLW_EXISTS_EXCEPTION);
             }
+        }
+    }
+
+    @Override
+    @Transactional
+    public boolean importFrontLineWorkerRch(Map<String, Object> record) throws InvalidLocationException, FlwExistingRecordException {
+
+        long stateId = (long) record.get(FlwConstants.STATE_ID);
+        long districtId = (long) record.get(FlwConstants.DISTRICT_ID);
+        String rchFlwId = record.get(FlwConstants.FLW_ID).toString();
+        long contactNumber = (long) record.get(FlwConstants.MOBILE_NO);
+        String flwType = (String) record.get(FlwConstants.FLW_TYPE);
+
+        if (!validatetypeASHA(flwType)) {
+            return false;
+        }
+        // validate contact Number
+        if (!validateField10Digits(contactNumber)) {
+            flwErrorDataService.create(new FlwError(rchFlwId, stateId, districtId, FlwErrorReason.INVALID_PHONE_NUMBER));
+            return false;
+        }
+
+        // Validate RCH Flw ID
+        if (!validateFieldPresent(rchFlwId)) {
+            flwErrorDataService.create(new FlwError(rchFlwId, stateId, districtId, FlwErrorReason.INVALID_RCH_FLW_ID));
+            return false;
+        }
+
+        // validate State
+        State state = locationService.getState(stateId);
+        if (state == null) {
+            flwErrorDataService.create(new FlwError(rchFlwId, stateId, districtId, FlwErrorReason.INVALID_LOCATION_STATE));
+            return false;
+        }
+
+        // validate District
+        District district = locationService.getDistrict(stateId, districtId);
+        if (district == null) {
+            flwErrorDataService.create(new FlwError(rchFlwId, stateId, districtId, FlwErrorReason.INVALID_LOCATION_DISTRICT));
+            return false;
+        }
+
+        return updateFrontLineWorker(contactNumber, rchFlwId, state, districtId, record);
+    }
+
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
+    public boolean updateFrontLineWorker(long contactNumber, String rchFlwId, State state, long districtId, Map<String, Object> record) throws InvalidLocationException, FlwExistingRecordException {
+
+        FrontLineWorker existingFlwByNumber = frontLineWorkerService.getByContactNumber(contactNumber);
+        FrontLineWorker existingFlwByRchFlwId = frontLineWorkerService.getByMctsFlwIdAndState(rchFlwId, state);
+        LocalDate rchUpdatedDateNic = (LocalDate) record.get(FlwConstants.EXECUTION_DATE);
+
+        Map<String, Object> location = new HashMap<>();
+        try {
+            location = locationService.getLocations(record, false);
+
+            if (existingFlwByRchFlwId != null && existingFlwByNumber != null) {
+
+                if (existingFlwByRchFlwId.getMctsFlwId().equalsIgnoreCase(existingFlwByNumber.getMctsFlwId()) &&
+                        existingFlwByRchFlwId.getState().equals(existingFlwByNumber.getState())) {
+                    // we are trying to update the same existing flw. set fields and update
+                    if (rchUpdatedDateNic != null && (existingFlwByRchFlwId.getUpdatedDateNic() == null || rchUpdatedDateNic.isAfter(existingFlwByRchFlwId.getUpdatedDateNic()) || rchUpdatedDateNic.isEqual(existingFlwByRchFlwId.getUpdatedDateNic()))) {
+                        LOGGER.debug("Updating existing user with same phone number");
+                        frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByRchFlwId, record, location));
+                        return true;
+                    } else {
+                        throw new FlwExistingRecordException(FlwConstants.FLW_EXISTS_EXCEPTION);
+                    }
+                } else {
+                    // we are trying to update 2 different users and/or phone number used by someone else
+                    LOGGER.debug("Existing flw but phone number(update) already in use");
+                    flwErrorDataService.create(new FlwError(rchFlwId, state.getId(), districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
+                    return false;
+                }
+            } else if (existingFlwByRchFlwId != null && existingFlwByNumber == null) {
+                // trying to update the phone number of the person. possible migration scenario
+                // making design decision that flw will lose all progress when phone number is changed. Usage and tracking is not
+                // worth the effort & we don't really know that its the same flw
+                FrontLineWorker flwInstance = FlwMapper.updateFlw(existingFlwByRchFlwId, record, location);
+                if (rchUpdatedDateNic != null && (flwInstance.getUpdatedDateNic() == null || rchUpdatedDateNic.isAfter(flwInstance.getUpdatedDateNic()) || rchUpdatedDateNic.isEqual(flwInstance.getUpdatedDateNic()))) {
+                    LOGGER.debug("Updating phone number for flw");
+                    updateFlwMaMsisdn(flwInstance, existingFlwByRchFlwId.getContactNumber(), contactNumber);
+                    return true;
+                } else {
+                    throw new FlwExistingRecordException(FlwConstants.FLW_EXISTS_EXCEPTION);
+                }
+            } else if (existingFlwByRchFlwId == null && existingFlwByNumber != null) {
+
+                if (existingFlwByNumber.getMctsFlwId() == null) {
+                    // we just got data from rch for a previous anonymous user that subscribed by phone number
+                    // merging those records
+                    if (rchUpdatedDateNic != null && (existingFlwByNumber.getUpdatedDateNic() == null || rchUpdatedDateNic.isAfter(existingFlwByNumber.getUpdatedDateNic()) || rchUpdatedDateNic.isEqual(existingFlwByNumber.getUpdatedDateNic()))) {
+                        LOGGER.debug("Merging mcts data with previously anonymous user");
+                        frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByNumber, record, location));
+                        return true;
+                    } else {
+                        throw new FlwExistingRecordException(FlwConstants.FLW_EXISTS_EXCEPTION);
+                    }
+                } else {
+                    // phone number used by someone else.
+                    LOGGER.debug("New flw but phone number(update) already in use");
+                    flwErrorDataService.create(new FlwError(rchFlwId, state.getId(), districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
+                    return false;
+                }
+
+            } else { // existingFlwByRchFlwId & existingFlwByNumber are null)
+                // new user. set fields and add
+                LOGGER.debug("Adding new flw user");
+                frontLineWorkerService.add(FlwMapper.createFlw(record, location));
+                return true;
+            }
+        } catch (InvalidLocationException ile) {
+            LOGGER.debug(ile.toString());
+            return false;
         }
     }
 
@@ -258,9 +388,33 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
 
     private Map<String, CellProcessor> getProcessorMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
+
+        getFlwLocationMapping(mapping);
+
         mapping.put(FlwConstants.ID, new GetString());
         mapping.put(FlwConstants.CONTACT_NO, new GetLong());
         mapping.put(FlwConstants.NAME, new GetString());
+        mapping.put(FlwConstants.TYPE, new Optional(new GetString()));
+        mapping.put(FlwConstants.UPDATED_ON, new Optional(new GetLocalDate()));
+
+        return mapping;
+    }
+
+    private Map<String, CellProcessor> getRchFlwProcessorMapping() {
+        Map<String, CellProcessor> mapping = new HashMap<>();
+
+        getFlwLocationMapping(mapping);
+
+        mapping.put(FlwConstants.FLW_ID, new GetString());
+        mapping.put(FlwConstants.MOBILE_NO, new GetLong());
+        mapping.put(FlwConstants.FLW_NAME, new GetString());
+        mapping.put(FlwConstants.FLW_TYPE, new Optional(new GetString()));
+        mapping.put(FlwConstants.EXECUTION_DATE, new Optional(new GetLocalDate()));
+
+        return mapping;
+    }
+
+    private void getFlwLocationMapping(Map<String, CellProcessor> mapping) {
 
         mapping.put(FlwConstants.STATE_ID, new Optional(new GetLong()));
 
@@ -282,11 +436,34 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         mapping.put(FlwConstants.CENSUS_VILLAGE_ID, new Optional(new GetLong()));
         mapping.put(FlwConstants.NON_CENSUS_VILLAGE_ID, new Optional(new GetLong()));
         mapping.put(FlwConstants.VILLAGE_NAME, new Optional(new GetString()));
+    }
 
-        mapping.put(FlwConstants.TYPE, new Optional(new GetString()));
-        mapping.put(FlwConstants.UPDATED_ON, new Optional(new GetLocalDate()));
+    private boolean validatetypeASHA(String type) {
+        if (!validateFieldPresent(type)) {
+            return false;
+        }
+        String designation = type.trim();
+        if (FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation)) {
+            return true;
+        }
+        return false;
+    }
 
-        return mapping;
+    private boolean validateFieldPresent(Object value) {
+        if (value != null) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean validateField10Digits(Long value) {
+        if (!validateFieldPresent(value)) {
+            return false;
+        }
+        if (value >= FlwConstants.SMALLEST_10_DIGIT_NUMBER && value <= FlwConstants.LARGEST_10_DIGIT_NUMBER) {
+            return true;
+        }
+        return false;
     }
 
     private String createErrorMessage(String message, int rowNumber) {

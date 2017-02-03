@@ -84,6 +84,7 @@
                         <Resource-Path>flwUpdate/resources</Resource-Path>
                         <Context-Path>flwUpdate</Context-Path>
                         <Export-Package>
+                            org.motechproject.nms.flwUpdate.domain;version=${project.version},
                             org.motechproject.nms.flwUpdate.service;version=${project.version}
                         </Export-Package>
                         <Import-Package>

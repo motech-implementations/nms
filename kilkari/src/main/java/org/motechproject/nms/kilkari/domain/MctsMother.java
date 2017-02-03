@@ -16,8 +16,23 @@ public class MctsMother extends MctsBeneficiary {
     @Field
     private DateTime dateOfBirth; // this field is needed to calculate mother's age for some Kilkari reports
 
+    @Field
+    private Long caseNo;
+
     public MctsMother(String beneficiaryId) {
         super(beneficiaryId);
+    }
+
+    public MctsMother(String rchId, String beneficiaryId) {
+        super(rchId, beneficiaryId);
+    }
+
+    public Long getCaseNo() {
+        return caseNo;
+    }
+
+    public void setCaseNo(Long caseNo) {
+        this.caseNo = caseNo;
     }
 
     public DateTime getDateOfBirth() {

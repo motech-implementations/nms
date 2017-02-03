@@ -8,7 +8,6 @@ import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.csv.service.CsvAuditService;
 import org.motechproject.nms.kilkari.domain.BeneficiaryImportOrigin;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
-import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,17 +23,16 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 /**
- * Controller that supports import of Kilkari subscribers (mother and child records) from MCTS
+ * Controller that supports import of Kilkari subscribers (mother and child records) from RCH
  */
 @Controller
-public class MctsBeneficiaryImportController {
+public class RchBeneficiaryImportController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RchBeneficiaryImportController.class);
 
 
     private AlertService alertService;
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
-    private MctsBeneficiaryUpdateService mctsBeneficiaryUpdateService;
     private CsvAuditService csvAuditService;
 
     @Autowired
@@ -48,19 +46,12 @@ public class MctsBeneficiaryImportController {
     }
 
     @Autowired
-    public void setMctsBeneficiaryUpdateService(MctsBeneficiaryUpdateService mctsBeneficiaryUpdateService) {
-        this.mctsBeneficiaryUpdateService = mctsBeneficiaryUpdateService;
-    }
-
-    @Autowired
     public void setCsvAuditService(CsvAuditService csvAuditService) {
         this.csvAuditService = csvAuditService;
     }
 
 
-
-
-    @RequestMapping(value = "/mother/import", method = RequestMethod.POST)
+    @RequestMapping(value = "/rch/mother/import", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void importMotherData(@RequestParam MultipartFile csvFile) {
 
@@ -69,21 +60,21 @@ public class MctsBeneficiaryImportController {
         int count = 0;
         try {
             try (InputStream in = csvFile.getInputStream()) {
-                count = mctsBeneficiaryImportService.importMotherData(new InputStreamReader(in), BeneficiaryImportOrigin.MCTS);
-                csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/mother/import");
+                count = mctsBeneficiaryImportService.importMotherData(new InputStreamReader(in), BeneficiaryImportOrigin.RCH);
+                csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/rch/mother/import");
             }
         } catch (CsvImportException e) {
-            logError(csvFile.getOriginalFilename(), "/kilkari/mother/import", e);
+            logError(csvFile.getOriginalFilename(), "/kilkari/rch/mother/import", e);
             throw e;
         } catch (Exception e) {
-            logError(csvFile.getOriginalFilename(), "/kilkari/mother/import", e);
+            logError(csvFile.getOriginalFilename(), "/kilkari/rch/mother/import", e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
         LOGGER.debug("importMotherData() END ({})", count > 0 ? timer.frequency(count) : timer.time());
     }
 
 
-    @RequestMapping(value = "/child/import", method = RequestMethod.POST)
+    @RequestMapping(value = "/rch/child/import", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void importChildData(@RequestParam MultipartFile csvFile) {
         LOGGER.debug("importChildData() BEGIN");
@@ -91,42 +82,23 @@ public class MctsBeneficiaryImportController {
         int count = 0;
         try {
             try (InputStream in = csvFile.getInputStream()) {
-                count = mctsBeneficiaryImportService.importChildData(new InputStreamReader(in), BeneficiaryImportOrigin.MCTS);
-                csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/child/import");
+                count = mctsBeneficiaryImportService.importChildData(new InputStreamReader(in), BeneficiaryImportOrigin.RCH);
+                csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/rch/child/import");
             }
         } catch (CsvImportException e) {
-            logError(csvFile.getOriginalFilename(), "/kilkari/child/import", e);
+            logError(csvFile.getOriginalFilename(), "/kilkari/rch/child/import", e);
             throw e;
         } catch (Exception e) {
-            logError(csvFile.getOriginalFilename(), "/kilkari/child/import", e);
+            logError(csvFile.getOriginalFilename(), "/kilkari/rch/child/import", e);
             throw new CsvImportException("An error occurred during CSV import", e);
         }
         LOGGER.debug("importChildData() END ({})", count > 0 ? timer.frequency(count) : timer.time());
     }
 
-    @RequestMapping(value = "/beneficiary/update", method = RequestMethod.POST)
-    @ResponseStatus(HttpStatus.OK)
-    public void updateBeneficiaryData(@RequestParam MultipartFile csvFile) {
-
-        LOGGER.debug("updateBeneficiaryData() BEGIN");
-        try {
-            try (InputStream in = csvFile.getInputStream()) {
-                mctsBeneficiaryUpdateService.updateBeneficiaryData(new InputStreamReader(in));
-                csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/beneficiary/update");
-            }
-        } catch (CsvImportException e) {
-            logError(csvFile.getOriginalFilename(), "/kilkari/beneficiary/update", e);
-            throw e;
-        } catch (Exception e) {
-            logError(csvFile.getOriginalFilename(), "/kilkari/beneficiary/update", e);
-            throw new CsvImportException("An error occurred during CSV import", e);
-        }
-    }
-
     private void logError(String fileName, String endpoint, Exception exception) {
         LOGGER.error(exception.getMessage(), exception);
         csvAuditService.auditFailure(fileName, endpoint, exception.getMessage());
-        alertService.create("mcts_import_error", "MCTS data import error", exception.getMessage(),
+        alertService.create("rch_import_error", "RCH data import error", exception.getMessage(),
                 AlertType.CRITICAL, AlertStatus.NEW, 0, null);
     }
 

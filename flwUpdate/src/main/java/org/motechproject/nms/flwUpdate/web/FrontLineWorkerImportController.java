@@ -6,6 +6,8 @@ import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.csv.service.CsvAuditService;
+import org.motechproject.nms.flw.utils.FlwConstants;
+import org.motechproject.nms.flwUpdate.domain.CsvImportType;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerUpdateImportService;
 import org.slf4j.Logger;
@@ -57,7 +59,7 @@ public class FrontLineWorkerImportController {
         } catch (Exception e) {
             logError(csvFile.getOriginalFilename(), "/flwUpdate/update/language", e, "front_line_workers_language_import_error",
                     "Front line workers language import error");
-            throw new CsvImportException("An error occurred during CSV import", e);
+            throw new CsvImportException(FlwConstants.CSV_IMPORT_ERROR, e);
         }
     }
 
@@ -77,7 +79,7 @@ public class FrontLineWorkerImportController {
         } catch (Exception e) {
             logError(csvFile.getOriginalFilename(), "/flwUpdate/update/msisdn", e, "front_line_workers_msisdn_import_error",
                     "Front line workers msisdn import error");
-            throw new CsvImportException("An error occurred during CSV import", e);
+            throw new CsvImportException(FlwConstants.CSV_IMPORT_ERROR, e);
         }
     }
 
@@ -87,20 +89,39 @@ public class FrontLineWorkerImportController {
 
         try {
             try (InputStream in = csvFile.getInputStream()) {
-                frontLineWorkerImportService.importData(new InputStreamReader(in));
+                frontLineWorkerImportService.importData(new InputStreamReader(in), CsvImportType.MCTS);
                 csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/flwUpdate/import");
             }
         } catch (CsvImportDataException e) {
-            logError(csvFile.getOriginalFilename(), "/flwUpdate/import", e, "front_line_workers_import_error",
-                    "Front line workers import error");
+            logError(csvFile.getOriginalFilename(), "/flwUpdate/import", e, FlwConstants.FLW_ERROR_ENTITY_ID,
+                    FlwConstants.FLW_ERROR_NAME);
             throw e;
         } catch (Exception e) {
-            logError(csvFile.getOriginalFilename(), "/flwUpdate/import", e, "front_line_workers_import_error",
-                    "Front line workers import error");
-            throw new CsvImportException("An error occurred during CSV import", e);
+            logError(csvFile.getOriginalFilename(), "/flwUpdate/import", e, FlwConstants.FLW_ERROR_ENTITY_ID,
+                    FlwConstants.FLW_ERROR_NAME);
+            throw new CsvImportException(FlwConstants.CSV_IMPORT_ERROR, e);
         }
     }
 
+    @RequestMapping(value = "/rch/import", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public void importFrontLineWorkersRch(@RequestParam MultipartFile csvFile) {
+
+        try {
+            try (InputStream in = csvFile.getInputStream()) {
+                frontLineWorkerImportService.importData(new InputStreamReader(in), CsvImportType.RCH);
+                csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/flwUpdate/rch/import");
+            }
+        } catch (CsvImportDataException e) {
+            logError(csvFile.getOriginalFilename(), "/flwUpdate/rch/import", e, FlwConstants.FLW_ERROR_ENTITY_ID,
+                    FlwConstants.FLW_ERROR_NAME);
+            throw e;
+        } catch (Exception e) {
+            logError(csvFile.getOriginalFilename(), "/flwUpdate/rch/import", e, FlwConstants.FLW_ERROR_ENTITY_ID,
+                    FlwConstants.FLW_ERROR_NAME);
+            throw new CsvImportException(FlwConstants.CSV_IMPORT_ERROR, e);
+        }
+    }
     private void logError(String fileName, String endpoint, Exception exception, String entityId, String name) {
         LOGGER.error(exception.getMessage(), exception);
         csvAuditService.auditFailure(fileName, endpoint, exception.getMessage());

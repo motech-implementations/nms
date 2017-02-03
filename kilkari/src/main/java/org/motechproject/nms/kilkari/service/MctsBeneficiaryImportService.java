@@ -1,5 +1,7 @@
 package org.motechproject.nms.kilkari.service;
 
+import org.motechproject.nms.kilkari.domain.BeneficiaryImportOrigin;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Map;
@@ -9,11 +11,11 @@ import java.util.Map;
  */
 public interface MctsBeneficiaryImportService {
 
-    int importMotherData(Reader reader) throws IOException;
+    int importMotherData(Reader reader, BeneficiaryImportOrigin beneficiaryImportOrigin) throws IOException;
 
-    int importChildData(Reader reader) throws IOException;
+    int importChildData(Reader reader, BeneficiaryImportOrigin beneficiaryImportOrigin) throws IOException;
 
-    boolean importMotherRecord(Map<String, Object> record);
+    boolean importMotherRecord(Map<String, Object> record, BeneficiaryImportOrigin beneficiaryImportOrigin);
 
-    boolean importChildRecord(Map<String, Object> record);
+    boolean importChildRecord(Map<String, Object> record, BeneficiaryImportOrigin beneficiaryImportOrigin);
 }

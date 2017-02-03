@@ -16,6 +16,7 @@ import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
+import org.motechproject.nms.kilkari.domain.BeneficiaryImportOrigin;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
@@ -215,7 +216,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                 boolean hpdValidation = validateHpdUser(hpdMap,
                         (long) recordMap.get(KilkariConstants.STATE_ID),
                         (long) recordMap.get(KilkariConstants.DISTRICT_ID));
-                if (hpdValidation && mctsBeneficiaryImportService.importMotherRecord(recordMap)) {
+                if (hpdValidation && mctsBeneficiaryImportService.importMotherRecord(recordMap, BeneficiaryImportOrigin.MCTS)) {
                     saved++;
                 } else {
                     rejected++;
@@ -307,7 +308,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                         (long) recordMap.get(KilkariConstants.STATE_ID),
                         (long) recordMap.get(KilkariConstants.DISTRICT_ID));
 
-                if (hpdValidation && mctsBeneficiaryImportService.importChildRecord(toMap(record))) {
+                if (hpdValidation && mctsBeneficiaryImportService.importChildRecord(toMap(record), BeneficiaryImportOrigin.MCTS)) {
                     saved++;
                 } else {
                     rejected++;
@@ -401,7 +402,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                 try {
                     // get user property map
                     Map<String, Object> recordMap = record.toFlwRecordMap();    // temp var used for debugging
-                    frontLineWorkerImportService.importFrontLineWorker(recordMap, state);
+                    frontLineWorkerImportService.importFrontLineWorkerMcts(recordMap, state);
                     saved++;
                 } catch (InvalidLocationException e) {
                     LOGGER.warn("Invalid location for FLW: ", e);
