@@ -48,6 +48,7 @@
                                             <xs:element name="Verifier_Remarks" type="xs:string" minOccurs="0"/>
                                             <xs:element name="GF_Address" type="xs:string" minOccurs="0"/>
                                             <xs:element name="Husband_Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="GF_Status" type="xs:string" minOccurs="0"/>
                                         </xs:sequence>
                                     </xs:complexType>
                                 </xs:element>
@@ -95,6 +96,7 @@
                             <Verifier_Remarks>Verifier_Remarks 1</Verifier_Remarks>
                             <GF_Address>GF_Address 1</GF_Address>
                             <Husband_Name>Husband_Name 1</Husband_Name>
+                            <GF_Status>Active</GF_Status>
                         </Records>
                         <Records diffgr:id="Records2" msdata:rowOrder="1">
                             <ID>112312</ID>
@@ -134,6 +136,7 @@
                             <Verifier_Remarks>verified</Verifier_Remarks>
                             <GF_Address>GF_Address 3</GF_Address>
                             <Husband_Name>Husband_Name 3</Husband_Name>
+                            <GF_Status>Active</GF_Status>
                         </Records>
                         <Records diffgr:id="Records3" msdata:rowOrder="2">
                             <ID>7116</ID>
@@ -166,6 +169,7 @@
                             <Verifier_Remarks/>
                             <GF_Address>GF_Address 2</GF_Address>
                             <Husband_Name>Husband_Name 2</Husband_Name>
+                            <GF_Status>Active</GF_Status>
                         </Records>
                         <Records diffgr:id="Records4" msdata:rowOrder="3">
                             <ID>2343</ID>
@@ -205,6 +209,7 @@
                             <Verifier_Remarks>Verifier_Remarks 1</Verifier_Remarks>
                             <GF_Address>GF_Address 1</GF_Address>
                             <Husband_Name>Husband_Name 1</Husband_Name>
+                            <GF_Status>Active</GF_Status>
                         </Records>
                     </NewDataSet>
                 </diffgr:diffgram>

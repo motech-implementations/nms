@@ -5,18 +5,18 @@ Password :
 From Date (dd-mm-yyyy) :	
 To Date (dd-mm-yyyy) :	
 		
-ID	District_ID	District_Name	Taluka_ID	Taluka_Name	HealthBlock_ID	HealthBlock_Name	PHC_ID	PHC_Name	SubCentre_ID	SubCentre_Name	Village_ID	Village_Name	Reg_Date	Name	Contact_No	Sex	Type	SMS_Reply	Aadhar_No	Created_On	Updated_On	Bank_ID	Branch_Name	IFSC_ID_Code	Bank_Name	Acc_No	Is_Aadhar_linked	Verify_Date	Verifier_Name	VerifierID	Call_Ans	IsPhoneNoCorrect	NoCall_Reason	NoPhone_Reason	Verifier_Remarks	GF_Address	Husband_Name
-72185	29	Koraput	0463	Similiguda	405	Kunduli	1238	CHC Kunduli	4434	Dhudhari	0	 	21-08-2014	Bishnu Priya Behera	9999999996	F	ASHA	 	 	24-04-2015	 	 	 	 	 	 		 	 	 			 	 	 	Dudhari	Ram Kumar Sabat
-72174	21	Kandhamal	0360	Phulabani Town	348	Phulbani	1427	PHC (N) Katringia	0	 	0	 	 	Archanarani Sahu	9439988582	F	ASHA	 	 	24-04-2015	 	 	 	 	 	 		 	 	 			 	 	 	Katringia	Mr Sahu
-72175	21	Kandhamal	0371	Kotagarh	337	Kotagarh	1393	CHC Subarnagiri	5130	Adari	0	 	 	Bandana Pradhan	9439988701	F	ASHA	 	 	24-04-2015	 	 	 	 	 	 		 	 	 			 	 	 	Adari	Mr Pradhan
-72176	19	Ganjam	0343	DIGAPAHANDI	275	DIGAPAHANDI	1799	BHISMAGIRI PHC-N	0	 	0	 	 	Nayan Kumar Barik	9439984360	F	ASHA	 	 	24-04-2015	24-04-2015	 	 	 	 	 		 	 	 			 	 	 	BHISMAGIRI SECTOR	GANGADHAR BARIK
-72177	2	Jharsuguda	0017	Lakhanpur P.S.	262	Lakhanpur	689	Lakhanpur CHC	2141	Kusuraloi	0	 	15-03-2013	Sanjukta Banchor	7890404708	F	ASHA	 	 	24-04-2015	 	 	 	 	 	 		 	 	 			 	 	 	At- Kusuraloi	Indramani Banchor
-72178	2	Jharsuguda	0017	Lakhanpur P.S.	262	Lakhanpur	689	Lakhanpur CHC	2142	Rampela	0	 	01-01-2014	Pinki Minz	7873663882	F	ASHA	 	 	24-04-2015	24-04-2015	 	 	 	 	 		 	 	 			 	 	 	At- Rampela	Nabor Minz
-72179	21	Kandhamal	0367	Baliguda	317	Baliguda	1271	CHC Barakhama	4705	Kutikia MCH	0	 	 	Sonali Silpa Nayak	9439988703	F	ASHA	 	 	24-04-2015	 	 	 	 	 	 		 	 	 			 	 	 	Kutikia	Mr Nayak
-72168	1	Bargarh	0013	Bhatli	175	BHATLI	250	BHATLI CHC	1096	BHATLI SC	0	 	 	Pratima Kumar	9439999245	F	ASHA	 	 	24-04-2015	 	 	 	 	 	 		 	 	 			 	 	 	Bhatli	Belar Sen
-72169	18	Puri	0304	Pipili	432	Pipli	1441	Managalpur CHC	5159	Bharatipur SC	28981	Bharatipur (28981)	 	Hemalata Behera	8596059653	F	ASHA	 	 	24-04-2015	24-04-2015	 	 	 	 	 		 	 	 			 	 	 	BHARATIPUR	RAMESH BEHERA
-72170	18	Puri	0304	Pipili	432	Pipli	1441	Managalpur CHC	5167	Danagahiri SC	10005284	Nuasahi *	 	Aisha Bibi	9938976266	F	ASHA	 	 	24-04-2015	24-04-2015	 	 	 	 	 		 	 	 			 	 	 	NUASAHI	XXX
-72171	18	Puri	111	Taluka	222	HealthBlock	333	PHC	444	SC	555	Village	 	Aisha Bibi	1138976266	F	ASHA	 	 	24-04-2015	24-04-2015	 	 	 	 	 		 	 	 			 	 	 	NUASAHI	XXX
-72172	18	Puri	111	Taluka	222	HealthBlock	333	PHC	444	SC	555	Village	 	Aisha Biba	1138976267	F	ANM	 	 	24-04-2015	24-04-2015	 	 	 	 	 		 	 	 			 	 	 	NUASAHI	XXX
-72173	18	Puri	111	Taluka	222	HealthBlock	333	PHC	444	SC	555	Village	 	Aisha Bibe	1138976268	F		 	 	24-04-2015	24-04-2015	 	 	 	 	 		 	 	 			 	 	 	NUASAHI	XXX
-72140	18	Puri	111	Taluka	222	HealthBlock	333	PHC	444	SC	555	Village	 	Aisha Bibu	1138976268	F	ANM 2	 	 	24-04-2015	24-04-2015	 	 	 	 	 		 	 	 			 	 	 	NUASAHI	XXX
+ID	District_ID	District_Name	Taluka_ID	Taluka_Name	HealthBlock_ID	HealthBlock_Name	PHC_ID	PHC_Name	SubCentre_ID	SubCentre_Name	Village_ID	Village_Name	Reg_Date	Name	Contact_No	Sex	Type	SMS_Reply	Aadhar_No	Created_On	Updated_On	Bank_ID	Branch_Name	IFSC_ID_Code	Bank_Name	Acc_No	Is_Aadhar_linked	Verify_Date	Verifier_Name	VerifierID	Call_Ans	IsPhoneNoCorrect	NoCall_Reason	NoPhone_Reason	Verifier_Remarks	GF_Address	Husband_Name	GF_Status
+72185	29	Koraput	0463	Similiguda	405	Kunduli	1238	CHC Kunduli	4434	Dhudhari	0	 	21-08-2014	Bishnu Priya Behera	9999999996	F	ASHA	 	 	24-04-2015	 	 	 	 	 	 		 	 	 			 	 	 	Dudhari	Ram Kumar Sabat	Active
+72174	21	Kandhamal	0360	Phulabani Town	348	Phulbani	1427	PHC (N) Katringia	0	 	0	 	 	Archanarani Sahu	9439988582	F	ASHA	 	 	24-04-2015	 	 	 	 	 	 		 	 	 			 	 	 	Katringia	Mr Sahu	Active
+72175	21	Kandhamal	0371	Kotagarh	337	Kotagarh	1393	CHC Subarnagiri	5130	Adari	0	 	 	Bandana Pradhan	9439988701	F	ASHA	 	 	24-04-2015	 	 	 	 	 	 		 	 	 			 	 	 	Adari	Mr Pradhan	Inactive
+72176	19	Ganjam	0343	DIGAPAHANDI	275	DIGAPAHANDI	1799	BHISMAGIRI PHC-N	0	 	0	 	 	Nayan Kumar Barik	9439984360	F	ASHA	 	 	24-04-2015	24-04-2015	 	 	 	 	 		 	 	 			 	 	 	BHISMAGIRI SECTOR	GANGADHAR BARIK	Active
+72177	2	Jharsuguda	0017	Lakhanpur P.S.	262	Lakhanpur	689	Lakhanpur CHC	2141	Kusuraloi	0	 	15-03-2013	Sanjukta Banchor	7890404708	F	ASHA	 	 	24-04-2015	 	 	 	 	 	 		 	 	 			 	 	 	At- Kusuraloi	Indramani Banchor	Active
+72178	2	Jharsuguda	0017	Lakhanpur P.S.	262	Lakhanpur	689	Lakhanpur CHC	2142	Rampela	0	 	01-01-2014	Pinki Minz	7873663882	F	ASHA	 	 	24-04-2015	24-04-2015	 	 	 	 	 		 	 	 			 	 	 	At- Rampela	Nabor Minz	Inactive
+72179	21	Kandhamal	0367	Baliguda	317	Baliguda	1271	CHC Barakhama	4705	Kutikia MCH	0	 	 	Sonali Silpa Nayak	9439988703	F	ASHA	 	 	24-04-2015	 	 	 	 	 	 		 	 	 			 	 	 	Kutikia	Mr Nayak	Active
+72168	1	Bargarh	0013	Bhatli	175	BHATLI	250	BHATLI CHC	1096	BHATLI SC	0	 	 	Pratima Kumar	9439999245	F	ASHA	 	 	24-04-2015	 	 	 	 	 	 		 	 	 			 	 	 	Bhatli	Belar Sen	Active
+72169	18	Puri	0304	Pipili	432	Pipli	1441	Managalpur CHC	5159	Bharatipur SC	28981	Bharatipur (28981)	 	Hemalata Behera	8596059653	F	ASHA	 	 	24-04-2015	24-04-2015	 	 	 	 	 		 	 	 			 	 	 	BHARATIPUR	RAMESH BEHERA	Active
+72170	18	Puri	0304	Pipili	432	Pipli	1441	Managalpur CHC	5167	Danagahiri SC	10005284	Nuasahi *	 	Aisha Bibi	9938976266	F	ASHA	 	 	24-04-2015	24-04-2015	 	 	 	 	 		 	 	 			 	 	 	NUASAHI	XXX	Active
+72171	18	Puri	111	Taluka	222	HealthBlock	333	PHC	444	SC	555	Village	 	Aisha Bibi	1138976266	F	ASHA	 	 	24-04-2015	24-04-2015	 	 	 	 	 		 	 	 			 	 	 	NUASAHI	XXX	Active
+72172	18	Puri	111	Taluka	222	HealthBlock	333	PHC	444	SC	555	Village	 	Aisha Biba	1138976267	F	ANM	 	 	24-04-2015	24-04-2015	 	 	 	 	 		 	 	 			 	 	 	NUASAHI	XXX	Active
+72173	18	Puri	111	Taluka	222	HealthBlock	333	PHC	444	SC	555	Village	 	Aisha Bibe	1138976268	F		 	 	24-04-2015	24-04-2015	 	 	 	 	 		 	 	 			 	 	 	NUASAHI	XXX	Inactive
+72140	18	Puri	111	Taluka	222	HealthBlock	333	PHC	444	SC	555	Village	 	Aisha Bibu	1138976268	F	ANM 2	 	 	24-04-2015	24-04-2015	 	 	 	 	 		 	 	 			 	 	 	NUASAHI	XXX	Inactive

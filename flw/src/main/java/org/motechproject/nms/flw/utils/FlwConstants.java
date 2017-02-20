@@ -23,6 +23,7 @@ public final class FlwConstants {
     public static final String TYPE = "Type";
     public static final String UPDATED_ON = "Updated_On";
     public static final String ASHA_TYPE = "ASHA";
+    public static final String GF_STATUS = "GF_Status";
 
     private FlwConstants() {
     }
