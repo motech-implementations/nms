@@ -156,6 +156,7 @@ public class OpsController extends BaseController {
         validateFieldPresent(failureReasons, "stateId", addFlwRequest.getStateId());
         validateFieldPresent(failureReasons, "districtId", addFlwRequest.getDistrictId());
         validateFieldString(failureReasons, "name", addFlwRequest.getName());
+        validateFieldGfStatus(failureReasons, "gfStatus", addFlwRequest.getGfStatus());
         validatetypeASHA(failureReasons, "type", addFlwRequest.getMctsFlwId(), addFlwRequest.getContactNumber(), addFlwRequest.getType());
 
         if (failureReasons.length() > 0) {
@@ -168,6 +169,7 @@ public class OpsController extends BaseController {
         flwProperties.put(FlwConstants.CONTACT_NO, addFlwRequest.getContactNumber());
         flwProperties.put(FlwConstants.STATE_ID, addFlwRequest.getStateId());
         flwProperties.put(FlwConstants.DISTRICT_ID, addFlwRequest.getDistrictId());
+        flwProperties.put(FlwConstants.GF_STATUS, addFlwRequest.getGfStatus());
 
         if (addFlwRequest.getType() != null) {
             flwProperties.put(FlwConstants.TYPE, addFlwRequest.getType());

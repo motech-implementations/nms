@@ -54,6 +54,7 @@ public class AnmAshaRecord {
     private String verifierRemarks;
     private String gfAddress;
     private String husbandName;
+    private String gfStatus;
 
     public Long getId() {
         return id;
@@ -406,6 +407,11 @@ public class AnmAshaRecord {
         this.husbandName = husbandName;
     }
 
+    public String getGfStatus() { return gfStatus; }
+
+    @XmlElement(name = "GF_Status")
+    public void setGfStatus(String gfStatus) { this.gfStatus = gfStatus; }
+
     public Map<String, Object> toFlwRecordMap() {
         Map<String, Object> map = new HashMap<>();
         map.put(FlwConstants.ID, getId() == null ? null : getId().toString());
@@ -424,6 +430,7 @@ public class AnmAshaRecord {
         map.put(FlwConstants.CENSUS_VILLAGE_ID, getVillageId());
         map.put(FlwConstants.VILLAGE_NAME, getVillageName());
         map.put(FlwConstants.TYPE, getType());
+        map.put(FlwConstants.GF_STATUS, getGfStatus());
         map.put(FlwConstants.UPDATED_ON, "".equals(getUpdatedOn()) ? null : LocalDate.parse(getUpdatedOn(), DateTimeFormat.forPattern("dd-MM-yyyy")));
         return map;
     }

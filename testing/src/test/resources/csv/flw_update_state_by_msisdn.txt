@@ -5,5 +5,5 @@ Password :
 From Date (dd-mm-yyyy) :
 To Date (dd-mm-yyyy) :
 
-ID	District_ID	Name	Contact_No	Updated_On	Type
-#0	22	Test MSISDN	1234567890	18-08-2016	ASHA
+ID	District_ID	Name	Contact_No	Updated_On	Type	GF_Status
+#0	22	Test MSISDN	1234567890	18-08-2016	ASHA	Active

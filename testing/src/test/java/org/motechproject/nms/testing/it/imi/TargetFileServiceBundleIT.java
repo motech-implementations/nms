@@ -224,7 +224,10 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
         // Verify modificationDate is not earlier than endDate
         for (Subscription s : subscriptionDataService.retrieveAll()) {
-            assert(!s.getModificationDate().isBefore(s.getEndDate()));
+            if(s.getEndDate() != null){
+                assert(!s.getModificationDate().isBefore(s.getEndDate()));
+            }
+
         }
 
 

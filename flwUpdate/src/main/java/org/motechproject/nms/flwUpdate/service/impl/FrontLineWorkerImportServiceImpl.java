@@ -284,6 +284,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         mapping.put(FlwConstants.VILLAGE_NAME, new Optional(new GetString()));
 
         mapping.put(FlwConstants.TYPE, new Optional(new GetString()));
+        mapping.put(FlwConstants.GF_STATUS, new Optional(new GetString()));
         mapping.put(FlwConstants.UPDATED_ON, new Optional(new GetLocalDate()));
 
         return mapping;
