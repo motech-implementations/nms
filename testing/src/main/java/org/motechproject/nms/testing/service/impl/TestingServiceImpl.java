@@ -84,6 +84,8 @@ public class TestingServiceImpl implements TestingService {
         "nms_districts__TRASH",
         "nms_circles",
         "nms_circles__TRASH",
+        "nms_contactNumber_audit",
+        "nms_contactNumber_audit__TRASH",
         "nms_csv_audit_records",
         "nms_csv_audit_records__TRASH",
         "nms_deployed_services",

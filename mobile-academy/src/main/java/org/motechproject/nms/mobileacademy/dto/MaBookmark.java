@@ -7,7 +7,7 @@ import java.util.Map;
  */
 public class MaBookmark {
 
-    private Long callingNumber;
+    private Long flwId;
 
     private String callId;
 
@@ -18,20 +18,20 @@ public class MaBookmark {
     public MaBookmark() {
     }
 
-    public MaBookmark(Long callingNumber, String callId, String bookmark, Map<String, Integer> scoresByChapter) {
+    public MaBookmark(Long flwId, String callId, String bookmark, Map<String, Integer> scoresByChapter) {
 
-        this.callingNumber = callingNumber;
+        this.flwId = flwId;
         this.callId = callId;
         this.bookmark = bookmark;
         this.scoresByChapter = scoresByChapter;
     }
 
-    public Long getCallingNumber() {
-        return callingNumber;
+    public Long getFlwId() {
+        return flwId;
     }
 
-    public void setCallingNumber(Long callingNumber) {
-        this.callingNumber = callingNumber;
+    public void setFlwId(Long flwId) {
+        this.flwId = flwId;
     }
 
     public String getCallId() {

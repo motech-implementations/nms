@@ -493,7 +493,6 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         createMaRecords(1000000000L);
         assertBookmark("1000000000", 1);
         assertActivity("1000000000", 2);
-        List<CourseCompletionRecord> ccrs = newCompletionRecord(1000000000L);
 
         Reader reader = createMSISDNReaderWithHeaders(",,9439986187,1000000000,1");
 
@@ -503,7 +502,6 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
 
             assertBookmark("1000000000", 1);   // Records expected is 1 instead of 2 since update fails
             assertActivity("1000000000", 2);
-            assertTrue(ccrs.get(0).getId() == newCompletionRecord(1000000000L).get(0).getId());
         }
     }
 
@@ -792,9 +790,6 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         assertBookmark(oldContact, 0);
         assertBookmark(newContact, 1);
 
-        assertEquals(0, newCompletionRecord(oldContactNumber).size());
-        assertEquals(1, newCompletionRecord(newContactNumber).size());
-
         assertActivity(oldContact, 0);
         assertActivity(newContact, 2);
     }
@@ -802,10 +797,6 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
     private void assertBookmark(String contactNumber, int expected) {
         List<Bookmark> bm = bookmarkDataService.findBookmarksForUser(contactNumber);
         assertTrue(bm.size() == expected);
-    }
-
-    private List<CourseCompletionRecord> newCompletionRecord(Long contactNumber) {
-        return courseCompletionRecordDataService.findByCallingNumber(contactNumber);
     }
 
     private void assertActivity(String contactNumber, int expected) {

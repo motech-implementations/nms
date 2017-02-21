@@ -36,7 +36,6 @@ import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
 
-import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import java.io.File;
@@ -46,7 +45,6 @@ import java.io.InputStream;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -119,7 +117,7 @@ public class MobileAcademyServiceUnitTest {
         nmsCourseDataService.deleteAll();
         when(settingsFacade.getRawConfig("nmsCourse.json")).thenReturn(getFileInputStream("nmsCourseTest.json"));
         mobileAcademyService = new MobileAcademyServiceImpl(bookmarkService, activityService,
-                nmsCourseDataService, activityDataService, courseCompletionRecordDataService, eventRelay, mtrainingModuleActivityRecordAuditDataService, settingsFacade, alertService);
+                nmsCourseDataService, activityDataService, courseCompletionRecordDataService, frontLineWorkerService, eventRelay, mtrainingModuleActivityRecordAuditDataService, settingsFacade, alertService);
         courseNotificationService = new CourseNotificationServiceImpl(smsNotificationService,
                     settingsFacade, activityService, schedulerService, courseCompletionRecordDataService, alertService,
                 frontLineWorkerService, districtDataService);
@@ -141,11 +139,14 @@ public class MobileAcademyServiceUnitTest {
     public void getBookmarkTest() {
         Bookmark newBookmark = new Bookmark("55", "getBookmarkTest", null, null, null);
 
+        FrontLineWorker flw = new FrontLineWorker(1234567890L);
+        flw.setId(55L);
         when(bookmarkService.getLatestBookmarkByUserId(anyString()))
                 .thenReturn(newBookmark);
+        when(frontLineWorkerService.getByContactNumber(anyLong())).thenReturn(flw);
 
-        MaBookmark mab = mobileAcademyService.getBookmark(55L, VALID_CALL_ID);
-        assertTrue(mab.getCallingNumber() == 55);
+        MaBookmark mab = mobileAcademyService.getBookmark(1234567890L, VALID_CALL_ID);
+        assertTrue(mab.getFlwId() == 55L);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -156,21 +157,27 @@ public class MobileAcademyServiceUnitTest {
 
     @Test
     public void setNewBookmarkTest() {
-        MaBookmark mab = new MaBookmark(1234567890L, VALID_CALL_ID, "Chapter1_Lesson1", null);
+        MaBookmark mab = new MaBookmark(123456L, VALID_CALL_ID, "Chapter1_Lesson1", null);
 
+        FrontLineWorker flw = new FrontLineWorker(1234567890L);
+        flw.setId(123456L);
         when(bookmarkService.createBookmark(any(Bookmark.class))).thenReturn(new Bookmark());
         when(bookmarkService.getLatestBookmarkByUserId(anyString())).thenReturn(null);
+        when(frontLineWorkerService.getById(anyLong())).thenReturn(flw);
         mobileAcademyService.setBookmark(mab);
     }
 
     @Test
     public void setUpdateBookmarkTest() {
-        MaBookmark mab = new MaBookmark(1234567890L, VALID_CALL_ID, "Chapter1_Lesson1", null);
+        MaBookmark mab = new MaBookmark(123456L, VALID_CALL_ID, "Chapter1_Lesson1", null);
 
+        FrontLineWorker flw = new FrontLineWorker(1234567890L);
+        flw.setId(123456L);
         when(bookmarkService.createBookmark(any(Bookmark.class)))
                 .thenReturn(new Bookmark());
         when(bookmarkService.getLatestBookmarkByUserId(anyString()))
                 .thenReturn(new Bookmark());
+        when(frontLineWorkerService.getById(anyLong())).thenReturn(flw);
         mobileAcademyService.setBookmark(mab);
     }
 
@@ -180,13 +187,16 @@ public class MobileAcademyServiceUnitTest {
         for (int i = 1; i < 12; i++) {
             scores.put(String.valueOf(i), ((int) (Math.random() * 100)) % 5);
         }
-        MaBookmark mab = new MaBookmark(1234567890L, VALID_CALL_ID, "COURSE_COMPLETED", scores);
+        MaBookmark mab = new MaBookmark(123456L, VALID_CALL_ID, "COURSE_COMPLETED", scores);
         doNothing().when(eventRelay).sendEventMessage(any(MotechEvent.class));
 
-        CourseCompletionRecord ccr = new CourseCompletionRecord(1234567890L, 22, scores.toString(), false);
+        CourseCompletionRecord ccr = new CourseCompletionRecord(123456L, 22, scores.toString(), false);
         List<CourseCompletionRecord> records = new ArrayList<>();
         records.add(ccr);
-        when(courseCompletionRecordDataService.findByCallingNumber(anyLong())).thenReturn(records);
+        when(courseCompletionRecordDataService.findByFlwId(anyLong())).thenReturn(records);
+        FrontLineWorker flw = new FrontLineWorker(1234567890L);
+        flw.setId(123456L);
+        when(frontLineWorkerService.getById(anyLong())).thenReturn(flw);
         mobileAcademyService.setBookmark(mab);
     }
 
@@ -196,8 +206,11 @@ public class MobileAcademyServiceUnitTest {
         for (int i = 1; i < 12; i++) {
             scores.put(String.valueOf(i), 0);
         }
-        MaBookmark mab = new MaBookmark(1234567890L, VALID_CALL_ID, "COURSE_COMPLETED", scores);
+        MaBookmark mab = new MaBookmark(123456L, VALID_CALL_ID, "COURSE_COMPLETED", scores);
         doNothing().when(eventRelay).sendEventMessage(any(MotechEvent.class));
+        FrontLineWorker flw = new FrontLineWorker(1234567890L);
+        flw.setId(123456L);
+        when(frontLineWorkerService.getById(anyLong())).thenReturn(flw);
         mobileAcademyService.setBookmark(mab);
     }
 
@@ -215,26 +228,12 @@ public class MobileAcademyServiceUnitTest {
         Bookmark newBookmark = new Bookmark("55", "getBookmarkTest", null, null, progress);
         when(bookmarkService.getLatestBookmarkByUserId(anyString()))
                 .thenReturn(newBookmark);
-
-        MaBookmark retrieved = mobileAcademyService.getBookmark(55L, VALID_CALL_ID);
+        FrontLineWorker flw = new FrontLineWorker(1234567890L);
+        flw.setId(55L);
+        when(frontLineWorkerService.getByContactNumber(anyLong())).thenReturn(flw);
+        MaBookmark retrieved = mobileAcademyService.getBookmark(1234567890L, VALID_CALL_ID);
         assertNull(retrieved.getBookmark());
         assertNull(retrieved.getScoresByChapter());
-    }
-
-    @Test
-    public void testCallingNumberTooShort() {
-        CourseCompletionRecord ccr = new CourseCompletionRecord(1L, 22, "score");
-        Set<ConstraintViolation<CourseCompletionRecord>> cv = validator.validateProperty(ccr, "callingNumber");
-        assertEquals(1, cv.size());
-        assertEquals("callingNumber must be 10 digits", cv.iterator().next().getMessage());
-    }
-
-    @Test
-    public void testCallingNumberTooLong() {
-        CourseCompletionRecord ccr = new CourseCompletionRecord(11111111111L, 22, "score");
-        Set<ConstraintViolation<CourseCompletionRecord>> cv = validator.validateProperty(ccr, "callingNumber");
-        assertEquals(1, cv.size());
-        assertEquals("callingNumber must be 10 digits", cv.iterator().next().getMessage());
     }
 
     @Test
@@ -242,14 +241,17 @@ public class MobileAcademyServiceUnitTest {
         MotechEvent event = new MotechEvent();
         event.getParameters().put("address", "tel: 9876543210");
         event.getParameters().put("deliveryStatus", "DeliveredToTerminal");
-        CourseCompletionRecord ccr = new CourseCompletionRecord(9876543210L, 34, "score", true);
+        CourseCompletionRecord ccr = new CourseCompletionRecord(123456L, 34, "score", true);
         ccr.setModificationDate(DateTime.now());
         assertNull(ccr.getLastDeliveryStatus());
 
         List<CourseCompletionRecord> records = new ArrayList<>();
         records.add(ccr);
-        when(courseCompletionRecordDataService.findByCallingNumber(anyLong())).thenReturn(records);
+        when(courseCompletionRecordDataService.findByFlwId(anyLong())).thenReturn(records);
         when(settingsFacade.getProperty(anyString())).thenReturn("1");
+        FrontLineWorker flw = new FrontLineWorker(1234567890L);
+        flw.setFlwId("123456");
+        when(frontLineWorkerService.getByContactNumber(anyLong())).thenReturn(flw);
         courseNotificationService.updateSmsStatus(event);
         assertTrue(ccr.getLastDeliveryStatus().equals("DeliveredToTerminal"));
     }
@@ -259,17 +261,19 @@ public class MobileAcademyServiceUnitTest {
         MotechEvent event = new MotechEvent();
         event.getParameters().put("address", "tel: 9876543210");
         event.getParameters().put("deliveryStatus", "DeliveryImpossible");
-        CourseCompletionRecord ccr = new CourseCompletionRecord(9876543210L, 34, "score", true);
+        CourseCompletionRecord ccr = new CourseCompletionRecord(123456L, 34, "score", true);
         ccr.setModificationDate(DateTime.now().minusDays(1));
         assertNull(ccr.getLastDeliveryStatus());
         assertEquals(0, ccr.getNotificationRetryCount());
 
         List<CourseCompletionRecord> records = new ArrayList<>();
         records.add(ccr);
-        when(courseCompletionRecordDataService.findByCallingNumber(anyLong())).thenReturn(records);
+        when(courseCompletionRecordDataService.findByFlwId(anyLong())).thenReturn(records);
         when(settingsFacade.getProperty(anyString())).thenReturn("1");
         doNothing().when(schedulerService).safeScheduleRepeatingJob(any(RepeatingSchedulableJob.class));
+        when(frontLineWorkerService.getById(anyLong())).thenReturn(getFrontLineWorker());
         when(frontLineWorkerService.getByContactNumber(anyLong())).thenReturn(getFrontLineWorker());
+        when(frontLineWorkerService.getById(anyLong())).thenReturn(getFrontLineWorker());
         courseNotificationService.updateSmsStatus(event);
         assertTrue(ccr.getLastDeliveryStatus().equals("DeliveryImpossible"));
         assertEquals(1, ccr.getNotificationRetryCount());
@@ -282,6 +286,7 @@ public class MobileAcademyServiceUnitTest {
         district.setState(state);
         district.setCode(444L);
         state.setDistricts(new HashSet<>(Arrays.asList(district)));
+        flw.setId(123456L);
         flw.setState(state);
         flw.setDistrict(district);
         flw.setLanguage(new Language("hin", "Hindi"));
@@ -293,16 +298,21 @@ public class MobileAcademyServiceUnitTest {
         MotechEvent event = new MotechEvent();
         event.getParameters().put("address", "tel: 9876543210");
         event.getParameters().put("deliveryStatus", "DeliveryImpossible");
-        CourseCompletionRecord ccr = new CourseCompletionRecord(9876543210L, 34, "score", true, true, 1);
+        CourseCompletionRecord ccr = new CourseCompletionRecord(123456L, 34, "score", true, true, 1);
         ccr.setModificationDate(DateTime.now().minusDays(1));
         assertNull(ccr.getLastDeliveryStatus());
         assertEquals(1, ccr.getNotificationRetryCount());
 
         List<CourseCompletionRecord> records = new ArrayList<>();
         records.add(ccr);
-        when(courseCompletionRecordDataService.findByCallingNumber(anyLong())).thenReturn(records);
+        when(courseCompletionRecordDataService.findByFlwId(anyLong())).thenReturn(records);
         when(settingsFacade.getProperty(anyString())).thenReturn("1");
         doNothing().when(schedulerService).safeScheduleRepeatingJob(any(RepeatingSchedulableJob.class));
+        FrontLineWorker flw = new FrontLineWorker(1234567890L);
+        flw.setId(123456L);
+        when(frontLineWorkerService.getById(anyLong())).thenReturn(flw);
+        when(frontLineWorkerService.getByContactNumber(anyLong())).thenReturn(flw);
+        when(frontLineWorkerService.getById(anyLong())).thenReturn(flw);
         courseNotificationService.updateSmsStatus(event);
         assertTrue(ccr.getLastDeliveryStatus().equals("DeliveryImpossible"));
         assertEquals(1, ccr.getNotificationRetryCount());
@@ -313,16 +323,21 @@ public class MobileAcademyServiceUnitTest {
         MotechEvent event = new MotechEvent();
         event.getParameters().put("address", "tel: 9876543210");
         event.getParameters().put("deliveryStatus", "DeliveryImpossible");
-        CourseCompletionRecord ccr = new CourseCompletionRecord(9876543210L, 34, "score", true);
+        CourseCompletionRecord ccr = new CourseCompletionRecord(123456L, 34, "score", true);
         ccr.setModificationDate(DateTime.now());
         assertNull(ccr.getLastDeliveryStatus());
         assertEquals(0, ccr.getNotificationRetryCount());
 
         List<CourseCompletionRecord> records = new ArrayList<>();
         records.add(ccr);
-        when(courseCompletionRecordDataService.findByCallingNumber(anyLong())).thenReturn(records);
+        when(courseCompletionRecordDataService.findByFlwId(anyLong())).thenReturn(records);
         when(settingsFacade.getProperty(anyString())).thenReturn("1");
         doNothing().when(schedulerService).safeScheduleRepeatingJob(any(RepeatingSchedulableJob.class));
+        FrontLineWorker flw = new FrontLineWorker(1234567890L);
+        flw.setId(123456L);
+        when(frontLineWorkerService.getById(anyLong())).thenReturn(flw);
+        when(frontLineWorkerService.getByContactNumber(anyLong())).thenReturn(flw);
+        when(frontLineWorkerService.getById(anyLong())).thenReturn(flw);
         courseNotificationService.updateSmsStatus(event);
         assertTrue(ccr.getLastDeliveryStatus().equals("DeliveryImpossible"));
         assertEquals(0, ccr.getNotificationRetryCount());
@@ -330,27 +345,27 @@ public class MobileAcademyServiceUnitTest {
 
     @Test(expected = CourseNotCompletedException.class)
     public void testNotificationTriggerException() {
-        when(courseCompletionRecordDataService.findByCallingNumber(anyLong())).thenReturn(null);
-        mobileAcademyService.triggerCompletionNotification(1234567890L);
+        when(courseCompletionRecordDataService.findByFlwId(anyLong())).thenReturn(null);
+        mobileAcademyService.triggerCompletionNotification(123456L);
     }
 
     @Test
     public void testNotificationTriggerValidNew() {
-        CourseCompletionRecord ccr = new CourseCompletionRecord(1234567890L, 22, "score");
+        CourseCompletionRecord ccr = new CourseCompletionRecord(123456L, 22, "score");
         List<CourseCompletionRecord> records = new ArrayList<>();
         records.add(ccr);
-        when(courseCompletionRecordDataService.findByCallingNumber(anyLong())).thenReturn(records);
-        mobileAcademyService.triggerCompletionNotification(1234567890L);
-        mobileAcademyService.triggerCompletionNotification(1234567890L);
-        assertFalse(ccr.isSentNotification());
+        when(courseCompletionRecordDataService.findByFlwId(anyLong())).thenReturn(records);
+        mobileAcademyService.triggerCompletionNotification(123456L);
+        mobileAcademyService.triggerCompletionNotification(123456L);
+        assertTrue(ccr.isSentNotification());
     }
 
     @Test
     public void testNotificationTriggerValidExisting() {
-        CourseCompletionRecord ccr = new CourseCompletionRecord(1234567890L, 22, "score", true);
+        CourseCompletionRecord ccr = new CourseCompletionRecord(123456L, 22, "score", true);
         List<CourseCompletionRecord> records = new ArrayList<>();
         records.add(ccr);
-        when(courseCompletionRecordDataService.findByCallingNumber(anyLong())).thenReturn(records);
+        when(courseCompletionRecordDataService.findByFlwId(anyLong())).thenReturn(records);
 
         when(courseCompletionRecordDataService.update(any(CourseCompletionRecord.class))).thenAnswer(
                 new Answer<CourseCompletionRecord>() {

@@ -40,7 +40,7 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
     private static final String SMS_RETRY_COUNT = "sms.retry.count";
     private static final String DELIVERY_IMPOSSIBLE = "DeliveryImpossible";
     private static final String RETRY_FLAG = "retry.flag";
-    private static final String CALLING_NUMBER = "callingNumber";
+    private static final String FLWID = "flwId";
     private static final String SMS_CONTENT = "smsContent";
     private static final String DELIVERY_STATUS = "deliveryStatus";
     private static final String ADDRESS = "address";
@@ -115,23 +115,24 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
 
         try {
             LOGGER.debug("Handling course completion notification event");
-            Long callingNumber = (Long) event.getParameters().get(CALLING_NUMBER);
+            Long flwId = (Long) event.getParameters().get(FLWID);
 
-            List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByCallingNumber(callingNumber);
+            List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByFlwId(flwId);
             if (ccrs == null || ccrs.isEmpty()) {
                 // this should never be possible since the event dispatcher upstream adds the record
-                LOGGER.error("No completion record found for callingNumber: " + callingNumber);
+                LOGGER.error("No completion record found for flwId: " + flwId);
                 return;
             }
 
-            CourseCompletionRecord ccr = ccrs.get(ccrs.size()-1);
+            CourseCompletionRecord ccr = ccrs.get(ccrs.size() - 1);
 
             if (event.getParameters().containsKey(RETRY_FLAG)) {
                 LOGGER.debug("Handling retry for SMS notification");
                 ccr.setNotificationRetryCount(ccr.getNotificationRetryCount() + 1);
             }
 
-            String smsContent = buildSmsContent(callingNumber, ccr);
+            String smsContent = buildSmsContent(flwId, ccr);
+            long callingNumber = frontLineWorkerService.getById(flwId).getContactNumber();
             ccr.setSentNotification(smsNotificationService.sendSms(callingNumber, smsContent));
             courseCompletionRecordDataService.update(ccr);
         } catch (IllegalStateException se) {
@@ -149,14 +150,15 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
         String callingNumber = (String) event.getParameters().get(ADDRESS);
         int startIndex = callingNumber.indexOf(':') + 2;
         callingNumber = callingNumber.substring(startIndex);
-        List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByCallingNumber(Long.parseLong(callingNumber));
+        Long flwId = frontLineWorkerService.getByContactNumber(Long.parseLong(callingNumber)).getId();
+        List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByFlwId(flwId);
 
         if (ccrs == null || ccrs.isEmpty()) {
             // this should never be possible since the event dispatcher upstream adds the record
-            LOGGER.error("No completion record found for callingNumber: " + callingNumber);
+            LOGGER.error("No completion record found for flwId: " + flwId);
             return;
         }
-        CourseCompletionRecord ccr = ccrs.get(ccrs.size()-1);
+        CourseCompletionRecord ccr = ccrs.get(ccrs.size() - 1);
 
         // read properties
         String deliveryStatus = (String) event.getParameters().get(DELIVERY_STATUS);
@@ -172,10 +174,9 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
                 ccr.getNotificationRetryCount() < Integer.parseInt(settingsFacade.getProperty(SMS_RETRY_COUNT))) {
 
             try {
-                Long msisdn = Long.parseLong(callingNumber);
-                String smsContent = buildSmsContent(msisdn, ccr);
+                String smsContent = buildSmsContent(flwId, ccr);
                 MotechEvent retryEvent = new MotechEvent(COURSE_COMPLETED_SUBJECT);
-                retryEvent.getParameters().put(CALLING_NUMBER, msisdn);
+                retryEvent.getParameters().put(FLWID, flwId);
                 retryEvent.getParameters().put(SMS_CONTENT, smsContent);
                 retryEvent.getParameters().put(RETRY_FLAG, true);
 
@@ -202,17 +203,17 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
 
     /**
      * Helper to generate the completion sms content for an flw
-     * @param callingNumber calling number of the flw
+     * @param flwId calling number of the flw
      * @return localized sms content based on flw preferences or national default otherwise
      */
-    private String buildSmsContent(Long callingNumber, CourseCompletionRecord ccr) {
+    private String buildSmsContent(Long flwId, CourseCompletionRecord ccr) {
 
-        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
+        FrontLineWorker flw = frontLineWorkerService.getById(flwId);
         String locationCode = "XX"; // unknown location id
         String smsLanguageProperty = null;
 
         if (flw == null) {
-            throw new IllegalStateException("Unable to find flw for calling number: " + callingNumber);
+            throw new IllegalStateException("Unable to find flw for flwId: " + flwId);
         }
 
         // Build location code
@@ -246,6 +247,7 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
                     SMS_CONTENT_PREFIX + smsLanguageProperty);
         }
 
+        Long callingNumber = flw.getContactNumber();
         int attempts = activityService.getCompletedActivityForUser(callingNumber.toString()).size();
         String smsReferenceNumber = locationCode + callingNumber + attempts;
         ccr.setSmsReferenceNumber(smsReferenceNumber);

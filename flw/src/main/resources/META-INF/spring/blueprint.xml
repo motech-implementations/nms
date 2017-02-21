@@ -36,6 +36,9 @@
     <osgi:reference id="flwStatusUpdateAuditDataService"
                   interface="org.motechproject.nms.flw.repository.FlwStatusUpdateAuditDataService" />
 
+    <osgi:reference id="contactNumberAuditDataService"
+                    interface="org.motechproject.nms.flw.repository.ContactNumberAuditDataService" />
+
     <osgi:reference id="flwErrorDataService"
                     interface="org.motechproject.nms.flw.repository.FlwErrorDataService" />
 

@@ -50,9 +50,9 @@ public interface MobileAcademyService {
 
     /**
      * Retrigger the sms notification for course completion for user
-     * @param callingNumber
+     * @param flwId
      */
-    void triggerCompletionNotification(Long callingNumber);
+    void triggerCompletionNotification(Long flwId);
 
     /**
      * Get scores for a user

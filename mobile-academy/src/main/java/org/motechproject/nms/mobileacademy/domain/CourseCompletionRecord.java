@@ -4,10 +4,6 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.domain.MdsEntity;
 
-import javax.jdo.annotations.Column;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-
 /**
  * Tracks the completion record for a given calling number
  */
@@ -15,10 +11,7 @@ import javax.validation.constraints.Min;
 public class CourseCompletionRecord extends MdsEntity {
 
     @Field
-    @Min(value = 1000000000L, message = "callingNumber must be 10 digits")
-    @Max(value = 9999999999L, message = "callingNumber must be 10 digits")
-    @Column(length = 10)
-    private long callingNumber;
+    private Long flwId;
 
     @Field
     private int score;
@@ -51,10 +44,11 @@ public class CourseCompletionRecord extends MdsEntity {
 
     public CourseCompletionRecord(long callingNumber, int score, String chapterWiseScores, boolean sentNotification) {
         this(callingNumber, score, chapterWiseScores, false, sentNotification, 0);
+
     }
 
-    public CourseCompletionRecord(long callingNumber, int score, String chapterWiseScores, boolean passed, boolean sentNotification, int notificationRetryCount) {
-        this.callingNumber = callingNumber;
+    public CourseCompletionRecord(Long flwId, int score, String chapterWiseScores, boolean passed, boolean sentNotification, int notificationRetryCount) {
+        this.flwId = flwId;
         this.score = score;
         this.chapterWiseScores = chapterWiseScores;
         this.passed = passed;
@@ -62,12 +56,12 @@ public class CourseCompletionRecord extends MdsEntity {
         this.notificationRetryCount = notificationRetryCount;
     }
 
-    public long getCallingNumber() {
-        return callingNumber;
+    public Long getFlwId() {
+        return flwId;
     }
 
-    public void setCallingNumber(long callingNumber) {
-        this.callingNumber = callingNumber;
+    public void setFlwId(Long flwId) {
+        this.flwId = flwId;
     }
 
     public int getScore() {

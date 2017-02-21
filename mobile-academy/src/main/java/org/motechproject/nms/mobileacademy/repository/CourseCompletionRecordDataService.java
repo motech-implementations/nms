@@ -13,5 +13,5 @@ import java.util.List;
 public interface CourseCompletionRecordDataService extends MotechDataService<CourseCompletionRecord> {
 
     @Lookup
-    List<CourseCompletionRecord> findByCallingNumber(@LookupField(name = "callingNumber") Long callingNumber);
+    List<CourseCompletionRecord> findByFlwId(@LookupField(name = "flwId") Long flwId);
 }
