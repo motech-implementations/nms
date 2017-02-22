@@ -22,9 +22,8 @@ import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerUpdateImportService;
-import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
-import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
-import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
+import org.motechproject.nms.mobileacademy.domain.CourseCompletionRecord;
+import org.motechproject.nms.mobileacademy.repository.CourseCompletionRecordDataService;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
@@ -85,7 +84,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
     @Inject
     CsvAuditRecordDataService csvAuditRecordDataService;
     @Inject
-    CompletionRecordDataService completionRecordDataService;
+    CourseCompletionRecordDataService courseCompletionRecordDataService;
     @Inject
     BookmarkDataService bookmarkDataService;
     @Inject
@@ -494,7 +493,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         createMaRecords(1000000000L);
         assertBookmark("1000000000", 1);
         assertActivity("1000000000", 2);
-        CompletionRecord cr = completionRecord(1000000000L);
+        List<CourseCompletionRecord> ccrs = newCompletionRecord(1000000000L);
 
         Reader reader = createMSISDNReaderWithHeaders(",,9439986187,1000000000,1");
 
@@ -504,7 +503,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
 
             assertBookmark("1000000000", 1);   // Records expected is 1 instead of 2 since update fails
             assertActivity("1000000000", 2);
-            assertTrue(cr.getId() == completionRecord(1000000000L).getId());
+            assertTrue(ccrs.get(0).getId() == newCompletionRecord(1000000000L).get(0).getId());
         }
     }
 
@@ -776,8 +775,8 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
 
         bookmarkDataService.create(new Bookmark(contactNumber.toString(), "1", "1", "1", new HashMap<String, Object>()));
 
-        CompletionRecord cr = new CompletionRecord(contactNumber, 35, false, 1);
-        completionRecordDataService.create(cr);
+        CourseCompletionRecord ccr = new CourseCompletionRecord(contactNumber, 35, "score", false);
+        courseCompletionRecordDataService.create(ccr);
 //        String externalId, String courseName, String chapterName, String lessonName, DateTime startTime, DateTime completionTime, ActivityState.STARTED);
         ActivityRecord ar = new ActivityRecord(contactNumber.toString(), "1", "1", "1", null,null , ActivityState.STARTED);
         activityDataService.create(ar);
@@ -793,8 +792,8 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         assertBookmark(oldContact, 0);
         assertBookmark(newContact, 1);
 
-        assertNull(completionRecord(oldContactNumber));
-        assertNotNull(completionRecord(newContactNumber));
+        assertEquals(0, newCompletionRecord(oldContactNumber).size());
+        assertEquals(1, newCompletionRecord(newContactNumber).size());
 
         assertActivity(oldContact, 0);
         assertActivity(newContact, 2);
@@ -805,8 +804,8 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         assertTrue(bm.size() == expected);
     }
 
-    private CompletionRecord completionRecord(Long contactNumber) {
-        return completionRecordDataService.findRecordByCallingNumber(contactNumber);
+    private List<CourseCompletionRecord> newCompletionRecord(Long contactNumber) {
+        return courseCompletionRecordDataService.findByCallingNumber(contactNumber);
     }
 
     private void assertActivity(String contactNumber, int expected) {

@@ -5,12 +5,12 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.26</version>
+        <version>1.0.27</version>
         <relativePath>../</relativePath>
     </parent>
 
     <artifactId>api</artifactId>
-    <version>1.0.26</version>
+    <version>1.0.27</version>
     <packaging>bundle</packaging>
     <name>API module</name>
 
@@ -105,6 +105,8 @@
                             org.motechproject.nms.api.web.contract.mobileAcademy,
                             org.motechproject.nms.api.web.contract.mobileAcademy.sms,
                             org.motechproject.nms.api.web.converter,
+                            org.motechproject.nms.api.web.repository,
+                            org.motechproject.nms.api.web.domain
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,

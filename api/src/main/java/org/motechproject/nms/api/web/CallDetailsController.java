@@ -5,8 +5,11 @@ import org.motechproject.nms.api.web.contract.CallContentRequest;
 import org.motechproject.nms.api.web.contract.CallDetailRecordRequest;
 import org.motechproject.nms.flw.domain.CallContent;
 import org.motechproject.nms.flw.domain.CallDetailRecord;
+import org.motechproject.nms.flw.domain.FlwStatusUpdateAudit;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
+import org.motechproject.nms.flw.domain.UpdateStatusType;
+import org.motechproject.nms.flw.repository.FlwStatusUpdateAuditDataService;
 import org.motechproject.nms.flw.service.CallContentService;
 import org.motechproject.nms.flw.service.CallDetailRecordService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
@@ -39,6 +42,9 @@ public class CallDetailsController extends BaseController {
 
     @Autowired
     private FrontLineWorkerService frontLineWorkerService;
+
+    @Autowired
+    private FlwStatusUpdateAuditDataService flwStatusUpdateAuditDataService;
 
     /**
      * 2.2.6 Save CallDetails API
@@ -119,6 +125,8 @@ public class CallDetailsController extends BaseController {
                 validateFlwLocation(flw)) {
             flw.setStatus(FrontLineWorkerStatus.ACTIVE);
             frontLineWorkerService.update(flw);
+            FlwStatusUpdateAudit flwStatusUpdateAudit = new FlwStatusUpdateAudit(DateTime.now(), flw.getFlwId(), flw.getMctsFlwId(), flw.getContactNumber(), UpdateStatusType.INACTIVE_TO_ACTIVE);
+            flwStatusUpdateAuditDataService.create(flwStatusUpdateAudit);
         }
     }
 

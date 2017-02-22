@@ -18,9 +18,9 @@ import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
+import org.motechproject.nms.mobileacademy.domain.CourseCompletionRecord;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
-import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
+import org.motechproject.nms.mobileacademy.repository.CourseCompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
@@ -119,7 +119,8 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Inject
     MobileAcademyService maService;
     @Inject
-    CompletionRecordDataService completionRecordDataService;
+    CourseCompletionRecordDataService courseCompletionRecordDataService;
+
 
     @Inject
     private CsvAuditRecordDataService csvAuditRecordDataService;
@@ -602,8 +603,8 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         }
         bookmark.setScoresByChapter(scores);
         maService.setBookmark(bookmark);
-        CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(1234567890L);
-        assertNotNull(cr);
+        CourseCompletionRecord ccr = courseCompletionRecordDataService.findByCallingNumber(1234567890L).get(0);
+        assertNotNull(ccr);
 
         // Update Msisdn
         reader = createReaderWithHeaders("#0\t9876543210\tFLW 0\t11\t18-08-2016\tASHA");
@@ -618,7 +619,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         assertEquals(0, activityDataService.findRecordsForUserByState("1234567890", ActivityState.STARTED).size());
         assertEquals(1, activityDataService.findRecordsForUserByState("9876543210", ActivityState.STARTED).size());
 
-        assertNull(completionRecordDataService.findRecordByCallingNumber(1234567890L));
-        assertNotNull(completionRecordDataService.findRecordByCallingNumber(9876543210L));
+        assertEquals(0, courseCompletionRecordDataService.findByCallingNumber(1234567890L).size());
+        assertNotNull(courseCompletionRecordDataService.findByCallingNumber(9876543210L).get(0));
     }
 }
