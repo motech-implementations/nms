@@ -14,23 +14,24 @@ import org.motechproject.nms.tracking.annotation.TrackFields;
 public class MctsMother extends MctsBeneficiary {
 
     @Field
-    private DateTime dateOfBirth; // this field is needed to calculate mother's age for some Kilkari reports
+    private DateTime lastMenstrualPeriod;
 
     public MctsMother(String beneficiaryId) {
         super(beneficiaryId);
     }
 
-    public DateTime getDateOfBirth() {
-        return dateOfBirth;
+    public DateTime getLastMenstrualPeriod() {
+        return lastMenstrualPeriod;
     }
 
-    public void setDateOfBirth(DateTime dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
+    public void setLastMenstrualPeriod(DateTime lastMenstrualPeriod) {
+        this.lastMenstrualPeriod = lastMenstrualPeriod;
     }
 
     public void deepCopyFrom(MctsMother other) {
         setName(other.getName());
         setDateOfBirth(other.getDateOfBirth());
+        setLastMenstrualPeriod(other.getLastMenstrualPeriod());
         setState(other.getState());
         setDistrict(other.getDistrict());
         setTaluka(other.getTaluka());

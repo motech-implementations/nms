@@ -5,6 +5,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Weeks;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.motechproject.commons.date.util.DateUtil;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.event.listener.annotations.MotechListener;
@@ -52,6 +53,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Implementation of the {@link SubscriptionService} interface.
@@ -125,7 +127,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         int purgedSubscriptions = 0;
         for (Subscription subscription : purgeList) {
             String subscriptionId = subscription.getSubscriptionId();
-            Long callingNumber = subscription.getSubscriber().getCallingNumber();
 
             // If, for some reason, there is a retry record for that subscription, delete it too.
             CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
@@ -135,10 +136,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
 
             LOGGER.debug("Purging subscription {}", subscription.getSubscriptionId());
+            Subscriber subscriber = subscription.getSubscriber();
             subscriptionDataService.delete(subscription);
 
             // I need to load the subscriber since I deleted one of their subscription prior
-            Subscriber subscriber = subscriberDataService.findByNumber(callingNumber);
             purgedSubscriptions++;
             if (subscriber.getSubscriptions().size() == 0) {
                 LOGGER.debug("Purging subscriber for subscription {} as it was the last subscription for that subscriber",
@@ -218,15 +219,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public Subscription createSubscription(long callingNumber, Language language,
+    public Subscription createSubscription(Subscriber subscriber, long callingNumber, Language language,
                                            SubscriptionPack subscriptionPack, SubscriptionOrigin mode) {
 
         // call overload with null circle
-        return createSubscription(callingNumber, language, null, subscriptionPack, mode);
+        return createSubscription(subscriber, callingNumber, language, null, subscriptionPack, mode);
     }
 
-    @Override
-    public Subscription createSubscription(long callingNumber, Language language, Circle circle,
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
+    public Subscription createSubscription(Subscriber subscriber, long callingNumber, Language language, Circle circle,
                                            SubscriptionPack subscriptionPack, SubscriptionOrigin mode) {
 
         long number = PhoneNumberHelper.truncateLongNumber(callingNumber);
@@ -235,38 +236,41 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         BlockedMsisdnRecord blockedMsisdnRecord = blockedMsisdnRecordDataService.findByNumber(callingNumber);
         if (blockedMsisdnRecord != null) {
             LOGGER.info("Can't create a Subscription as the number {} is deactivated due to Weekly Calls Not Answered", callingNumber);
-            subscriptionErrorDataService.create(new SubscriptionError(number, SubscriptionRejectionReason.WEEKLY_CALLS_NOT_ANSWERED, subscriptionPack.getType()));
+            subscriptionErrorDataService.create(new SubscriptionError(number,
+                    (mode == SubscriptionOrigin.IVR) ? "" : ((subscriptionPack.getType() == SubscriptionPackType.PREGNANCY) ? subscriber.getMother().getBeneficiaryId() : subscriber.getChild().getBeneficiaryId()),
+                    SubscriptionRejectionReason.WEEKLY_CALLS_NOT_ANSWERED, subscriptionPack.getType(), ""));
             return null;
         }
 
-        Subscriber subscriber = subscriberDataService.findByNumber(callingNumber);
         Subscription subscription;
+        Subscriber sub;
 
         if (subscriber == null) {
-            subscriber = new Subscriber(number, language, circle);
-            subscriberDataService.create(subscriber);
+            sub = subscriberDataService.create(new Subscriber(number, language, circle));
+        } else {
+            sub = subscriber;
         }
 
-        Language subscriberLanguage = subscriber.getLanguage();
-        Circle subscriberCircle = subscriber.getCircle();
+        Language subscriberLanguage = sub.getLanguage();
+        Circle subscriberCircle = sub.getCircle();
 
         if (subscriberLanguage == null && language != null) {
-            subscriber.setLanguage(language);
-            subscriberDataService.update(subscriber);
+            sub.setLanguage(language);
+            subscriberDataService.update(sub);
         }
 
         if (subscriberCircle == null && circle != null) {
-            subscriber.setCircle(circle);
-            subscriberDataService.update(subscriber);
+            sub.setCircle(circle);
+            subscriberDataService.update(sub);
         }
 
         subscription = (mode == SubscriptionOrigin.IVR) ?
-                createSubscriptionViaIvr(subscriber, subscriptionPack) :
-                createSubscriptionViaMcts(subscriber, subscriptionPack);
+                createSubscriptionViaIvr(sub, subscriptionPack) :
+                createSubscriptionViaMcts(sub, subscriptionPack);
 
         if (subscription != null) {
-            subscriber.getSubscriptions().add(subscription);
-            subscriberDataService.update(subscriber);
+            sub.getSubscriptions().add(subscription);
+            subscriberDataService.update(sub);
         }
 
         return subscription;
@@ -364,7 +368,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
             if (getActiveSubscription(subscriber, SubscriptionPackType.CHILD) != null) {
                 // reject the subscription if it already exists
-                logRejectedSubscription(subscriber.getCallingNumber(),
+                logRejectedSubscription(subscriber.getCallingNumber(), subscriber.getChild().getBeneficiaryId(),
                         SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD);
                 return false;
             }
@@ -375,13 +379,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
 
             if (Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(KilkariConstants.THREE_MONTHS),
-                    DateTime.now(), pack)) {
+                    DateUtil.now(), pack)) {
                 return false;
             }
 
             if (getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY) != null) {
                 // reject the subscription if it already exists
-                logRejectedSubscription(subscriber.getCallingNumber(),
+                logRejectedSubscription(subscriber.getCallingNumber(), subscriber.getMother().getBeneficiaryId(),
                         SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY);
                 return false;
             }
@@ -390,9 +394,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return true;
     }
 
-    private void logRejectedSubscription(long callingNumber, SubscriptionRejectionReason reason,
+    private void logRejectedSubscription(long callingNumber, String beneficiaryId, SubscriptionRejectionReason reason,
                                          SubscriptionPackType packType) {
-        SubscriptionError error = new SubscriptionError(callingNumber, reason, packType);
+        SubscriptionError error = new SubscriptionError(callingNumber, beneficiaryId, reason, packType, "Active subscription exists for same pack");
         subscriptionErrorDataService.create(error);
     }
 
@@ -410,7 +414,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                          existingSubscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
                     return existingSubscription;
                 }
-                if (type == SubscriptionPackType.CHILD && existingSubscription.getStatus() == SubscriptionStatus.ACTIVE) {
+                if (type == SubscriptionPackType.CHILD &&
+                        (existingSubscription.getStatus() == SubscriptionStatus.ACTIVE) ||
+                        existingSubscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION) {
                     return existingSubscription;
                 }
             }
@@ -432,6 +438,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscription.setStartDate(newReferenceDate);
         }
         subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
+        if (subscription.getOrigin() == SubscriptionOrigin.IVR) {  // Start Date gets updated through MCTS
+            subscription.setOrigin(SubscriptionOrigin.MCTS_IMPORT);
+        }
         subscriptionDataService.update(subscription);
     }
 
@@ -709,4 +718,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptionDataService.retrieveAll();
     }
 
+    @Override
+    public Subscription getIVRSubscription(Set<Subscription> subscriptions, SubscriptionPackType packType) {
+        for (Subscription subscription : subscriptions) {
+            if (subscription.getSubscriptionPack().getType() == packType && subscription.getOrigin() == SubscriptionOrigin.IVR) {
+                return subscription;
+            }
+        }
+        return null;
+    }
 }

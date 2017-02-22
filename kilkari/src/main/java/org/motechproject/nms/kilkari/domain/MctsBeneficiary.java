@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.domain;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
@@ -38,6 +39,9 @@ public abstract class MctsBeneficiary extends MdsEntity implements FullLocation 
     private String name;
 
     @Field
+    private DateTime dateOfBirth; // this field is needed to calculate mother's age for some Kilkari reports in case of MCTSMother
+
+    @Field
     private State state;
 
     @Field
@@ -71,6 +75,14 @@ public abstract class MctsBeneficiary extends MdsEntity implements FullLocation 
     public MctsBeneficiary(String beneficiaryId, String name) {
         this.beneficiaryId = beneficiaryId;
         this.name = name;
+    }
+
+    public DateTime getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(DateTime dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
     }
 
     public LocalDate getUpdatedDateNic() {

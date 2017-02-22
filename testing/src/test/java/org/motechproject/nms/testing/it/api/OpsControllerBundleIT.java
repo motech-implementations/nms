@@ -511,13 +511,13 @@ public class OpsControllerBundleIT extends BasePaxIT {
         subscriberIVR.setLastMenstrualPeriod(DateTime.now().plusWeeks(70));
         subscriberIVR = subscriberDataService.update(subscriberIVR);
 
-       subscriptionService.createSubscription(subscriberIVR.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
+       subscriptionService.createSubscription(subscriberIVR, subscriberIVR.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
 
         Subscriber subscriberMCTS = subscriberDataService.create(new Subscriber(6000000000L));
         subscriberMCTS.setLastMenstrualPeriod(DateTime.now().plusWeeks(70));
         subscriberMCTS = subscriberDataService.update(subscriberMCTS);
-        subscriptionService.createSubscription(subscriberMCTS.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
+        subscriptionService.createSubscription(subscriberMCTS, subscriberMCTS.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
                 sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         transactionManager.commit(status);
     }
@@ -527,14 +527,14 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        Subscriber subscriberIVR = subscriberDataService.findByNumber(5000000000L);
+        Subscriber subscriberIVR = subscriberDataService.findByNumber(5000000000L).get(0);
         Set<Subscription> subscriptionsIVR = ( Set<Subscription> ) subscriberDataService.getDetachedField(subscriberIVR, "subscriptions");
         for (Subscription subscriptionIVR : subscriptionsIVR) {
             Assert.assertTrue(subscriptionIVR.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED));
             Assert.assertTrue(subscriptionIVR.getStatus().equals(SubscriptionStatus.DEACTIVATED));
         }
 
-        Subscriber subscriberMCTS = subscriberDataService.findByNumber(6000000000L);
+        Subscriber subscriberMCTS = subscriberDataService.findByNumber(6000000000L).get(0);
         Set<Subscription> subscriptionsMCTS = ( Set<Subscription> ) subscriberDataService.getDetachedField(subscriberMCTS, "subscriptions");
         for (Subscription subscriptionMCTS : subscriptionsMCTS) {
             Assert.assertTrue(subscriptionMCTS.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED) || subscriptionMCTS.getDeactivationReason().equals(DeactivationReason.LOW_LISTENERSHIP));
@@ -599,8 +599,8 @@ public class OpsControllerBundleIT extends BasePaxIT {
         BlockedMsisdnRecord blockedMsisdnRecord = blockedMsisdnRecordDataService.findByNumber(msisdn);
         assertNotNull(blockedMsisdnRecord);
 
-        Subscriber subscriber = subscriberDataService.findByNumber(msisdn);
-        Subscription subscription = subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
+        Subscriber subscriber = subscriberDataService.findByNumber(msisdn).get(0);
+        Subscription subscription = subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
         Assert.assertNull(subscription);
         transactionManager.commit(status);

@@ -118,6 +118,9 @@
     <osgi:reference id="deactivationSubscriptionAuditRecordDataService"
                     interface="org.motechproject.nms.kilkari.repository.DeactivationSubscriptionAuditRecordDataService" />
 
+    <osgi:reference id="subscriberMsisdnTrackerDataService"
+                    interface="org.motechproject.nms.kilkari.repository.SubscriberMsisdnTrackerDataService" />
+
     <!-- CSV Audit Service -->
     <osgi:reference id="csvAuditService" interface="org.motechproject.nms.csv.service.CsvAuditService" />
 

@@ -107,10 +107,10 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		subscriber.setLastMenstrualPeriod(now.minusDays(94));
 		subscriberService.create(subscriber);
 
-		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(),
+		subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
 
-		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber()).get(0);
 		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
 		Subscription subscription = subscriptions.iterator().next();
 		SubscriptionPackMessage msg = inboxService.getInboxMessage(subscription);
@@ -123,7 +123,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		subscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90));
 		subscriberService.updateStartDate(subscriber);
 
-		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber()).get(0);
 		subscriptions = subscriber.getAllSubscriptions();
 		subscription = subscriptions.iterator().next();
 		msg = inboxService.getInboxMessage(subscription);
@@ -147,10 +147,10 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		subscriber.setLastMenstrualPeriod(now.minusDays(94));
 		subscriberService.create(subscriber);
 
-		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(),
+		subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), rh.hindiLanguage(),
 				sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
 
-		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber()).get(0);
 		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
 		Subscription subscription = subscriptions.iterator().next();
 		SubscriptionPackMessage msg = inboxService.getInboxMessage(subscription);
@@ -163,7 +163,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		subscriber.setLastMenstrualPeriod(now.minusDays(595));
 		subscriberService.updateStartDate(subscriber);
 
-		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber()).get(0);
 		subscriptions = subscriber.getAllSubscriptions();
 		subscription = subscriptions.iterator().next();
 		msg = inboxService.getInboxMessage(subscription);
@@ -186,10 +186,10 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		subscriberService.create(subscriber);
 
 		// create subscription for childPack with one message per week.
-		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
+		subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
 				SubscriptionOrigin.MCTS_IMPORT);
 
-		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber()).get(0);
 		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
 		Subscription subscription = subscriptions.iterator().next();
 		SubscriptionPackMessage msg = inboxService.getInboxMessage(subscription);
@@ -202,7 +202,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		subscriber.setDateOfBirth(now.minusDays(6));
 		subscriberService.updateStartDate(subscriber);
 
-		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber()).get(0);
 		subscriptions = subscriber.getAllSubscriptions();
 		subscription = subscriptions.iterator().next();
 		msg = inboxService.getInboxMessage(subscription);
@@ -225,10 +225,10 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		subscriber.setLastMenstrualPeriod(now.minusDays(30));
 		subscriberService.create(subscriber);
 
-		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+		subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
 				SubscriptionOrigin.MCTS_IMPORT);
 
-		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber()).get(0);
 		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
 		Subscription subscription = subscriptions.iterator().next();
 
@@ -248,10 +248,10 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		subscriberService.create(subscriber);
 		
 		// create subscription for childPack with one message per week.
-		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
+		subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
 				SubscriptionOrigin.MCTS_IMPORT);
 		
-		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber()).get(0);
 		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
 		Subscription subscription = subscriptions.iterator().next();
 		SubscriptionPackMessage msg = inboxService.getInboxMessage(subscription);
@@ -263,7 +263,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		subscriber.setDateOfBirth(DateTime.now().minusDays(342)); // completion_duration + 7 days
 		subscriberService.updateStartDate(subscriber);
 
-		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber()).get(0);
 		subscriptions = subscriber.getAllSubscriptions();
 		subscription = subscriptions.iterator().next();
 		msg = inboxService.getInboxMessage(subscription);
@@ -288,10 +288,10 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		subscriberService.create(subscriber);
 		
 		// create pregnancyPack subscription for one message per week.
-		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), 
+		subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), rh.hindiLanguage(),
 				sh.pregnancyPackFor1MessagePerWeek(subscriptionPackMessageDataService), SubscriptionOrigin.MCTS_IMPORT);
 		
-		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber()).get(0);
 		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
 		Subscription subscription = subscriptions.iterator().next();
 		SubscriptionPackMessage msg = inboxService.getInboxMessage(subscription);
@@ -303,7 +303,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		subscriber.setLastMenstrualPeriod(DateTime.now().minusDays(96)); 
 		subscriberService.updateStartDate(subscriber);
 
-		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber()).get(0);
 		subscriptions = subscriber.getAllSubscriptions();
 		subscription = subscriptions.iterator().next();
 		msg = inboxService.getInboxMessage(subscription);
@@ -328,11 +328,11 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		subscriberService.create(subscriber);
 		
 		// create childPack subscription for two message per week.
-		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), 
+		subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), rh.hindiLanguage(),
 				sh.childPackFor2MessagePerWeek(subscriptionPackMessageDataService),
 				SubscriptionOrigin.MCTS_IMPORT);
 		
-		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber()).get(0);
 		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
 		Subscription subscription = subscriptions.iterator().next();
 		SubscriptionPackMessage msg = inboxService.getInboxMessage(subscription);
@@ -344,7 +344,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		subscriber.setDateOfBirth(now.minusDays(4));
 		subscriberService.updateStartDate(subscriber);
 
-		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber()).get(0);
 		subscriptions = subscriber.getAllSubscriptions();
 		subscription = subscriptions.iterator().next();
 		msg = inboxService.getInboxMessage(subscription);
@@ -367,7 +367,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
  		subscriber.setDateOfBirth(now.minusDays(4));
  		subscriberService.create(subscriber);
 
- 		Subscription childSubscription = subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
+ 		Subscription childSubscription = subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
 				SubscriptionOrigin.MCTS_IMPORT);
  		assertEquals(1, childSubscription.getSubscriptionPack().getMessagesPerWeek());
  		SubscriptionPackMessage packMessage = inboxService.getInboxMessage(childSubscription);
@@ -377,7 +377,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
  		//update subscriptionPack and subscriptionPackMeassage list according to 2 msg per week for childPack
  		sh.childPackFor2MessagePerWeek(subscriptionPackMessageDataService);
 
- 		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+ 		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber()).get(0);
  		childSubscription = subscriber.getSubscriptions().iterator().next();
  		assertEquals(2, childSubscription.getSubscriptionPack().getMessagesPerWeek());
  		
@@ -397,7 +397,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
  		subscriber.setLastMenstrualPeriod(now.minusDays(94));
  		subscriberService.create(subscriber);
 
- 		Subscription motherSubscription = subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+ 		Subscription motherSubscription = subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
  				SubscriptionOrigin.MCTS_IMPORT);
  		assertEquals(2, motherSubscription.getSubscriptionPack().getMessagesPerWeek());
  		
@@ -408,7 +408,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
  		//update subscriptionPack and subscriptionPackMeassage list according to 1 msg per week for pregnancyPack
  		sh.pregnancyPackFor1MessagePerWeek(subscriptionPackMessageDataService);
  		
- 		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+ 		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber()).get(0);
  		motherSubscription = subscriber.getSubscriptions().iterator().next();
  		assertEquals(1, motherSubscription.getSubscriptionPack().getMessagesPerWeek());
  		
@@ -427,10 +427,10 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		subscriber.setLastMenstrualPeriod(now.minusDays(108));
 		subscriberService.create(subscriber);
 
-		subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(),
+		subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), rh.hindiLanguage(),
 				sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
 
-		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber()).get(0);
 		Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
 		Subscription subscription = subscriptions.iterator().next();
 		SubscriptionPackMessage msg = inboxService.getInboxMessage(subscription);
@@ -443,7 +443,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		subscriber.setLastMenstrualPeriod(DateTime.now().minusDays(104));
 		subscriberService.updateStartDate(subscriber);
 
-		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber());
+		subscriber = subscriberService.getSubscriber(subscriber.getCallingNumber()).get(0);
 		subscriptions = subscriber.getAllSubscriptions();
 		subscription = subscriptions.iterator().next();
 		msg = inboxService.getInboxMessage(subscription);

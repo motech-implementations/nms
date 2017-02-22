@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -167,30 +168,34 @@ public class UserController extends BaseController {
     }
 
     private boolean validateKilkariServiceAvailability(Long callingNumber, Circle circle) { // NO CHECKSTYLE Cyclomatic Complexity
-        Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
+        List<Subscriber> subscribers = subscriberService.getSubscriber(callingNumber);
 
         // 1. Check for existing subscriber and if mcts data is available
         // 2. If not mcts data available, use circle information for existing subscriber
         // 3. If existing subscriber has no circle available or is new subscriber, use circle passed from imi
 
+        Circle subscriberCircle = null;
         // check for subscriber and mcts location data
-        if (subscriber != null) {
+        if (!subscribers.isEmpty()) {
+            for (Subscriber eachSubscriber : subscribers) {
 
-            MctsMother mother = subscriber.getMother();
-            if (mother != null) {
-                return serviceDeployedInUserState(Service.KILKARI, mother.getState());
-            }
+                MctsMother mother = eachSubscriber.getMother();
+                if (mother != null) {
+                    return serviceDeployedInUserState(Service.KILKARI, mother.getState());
+                }
 
-            MctsChild child = subscriber.getChild();
-            if (child != null) {
-                return serviceDeployedInUserState(Service.KILKARI, child.getState());
+                MctsChild child = eachSubscriber.getChild();
+                if (child != null) {
+                    return serviceDeployedInUserState(Service.KILKARI, child.getState());
+                }
+                subscriberCircle = eachSubscriber.getCircle();
             }
         }
 
         // Try to validate from circle since we don't have MCTS data for state. Choose circle from subscriber or
         // passed from IMI as last resort
-        Circle currentCircle = (subscriber != null && subscriber.getCircle() != null) ?
-                subscriber.getCircle() : circle;
+        Circle currentCircle = (!subscribers.isEmpty() && subscriberCircle != null) ?
+                subscriberCircle : circle;
         if (currentCircle == null) { // No circle available
             return true;
         }
@@ -213,24 +218,24 @@ public class UserController extends BaseController {
     }
 
     private UserResponse getKilkariResponseUser(Long callingNumber) {
-        Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
+        List<Subscriber> subscribers = subscriberService.getSubscriber(callingNumber);
         KilkariUserResponse kilkariUserResponse = new KilkariUserResponse();
         Set<String> packs = new HashSet<>();
 
-        if (subscriber != null) {
-
-            Set<Subscription> subscriptions = subscriber.getSubscriptions();
-            for (Subscription subscription : subscriptions) {
-                if ((subscription.getStatus() == SubscriptionStatus.ACTIVE) ||
-                        (subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
-                    packs.add(subscription.getSubscriptionPack().getName());
+        if (!subscribers.isEmpty()) {
+            for (Subscriber eachSubscriber : subscribers) {
+                Set<Subscription> subscriptions = eachSubscriber.getSubscriptions();
+                for (Subscription subscription : subscriptions) {
+                    if ((subscription.getStatus() == SubscriptionStatus.ACTIVE) ||
+                            (subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
+                        packs.add(subscription.getSubscriptionPack().getName());
+                    }
                 }
-            }
-            kilkariUserResponse.setSubscriptionPackList(packs);
 
-            Language subscriberLanguage = subscriber.getLanguage();
-            if (subscriberLanguage != null) {
-                kilkariUserResponse.setLanguageLocationCode(subscriberLanguage.getCode());
+                Language subscriberLanguage = eachSubscriber.getLanguage();
+                if (subscriberLanguage != null) {
+                    kilkariUserResponse.setLanguageLocationCode(subscriberLanguage.getCode());
+                }
             }
         }
 

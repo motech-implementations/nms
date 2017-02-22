@@ -37,6 +37,7 @@ public class MctsChild extends MctsBeneficiary {
     public void deepCopyFrom(MctsChild other) {
         setName(other.getName());
         setMother(other.getMother());
+        setDateOfBirth(other.getDateOfBirth());
         setState(other.getState());
         setDistrict(other.getDistrict());
         setTaluka(other.getTaluka());

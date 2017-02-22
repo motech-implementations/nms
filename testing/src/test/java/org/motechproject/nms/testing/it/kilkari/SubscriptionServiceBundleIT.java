@@ -9,6 +9,8 @@ import org.junit.runner.RunWith;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.mds.annotations.Ignore;
 import org.motechproject.mds.ex.JdoListenerInvocationException;
+import org.motechproject.nms.kilkari.domain.MctsChild;
+import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.CallStage;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
@@ -131,13 +133,13 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L));
-        subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),
+        subscriptionService.createSubscription(subscriber1, subscriber1.getCallingNumber(), rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
 
         Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L));
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.hindiLanguage(),
+        subscriptionService.createSubscription(subscriber2, subscriber2.getCallingNumber(), rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.hindiLanguage(),
+        subscriptionService.createSubscription(subscriber2, subscriber2.getCallingNumber(), rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
         transactionManager.commit(status);
     }
@@ -153,39 +155,34 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         // s1 & s2 should remain untouched
-        subscriptionService.createSubscription(1000000000L, rh.hindiLanguage(), sh.childPack(),
-                SubscriptionOrigin.IVR);
-
-        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
-        assertNotNull(subscriber);
-        Set<Subscription> subscriptions = subscriber.getSubscriptions();
+        List<Subscriber> subscriber = subscriberService.getSubscriber(1000000000L);
+        assertFalse(subscriber.isEmpty());
+        Set<Subscription> subscriptions = subscriber.get(0).getSubscriptions();
         assertEquals(1, subscriptions.size());
 
 
         Subscriber s2 = new Subscriber(1000000001L, rh.hindiLanguage());
         subscriberService.create(s2);
 
-        subscriptionService.createSubscription(s2.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(s2, s2.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(s2.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+        subscriptionService.createSubscription(s2, s2.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.IVR);
 
         subscriber = subscriberService.getSubscriber(1000000001L);
-        assertNotNull(subscriber);
-        subscriptions = subscriber.getSubscriptions();
-        assertEquals(2, subscriptions.size());
+        assertEquals(1, subscriber.size());
+        assertEquals(2, subscriber.get(0).getSubscriptions().size());
 
         subscriptionService.purgeOldInvalidSubscriptions();
 
         subscriber = subscriberService.getSubscriber(1000000000L);
-        assertNotNull(subscriber);
-        subscriptions = subscriber.getSubscriptions();
+        assertNotNull(subscriber.get(0));
+        subscriptions = subscriber.get(0).getSubscriptions();
         assertEquals(1, subscriptions.size());
 
         subscriber = subscriberService.getSubscriber(1000000001L);
-        assertNotNull(subscriber);
-        subscriptions = subscriber.getSubscriptions();
-        assertEquals(2, subscriptions.size());
+        assertEquals(1, subscriber.size());
+        assertEquals(2, subscriber.get(0).getSubscriptions().size());
 
         transactionManager.commit(status);
     }
@@ -193,7 +190,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     @Test
     public void testPurgeOldClosedSubscriptionsSubscribersDeleted() {
 
-        Subscriber subscriber;
+        List<Subscriber> subscriber;
         Set<Subscription> subscriptions;
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -202,10 +199,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscriber s3 = new Subscriber(1000000002L, rh.hindiLanguage());
         subscriberService.create(s3);
 
-        subscriptionService.createSubscription(s3.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(s3, s3.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
 
-        s3 = subscriberService.getSubscriber(1000000002L);
+        s3 = subscriberService.getSubscriber(1000000002L).get(0);
         Subscription subscription = s3.getSubscriptions().iterator().next();
         subscription.setStatus(SubscriptionStatus.COMPLETED);
         subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
@@ -213,20 +210,20 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         subscriber = subscriberService.getSubscriber(1000000002L);
         assertNotNull(subscriber);
-        subscriptions = subscriber.getSubscriptions();
+        subscriptions = subscriber.get(0).getSubscriptions();
         assertEquals(1, subscriptions.size());
 
 
         Subscriber s4 = new Subscriber(1000000003L, rh.hindiLanguage());
         subscriberService.create(s4);
 
-        subscriptionService.createSubscription(s4.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(s4, s4.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(s4.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+        subscriptionService.createSubscription(s4, s4.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.IVR);
 
-        s4 = subscriberService.getSubscriber(1000000003L);
-        Iterator<Subscription> subscriptionIterator = s4.getSubscriptions().iterator();
+        subscriber = subscriberService.getSubscriber(1000000003L);
+        Iterator<Subscription> subscriptionIterator = subscriber.get(0).getSubscriptions().iterator();
         subscription = subscriptionIterator.next();
         subscription.setStatus(SubscriptionStatus.COMPLETED);
         subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
@@ -238,16 +235,16 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         subscriber = subscriberService.getSubscriber(1000000003L);
         assertNotNull(subscriber);
-        subscriptions = subscriber.getSubscriptions();
+        subscriptions = subscriber.get(0).getSubscriptions();
         assertEquals(2, subscriptions.size());
 
         subscriptionService.purgeOldInvalidSubscriptions();
 
         subscriber = subscriberService.getSubscriber(1000000002L);
-        assertNull(subscriber);
+        assertTrue(subscriber.isEmpty());
 
         subscriber = subscriberService.getSubscriber(1000000003L);
-        assertNull(subscriber);
+        assertTrue(subscriber.isEmpty());
 
         transactionManager.commit(status);
     }
@@ -255,7 +252,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     @Test
     public void testPurgeOldClosedSubscriptionsRemoveSubscriptionLeaveSubscriber() {
 
-        Subscriber subscriber;
+        List<Subscriber> subscriber;
         Set<Subscription> subscriptions;
         Iterator<Subscription> subscriptionIterator;
         Subscription subscription;
@@ -266,12 +263,12 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscriber s5 = new Subscriber(1000000004L, rh.hindiLanguage());
         subscriberService.create(s5);
 
-        subscriptionService.createSubscription(s5.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(s5, s5.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(s5.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+        subscriptionService.createSubscription(s5, s5.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.IVR);
-        s5 = subscriberService.getSubscriber(1000000004L);
-        subscriptionIterator = s5.getSubscriptions().iterator();
+        subscriber = subscriberService.getSubscriber(1000000004L);
+        subscriptionIterator = subscriber.get(0).getSubscriptions().iterator();
         subscription = subscriptionIterator.next();
         subscription.setStatus(SubscriptionStatus.COMPLETED);
         subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
@@ -279,18 +276,18 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         subscriber = subscriberService.getSubscriber(1000000004L);
         assertNotNull(subscriber);
-        subscriptions = subscriber.getSubscriptions();
+        subscriptions = subscriber.get(0).getSubscriptions();
         assertEquals(2, subscriptions.size());
 
         Subscriber s6 = new Subscriber(1000000005L, rh.hindiLanguage());
         subscriberService.create(s6);
 
-        subscriptionService.createSubscription(s6.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(s6, s6.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(s6.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+        subscriptionService.createSubscription(s6, s6.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.IVR);
-        s6 = subscriberService.getSubscriber(1000000005L);
-        subscriptionIterator = s6.getSubscriptions().iterator();
+        subscriber = subscriberService.getSubscriber(1000000005L);
+        subscriptionIterator = subscriber.get(0).getSubscriptions().iterator();
         subscription = subscriptionIterator.next();
         subscription.setStatus(SubscriptionStatus.DEACTIVATED);
         subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
@@ -298,7 +295,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         subscriber = subscriberService.getSubscriber(1000000005L);
         assertNotNull(subscriber);
-        subscriptions = subscriber.getSubscriptions();
+        subscriptions = subscriber.get(0).getSubscriptions();
         assertEquals(2, subscriptions.size());
 
         transactionManager.commit(status);
@@ -311,12 +308,12 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         subscriber = subscriberService.getSubscriber(1000000004L);
         assertNotNull(subscriber);
-        subscriptions = subscriber.getSubscriptions();
+        subscriptions = subscriber.get(0).getSubscriptions();
         assertEquals(1, subscriptions.size());
 
         subscriber = subscriberService.getSubscriber(1000000005L);
         assertNotNull(subscriber);
-        subscriptions = subscriber.getSubscriptions();
+        subscriptions = subscriber.get(0).getSubscriptions();
         assertEquals(1, subscriptions.size());
 
         transactionManager.commit(status);
@@ -328,12 +325,14 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         SubscriptionPack pack1 = subscriptionPackDataService.byName("pack1");
         SubscriptionPack pack2 = subscriptionPackDataService.byName("pack2");
-        subscriptionService.createSubscription(1000000000L, rh.hindiLanguage(), sh.childPack(),
+
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(1000000001L));
+        subscriptionService.createSubscription(subscriber, 1000000001L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(1000000000L, rh.hindiLanguage(),
+        subscriptionService.createSubscription(subscriber, 1000000001L, rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
 
-        Subscriber subscriber = subscriberService.getSubscriber(1000000000L);
+        subscriber = subscriberService.getSubscriber(1000000001L).get(0);
         Set<Subscription> subscriptions = subscriber.getSubscriptions();
 
         transactionManager.commit(status);
@@ -388,9 +387,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscriber s2 = new Subscriber(1000000001L, rh.hindiLanguage());
         subscriberService.create(s2);
 
-        subscriptionService.createSubscription(s2.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(s2, s2.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(s2.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+        subscriptionService.createSubscription(s2, s2.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.IVR);
 
         SubscriptionPack fortyEightWeekPack = subscriptionPackDataService.byName("childPack");
@@ -405,20 +404,20 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     @Test
     public void testCreateSubscriptionNoSubscriber() throws Exception {
         // Just verify the db is clean
-        Subscriber s = subscriberService.getSubscriber(1111111111L);
-        assertNull(s);
+        List<Subscriber> subscriber = subscriberService.getSubscriber(1111111111L);
+        assertTrue(subscriber.isEmpty());
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(null, 1111111111L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
 
-        Subscriber subscriber = subscriberService.getSubscriber(1111111111L);
+        subscriber = subscriberService.getSubscriber(1111111111L);
         assertNotNull(subscriber);
-        assertEquals(rh.hindiLanguage(), subscriber.getLanguage());
-        assertEquals(1, subscriber.getSubscriptions().size());
+        assertEquals(rh.hindiLanguage(), subscriber.get(0).getLanguage());
+        assertEquals(1, subscriber.get(0).getSubscriptions().size());
 
-        Subscription subscription = subscriber.getSubscriptions().iterator().next();
+        Subscription subscription = subscriber.get(0).getSubscriptions().iterator().next();
         assertEquals(sh.childPack(), subscription.getSubscriptionPack());
 
         transactionManager.commit(status);
@@ -428,19 +427,20 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     public void testCreateSubscriptionExistingSubscriberDifferentLanguage() throws Exception {
 
         // Just verify the db is clean
-        Subscriber s = subscriberService.getSubscriber(1111111111L);
-        assertNull(s);
+        List<Subscriber> s = subscriberService.getSubscriber(1111111111L);
+        assertTrue(s.isEmpty());
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(), sh.childPack(),
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(1111111111L));
+        subscriptionService.createSubscription(subscriber, 1111111111L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
 
         // Since the user exists we will not change their language
-        subscriptionService.createSubscription(1111111111L, rh.kannadaLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(subscriber, 1111111111L, rh.kannadaLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
 
-        Subscriber subscriber = subscriberService.getSubscriber(1111111111L);
+        subscriber = subscriberService.getSubscriber(1111111111L).get(0);
         assertNotNull(subscriber);
         assertEquals(rh.hindiLanguage(), subscriber.getLanguage());
         assertEquals(1, subscriber.getSubscriptions().size());
@@ -456,22 +456,22 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     public void testCreateSubscriptionExistingSubscriberWithoutLanguage() throws Exception {
 
         // Just verify the db is clean
-        Subscriber s = subscriberService.getSubscriber(1111111111L);
-        assertNull(s);
+        List<Subscriber> s = subscriberService.getSubscriber(1111111111L);
+        assertTrue(s.isEmpty());
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         subscriberService.create(new Subscriber(1111111111L));
         s = subscriberService.getSubscriber(1111111111L);
         assertNotNull(s);
-        assertNull(s.getLanguage());
+        assertNull(s.get(0).getLanguage());
 
-        subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(s.get(0), 1111111111L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
 
-        Subscriber subscriber = subscriberService.getSubscriber(1111111111L);
-        assertNotNull(subscriber);
-        assertEquals(rh.hindiLanguage(), subscriber.getLanguage());
+        s = subscriberService.getSubscriber(1111111111L);
+        assertNotNull(s);
+        assertEquals(rh.hindiLanguage(), s.get(0).getLanguage());
 
         transactionManager.commit(status);
     }
@@ -484,10 +484,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         assertEquals(1, mctsSubscriber.getActiveAndPendingSubscriptions().size());
 
         transactionManager.commit(status);
@@ -501,18 +501,19 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
+        mctsSubscriber.setChild(new MctsChild("123456789"));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         assertEquals(1, mctsSubscriber.getActiveAndPendingSubscriptions().size());
 
         // attempt to create subscription to the same pack -- should fail
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         assertEquals(1, mctsSubscriber.getActiveAndPendingSubscriptions().size());
 
         transactionManager.commit(status);
@@ -525,18 +526,19 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(28));
+        mctsSubscriber.setMother(new MctsMother("123456789"));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         assertEquals(1, mctsSubscriber.getActiveAndPendingSubscriptions().size());
 
         // attempt to create subscription to the same pack -- should fail
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         assertEquals(1, mctsSubscriber.getActiveAndPendingSubscriptions().size());
 
         transactionManager.commit(status);
@@ -551,18 +553,18 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(28));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         Subscription pregnancySubscription = mctsSubscriber.getActiveAndPendingSubscriptions().iterator().next();
         pregnancySubscription.setStatus(SubscriptionStatus.DEACTIVATED);
         subscriptionDataService.update(pregnancySubscription);
 
         // attempt to create subscription to the same pack -- should succeed
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         assertEquals(1, mctsSubscriber.getActiveAndPendingSubscriptions().size());
 
         transactionManager.commit(status);
@@ -577,10 +579,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
 
         // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
         // create a second subscription for this MCTS subscriber
@@ -589,10 +591,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriberDataService.update(mctsSubscriber);
 
         // attempt to create subscription to a different pack
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         assertEquals(2, mctsSubscriber.getActiveAndPendingSubscriptions().size());
 
         transactionManager.commit(status);
@@ -606,27 +608,27 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         ivrSubscriber.setDateOfBirth(null);
         subscriberDataService.create(ivrSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(ivrSubscriber, 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
 
-        ivrSubscriber = subscriberDataService.findByNumber(9999911122L);
+        ivrSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
 
         // create a second subscription for this IVR subscriber
         ivrSubscriber.setLastMenstrualPeriod(null);
         subscriberDataService.update(ivrSubscriber);
 
         // attempt to create subscription to a different pack
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+        subscriptionService.createSubscription(ivrSubscriber, 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.IVR);
 
-        ivrSubscriber = subscriberDataService.findByNumber(9999911122L);
+        ivrSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         assertEquals(2, ivrSubscriber.getActiveAndPendingSubscriptions().size());
 
         transactionManager.commit(status);
 
         // create new transaction and test updateStartDate call with
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        ivrSubscriber = subscriberDataService.findByNumber(9999911122L);
+        ivrSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         subscriberService.updateStartDate(ivrSubscriber);
         assertEquals(2, ivrSubscriber.getActiveAndPendingSubscriptions().size());
         transactionManager.commit(status);
@@ -642,9 +644,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(now.minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
 
@@ -654,7 +656,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(now.minusDays(100));
         subscriberService.updateStartDate(mctsSubscriber);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         subscription = mctsSubscriber.getSubscriptions().iterator().next();
 
         assertEquals(now.minusDays(100).withTimeAtStartOfDay(), subscription.getStartDate());
@@ -675,9 +677,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
 
@@ -687,7 +689,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber.setLastMenstrualPeriod(now.minusDays(270));
         subscriberService.updateStartDate(mctsSubscriber);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         subscription = mctsSubscriber.getSubscriptions().iterator().next();
 
         assertEquals(now.minusDays(180).withTimeAtStartOfDay(), subscription.getStartDate());
@@ -696,7 +698,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber.setLastMenstrualPeriod(now.minusDays(1000));
         subscriberService.updateStartDate(mctsSubscriber);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         subscription = mctsSubscriber.getSubscriptions().iterator().next();
 
         assertEquals(now.minusDays(910).withTimeAtStartOfDay(), subscription.getStartDate());
@@ -715,9 +717,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setLastMenstrualPeriod(now.minusDays(90)); //so the startDate should be today
         subscriberDataService.create(mctsSubscriber);
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
 
@@ -747,9 +749,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscriber mctsSubscriber = new Subscriber(9999911122L);
         mctsSubscriber.setLastMenstrualPeriod(now.minusDays(90));
         subscriberDataService.create(mctsSubscriber);
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh
                 .pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
 
         Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
         subscription.setNeedsWelcomeMessageViaObd(false);
@@ -795,12 +797,12 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriber = subscriberDataService.create(subscriber);
 
         // Make a deactivated subscription
-        Subscription subscription = subscriptionService.createSubscription(4444444444L, rh.hindiLanguage(),
+        Subscription subscription = subscriptionService.createSubscription(subscriber, 4444444444L, rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.DO_NOT_DISTURB);
 
         // Now mimic a subscriber calling
-        subscription = subscriptionService.createSubscription(4444444444L, rh.hindiLanguage(),
+        subscription = subscriptionService.createSubscription(subscriber, 4444444444L, rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
 
         // And check the subscription is now pending activation
@@ -822,7 +824,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        Subscription subscription = subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(),
+        Subscription subscription = subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
 
         transactionManager.commit(status);
@@ -840,7 +842,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        Subscription subscription = subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(),
+        Subscription subscription = subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscription.setStatus(SubscriptionStatus.DEACTIVATED);
         subscriptionDataService.update(subscription);
@@ -859,7 +861,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        Subscription subscription = subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(),
+        Subscription subscription = subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscription.setStatus(SubscriptionStatus.COMPLETED);
         subscriptionDataService.update(subscription);
@@ -875,7 +877,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     public void testDeleteOldDeactivatedSubscription() {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        Subscriber subscriber = subscriberService.getSubscriber(2000000000L);
+        Subscriber subscriber = subscriberService.getSubscriber(2000000000L).get(0);
         assertNotNull(subscriber);
 
         assertEquals(2, subscriber.getSubscriptions().size());
@@ -887,7 +889,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         subscriptionDataService.delete(subscription);
 
-        subscriber = subscriberDataService.findByNumber(2000000000L);
+        subscriber = subscriberDataService.findByNumber(2000000000L).get(0);
         assertEquals(1, subscriber.getSubscriptions().size());
 
         transactionManager.commit(status);
@@ -897,7 +899,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     public void testDeleteOldCompletedSubscription() {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        Subscriber subscriber = subscriberService.getSubscriber(2000000000L);
+        Subscriber subscriber = subscriberService.getSubscriber(2000000000L).get(0);
         assertNotNull(subscriber);
 
         assertEquals(2, subscriber.getSubscriptions().size());
@@ -909,7 +911,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         subscriptionDataService.delete(subscription);
 
-        subscriber = subscriberDataService.findByNumber(2000000000L);
+        subscriber = subscriberDataService.findByNumber(2000000000L).get(0);
         assertEquals(1, subscriber.getSubscriptions().size());
 
         transactionManager.commit(status);
@@ -948,15 +950,15 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(28));
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         
         // mark subscription as complete
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(602));
         subscriberService.updateStartDate(mctsSubscriber);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         DateTime oldLMP = mctsSubscriber.getLastMenstrualPeriod();
         assertEquals(1, mctsSubscriber.getSubscriptions().size()); // Completed subscription should be there
         assertEquals(0, mctsSubscriber.getActiveAndPendingSubscriptions().size()); // No active subscription
@@ -967,10 +969,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriberService.updateStartDate(mctsSubscriber);
         
         // attempt to create subscription to the same pack -- should succeed
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         assertFalse(mctsSubscriber.getLastMenstrualPeriod().equals(oldLMP));
         assertEquals(mctsSubscriber.getLastMenstrualPeriod(), newLMP);
         assertEquals(2, mctsSubscriber.getSubscriptions().size());
@@ -996,24 +998,24 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(DateTime.now());
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         Subscription childSubscription = mctsSubscriber.getActiveAndPendingSubscriptions().iterator().next();
         childSubscription.setStatus(SubscriptionStatus.DEACTIVATED);
         subscriptionDataService.update(childSubscription);
         
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         DateTime oldDob = mctsSubscriber.getDateOfBirth();
         DateTime newDob = DateTime.now().minusDays(100);
         mctsSubscriber.setDateOfBirth(newDob);
         subscriberService.updateStartDate(mctsSubscriber);
 
         // attempt to create subscription to the same pack -- should succeed
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         assertFalse(mctsSubscriber.getDateOfBirth().equals(oldDob));
         assertEquals(mctsSubscriber.getDateOfBirth(), newDob);
         assertEquals(2, mctsSubscriber.getSubscriptions().size());
@@ -1040,15 +1042,15 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(currentTime);
         subscriberDataService.create(mctsSubscriber);
 
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
         
         // mark subscription as complete
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         mctsSubscriber.setDateOfBirth(currentTime.minusDays(340));
         subscriberService.updateStartDate(mctsSubscriber);
         
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         DateTime oldDob = mctsSubscriber.getDateOfBirth(); 
         assertEquals(1, mctsSubscriber.getSubscriptions().size());
         assertEquals(0, mctsSubscriber.getActiveAndPendingSubscriptions().size()); // No active subscription
@@ -1057,10 +1059,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(newDob);
         subscriberService.updateStartDate(mctsSubscriber);
         // attempt to create subscription to the same pack -- should succeed
-        subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         assertFalse(mctsSubscriber.getDateOfBirth().equals(oldDob));
         assertEquals(mctsSubscriber.getDateOfBirth(), newDob);
         assertEquals(2, mctsSubscriber.getSubscriptions().size());
@@ -1076,13 +1078,13 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
     public void verifyFT182() {
     	
     	//attempt to create subscriber and subscription having calling number more than 10 digit
-    	subscriptionService.createSubscription(991111111122L, rh.hindiLanguage(),
+    	subscriptionService.createSubscription(null, 991111111122L, rh.hindiLanguage(),
 				sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
     	
-        Subscriber subscriber1 = subscriberDataService.findByNumber(991111111122L);
-        assertNull(subscriber1);
+        List<Subscriber> subscriber1 = subscriberDataService.findByNumber(991111111122L);
+        assertTrue(subscriber1.isEmpty());
 
-        Subscriber subscriber2 = subscriberDataService.findByNumber(1111111122L);
+        Subscriber subscriber2 = subscriberDataService.findByNumber(1111111122L).get(0);
         assertNotNull(subscriber2);
     }
 
@@ -1096,10 +1098,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         Subscriber subscriber = new Subscriber(9999911222L);
         subscriberService.create(subscriber);
         
-        subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
         
-        subscriber = subscriberDataService.findByNumber(9999911222L);
+        subscriber = subscriberDataService.findByNumber(9999911222L).get(0);
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
         assertEquals(1, subscriber.getSubscriptions().size());
         assertEquals(SubscriptionStatus.PENDING_ACTIVATION, subscription.getStatus());
@@ -1117,7 +1119,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         // create subscriber and subscription
         Subscriber subscriber = new Subscriber(9999911222L);
         subscriberService.create(subscriber);
-        Subscription sub = subscriptionService.createSubscription(subscriber.getCallingNumber(),
+        Subscription sub = subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(),
                 rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
 
         // get and update subscription with old start date beyond expected range (>48wks for child pack)
@@ -1147,7 +1149,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         // create subscriber and subscription
         Subscriber subscriber = new Subscriber(9999911222L);
         subscriberService.create(subscriber);
-        Subscription sub = subscriptionService.createSubscription(subscriber.getCallingNumber(),
+        Subscription sub = subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(),
                 rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
 
         // get and update subscription with old start date within expected range (<48wks for child pack)
@@ -1177,7 +1179,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         // create subscriber and subscription
         Subscriber subscriber = new Subscriber(9999911222L);
         subscriberService.create(subscriber);
-        Subscription sub = subscriptionService.createSubscription(subscriber.getCallingNumber(),
+        Subscription sub = subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(),
                 rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
 
         // get and update subscription with old start date beyond expected range (>72wks for pregnancy pack)
@@ -1207,7 +1209,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         // create subscriber and subscription
         Subscriber subscriber = new Subscriber(9999911222L);
         subscriberService.create(subscriber);
-        Subscription sub = subscriptionService.createSubscription(subscriber.getCallingNumber(),
+        Subscription sub = subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(),
                 rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
 
         // get and update subscription with old start date within expected range (<72wks for pregnancy pack)
@@ -1238,7 +1240,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         // create subscriber and subscription
         Subscriber subscriber = new Subscriber(9999911222L);
         subscriberService.create(subscriber);
-        Subscription sub = subscriptionService.createSubscription(subscriber.getCallingNumber(),
+        Subscription sub = subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(),
                 rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
         DateTime startDate1 = sub.getStartDate();
 
@@ -1277,7 +1279,7 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         // create subscriber and subscription
         Subscriber subscriber = new Subscriber(9999911222L);
         subscriberService.create(subscriber);
-        Subscription sub = subscriptionService.createSubscription(subscriber.getCallingNumber(), rh.hindiLanguage(),
+        Subscription sub = subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
 
         Long subscriptionId = sub.getId();
@@ -1315,10 +1317,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber);
 
-        Subscription hold = subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+        Subscription hold = subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
         assertEquals(0, mctsSubscriber.getActiveAndPendingSubscriptions().size());
 
         Subscription holdFetch = subscriptionService.getSubscription(hold.getSubscriptionId());
@@ -1343,10 +1345,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber1.setDateOfBirth(DateTime.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber1);
 
-        Subscription hold = subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+        Subscription hold = subscriptionService.createSubscription(mctsSubscriber1, 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
-        mctsSubscriber1 = subscriberDataService.findByNumber(9999911122L);
+        mctsSubscriber1 = subscriberDataService.findByNumber(9999911122L).get(0);
         assertEquals(0, mctsSubscriber1.getActiveAndPendingSubscriptions().size());
 
         Subscription holdFetch = subscriptionService.getSubscription(hold.getSubscriptionId());
@@ -1359,10 +1361,10 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         mctsSubscriber2.setDateOfBirth(DateTime.now().minusDays(14));
         subscriberDataService.create(mctsSubscriber2);
 
-        subscriptionService.createSubscription(9999911123L, rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(mctsSubscriber2, 9999911123L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
-        mctsSubscriber2 = subscriberDataService.findByNumber(9999911123L);
+        mctsSubscriber2 = subscriberDataService.findByNumber(9999911123L).get(0);
         assertEquals(1, mctsSubscriber2.getActiveAndPendingSubscriptions().size());
 
         transactionManager.commit(status);
@@ -1409,9 +1411,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriberDataService.create(mctsSubscriber2);
 
         // creation subscriptions
-        Subscription hold1 = subscriptionService.createSubscription(9999911122L, rh.hindiLanguage(), sh.childPack(),
+        Subscription hold1 = subscriptionService.createSubscription(mctsSubscriber1, 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
-        Subscription hold2 = subscriptionService.createSubscription(9999911123L, rh.hindiLanguage(), sh.childPack(),
+        Subscription hold2 = subscriptionService.createSubscription(mctsSubscriber2, 9999911123L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
         // verify that they are on hold

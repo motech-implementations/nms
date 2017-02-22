@@ -38,7 +38,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
         if (value == null) {
             return null;
         }
-        return mctsMotherDataService.findByBeneficiaryId(value);
+        return getOrCreateMotherInstance(value);
     }
 
     @Override
