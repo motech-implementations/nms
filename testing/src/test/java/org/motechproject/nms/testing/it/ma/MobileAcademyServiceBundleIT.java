@@ -6,7 +6,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.event.MotechEvent;
-import org.motechproject.mtraining.domain.ActivityRecord;
 import org.motechproject.mtraining.domain.ActivityState;
 import org.motechproject.mtraining.domain.Bookmark;
 import org.motechproject.mtraining.repository.ActivityDataService;
@@ -14,12 +13,12 @@ import org.motechproject.mtraining.repository.BookmarkDataService;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
+import org.motechproject.nms.mobileacademy.domain.CourseCompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.dto.MaCourse;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
-import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
+import org.motechproject.nms.mobileacademy.repository.CourseCompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.mobileacademy.service.CourseNotificationService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
@@ -43,8 +42,6 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -76,7 +73,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     ActivityDataService activityDataService;
 
     @Inject
-    CompletionRecordDataService completionRecordDataService;
+    CourseCompletionRecordDataService courseCompletionRecordDataService;
 
     @Inject
     NmsCourseDataService nmsCourseDataService;
@@ -117,7 +114,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Before
     public void setupMobileAcademy() {
 
-        completionRecordDataService.deleteAll();
+        courseCompletionRecordDataService.deleteAll();
         activityDataService.deleteAll();
         bookmarkDataService.deleteAll();
         nmsCourseDataService.deleteAll();
@@ -395,10 +392,10 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         }
         bookmark.setScoresByChapter(scores);
         maService.setBookmark(bookmark);
-        CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(callingNumber);
-        assertNotNull(cr);
-        assertEquals(cr.getCallingNumber(), callingNumber);
-        assertEquals(cr.getScore(), 33);
+        CourseCompletionRecord ccr = courseCompletionRecordDataService.findByCallingNumber(callingNumber).get(0);
+        assertNotNull(ccr);
+        assertEquals(ccr.getCallingNumber(), callingNumber);
+        assertEquals(ccr.getScore(), 33);
     }
 
     @Test
@@ -417,8 +414,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         }
         bookmark.setScoresByChapter(scores);
         maService.setBookmark(bookmark);
-        // null because we set a failing score
-        assertNull(completionRecordDataService.findRecordByCallingNumber(callingNumber));
+        assertEquals(1, courseCompletionRecordDataService.findByCallingNumber(callingNumber).size());
+        assertFalse(courseCompletionRecordDataService.findByCallingNumber(callingNumber).get(0).isPassed());
     }
 
     @Test
@@ -426,12 +423,13 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
         long callingNumber = 9876543211L;
 
-        CompletionRecord cr = new CompletionRecord(callingNumber, 44, true, 1);
-        completionRecordDataService.create(cr);
+        CourseCompletionRecord ccr = new CourseCompletionRecord(callingNumber, 44, "score", true);
+        courseCompletionRecordDataService.create(ccr);
 
         maService.triggerCompletionNotification(callingNumber);
-        cr = completionRecordDataService.findRecordByCallingNumber(callingNumber);
-        assertFalse(cr.isSentNotification());
+        List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByCallingNumber(callingNumber);
+        ccr = ccrs.get(ccrs.size()-1);
+        assertTrue(ccr.isSentNotification());
     }
 
     @Test(expected = CourseNotCompletedException.class)
@@ -469,8 +467,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         MotechEvent event = new MotechEvent();
         event.getParameters().put("callingNumber", callingNumber);
         event.getParameters().put("smsContent", "FooBar");
-        CompletionRecord cr = new CompletionRecord(callingNumber, 35, false, 1);
-        completionRecordDataService.create(cr);
+        CourseCompletionRecord ccr = new CourseCompletionRecord(callingNumber, 35, "score", false);
+        courseCompletionRecordDataService.create(ccr);
         courseNotificationService.sendSmsNotification(event);
         // TODO: cannot check the notification status yet since we don't have a real IMI url to hit
     }
@@ -495,8 +493,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         MotechEvent event = new MotechEvent();
         event.getParameters().put("callingNumber", callingNumber);
         event.getParameters().put("smsContent", "FooBar");
-        CompletionRecord cr = new CompletionRecord(callingNumber, 35, false, 1);
-        completionRecordDataService.create(cr);
+        CourseCompletionRecord ccr = new CourseCompletionRecord(callingNumber, 35, "score", false);
+        courseCompletionRecordDataService.create(ccr);
         courseNotificationService.sendSmsNotification(event);
         // TODO: cannot check the notification status yet since we don't have a real IMI url to hit
     }
@@ -527,15 +525,66 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         MotechEvent event = new MotechEvent();
         event.getParameters().put("callingNumber", callingNumber);
         event.getParameters().put("smsContent", "FooBar");
-        CompletionRecord cr = new CompletionRecord(callingNumber, 35, false, 1);
-        completionRecordDataService.create(cr);
-        assertNull(cr.getSmsReferenceNumber());
+        CourseCompletionRecord ccr = new CourseCompletionRecord(callingNumber, 35, "score", false);
+        courseCompletionRecordDataService.create(ccr);
+        assertNull(ccr.getSmsReferenceNumber());
 
         courseNotificationService.sendSmsNotification(event);
-        CompletionRecord smsCr = completionRecordDataService.findRecordByCallingNumber(callingNumber);
-        assertNotNull(smsCr.getSmsReferenceNumber());
+        CourseCompletionRecord smsCcr = courseCompletionRecordDataService.findByCallingNumber(callingNumber).get(0);
+        assertNotNull(smsCcr.getSmsReferenceNumber());
         String expectedCode = "" + flw.getState().getCode() + flw.getDistrict().getCode() + callingNumber + 0; // location code + callingNumber + tries
-        assertEquals(expectedCode, smsCr.getSmsReferenceNumber());
+        assertEquals(expectedCode, smsCcr.getSmsReferenceNumber());
+    }
+
+    @Test
+    public void testMultipleCompletions() {
+        long callingNumber = 9876543210L;
+        MaBookmark bookmark = new MaBookmark(callingNumber, VALID_CALL_ID, null, null);
+        maService.setBookmark(bookmark);
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9876543210");
+        assertTrue(added.size() == 1);
+
+        bookmark.setBookmark(FINAL_BOOKMARK);
+        Map<String, Integer> scores = new HashMap<>();
+        for (int i = 1; i < 12; i++) {
+            scores.put(String.valueOf(i), ((int) (Math.random() * 100)) % 5);
+        }
+        String chapterwiseScore = scores.toString();
+        bookmark.setScoresByChapter(scores);
+        maService.setBookmark(bookmark);
+
+        bookmark.setBookmark(FINAL_BOOKMARK);
+        Map<String, Integer> scores1 = new HashMap<>();
+        for (int i = 1; i < 12; i++) {
+            scores1.put(String.valueOf(i), 3);
+        }
+        String chapterwiseScore1 = scores1.toString();
+        bookmark.setScoresByChapter(scores1);
+        maService.setBookmark(bookmark);
+
+        bookmark.setBookmark(FINAL_BOOKMARK);
+        Map<String, Integer> scores2 = new HashMap<>();
+        for (int i = 1; i < 12; i++) {
+            scores2.put(String.valueOf(i), 1);
+        }
+        String chapterwiseScore2 = scores2.toString();
+        bookmark.setScoresByChapter(scores2);
+        maService.setBookmark(bookmark);
+
+        List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByCallingNumber(callingNumber);
+        assertEquals(3, ccrs.size());
+        assertEquals(4, activityDataService.findRecordsForUser((String.valueOf(callingNumber))).size());
+        assertEquals(ActivityState.STARTED, activityDataService.findRecordsForUser((String.valueOf(callingNumber))).get(0).getState());
+        assertEquals(ActivityState.COMPLETED, activityDataService.findRecordsForUser((String.valueOf(callingNumber))).get(1).getState());
+        assertEquals(ActivityState.COMPLETED, activityDataService.findRecordsForUser((String.valueOf(callingNumber))).get(2).getState());
+        assertEquals(ActivityState.COMPLETED, activityDataService.findRecordsForUser((String.valueOf(callingNumber))).get(3).getState());
+        assertEquals(33, ccrs.get(1).getScore());
+        assertEquals(11, ccrs.get(2).getScore());
+        assertTrue(ccrs.get(1).isPassed());
+        assertFalse(ccrs.get(2).isPassed());
+        assertEquals(chapterwiseScore, ccrs.get(0).getChapterWiseScores());
+        assertEquals(chapterwiseScore1, ccrs.get(1).getChapterWiseScores());
+        assertEquals(chapterwiseScore2, ccrs.get(2).getChapterWiseScores());
     }
 
     private void createLanguageLocationData() {

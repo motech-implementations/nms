@@ -4,12 +4,16 @@ import org.joda.time.DateTime;
 import org.joda.time.Weeks;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.motechproject.commons.date.util.DateUtil;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
+import org.motechproject.nms.flw.domain.FlwStatusUpdateAudit;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
+import org.motechproject.nms.flw.domain.UpdateStatusType;
+import org.motechproject.nms.flw.repository.FlwStatusUpdateAuditDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.region.domain.District;
@@ -45,6 +49,8 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
 
     private FrontLineWorkerDataService frontLineWorkerDataService;
 
+    private FlwStatusUpdateAuditDataService flwStatusUpdateAuditDataService;
+
     private SettingsFacade settingsFacade;
     private MotechSchedulerService schedulerService;
     private LanguageService languageService;
@@ -53,11 +59,13 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     public FrontLineWorkerServiceImpl(@Qualifier("flwSettings") SettingsFacade settingsFacade,
                                       MotechSchedulerService schedulerService,
                                       FrontLineWorkerDataService frontLineWorkerDataService,
-                                      LanguageService languageService) {
+                                      LanguageService languageService,
+                                      FlwStatusUpdateAuditDataService flwStatusUpdateAuditDataService) {
         this.frontLineWorkerDataService = frontLineWorkerDataService;
         this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
         this.languageService = languageService;
+        this.flwStatusUpdateAuditDataService = flwStatusUpdateAuditDataService;
         schedulePurgeOfOldFrontLineWorkers();
     }
 
@@ -82,7 +90,7 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
         Integer secInterval = Integer.parseInt(intervalProp);
 
         LOGGER.debug(String.format("The %s message will be sent every %ss starting at %s",
-                                    FLW_PURGE_EVENT_SUBJECT, secInterval.toString(), today.toString()));
+                FLW_PURGE_EVENT_SUBJECT, secInterval.toString(), today.toString()));
 
         //Schedule repeating job
         MotechEvent event = new MotechEvent(FLW_PURGE_EVENT_SUBJECT);
@@ -225,6 +233,9 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
         if (record.getStatus() == FrontLineWorkerStatus.INVALID) {
             // if the caller sets the status to INVALID, that takes precedence over any other status change
             frontLineWorkerDataService.update(record);
+            FlwStatusUpdateAudit flwStatusUpdateAudit = new FlwStatusUpdateAudit(DateUtil.now(), record.getFlwId(), record.getMctsFlwId(), null, UpdateStatusType.ACTIVE_TO_INVALID);
+            flwStatusUpdateAuditDataService.create(flwStatusUpdateAudit);
+
             return;
         }
 
@@ -239,10 +250,16 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
                     (record.getLanguage() != null) && (record.getDistrict() != null)) {
 
                 record.setStatus(FrontLineWorkerStatus.ACTIVE);
+                frontLineWorkerDataService.update(record);
+                FlwStatusUpdateAudit flwStatusUpdateAudit = new FlwStatusUpdateAudit(DateUtil.now(), record.getFlwId(), record.getMctsFlwId(), record.getContactNumber(), UpdateStatusType.ANONYMOUS_TO_ACTIVE);
+                flwStatusUpdateAuditDataService.create(flwStatusUpdateAudit);
+
+                return;
             }
         }
 
         frontLineWorkerDataService.update(record);
+
     }
 
     @Override
@@ -266,7 +283,7 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
 
         if (Math.abs(Weeks.weeksBetween(now, frontLineWorker.getInvalidationDate()).getWeeks()) < weeksToKeepInvalidFLWs) {
             throw new IllegalStateException(String.format("FLW must be in %s state for %s weeks before deleting",
-                                                          status, weeksToKeepInvalidFLWs));
+                    status, weeksToKeepInvalidFLWs));
         }
     }
 }

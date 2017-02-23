@@ -1,17 +1,11 @@
 package org.motechproject.nms.testing.it.api;
 
 import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.NameValuePair;
-import org.apache.commons.httpclient.URIException;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.regexp.RE;
 import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Before;
@@ -31,9 +25,9 @@ import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.repository.*;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
-import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
+import org.motechproject.nms.mobileacademy.domain.CourseCompletionRecord;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
-import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
+import org.motechproject.nms.mobileacademy.repository.CourseCompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
@@ -59,14 +53,12 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
-import org.osgi.service.dmt.Uri;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
@@ -148,7 +140,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
     @Inject
     MobileAcademyService maService;
     @Inject
-    CompletionRecordDataService completionRecordDataService;
+    CourseCompletionRecordDataService courseCompletionRecordDataService;
 
 
     private RegionHelper rh;
@@ -628,8 +620,8 @@ public class OpsControllerBundleIT extends BasePaxIT {
         }
         bookmark.setScoresByChapter(scores);
         maService.setBookmark(bookmark);
-        CompletionRecord cr = completionRecordDataService.findRecordByCallingNumber(9876543210L);
-        assertNotNull(cr);
+        List <CourseCompletionRecord> ncrs = courseCompletionRecordDataService.findByCallingNumber(9876543210L);
+        assertEquals(1, ncrs.size());
 
         // Update Msisdn and verify MA records
         AddFlwRequest request = new AddFlwRequest();
@@ -648,7 +640,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         assertEquals(0, activityDataService.findRecordsForUserByState("9876543210", ActivityState.STARTED).size());
         assertEquals(1, activityDataService.findRecordsForUserByState("7896543210", ActivityState.STARTED).size());
 
-        assertNull(completionRecordDataService.findRecordByCallingNumber(9876543210L));
-        assertNotNull(completionRecordDataService.findRecordByCallingNumber(7896543210L));
+        assertEquals(0, courseCompletionRecordDataService.findByCallingNumber(9876543210L).size());
+        assertEquals(1, courseCompletionRecordDataService.findByCallingNumber(7896543210L).size());
     }
 }

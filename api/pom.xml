@@ -105,6 +105,8 @@
                             org.motechproject.nms.api.web.contract.mobileAcademy,
                             org.motechproject.nms.api.web.contract.mobileAcademy.sms,
                             org.motechproject.nms.api.web.converter,
+                            org.motechproject.nms.api.web.repository,
+                            org.motechproject.nms.api.web.domain
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,

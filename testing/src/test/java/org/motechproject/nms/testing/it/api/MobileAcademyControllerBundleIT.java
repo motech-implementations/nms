@@ -21,10 +21,10 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.DeliveryStatus;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.RequestData;
-import org.motechproject.nms.mobileacademy.domain.CompletionRecord;
+import org.motechproject.nms.mobileacademy.domain.CourseCompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.dto.MaCourse;
-import org.motechproject.nms.mobileacademy.repository.CompletionRecordDataService;
+import org.motechproject.nms.mobileacademy.repository.CourseCompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
@@ -41,6 +41,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -63,7 +64,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     private BookmarkService bookmarkService;
 
     @Inject
-    private CompletionRecordDataService completionRecordDataService;
+    private CourseCompletionRecordDataService courseCompletionRecordDataService;
 
     @Inject
     private NmsCourseDataService nmsCourseDataService;
@@ -957,11 +958,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD));
 
-        CompletionRecord cr = completionRecordDataService
-                .findRecordByCallingNumber(1234567890l);
-        assertNotNull(cr);
-        assertEquals(cr.getCompletionCount(), 1);
-
+        List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByCallingNumber(1234567890l);
+        assertEquals(1, ccrs.size());
         // assert if bookmark has been reset
         HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
                 VALID_CALL_ID);
@@ -1014,9 +1012,9 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      */
     public void verifyFT564() throws IOException, InterruptedException {
         // create completion record for msisdn 1234567890l
-        CompletionRecord cr = new CompletionRecord(1234567890l, 25, true, 1, 0);
-        cr = completionRecordDataService.create(cr);
-        assertNull(cr.getLastDeliveryStatus());
+        CourseCompletionRecord ccr = new CourseCompletionRecord(1234567890l, 25, "score", true, true, 0);
+        ccr = courseCompletionRecordDataService.create(ccr);
+        assertNull(ccr.getLastDeliveryStatus());
         // invoke delivery notification API
         String endpoint = String.format(
         "http://localhost:%d/api/mobileacademy/smsdeliverystatus",
@@ -1031,8 +1029,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 postRequest, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         // assert completion record
-        cr = completionRecordDataService.findRecordByCallingNumber(1234567890l);
-        assertEquals(DeliveryStatus.DeliveredToNetwork.toString(), cr.getLastDeliveryStatus());
+        ccr = courseCompletionRecordDataService.findByCallingNumber(1234567890l).get(0);
+        assertEquals(DeliveryStatus.DeliveredToNetwork.toString(), ccr.getLastDeliveryStatus());
     }
 }
 
