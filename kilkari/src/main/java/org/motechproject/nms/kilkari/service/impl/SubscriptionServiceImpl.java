@@ -414,9 +414,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                          existingSubscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
                     return existingSubscription;
                 }
-                if (type == SubscriptionPackType.CHILD &&
-                        (existingSubscription.getStatus() == SubscriptionStatus.ACTIVE) ||
-                        existingSubscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION) {
+                if (type == SubscriptionPackType.CHILD && existingSubscription.getStatus() == SubscriptionStatus.ACTIVE) {
                     return existingSubscription;
                 }
             }

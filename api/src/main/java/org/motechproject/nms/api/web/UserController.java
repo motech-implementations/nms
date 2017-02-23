@@ -177,18 +177,18 @@ public class UserController extends BaseController {
         Circle subscriberCircle = null;
         // check for subscriber and mcts location data
         if (!subscribers.isEmpty()) {
-            for (Subscriber eachSubscriber : subscribers) {
+            for (Subscriber subscriber : subscribers) {
 
-                MctsMother mother = eachSubscriber.getMother();
+                MctsMother mother = subscriber.getMother();
                 if (mother != null) {
                     return serviceDeployedInUserState(Service.KILKARI, mother.getState());
                 }
 
-                MctsChild child = eachSubscriber.getChild();
+                MctsChild child = subscriber.getChild();
                 if (child != null) {
                     return serviceDeployedInUserState(Service.KILKARI, child.getState());
                 }
-                subscriberCircle = eachSubscriber.getCircle();
+                subscriberCircle = subscriber.getCircle();
             }
         }
 
@@ -223,8 +223,8 @@ public class UserController extends BaseController {
         Set<String> packs = new HashSet<>();
 
         if (!subscribers.isEmpty()) {
-            for (Subscriber eachSubscriber : subscribers) {
-                Set<Subscription> subscriptions = eachSubscriber.getSubscriptions();
+            for (Subscriber subscriber : subscribers) {
+                Set<Subscription> subscriptions = subscriber.getSubscriptions();
                 for (Subscription subscription : subscriptions) {
                     if ((subscription.getStatus() == SubscriptionStatus.ACTIVE) ||
                             (subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
@@ -232,7 +232,7 @@ public class UserController extends BaseController {
                     }
                 }
 
-                Language subscriberLanguage = eachSubscriber.getLanguage();
+                Language subscriberLanguage = subscriber.getLanguage();
                 if (subscriberLanguage != null) {
                     kilkariUserResponse.setLanguageLocationCode(subscriberLanguage.getCode());
                 }

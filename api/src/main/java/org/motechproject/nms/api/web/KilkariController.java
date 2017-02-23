@@ -108,8 +108,8 @@ public class KilkariController extends BaseController {
         String weekId;
         String fileName;
 
-        for (Subscriber eachSubscriber : subscribers) {
-            for (Subscription subscription : eachSubscriber.getAllSubscriptions()) {
+        for (Subscriber subscriber : subscribers) {
+            for (Subscription subscription : subscriber.getAllSubscriptions()) {
 
                 try {
                     inboxMessage = inboxService.getInboxMessage(subscription);

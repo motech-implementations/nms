@@ -1398,16 +1398,16 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportService.importChildData(reader);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        List<Subscriber> subscriber = subscriberDataService.findByNumber(9439986187L);
-        Set<Subscription> subscriptions = subscriber.get(0).getAllSubscriptions();
+        List<Subscriber> subscribers = subscriberDataService.findByNumber(9439986187L);
+        Set<Subscription> subscriptions = subscribers.get(0).getAllSubscriptions();
         assertEquals(1, subscriptions.size());
         Subscription subscription = subscriptions.iterator().next();
         assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
 
         //Deactivate child subscription
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.CHILD_DEATH);
-        subscriber = subscriberDataService.findByNumber(9439986187L);
-        subscriptions = subscriber.get(0).getAllSubscriptions();
+        subscribers = subscriberDataService.findByNumber(9439986187L);
+        subscriptions = subscribers.get(0).getAllSubscriptions();
         subscription = subscriptions.iterator().next();
         assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
         assertEquals(DeactivationReason.CHILD_DEATH, subscription.getDeactivationReason());
@@ -1422,16 +1422,16 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         //pregnancy record should be activated.
-        subscriber = subscriberDataService.findByNumber(9439986187L);
-        assertEquals(2, subscriber.size());
-        for (Subscriber eachSubscriber : subscriber) {
-            if (eachSubscriber.getLastMenstrualPeriod() == null) {
-                assertEquals(0, eachSubscriber.getActiveAndPendingSubscriptions().size());
+        subscribers = subscriberDataService.findByNumber(9439986187L);
+        assertEquals(2, subscribers.size());
+        for (Subscriber subscriber : subscribers) {
+            if (subscriber.getLastMenstrualPeriod() == null) {
+                assertEquals(0, subscriber.getActiveAndPendingSubscriptions().size());
             } else {
-                assertEquals(1, eachSubscriber.getActiveAndPendingSubscriptions().size());
+                assertEquals(1, subscriber.getActiveAndPendingSubscriptions().size());
             }
         }
-        assertEquals(2, subscriber.get(0).getAllSubscriptions().size() + subscriber.get(1).getAllSubscriptions().size());
+        assertEquals(2, subscribers.get(0).getAllSubscriptions().size() + subscribers.get(1).getAllSubscriptions().size());
         transactionManager.commit(status);
     }
 
@@ -1701,7 +1701,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     public void testUpdateIVRMother() throws Exception {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriberIVR = subscriberDataService.create(new Subscriber(5000000000L));
-        subscriberIVR.setLastMenstrualPeriod(DateTime.now().minusDays(70));
         subscriberIVR = subscriberDataService.update(subscriberIVR);
         subscriptionService.createSubscription(subscriberIVR, subscriberIVR.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
@@ -1726,17 +1725,18 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         transactionManager.commit(status);
     }
 
-    //Test an existing mother subscriber through IVR gets updated by mcts
+    //Test an existing child subscriber through IVR gets updated by mcts
     @Test
     public void testUpdateIVRChild() throws Exception {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriberIVR = subscriberDataService.create(new Subscriber(5000000000L));
-        subscriberIVR.setDateOfBirth(DateTime.now().minusDays(70));
         subscriberIVR = subscriberDataService.update(subscriberIVR);
-        subscriptionService.createSubscription(subscriberIVR, subscriberIVR.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
+        Subscription subscription = subscriptionService.createSubscription(subscriberIVR, subscriberIVR.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
                 sh.childPack(), SubscriptionOrigin.IVR);
         assertNull(subscriberIVR.getChild());
         assertNull(subscriberIVR.getMother());
+        subscription.setStatus(SubscriptionStatus.ACTIVE);
+//        subscription.setStartDate(DateTime.now().minusDays(70));
         transactionManager.commit(status);
 
         DateTime dob = DateTime.now().minusDays(100);
@@ -1763,8 +1763,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     public void testImportChildWhenIVRMotherExists() throws  Exception {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriberIVR = subscriberDataService.create(new Subscriber(5000000000L));
-        DateTime lmp = DateTime.now().minusDays(70);
-        subscriberIVR.setLastMenstrualPeriod(lmp);
         subscriberIVR = subscriberDataService.update(subscriberIVR);
         subscriptionService.createSubscription(subscriberIVR, subscriberIVR.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
@@ -1782,7 +1780,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         List<Subscriber> subscribers = subscriberDataService.findByNumber(5000000000L);
         assertEquals(2, subscribers.size());
         assertEquals(dob.toLocalDate(), subscribers.get(1).getDateOfBirth().toLocalDate());
-        assertEquals(lmp.toLocalDate(), subscribers.get(0).getLastMenstrualPeriod().toLocalDate());
         assertNotNull(subscribers.get(1).getMother());
         assertNotNull(subscribers.get(1).getChild());
 
@@ -1802,8 +1799,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     public void testImportMotherWhenIVRChildExists() throws Exception {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriberIVR = subscriberDataService.create(new Subscriber(5000000000L));
-        DateTime dob = DateTime.now().minusDays(70);
-        subscriberIVR.setDateOfBirth(dob);
         subscriberIVR = subscriberDataService.update(subscriberIVR);
         subscriptionService.createSubscription(subscriberIVR, subscriberIVR.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
                 sh.childPack(), SubscriptionOrigin.IVR);
@@ -1821,7 +1816,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertEquals(lmp.toLocalDate(), mctsMotherDataService.findByBeneficiaryId("1234567890").getLastMenstrualPeriod().toLocalDate());
         List<Subscriber> subscribers = subscriberDataService.findByNumber(5000000000L);
         assertEquals(2, subscribers.size());
-        assertEquals(dob.toLocalDate(), subscribers.get(0).getDateOfBirth().toLocalDate());
         assertEquals(lmp.toLocalDate(), subscribers.get(1).getLastMenstrualPeriod().toLocalDate());
         assertNotNull(subscribers.get(1).getMother());
 
