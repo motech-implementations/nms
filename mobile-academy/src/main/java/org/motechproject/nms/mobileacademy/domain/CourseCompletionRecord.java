@@ -38,12 +38,12 @@ public class CourseCompletionRecord extends MdsEntity {
     private int notificationRetryCount;
 
 
-    public CourseCompletionRecord(long callingNumber, int score, String chapterWiseScores) {
-        this(callingNumber, score, chapterWiseScores, false);
+    public CourseCompletionRecord(long flwId, int score, String chapterWiseScores) {
+        this(flwId, score, chapterWiseScores, false);
     }
 
-    public CourseCompletionRecord(long callingNumber, int score, String chapterWiseScores, boolean sentNotification) {
-        this(callingNumber, score, chapterWiseScores, false, sentNotification, 0);
+    public CourseCompletionRecord(long flwId, int score, String chapterWiseScores, boolean sentNotification) {
+        this(flwId, score, chapterWiseScores, false, sentNotification, 0);
 
     }
 

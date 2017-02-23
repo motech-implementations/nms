@@ -18,6 +18,7 @@ import org.motechproject.mtraining.service.BookmarkService;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
 import org.motechproject.nms.flw.domain.FlwError;
 import org.motechproject.nms.flw.domain.FlwErrorReason;
+import org.motechproject.nms.flw.domain.FlwJobStatus;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.repository.FlwErrorDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
@@ -397,6 +398,25 @@ public class OpsControllerBundleIT extends BasePaxIT {
         assertEquals("{000000}", body);
     }
 
+    @Test
+    public void testUpdateWrongGfStatus() throws IOException, InterruptedException {
+
+        // create flw with null mcts id
+        createFlwHelper("Chinkoo Devi", 9876543210L, null);
+
+        AddFlwRequest updateRequest = getAddRequestASHA();
+        HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, updateRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+
+        updateRequest.setGfStatus("Random");
+        httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, updateRequest);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpRequest, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertNotNull(response);
+        assertEquals(400, response.getStatusLine().getStatusCode());
+
+
+    }
+
     private void createFlwHelper(String name, Long phoneNumber, String mctsFlwId) {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         stateDataService.create(state);
@@ -419,6 +439,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         request.setStateId(state.getCode());
         request.setDistrictId(district.getCode());
         request.setType("ASHA");
+        request.setGfStatus("Active");
         return request;
     }
 
@@ -431,6 +452,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         request.setStateId(state.getCode());
         request.setDistrictId(district.getCode());
         request.setType("ANM");
+        request.setGfStatus("Active");
         return request;
     }
 
@@ -639,6 +661,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         request.setStateId(state.getCode());
         request.setDistrictId(district.getCode());
         request.setType("ASHA");
+        request.setGfStatus("Active");
         httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, request);
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
 

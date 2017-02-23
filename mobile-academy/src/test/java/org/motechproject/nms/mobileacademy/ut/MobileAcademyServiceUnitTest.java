@@ -44,9 +44,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
@@ -357,7 +355,7 @@ public class MobileAcademyServiceUnitTest {
         when(courseCompletionRecordDataService.findByFlwId(anyLong())).thenReturn(records);
         mobileAcademyService.triggerCompletionNotification(123456L);
         mobileAcademyService.triggerCompletionNotification(123456L);
-        assertTrue(ccr.isSentNotification());
+        assertFalse(ccr.isSentNotification());
     }
 
     @Test

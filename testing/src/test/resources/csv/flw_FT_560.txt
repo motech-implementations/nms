@@ -1,5 +1,4 @@
-
 State Name : State 10
 
-ID	District_ID	Name	Contact_No	Updated_On	Type
-10	1	Aisha Bibi	1234567899	18-08-2016	ASHA
+ID	District_ID	Name	Contact_No	Updated_On	Type	GF_Status
+10	1	Aisha Bibi	1234567899	18-08-2016	ASHA	Active

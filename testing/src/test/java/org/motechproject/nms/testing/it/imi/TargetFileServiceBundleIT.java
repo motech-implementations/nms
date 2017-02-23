@@ -205,7 +205,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         subscription8.setStatus(SubscriptionStatus.ACTIVE);
         subscription8.setStartDate(subscriber8.getLastMenstrualPeriod());
         subscription8.setNeedsWelcomeMessageViaObd(false);
-        subscription8 = subscriptionDataService.update(subscription8);
+        subscriptionDataService.update(subscription8);
 
         transactionManager.commit(status);
 

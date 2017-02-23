@@ -68,6 +68,8 @@ public class TestingServiceImpl implements TestingService {
         "nms_flw_status_update_audit__TRASH",
         "nms_anonymous_call_details_audit",
         "nms_anonymous_call_details_audit__TRASH",
+        "nms_inactive_job_call_audit",
+        "nms_inactive_job_call_audit__TRASH",
         "nms_call_content",
         "nms_call_content__TRASH",
         "nms_subscription_errors",

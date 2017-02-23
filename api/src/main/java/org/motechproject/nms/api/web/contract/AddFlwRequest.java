@@ -16,6 +16,7 @@ public class AddFlwRequest {
     private Long villageId;
     private Long healthblockId;
     private String type;
+    private String gfStatus;
 
     public AddFlwRequest() {
 
@@ -108,4 +109,8 @@ public class AddFlwRequest {
     public void setType(String type) {
         this.type = type;
     }
+
+    public String getGfStatus() { return gfStatus; }
+
+    public void setGfStatus(String gfStatus) { this.gfStatus = gfStatus; }
 }

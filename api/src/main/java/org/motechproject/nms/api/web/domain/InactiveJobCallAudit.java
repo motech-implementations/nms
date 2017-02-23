@@ -5,24 +5,28 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
 /**
- * Audit record for Anonymous call details
+ * Audit record for Inactive Job Flw call details
  */
 
-@Entity(tableName = "nms_anonymous_call_details_audit")
-public class AnonymousCallAudit {
+@Entity(tableName = "nms_inactive_job_call_audit")
+public class InactiveJobCallAudit {
 
     @Field
     private DateTime dateTimeNow;
 
     @Field
-    private String circle;
+    private String flwId;
+
+    @Field
+    private String mctsFlwId;
 
     @Field
     private Long callingNumber;
 
-    public AnonymousCallAudit(DateTime dateTimeNow, String circle, Long callingNumber) {
+    public InactiveJobCallAudit(DateTime dateTimeNow, String flwId, String mctsFlwId, Long callingNumber) {
         this.dateTimeNow = dateTimeNow;
-        this.circle = circle;
+        this.flwId = flwId;
+        this.mctsFlwId = mctsFlwId;
         this.callingNumber = callingNumber;
     }
 
@@ -34,12 +38,20 @@ public class AnonymousCallAudit {
         this.dateTimeNow = dateTimeNow;
     }
 
-    public String getCircle() {
-        return circle;
+    public String getFlwId() {
+        return flwId;
     }
 
-    public void setCircle(String circle) {
-        this.circle = circle;
+    public void setFlwId(String flwId) {
+        this.flwId = flwId;
+    }
+
+    public String getMctsFlwId() {
+        return mctsFlwId;
+    }
+
+    public void setMctsFlwId(String mctsFlwId) {
+        this.mctsFlwId = mctsFlwId;
     }
 
     public Long getCallingNumber() {
