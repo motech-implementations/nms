@@ -7,12 +7,12 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.27</version>
+        <version>1.0.28</version>
         <relativePath>../</relativePath>
     </parent>
 
     <artifactId>testing</artifactId>
-    <version>1.0.27</version>
+    <version>1.0.28</version>
     <packaging>bundle</packaging>
     <name>Testing module</name>
 
@@ -168,6 +168,7 @@
                                     </excludes>
                                     <encoding>UTF-8</encoding>
                                     <summaryFile>target/failsafe-reports/failsafe-summary-it.xml</summaryFile>
+                                    <argLine>-Xmx2G -XX:MaxPermSize=2G -Xms2G -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005</argLine>
                                     <systemPropertiesFile>${modules.root.dir}/maven.properties</systemPropertiesFile>
                                     <runOrder>random</runOrder>
                                 </configuration>

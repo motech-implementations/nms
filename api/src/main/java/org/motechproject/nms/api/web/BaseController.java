@@ -173,6 +173,17 @@ public class BaseController {
         return false;
     }
 
+    protected static boolean validateFieldGfStatus(StringBuilder errors, String fieldName, String value) {
+        if (!validateFieldPresent(errors, fieldName, value)) {
+            return false;
+        }
+        if (("Active").equals(value) || ("Inactive").equals(value)) {
+            return true;
+        }
+        errors.append(String.format(INVALID, fieldName));
+        return false;
+    }
+
     protected static boolean validateFieldCallDisconnectReason(StringBuilder errors, String fieldName,
                                                                Integer value) {
         if (!validateFieldPresent(errors, fieldName, value)) {

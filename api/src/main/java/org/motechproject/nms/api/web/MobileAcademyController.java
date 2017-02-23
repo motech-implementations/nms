@@ -11,6 +11,8 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.DeliveryInfo;
 import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
 import org.motechproject.nms.api.web.validator.MobileAcademyValidator;
+import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.dto.MaCourse;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
@@ -49,6 +51,9 @@ public class MobileAcademyController extends BaseController {
      */
     @Autowired
     private MobileAcademyService mobileAcademyService;
+
+    @Autowired
+    private FrontLineWorkerService frontLineWorkerService;
 
     /**
      * Event relay service to handle async notifications
@@ -194,7 +199,9 @@ public class MobileAcademyController extends BaseController {
 
         // validate scores
         if (validateMAScores(bookmarkRequest.getScoresByChapter())) {
-            MaBookmark bookmark = MobileAcademyConverter.convertSaveBookmarkRequest(bookmarkRequest);
+            FrontLineWorker flw = frontLineWorkerService.getByContactNumber(bookmarkRequest.getCallingNumber());
+            Long flwId = flw.getId();
+            MaBookmark bookmark = MobileAcademyConverter.convertSaveBookmarkRequest(bookmarkRequest, flwId);
             mobileAcademyService.setBookmark(bookmark);
         }
     }
@@ -237,19 +244,13 @@ public class MobileAcademyController extends BaseController {
             value = "/notify",
             method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
-    public void sendNotification(@RequestBody Long callingNumber) {
+    public void sendNotification(@RequestBody Long flwId) {
 
-        log("REQUEST: /mobileacademy/notify (POST)", String.format("callingNumber=%s", LogHelper.obscure(callingNumber)));
-
-        StringBuilder errors = new StringBuilder();
-        validateField10Digits(errors, "callingNumber", callingNumber);
-        if (errors.length() != 0) {
-            throw new IllegalArgumentException(errors.toString());
-        }
+        log("REQUEST: /mobileacademy/notify (POST)", String.format("flwId=%s", String.valueOf(flwId)));
 
         // done with validation
         try {
-            mobileAcademyService.triggerCompletionNotification(callingNumber);
+            mobileAcademyService.triggerCompletionNotification(flwId);
         } catch (CourseNotCompletedException cnc) {
             LOGGER.error("Could not send notification: " + cnc.toString());
             throw cnc;

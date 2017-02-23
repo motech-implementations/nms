@@ -9,12 +9,14 @@ import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.csv.utils.GetLocalDate;
+import org.motechproject.nms.flw.domain.ContactNumberAudit;
 import org.motechproject.nms.flw.domain.FlwError;
 import org.motechproject.nms.flw.domain.FlwErrorReason;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
+import org.motechproject.nms.flw.repository.ContactNumberAuditDataService;
 import org.motechproject.nms.flw.repository.FlwErrorDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.utils.FlwConstants;
@@ -58,6 +60,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     private LocationService locationService;
     private FlwErrorDataService flwErrorDataService;
     private MobileAcademyService mobileAcademyService;
+    private ContactNumberAuditDataService contactNumberAuditDataService;
 
     /*
         Expected file format:
@@ -114,6 +117,11 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                 Long newMsisdn = (Long) record.get(FlwConstants.CONTACT_NO);
                 if (!oldMsisdn.equals(newMsisdn)) {
                     mobileAcademyService.updateMsisdn(flwInstance.getId(), oldMsisdn, newMsisdn);
+                    ContactNumberAudit contactNumberAudit = new ContactNumberAudit(flwInstance.getId());
+                    contactNumberAudit.setOldCallingNumber(oldMsisdn);
+                    contactNumberAudit.setNewCallingNumber(newMsisdn);
+                    contactNumberAudit.setImportDate(LocalDate.now());
+                    contactNumberAuditDataService.create(contactNumberAudit);
                 }
             } else {
                 throw new FlwExistingRecordException("Updated record exists in the database");
@@ -284,6 +292,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         mapping.put(FlwConstants.VILLAGE_NAME, new Optional(new GetString()));
 
         mapping.put(FlwConstants.TYPE, new Optional(new GetString()));
+        mapping.put(FlwConstants.GF_STATUS, new Optional(new GetString()));
         mapping.put(FlwConstants.UPDATED_ON, new Optional(new GetLocalDate()));
 
         return mapping;
@@ -329,6 +338,9 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         this.mobileAcademyService = mobileAcademyService;
     }
 
-
+    @Autowired
+    public void setContactNumberAuditDataService(ContactNumberAuditDataService contactNumberAuditDataService) {
+        this.contactNumberAuditDataService = contactNumberAuditDataService;
+    }
 
 }

@@ -205,7 +205,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         subscription8.setStatus(SubscriptionStatus.ACTIVE);
         subscription8.setStartDate(subscriber8.getLastMenstrualPeriod());
         subscription8.setNeedsWelcomeMessageViaObd(false);
-        subscription8 = subscriptionDataService.update(subscription8);
+        subscriptionDataService.update(subscription8);
 
         transactionManager.commit(status);
 
@@ -224,7 +224,9 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
         // Verify modificationDate is not earlier than endDate
         for (Subscription s : subscriptionDataService.retrieveAll()) {
-            assert(!s.getModificationDate().isBefore(s.getEndDate()));
+            if (s.getEndDate()!= null) {
+                assert(!s.getModificationDate().isBefore(s.getEndDate()));
+            }
         }
 
 

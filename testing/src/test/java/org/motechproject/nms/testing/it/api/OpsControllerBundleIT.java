@@ -18,9 +18,11 @@ import org.motechproject.mtraining.service.BookmarkService;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
 import org.motechproject.nms.flw.domain.FlwError;
 import org.motechproject.nms.flw.domain.FlwErrorReason;
+import org.motechproject.nms.flw.domain.FlwJobStatus;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.repository.FlwErrorDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.repository.*;
 import org.motechproject.nms.kilkari.service.SubscriberService;
@@ -102,6 +104,9 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
     @Inject
     FrontLineWorkerDataService frontLineWorkerDataService;
+
+    @Inject
+    FrontLineWorkerService frontLineWorkerService;
 
     @Inject
     FlwErrorDataService flwErrorDataService;
@@ -393,6 +398,25 @@ public class OpsControllerBundleIT extends BasePaxIT {
         assertEquals("{000000}", body);
     }
 
+    @Test
+    public void testUpdateWrongGfStatus() throws IOException, InterruptedException {
+
+        // create flw with null mcts id
+        createFlwHelper("Chinkoo Devi", 9876543210L, null);
+
+        AddFlwRequest updateRequest = getAddRequestASHA();
+        HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, updateRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+
+        updateRequest.setGfStatus("Random");
+        httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, updateRequest);
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpRequest, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
+        assertNotNull(response);
+        assertEquals(400, response.getStatusLine().getStatusCode());
+
+
+    }
+
     private void createFlwHelper(String name, Long phoneNumber, String mctsFlwId) {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         stateDataService.create(state);
@@ -415,6 +439,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         request.setStateId(state.getCode());
         request.setDistrictId(district.getCode());
         request.setType("ASHA");
+        request.setGfStatus("Active");
         return request;
     }
 
@@ -427,6 +452,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         request.setStateId(state.getCode());
         request.setDistrictId(district.getCode());
         request.setType("ANM");
+        request.setGfStatus("Active");
         return request;
     }
 
@@ -608,7 +634,9 @@ public class OpsControllerBundleIT extends BasePaxIT {
         HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, addFlwRequest);
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
 
-        MaBookmark bookmark = new MaBookmark(9876543210L, VALID_CALL_ID, null, null);
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(9876543210L);
+        Long flwId = flw.getId();
+        MaBookmark bookmark = new MaBookmark(flwId, VALID_CALL_ID, null, null);
         maService.setBookmark(bookmark);
         assertNotNull(maService.getBookmark(9876543210L, VALID_CALL_ID));
         assertEquals(1, activityDataService.findRecordsForUserByState("9876543210", ActivityState.STARTED).size());
@@ -618,9 +646,11 @@ public class OpsControllerBundleIT extends BasePaxIT {
         for (int i = 1; i < 12; i++) {
             scores.put(String.valueOf(i), 3);
         }
+
+        flw = frontLineWorkerService.getByContactNumber(9876543210L);
         bookmark.setScoresByChapter(scores);
         maService.setBookmark(bookmark);
-        List <CourseCompletionRecord> ncrs = courseCompletionRecordDataService.findByCallingNumber(9876543210L);
+        List <CourseCompletionRecord> ncrs = courseCompletionRecordDataService.findByFlwId(flw.getId());
         assertEquals(1, ncrs.size());
 
         // Update Msisdn and verify MA records
@@ -631,6 +661,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         request.setStateId(state.getCode());
         request.setDistrictId(district.getCode());
         request.setType("ASHA");
+        request.setGfStatus("Active");
         httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, request);
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
 
@@ -640,7 +671,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         assertEquals(0, activityDataService.findRecordsForUserByState("9876543210", ActivityState.STARTED).size());
         assertEquals(1, activityDataService.findRecordsForUserByState("7896543210", ActivityState.STARTED).size());
 
-        assertEquals(0, courseCompletionRecordDataService.findByCallingNumber(9876543210L).size());
-        assertEquals(1, courseCompletionRecordDataService.findByCallingNumber(7896543210L).size());
+        flw = frontLineWorkerService.getByContactNumber(7896543210L);
+        assertEquals(1, courseCompletionRecordDataService.findByFlwId(flw.getId()).size());
     }
 }

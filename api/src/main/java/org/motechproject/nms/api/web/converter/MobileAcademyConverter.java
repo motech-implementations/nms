@@ -70,9 +70,9 @@ public final class MobileAcademyConverter {
      * @param saveBookmarkRequest api request object
      * @return bookmark dto
      */
-    public static MaBookmark convertSaveBookmarkRequest(SaveBookmarkRequest saveBookmarkRequest) {
+    public static MaBookmark convertSaveBookmarkRequest(SaveBookmarkRequest saveBookmarkRequest, Long flwId) {
         MaBookmark bookmark = new MaBookmark();
-        bookmark.setCallingNumber(saveBookmarkRequest.getCallingNumber());
+        bookmark.setFlwId(flwId);
         bookmark.setCallId(saveBookmarkRequest.getCallId());
         bookmark.setBookmark(saveBookmarkRequest.getBookmark());
         bookmark.setScoresByChapter(saveBookmarkRequest.getScoresByChapter());
