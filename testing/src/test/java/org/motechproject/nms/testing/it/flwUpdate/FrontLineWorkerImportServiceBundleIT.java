@@ -13,8 +13,10 @@ import org.motechproject.mtraining.repository.ActivityDataService;
 import org.motechproject.nms.csv.domain.CsvAuditRecord;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.repository.CsvAuditRecordDataService;
+import org.motechproject.nms.flw.domain.ContactNumberAudit;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
+import org.motechproject.nms.flw.repository.ContactNumberAuditDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
@@ -114,6 +116,8 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     VillageService villageService;
     @Inject
     FrontLineWorkerImportService frontLineWorkerImportService;
+    @Inject
+    ContactNumberAuditDataService contactNumberAuditDataService;
     @Inject
     ActivityDataService activityDataService;
     @Inject
@@ -253,7 +257,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerService.add(flw);
         transactionManager.commit(status);
 
-        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 0\t11\t18-08-2016\tASHA");
+        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader);
     }
 
@@ -266,7 +270,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         flw.setMctsFlwId("#0");
         frontLineWorkerService.add(flw);
 
-        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 0\t11\t18-08-2016\tASHA");
+        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader);
     }
 
@@ -283,7 +287,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void testImportWhenDistrictLanguageLocationPresent() throws Exception {
-        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11\t18-08-2016\tASHA");
+        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader);
 
         FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(1234567890L);
@@ -293,7 +297,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testImportWhenDistrictLanguageLocationNotPresent() throws Exception {
-        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t12\t18-08-2016\tASHA");
+        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t12\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader);
 
         FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(1234567890L);
@@ -305,7 +309,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      */
     @Test(expected = CsvImportDataException.class)
     public void testImportWhenDistrictNotPresent() throws Exception {
-        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t\t18-08-2016\tASHA");
+        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader);
     }
 
@@ -362,7 +366,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1234567890L);
         flw.setMctsFlwId("#0");
         frontLineWorkerService.add(flw);
-        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11\t18-08-2016\tASHA");
+        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader);
         FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(1234567890L);
         assertFLW(flw1, "#0", 1234567890L, "FLW 0", "District 11", "L1");
@@ -375,7 +379,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT537() throws Exception {
-        Reader reader = createReaderWithHeaders("#0\t\tFLW 0\t11\t18-08-2016\tASHA");
+        Reader reader = createReaderWithHeaders("#0\t\tFLW 0\t11\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader);
     }
 
@@ -384,7 +388,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      */
     @Test(expected = IllegalArgumentException.class)
     public void verifyFT540() throws Exception {
-        Reader reader = createReaderWithHeadersWithNoState("#1\t1234567890\tFLW 0\t11\t18-08-2016\tASHA");
+        Reader reader = createReaderWithHeadersWithNoState("#1\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader);
     }
 
@@ -407,7 +411,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT543() throws Exception {
-        Reader reader = createReaderWithHeaders("#1\t123456789\tFLW 1\t11\t18-08-2016\tASHA");
+        Reader reader = createReaderWithHeaders("#1\t123456789\tFLW 1\t11\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader);
     }
 
@@ -416,7 +420,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT544() throws Exception {
-        Reader reader = createReaderWithHeadersWithInvalidState("#1\t1234567890\tFLW 1\t11\t18-08-2016\tASHA");
+        Reader reader = createReaderWithHeadersWithInvalidState("#1\t1234567890\tFLW 1\t11\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader);
     }
 
@@ -425,7 +429,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      */
     @Test(expected = CsvImportDataException.class)
     public void verifyFT545() throws Exception {
-        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t111\t18-08-2016\tASHA");
+        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t111\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader);
     }
 
@@ -436,7 +440,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     public void verifyFT546() throws Exception {
         State state2 = createState(2L, "State 2");
         createDistrict(state2, 22L, "District 22");
-        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t22\t18-08-2016\tASHA");
+        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t22\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader);
     }
 
@@ -454,7 +458,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         builder.append("\n");
         builder.append("State Name : State 1").append("\n");
         builder.append("\n");
-        builder.append("ID\tContact_No\tName\tDistrict_ID\tUpdated_On\tType").append("\n");
+        builder.append("ID\tContact_No\tName\tDistrict_ID\tUpdated_On\tType\tGF_Status").append("\n");
         for (String line : lines) {
             builder.append(line).append("\n");
         }
@@ -466,7 +470,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         builder.append("\n");
         builder.append("State Name :").append("\n");
         builder.append("\n");
-        builder.append("ID\tContact_No\tName\tDistrict_ID\tUpdated_On\tType").append("\n");
+        builder.append("ID\tContact_No\tName\tDistrict_ID\tUpdated_On\tType\tGF_Status").append("\n");
         for (String line : lines) {
             builder.append(line).append("\n");
         }
@@ -478,7 +482,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         builder.append("\n");
         builder.append("State Name : State 2").append("\n");
         builder.append("\n");
-        builder.append("ID\tContact_No\tName\tDistrict_ID\tUpdated_On\tType").append("\n");
+        builder.append("ID\tContact_No\tName\tDistrict_ID\tUpdated_On\tType\tGF_Status").append("\n");
         for (String line : lines) {
             builder.append(line).append("\n");
         }
@@ -585,16 +589,18 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     // Test whether MSISDN is updated in Bookmark, Activity and Course Completion Records along with Flw
     @Test
     public void testMsisdnUpdateInMa() throws Exception {
-        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11\t18-08-2016\tASHA");
+        Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader);
+        Long oldMsisdn = 1234567890L;
 
-        FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(1234567890L);
-        assertFLW(flw, "#0", 1234567890L, "FLW 0", "District 11", "L1");
+        FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(oldMsisdn);
+        assertFLW(flw, "#0", oldMsisdn, "FLW 0", "District 11", "L1");
 
-        MaBookmark bookmark = new MaBookmark(1234567890L, VALID_CALL_ID, null, null);
+        Long flwId = flw.getId();
+        MaBookmark bookmark = new MaBookmark(flwId, VALID_CALL_ID, null, null);
         maService.setBookmark(bookmark);
-        assertNotNull(maService.getBookmark(1234567890L, VALID_CALL_ID));
-        assertEquals(1, activityDataService.findRecordsForUserByState("1234567890", ActivityState.STARTED).size());
+        assertNotNull(maService.getBookmark(oldMsisdn, VALID_CALL_ID));
+        assertEquals(1, activityDataService.findRecordsForUserByState(oldMsisdn.toString(), ActivityState.STARTED).size());
 
         bookmark.setBookmark("COURSE_COMPLETED");
         Map<String, Integer> scores = new HashMap<>();
@@ -603,23 +609,25 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         }
         bookmark.setScoresByChapter(scores);
         maService.setBookmark(bookmark);
-        CourseCompletionRecord ccr = courseCompletionRecordDataService.findByCallingNumber(1234567890L).get(0);
-        assertNotNull(ccr);
 
         // Update Msisdn
-        reader = createReaderWithHeaders("#0\t9876543210\tFLW 0\t11\t18-08-2016\tASHA");
+        reader = createReaderWithHeaders("#0\t9876543210\tFLW 0\t11\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader);
+        Long newMsisdn = 9876543210L;
 
-        flw = frontLineWorkerDataService.findByContactNumber(9876543210L);
-        assertFLW(flw, "#0", 9876543210L, "FLW 0", "District 11", "L1");
+        flw = frontLineWorkerDataService.findByContactNumber(newMsisdn);
+        assertFLW(flw, "#0", newMsisdn, "FLW 0", "District 11", "L1");
 
-        assertNull(maService.getBookmark(1234567890L, VALID_CALL_ID));
-        assertNotNull(maService.getBookmark(9876543210L, VALID_CALL_ID));
+        assertNull(maService.getBookmark(oldMsisdn, VALID_CALL_ID));
+        assertNotNull(maService.getBookmark(newMsisdn, VALID_CALL_ID));
 
-        assertEquals(0, activityDataService.findRecordsForUserByState("1234567890", ActivityState.STARTED).size());
-        assertEquals(1, activityDataService.findRecordsForUserByState("9876543210", ActivityState.STARTED).size());
+        assertEquals(0, activityDataService.findRecordsForUserByState(oldMsisdn.toString(), ActivityState.STARTED).size());
+        assertEquals(1, activityDataService.findRecordsForUserByState(newMsisdn.toString(), ActivityState.STARTED).size());
 
-        assertEquals(0, courseCompletionRecordDataService.findByCallingNumber(1234567890L).size());
-        assertNotNull(courseCompletionRecordDataService.findByCallingNumber(9876543210L).get(0));
+        List<ContactNumberAudit> contactNumberAudits = contactNumberAuditDataService.retrieveAll();
+        assertEquals(1, contactNumberAudits.size());
+        assertEquals(flwId, contactNumberAudits.get(0).getFlwId());
+        assertEquals(oldMsisdn, contactNumberAudits.get(0).getOldCallingNumber());
+        assertEquals(newMsisdn, contactNumberAudits.get(0).getNewCallingNumber());
     }
 }

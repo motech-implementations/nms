@@ -12,6 +12,7 @@ import org.motechproject.mtraining.repository.ActivityDataService;
 import org.motechproject.mtraining.repository.BookmarkDataService;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
+import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.mobileacademy.domain.CourseCompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
@@ -74,6 +75,9 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Inject
     CourseCompletionRecordDataService courseCompletionRecordDataService;
+
+    @Inject
+    FrontLineWorkerDataService frontLineWorkerDataService;
 
     @Inject
     NmsCourseDataService nmsCourseDataService;
@@ -186,8 +190,11 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Test
     public void testGetBookmark() {
 
-        bookmarkDataService.create(new Bookmark("1", "1", "1", "1", new HashMap<String, Object>()));
-        assertNotNull(maService.getBookmark(1L, VALID_CALL_ID));
+        FrontLineWorker flw = new FrontLineWorker(1234567890L);
+        frontLineWorkerService.add(flw);
+        String flwId = frontLineWorkerService.getByContactNumber(1234567890L).getId().toString();
+        bookmarkDataService.create(new Bookmark(flwId, "1", "1", "1", new HashMap<String, Object>()));
+        assertNotNull(maService.getBookmark(1234567890L, VALID_CALL_ID));
     }
 
     @Test
@@ -208,29 +215,38 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testSetNewBookmark() {
-        List<Bookmark> existing = bookmarkDataService.findBookmarksForUser("555");
-        MaBookmark bookmark = new MaBookmark(555L, VALID_CALL_ID, null, null);
+        FrontLineWorker flw = new FrontLineWorker(1234567890L);
+        frontLineWorkerService.add(flw);
+        flw = frontLineWorkerService.getByContactNumber(1234567890L);
+        List<Bookmark> existing = bookmarkDataService.findBookmarksForUser(flw.getId().toString());
+        MaBookmark bookmark = new MaBookmark(flw.getId(), VALID_CALL_ID, null, null);
         maService.setBookmark(bookmark);
-        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("555");
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser(flw.getId().toString());
         assertTrue(added.size() == (existing.size() + 1));
     }
 
     @Test
     public void testStartedActivity() {
-        List<Bookmark> existing = bookmarkDataService.findBookmarksForUser("555");
-        MaBookmark bookmark = new MaBookmark(555L, VALID_CALL_ID, null, null);
+        FrontLineWorker flw = new FrontLineWorker(1234567890L);
+        frontLineWorkerService.add(flw);
+        flw = frontLineWorkerService.getByContactNumber(1234567890L);
+        List<Bookmark> existing = bookmarkDataService.findBookmarksForUser(flw.getId().toString());
+        MaBookmark bookmark = new MaBookmark(flw.getId(), VALID_CALL_ID, null, null);
         maService.setBookmark(bookmark);
-        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("555");
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser(flw.getId().toString());
         assertTrue(added.size() == (existing.size() + 1));
-        assertEquals(1, activityDataService.findRecordsForUserByState("555", ActivityState.STARTED).size());
+        assertEquals(1, activityDataService.findRecordsForUserByState(flw.getContactNumber().toString(), ActivityState.STARTED).size());
     }
 
     @Test
     public void testSetExistingBookmark() {
 
-        MaBookmark bookmark = new MaBookmark(556L, VALID_CALL_ID, null, null);
+        FrontLineWorker flw = new FrontLineWorker(1234567890L);
+        frontLineWorkerService.add(flw);
+        flw = frontLineWorkerService.getByContactNumber(1234567890L);
+        MaBookmark bookmark = new MaBookmark(flw.getId(), VALID_CALL_ID, null, null);
         maService.setBookmark(bookmark);
-        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("556");
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser(flw.getId().toString());
         assertTrue(added.size() == 1);
 
         bookmark.setBookmark("Chapter3_Lesson2");
@@ -239,7 +255,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         bookmark.setScoresByChapter(scores);
         maService.setBookmark(bookmark);
 
-        MaBookmark retrieved = maService.getBookmark(556L, VALID_CALL_ID);
+        MaBookmark retrieved = maService.getBookmark(1234567890L, VALID_CALL_ID);
         assertNotNull(retrieved.getBookmark());
         assertTrue(retrieved.getBookmark().equals("Chapter3_Lesson2"));
         assertNotNull(retrieved.getScoresByChapter());
@@ -250,9 +266,12 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     public void testSetLastBookmark() {
 
         long callingNumber = 9876543210L;
-        MaBookmark bookmark = new MaBookmark(callingNumber, VALID_CALL_ID, null, null);
+        FrontLineWorker flw = new FrontLineWorker(callingNumber);
+        frontLineWorkerService.add(flw);
+        flw = frontLineWorkerService.getByContactNumber(callingNumber);
+        MaBookmark bookmark = new MaBookmark(flw.getId(), VALID_CALL_ID, null, null);
         maService.setBookmark(bookmark);
-        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9876543210");
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser(flw.getId().toString());
         assertTrue(added.size() == 1);
 
         bookmark.setBookmark(FINAL_BOOKMARK);
@@ -268,10 +287,13 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     public void testCompletionCount() {
 
         long callingNumber = 9876543210L;
+        FrontLineWorker flw = new FrontLineWorker(callingNumber);
+        frontLineWorkerService.add(flw);
+        flw = frontLineWorkerService.getByContactNumber(callingNumber);
         int completionCountBefore = activityDataService.findRecordsForUser(String.valueOf(callingNumber)).size();
-        MaBookmark bookmark = new MaBookmark(callingNumber, VALID_CALL_ID, null, null);
+        MaBookmark bookmark = new MaBookmark(flw.getId(), VALID_CALL_ID, null, null);
         maService.setBookmark(bookmark);
-        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9876543210");
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser(flw.getId().toString());
         assertTrue(added.size() == 1);
 
         bookmark.setBookmark(FINAL_BOOKMARK);
@@ -290,9 +312,12 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     public void testSetGetLastBookmark() {
 
         long callingNumber = 9987654321L;
-        MaBookmark bookmark = new MaBookmark(callingNumber, VALID_CALL_ID, null, null);
+        FrontLineWorker flw = new FrontLineWorker(callingNumber);
+        frontLineWorkerService.add(flw);
+        flw = frontLineWorkerService.getByContactNumber(callingNumber);
+        MaBookmark bookmark = new MaBookmark(flw.getId(), VALID_CALL_ID, null, null);
         maService.setBookmark(bookmark);
-        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9987654321");
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser(flw.getId().toString());
         assertTrue(added.size() == 1);
 
         bookmark.setBookmark(FINAL_BOOKMARK);
@@ -304,7 +329,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         maService.setBookmark(bookmark);
 
         MaBookmark retrieved = maService.getBookmark(callingNumber, VALID_CALL_ID);
-        assertNotNull(retrieved.getCallingNumber());
+        assertNotNull(retrieved.getFlwId());
         assertNotNull(retrieved.getCallId());
         assertNull(retrieved.getBookmark());
         assertNull(retrieved.getScoresByChapter());
@@ -314,9 +339,12 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     public void testSetGetResetBookmark() {
 
         long callingNumber = 9987654321L;
-        MaBookmark bookmark = new MaBookmark(callingNumber, VALID_CALL_ID, null, null);
+        FrontLineWorker flw = new FrontLineWorker(callingNumber);
+        frontLineWorkerService.add(flw);
+        flw = frontLineWorkerService.getByContactNumber(callingNumber);
+        MaBookmark bookmark = new MaBookmark(flw.getId(), VALID_CALL_ID, null, null);
         maService.setBookmark(bookmark);
-        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9987654321");
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser(flw.getId().toString());
         assertTrue(added.size() == 1);
 
         bookmark.setBookmark(FINAL_BOOKMARK);
@@ -328,7 +356,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         maService.setBookmark(bookmark);
 
         MaBookmark retrieved = maService.getBookmark(callingNumber, VALID_CALL_ID);
-        assertNotNull(retrieved.getCallingNumber());
+        assertNotNull(retrieved.getFlwId());
         assertNotNull(retrieved.getCallId());
         assertNull(retrieved.getBookmark());
         assertNull(retrieved.getScoresByChapter());
@@ -338,9 +366,12 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     public void testResetBookmarkNewStartActivity() {
 
         long callingNumber = 9987654321L;
-        MaBookmark bookmark = new MaBookmark(callingNumber, VALID_CALL_ID, null, null);
+        FrontLineWorker flw = new FrontLineWorker(callingNumber);
+        frontLineWorkerService.add(flw);
+        flw = frontLineWorkerService.getByContactNumber(callingNumber);
+        MaBookmark bookmark = new MaBookmark(flw.getId(), VALID_CALL_ID, null, null);
         maService.setBookmark(bookmark);
-        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9987654321");
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser(flw.getId().toString());
         assertTrue(added.size() == 1);
 
         // set final bookmark and trigger completed activity record
@@ -357,7 +388,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
         // verify that the bookmark is reset on the following get call
         MaBookmark retrieved = maService.getBookmark(callingNumber, VALID_CALL_ID);
-        assertNotNull(retrieved.getCallingNumber());
+        assertNotNull(retrieved.getFlwId());
         assertNotNull(retrieved.getCallId());
         assertNull(retrieved.getBookmark());
         assertNull(retrieved.getScoresByChapter());
@@ -380,9 +411,13 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     public void testTriggerNotificationSent() {
 
         long callingNumber = 9876543210L;
-        MaBookmark bookmark = new MaBookmark(callingNumber, VALID_CALL_ID, null, null);
+        FrontLineWorker flw = new FrontLineWorker(callingNumber);
+        frontLineWorkerDataService.create(flw);
+        flw = frontLineWorkerService.getByContactNumber(callingNumber);
+
+        MaBookmark bookmark = new MaBookmark(flw.getId(), VALID_CALL_ID, null, null);
         maService.setBookmark(bookmark);
-        List<Bookmark> added = bookmarkDataService.findBookmarksForUser(String.valueOf(callingNumber));
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser(String.valueOf(flw.getId()));
         assertTrue(added.size() == 1);
 
         bookmark.setBookmark(FINAL_BOOKMARK);
@@ -392,9 +427,10 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         }
         bookmark.setScoresByChapter(scores);
         maService.setBookmark(bookmark);
-        CourseCompletionRecord ccr = courseCompletionRecordDataService.findByCallingNumber(callingNumber).get(0);
+        Long flwId = frontLineWorkerDataService.findByContactNumber(callingNumber).getId();
+        CourseCompletionRecord ccr = courseCompletionRecordDataService.findByFlwId(flwId).get(0);
         assertNotNull(ccr);
-        assertEquals(ccr.getCallingNumber(), callingNumber);
+        assertEquals(ccr.getFlwId(), flwId);
         assertEquals(ccr.getScore(), 33);
     }
 
@@ -402,9 +438,12 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     public void testTriggerNotificationNotSent() {
 
         long callingNumber = 9876543211L;
-        MaBookmark bookmark = new MaBookmark(callingNumber, VALID_CALL_ID, null, null);
+        FrontLineWorker flw = new FrontLineWorker(callingNumber);
+        frontLineWorkerDataService.create(flw);
+        flw = frontLineWorkerService.getByContactNumber(callingNumber);
+        MaBookmark bookmark = new MaBookmark(flw.getId(), VALID_CALL_ID, null, null);
         maService.setBookmark(bookmark);
-        List<Bookmark> added = bookmarkDataService.findBookmarksForUser(String.valueOf(callingNumber));
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser(String.valueOf(flw.getId()));
         assertTrue(added.size() == 1);
 
         bookmark.setBookmark(FINAL_BOOKMARK);
@@ -414,20 +453,23 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         }
         bookmark.setScoresByChapter(scores);
         maService.setBookmark(bookmark);
-        assertEquals(1, courseCompletionRecordDataService.findByCallingNumber(callingNumber).size());
-        assertFalse(courseCompletionRecordDataService.findByCallingNumber(callingNumber).get(0).isPassed());
+        assertEquals(1, courseCompletionRecordDataService.findByFlwId(flw.getId()).size());
+        assertFalse(courseCompletionRecordDataService.findByFlwId(flw.getId()).get(0).isPassed());
     }
 
     @Test
     public void testRetriggerNotification() {
 
         long callingNumber = 9876543211L;
+        FrontLineWorker flw = new FrontLineWorker(callingNumber);
+        frontLineWorkerService.add(flw);
+        Long flwId = frontLineWorkerService.getByContactNumber(callingNumber).getId();
 
-        CourseCompletionRecord ccr = new CourseCompletionRecord(callingNumber, 44, "score", true);
+        CourseCompletionRecord ccr = new CourseCompletionRecord(flwId, 44, "score", true);
         courseCompletionRecordDataService.create(ccr);
 
-        maService.triggerCompletionNotification(callingNumber);
-        List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByCallingNumber(callingNumber);
+        maService.triggerCompletionNotification(flwId);
+        List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByFlwId(flwId);
         ccr = ccrs.get(ccrs.size()-1);
         assertTrue(ccr.isSentNotification());
     }
@@ -520,17 +562,18 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(callingNumber);
         assertNotNull(flw);
+        Long flwId = flw.getId();
         transactionManager.commit(status);
 
         MotechEvent event = new MotechEvent();
-        event.getParameters().put("callingNumber", callingNumber);
+        event.getParameters().put("flwId", flwId);
         event.getParameters().put("smsContent", "FooBar");
-        CourseCompletionRecord ccr = new CourseCompletionRecord(callingNumber, 35, "score", false);
+        CourseCompletionRecord ccr = new CourseCompletionRecord(flwId, 35, "score", false);
         courseCompletionRecordDataService.create(ccr);
         assertNull(ccr.getSmsReferenceNumber());
 
         courseNotificationService.sendSmsNotification(event);
-        CourseCompletionRecord smsCcr = courseCompletionRecordDataService.findByCallingNumber(callingNumber).get(0);
+        CourseCompletionRecord smsCcr = courseCompletionRecordDataService.findByFlwId(flwId).get(0);
         assertNotNull(smsCcr.getSmsReferenceNumber());
         String expectedCode = "" + flw.getState().getCode() + flw.getDistrict().getCode() + callingNumber + 0; // location code + callingNumber + tries
         assertEquals(expectedCode, smsCcr.getSmsReferenceNumber());
@@ -539,9 +582,12 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Test
     public void testMultipleCompletions() {
         long callingNumber = 9876543210L;
-        MaBookmark bookmark = new MaBookmark(callingNumber, VALID_CALL_ID, null, null);
+        FrontLineWorker flw = new FrontLineWorker(callingNumber);
+        frontLineWorkerService.add(flw);
+        flw = frontLineWorkerService.getByContactNumber(callingNumber);
+        MaBookmark bookmark = new MaBookmark(flw.getId(), VALID_CALL_ID, null, null);
         maService.setBookmark(bookmark);
-        List<Bookmark> added = bookmarkDataService.findBookmarksForUser("9876543210");
+        List<Bookmark> added = bookmarkDataService.findBookmarksForUser(flw.getId().toString());
         assertTrue(added.size() == 1);
 
         bookmark.setBookmark(FINAL_BOOKMARK);
@@ -571,7 +617,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         bookmark.setScoresByChapter(scores2);
         maService.setBookmark(bookmark);
 
-        List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByCallingNumber(callingNumber);
+        Long flwId = frontLineWorkerService.getByContactNumber(callingNumber).getId();
+        List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByFlwId(flwId);
         assertEquals(3, ccrs.size());
         assertEquals(4, activityDataService.findRecordsForUser((String.valueOf(callingNumber))).size());
         assertEquals(ActivityState.STARTED, activityDataService.findRecordsForUser((String.valueOf(callingNumber))).get(0).getState());

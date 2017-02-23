@@ -19,12 +19,8 @@ import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.api.web.domain.AnonymousCallAudit;
 import org.motechproject.nms.api.web.repository.AnonymousCallAuditDataService;
-import org.motechproject.nms.flw.domain.CallDetailRecord;
-import org.motechproject.nms.flw.domain.FrontLineWorker;
-import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
-import org.motechproject.nms.flw.domain.ServiceUsageCap;
-import org.motechproject.nms.flw.domain.WhitelistEntry;
-import org.motechproject.nms.flw.domain.WhitelistState;
+import org.motechproject.nms.api.web.repository.InactiveJobCallAuditDataService;
+import org.motechproject.nms.flw.domain.*;
 import org.motechproject.nms.flw.repository.CallDetailRecordDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.ServiceUsageCapDataService;
@@ -154,6 +150,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Inject
     AnonymousCallAuditDataService anonymousCallAuditDataService;
+
+    @Inject
+    InactiveJobCallAuditDataService inactiveJobCallAuditDataService;
 
     public static final Long WHITELIST_CONTACT_NUMBER = 1111111111l;
     public static final Long NOT_WHITELIST_CONTACT_NUMBER = 9000000000l;
@@ -5038,6 +5037,45 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(anonymousCallAuditDataService.count(),3l);
         assertEquals(anonymousCallAuditDataService.findByNumber(1200000000l).size(), 2);
         assertEquals(HttpStatus.SC_FORBIDDEN, response2.getStatusLine().getStatusCode());
+
+    }
+
+    /** To verify if the inactive job  call audit is done if an inactive job user
+     * attempted to call.
+     */
+
+    @Test
+    public void verifyInactiveJobUserCallAuditRecord() throws IOException, InterruptedException {
+
+        // add FLW with Anonymous status
+        FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1200000000l);
+        flw.setLanguage(rh.tamilLanguage());
+        flw.setDistrict(rh.bangaloreDistrict());
+        flw.setState(rh.karnatakaState());
+        flw.setMctsFlwId("123");
+        flw.setInvalidationDate(DateTime.now().minusDays(50));
+        flw.setJobStatus(FlwJobStatus.INACTIVE);
+        frontLineWorkerDataService.create(flw);
+
+
+        // service deployed in Karnataka State
+        deployedServiceDataService.create(new DeployedService(rh.karnatakaState(), Service.MOBILE_ACADEMY));
+
+
+        // invoke get user detail API for first flw user
+        HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
+                true, "1200000000", // callingNumber
+                false, null, // operator
+                false, null,// circle
+                true, VALID_CALL_ID // callId
+        );
+
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+
+        assertEquals(inactiveJobCallAuditDataService.findByNumber(flw.getContactNumber()).size(), 1);
+        assertEquals(HttpStatus.SC_FORBIDDEN, response.getStatusLine().getStatusCode());
+
 
     }
 

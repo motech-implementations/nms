@@ -96,6 +96,11 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
     @Column(length = 20)
     private String designation;
 
+    @Field
+    @Persistent(defaultFetchGroup = "true")
+    private FlwJobStatus jobStatus;
+
+
     public FrontLineWorker(Long contactNumber) {
         this.contactNumber = contactNumber;
     }
@@ -253,6 +258,10 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
     public void setUpdatedDateNic(LocalDate updatedDateNic) {
         this.updatedDateNic = updatedDateNic;
     }
+
+    public FlwJobStatus getJobStatus() { return jobStatus; }
+
+    public void setJobStatus(FlwJobStatus jobStatus) { this.jobStatus = jobStatus; }
 
     @Override //NO CHECKSTYLE CyclomaticComplexity
     public boolean equals(Object o) {

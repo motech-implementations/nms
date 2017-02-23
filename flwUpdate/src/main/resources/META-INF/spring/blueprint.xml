@@ -33,6 +33,9 @@
     <osgi:reference id="locationService"
                     interface="org.motechproject.nms.region.service.LocationService" />
 
+    <osgi:reference id="contactNumberAuditDataService"
+                    interface="org.motechproject.nms.flw.repository.ContactNumberAuditDataService" />
+
     <osgi:reference id="languageService"
                     interface="org.motechproject.nms.region.service.LanguageService" />
 

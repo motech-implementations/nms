@@ -5,13 +5,16 @@ import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.api.web.contract.UserResponse;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
 import org.motechproject.nms.api.web.domain.AnonymousCallAudit;
+import org.motechproject.nms.api.web.domain.InactiveJobCallAudit;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
 import org.motechproject.nms.api.web.exception.NotDeployedException;
 import org.motechproject.nms.api.web.repository.AnonymousCallAuditDataService;
+import org.motechproject.nms.api.web.repository.InactiveJobCallAuditDataService;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
+import org.motechproject.nms.flw.domain.FlwJobStatus;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.service.ServiceUsageCapService;
 import org.motechproject.nms.flw.service.ServiceUsageService;
@@ -70,6 +73,9 @@ public class UserController extends BaseController {
 
     @Autowired
     private AnonymousCallAuditDataService anonymousCallAuditDataService;
+
+    @Autowired
+    private InactiveJobCallAuditDataService inactiveJobCallAuditDataService;
 
 
     /**
@@ -272,6 +278,7 @@ public class UserController extends BaseController {
         if (MOBILE_ACADEMY.equals(serviceName)) {
             // make sure that flw is authorized to use MA
             restrictAnonymousMAUserCheck(flw, callingNumber, circle);
+            restrictInactiveJobUserCheck(flw);
         }
 
         if (flw != null) {
@@ -308,6 +315,15 @@ public class UserController extends BaseController {
 
             String circleName = circle == null ? null : circle.getName();
             anonymousCallAuditDataService.create(new AnonymousCallAudit(DateUtil.now(), circleName, callingNumber));
+            throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
+        }
+    }
+
+    private void restrictInactiveJobUserCheck(FrontLineWorker flw) {
+
+        if (flw == null || flw.getJobStatus() == FlwJobStatus.INACTIVE) {
+
+            inactiveJobCallAuditDataService.create(new InactiveJobCallAudit(DateUtil.now(), flw.getFlwId(), flw.getMctsFlwId(), flw.getContactNumber()));
             throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
         }
     }

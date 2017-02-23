@@ -16,6 +16,8 @@ import org.motechproject.mtraining.domain.Bookmark;
 import org.motechproject.mtraining.repository.ActivityDataService;
 import org.motechproject.mtraining.service.ActivityService;
 import org.motechproject.mtraining.service.BookmarkService;
+import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.mobileacademy.domain.CourseCompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.domain.MtrainingModuleActivityRecordAudit;
@@ -86,6 +88,8 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
 
     private CourseCompletionRecordDataService courseCompletionRecordDataService;
 
+    private FrontLineWorkerService frontLineWorkerService;
+
     /**
      * Activity record data service
      */
@@ -121,6 +125,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
                                     NmsCourseDataService nmsCourseDataService,
                                     ActivityDataService activityDataService,
                                     CourseCompletionRecordDataService courseCompletionRecordDataService,
+                                    FrontLineWorkerService frontLineWorkerService,
                                     EventRelay eventRelay,
                                     MtrainingModuleActivityRecordAuditDataService mtrainingModuleActivityRecordAuditDataService,
                                     @Qualifier("maSettings") SettingsFacade settingsFacade,
@@ -134,6 +139,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         this.alertService = alertService;
         this.mtrainingModuleActivityRecordAuditDataService = mtrainingModuleActivityRecordAuditDataService;
         this.courseCompletionRecordDataService = courseCompletionRecordDataService;
+        this.frontLineWorkerService = frontLineWorkerService;
         bootstrapCourse();
     }
 
@@ -178,7 +184,12 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     @Override
     public MaBookmark getBookmark(Long callingNumber, String callId) {
 
-        Bookmark existingBookmark = bookmarkService.getLatestBookmarkByUserId(callingNumber.toString());
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
+        if (flw == null) {
+            return null;
+        }
+        Long flwId = flw.getId();
+        Bookmark existingBookmark = bookmarkService.getLatestBookmarkByUserId(flwId.toString());
 
         if (existingBookmark != null) {
             MaBookmark toReturn = setMaBookmarkProperties(existingBookmark);
@@ -195,7 +206,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         Bookmark existingBookmark = bookmarkService.getLatestBookmarkByUserId(callingNumber.toString());
         if (existingBookmark != null) {
             MaBookmark toReturn = new MaBookmark();
-            toReturn.setCallingNumber(Long.parseLong(existingBookmark.getExternalId()));
+            toReturn.setFlwId(Long.parseLong(existingBookmark.getExternalId()));
 
             // default behavior to map the data
             if (existingBookmark.getProgress() != null) {
@@ -216,8 +227,10 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
             throw new IllegalArgumentException("Invalid bookmark, cannot be null");
         }
 
-        String callingNumber = saveBookmark.getCallingNumber().toString();
-        Bookmark existingBookmark = bookmarkService.getLatestBookmarkByUserId(callingNumber);
+        String flwId = saveBookmark.getFlwId().toString();
+        Bookmark existingBookmark = bookmarkService.getLatestBookmarkByUserId(flwId);
+        FrontLineWorker flw = frontLineWorkerService.getById(saveBookmark.getFlwId());
+        String callingNumber = flw.getContactNumber().toString();
 
         // write a new activity record if existing bookmark is null or
         // existing bookmark has no progress from earlier reset
@@ -229,7 +242,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
 
         if (existingBookmark == null) {
             // if no bookmarks exist for user
-            LOGGER.info("No bookmarks found for user " + LogHelper.obscure(saveBookmark.getCallingNumber()));
+            LOGGER.info("No bookmarks found for user " + LogHelper.obscure(saveBookmark.getFlwId()));
             bookmarkService.createBookmark(setBookmarkProperties(saveBookmark, new Bookmark()));
         } else {
 
@@ -247,19 +260,19 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
             // Create an activity record here since pass/fail counts as 1 try
             activityService.createActivity(
                     new ActivityRecord(callingNumber, null, null, null, null, DateTime.now(), ActivityState.COMPLETED));
-            evaluateCourseCompletion(saveBookmark.getCallingNumber(), saveBookmark.getScoresByChapter());
+            evaluateCourseCompletion(saveBookmark.getFlwId(), saveBookmark.getScoresByChapter());
         }
     }
 
     @Override
-    public void triggerCompletionNotification(Long callingNumber) {
+    public void triggerCompletionNotification(final Long flwId) {
 
-        List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByCallingNumber(callingNumber);
+        List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByFlwId(flwId);
         if (ccrs == null || ccrs.isEmpty()) {
-            throw new CourseNotCompletedException(String.format(NOT_COMPLETE, String.valueOf(callingNumber)));
+            throw new CourseNotCompletedException(String.format(NOT_COMPLETE, flwId));
         }
 
-        final CourseCompletionRecord ccr = ccrs.get(ccrs.size()-1);
+        final CourseCompletionRecord ccr = ccrs.get(ccrs.size() - 1);
 
         if (ccr.isSentNotification()) {
             LOGGER.error("Notification has already been sent.");
@@ -273,22 +286,22 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
                 @Override
                 public void afterCommit() {
-                    sendEvent(ccr.getCallingNumber());
+                    sendEvent(ccr.getFlwId());
                 }
             });
         } else {
-            sendEvent(ccr.getCallingNumber());
+            sendEvent(ccr.getFlwId());
         }
     }
 
     /**
      * Send event to notify
-     * @param callingNumber calling number to notify
+     * @param flwId flw ID to notify
      */
-    private void sendEvent(Long callingNumber) {
+    private void sendEvent(Long flwId) {
 
         Map<String, Object> eventParams = new HashMap<>();
-        eventParams.put("callingNumber", callingNumber);
+        eventParams.put("flwId", flwId);
         MotechEvent motechEvent = new MotechEvent(COURSE_COMPLETED, eventParams);
         eventRelay.sendEventMessage(motechEvent);
         LOGGER.debug("Sent event message to process completion notification");
@@ -297,7 +310,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     // Map the dto to the domain object
     private Bookmark setBookmarkProperties(MaBookmark fromBookmark, Bookmark toBookmark) {
 
-        toBookmark.setExternalId(fromBookmark.getCallingNumber().toString());
+        toBookmark.setExternalId(fromBookmark.getFlwId().toString());
 
         if (toBookmark.getProgress() == null) {
             toBookmark.setProgress(new HashMap<String, Object>());
@@ -321,7 +334,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     private MaBookmark setMaBookmarkProperties(Bookmark fromBookmark) {
 
         MaBookmark toReturn = new MaBookmark();
-        toReturn.setCallingNumber(Long.parseLong(fromBookmark.getExternalId()));
+        toReturn.setFlwId(Long.parseLong(fromBookmark.getExternalId()));
 
         // default behavior to map the data
         if (fromBookmark.getProgress() != null) {
@@ -345,17 +358,17 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
 
     /**
      * Helper method to check whether a course meets completion criteria
-     * @param callingNumber calling number of flw
+     * @param flwId flw Id of flw
      * @param scores scores in quiz
      */
-    private void evaluateCourseCompletion(Long callingNumber, Map<String, Integer> scores) {
+    private void evaluateCourseCompletion(Long flwId, Map<String, Integer> scores) {
 
         int totalScore = getTotalScore(scores);
-        CourseCompletionRecord ccr = new CourseCompletionRecord(callingNumber, totalScore, scores.toString());
+        CourseCompletionRecord ccr = new CourseCompletionRecord(flwId, totalScore, scores.toString());
         courseCompletionRecordDataService.create(ccr);
 
         if (totalScore < PASS_SCORE) {
-            LOGGER.debug("User with calling number: " + LogHelper.obscure(callingNumber) + " failed with score: " + totalScore);
+            LOGGER.debug("User with flwId: " + LogHelper.obscure(flwId) + " failed with score: " + totalScore);
             ccr.setPassed(false);
             courseCompletionRecordDataService.update(ccr);
             return;
@@ -363,7 +376,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
             // we updated the completion record. Start event message to trigger notification workflow
             ccr.setPassed(true);
             courseCompletionRecordDataService.update(ccr);
-            triggerCompletionNotification(callingNumber);
+            triggerCompletionNotification(flwId);
         }
     }
 
@@ -484,21 +497,7 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
             LOGGER.debug("No Bookmarks exists with given Msisdn");
         }
 
-        // Update Msisdn  In nms_ma_completion_records
-        LOGGER.debug("Fetching Completion records for Msisdn {}.", oldCallingNumber);
-        List<CourseCompletionRecord> courseCompletionRecords = courseCompletionRecordDataService.findByCallingNumber(oldCallingNumber);
-        if (null == courseCompletionRecords || courseCompletionRecords.isEmpty()) {
-            LOGGER.debug("No CourseCompletionRecord exists with given Msisdn");
-        } else {
-            for (CourseCompletionRecord courseCompletionRecord : courseCompletionRecords
-                 ) {
-                courseCompletionRecord.setCallingNumber(newCallingNumber);
-                courseCompletionRecordDataService.update(courseCompletionRecord);
-            }
-            LOGGER.debug("Updated MSISDN {} to {} in Completion record", oldCallingNumber, newCallingNumber);
-        }
-
-        // Update Msisdn  In MTRAINING_MODULE_ACTIVITYRECORD
+    // Update Msisdn  In MTRAINING_MODULE_ACTIVITYRECORD
         LOGGER.debug("Fetching Activity records for Msisdn {}", oldCallingNumber);
         List<ActivityRecord> existingRecords = activityDataService.findRecordsForUser(oldCallingNumber.toString());
         if (existingRecords.size() > 0) {

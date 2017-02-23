@@ -21,6 +21,8 @@ import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SmsStatusRequest;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.DeliveryStatus;
 import org.motechproject.nms.api.web.contract.mobileAcademy.sms.RequestData;
+import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.mobileacademy.domain.CourseCompletionRecord;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.dto.MaCourse;
@@ -36,6 +38,9 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -67,7 +72,13 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
     private CourseCompletionRecordDataService courseCompletionRecordDataService;
 
     @Inject
+    private FrontLineWorkerService frontLineWorkerService;
+
+    @Inject
     private NmsCourseDataService nmsCourseDataService;
+
+    @Inject
+    PlatformTransactionManager transactionManager;
 
     private static final String COURSE_NAME = "MobileAcademyCourse";
 
@@ -141,6 +152,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
         String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
+        FrontLineWorker flw = new FrontLineWorker(BaseController.SMALLEST_10_DIGIT_NUMBER);
+        frontLineWorkerService.add(flw);
         SaveBookmarkRequest bookmark = new SaveBookmarkRequest();
         bookmark.setCallingNumber(BaseController.SMALLEST_10_DIGIT_NUMBER);
         bookmark.setCallId(VALID_CALL_ID);
@@ -156,6 +169,9 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         SaveBookmarkRequest bookmark = new SaveBookmarkRequest();
         bookmark.setCallingNumber(BaseController.SMALLEST_10_DIGIT_NUMBER);
         bookmark.setCallId(VALID_CALL_ID);
+        FrontLineWorker flw = new FrontLineWorker(BaseController.SMALLEST_10_DIGIT_NUMBER);
+        frontLineWorkerService.add(flw);
+        flw = frontLineWorkerService.getByContactNumber(BaseController.SMALLEST_10_DIGIT_NUMBER);
 
         Map<String, Integer> scores = new HashMap<>();
         for (int i = 1; i < 12; i++) {
@@ -166,10 +182,10 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         HttpPost request = RequestBuilder.createPostRequest(endpoint, bookmark);
         assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
 
-        long callingNumber = BaseController.SMALLEST_10_DIGIT_NUMBER;
+        long flwId = flw.getId();
         endpoint = String.format("http://localhost:%d/api/mobileacademy/notify",
                 TestContext.getJettyPort());
-        request = RequestBuilder.createPostRequest(endpoint, callingNumber);
+        request = RequestBuilder.createPostRequest(endpoint, flwId);
         assertTrue(SimpleHttpClient.execHttpRequest(request, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
 
         // removed the negative testing since there's not reliable way to clean the data for it to fail
@@ -182,6 +198,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
 
         String endpoint = String.format("http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
+        FrontLineWorker flw = new FrontLineWorker(BaseController.SMALLEST_10_DIGIT_NUMBER);
+        frontLineWorkerService.add(flw);
         SaveBookmarkRequest bookmark = new SaveBookmarkRequest();
         bookmark.setCallingNumber(BaseController.SMALLEST_10_DIGIT_NUMBER);
         bookmark.setCallId(VALID_CALL_ID);
@@ -506,6 +524,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
+        FrontLineWorker flw = new FrontLineWorker(1234567890l);
+        frontLineWorkerService.add(flw);
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
         bookmarkRequest.setCallId(VALID_CALL_ID);
         bookmarkRequest.setCallingNumber(1234567890l);
@@ -533,6 +553,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
+        FrontLineWorker flw = new FrontLineWorker(1234567890l);
+        frontLineWorkerService.add(flw);
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
         bookmarkRequest.setCallId(VALID_CALL_ID);
         bookmarkRequest.setCallingNumber(1234567890l);
@@ -764,6 +786,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
+        FrontLineWorker flw = new FrontLineWorker(1234567890l);
+        frontLineWorkerService.add(flw);
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
 
         // save bookamark first
@@ -821,6 +845,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
+        FrontLineWorker flw = new FrontLineWorker(1234567890l);
+        frontLineWorkerService.add(flw);
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
 
         // save bookamark first
@@ -877,6 +903,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
+        FrontLineWorker flw = new FrontLineWorker(1234567890l);
+        frontLineWorkerService.add(flw);
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
 
         // save bookamark first
@@ -933,6 +961,9 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
+        FrontLineWorker flw = new FrontLineWorker(1234567890l);
+        frontLineWorkerService.add(flw);
+        flw = frontLineWorkerService.getByContactNumber(1234567890l);
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
 
         // save bookamark first
@@ -958,7 +989,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD));
 
-        List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByCallingNumber(1234567890l);
+        List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByFlwId(flw.getId());
         assertEquals(1, ccrs.size());
         // assert if bookmark has been reset
         HttpGet getRequest = createHttpGetBookmarkWithScore("1234567890",
@@ -982,6 +1013,8 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         String endpoint = String.format(
                 "http://localhost:%d/api/mobileacademy/bookmarkWithScore",
                 TestContext.getJettyPort());
+        FrontLineWorker flw = new FrontLineWorker(1234567890l);
+        frontLineWorkerService.add(flw);
         SaveBookmarkRequest bookmarkRequest = new SaveBookmarkRequest();
         bookmarkRequest.setCallId(VALID_CALL_ID);
         bookmarkRequest.setCallingNumber(1234567890l);
@@ -1012,7 +1045,10 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
      */
     public void verifyFT564() throws IOException, InterruptedException {
         // create completion record for msisdn 1234567890l
-        CourseCompletionRecord ccr = new CourseCompletionRecord(1234567890l, 25, "score", true, true, 0);
+        FrontLineWorker flw = new FrontLineWorker(1234567890l);
+        frontLineWorkerService.add(flw);
+        flw = frontLineWorkerService.getByContactNumber(1234567890l);
+        CourseCompletionRecord ccr = new CourseCompletionRecord(flw.getId(), 25, "score", true, true, 0);
         ccr = courseCompletionRecordDataService.create(ccr);
         assertNull(ccr.getLastDeliveryStatus());
         // invoke delivery notification API
@@ -1029,7 +1065,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 postRequest, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         // assert completion record
-        ccr = courseCompletionRecordDataService.findByCallingNumber(1234567890l).get(0);
+        ccr = courseCompletionRecordDataService.findByFlwId(flw.getId()).get(0);
         assertEquals(DeliveryStatus.DeliveredToNetwork.toString(), ccr.getLastDeliveryStatus());
     }
 }

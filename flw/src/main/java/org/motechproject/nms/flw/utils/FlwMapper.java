@@ -1,6 +1,7 @@
 package org.motechproject.nms.flw.utils;
 
 import org.joda.time.LocalDate;
+import org.motechproject.nms.flw.domain.FlwJobStatus;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.region.domain.State;
@@ -39,6 +40,7 @@ public final class FlwMapper {
         Long contactNumber = (Long) record.get(FlwConstants.CONTACT_NO);
         String name = (String) record.get(FlwConstants.NAME);
         String type = (String) record.get(FlwConstants.TYPE);
+        String gfStatus = (String) record.get(FlwConstants.GF_STATUS);
 
         if (contactNumber != null) {
             flw.setContactNumber(contactNumber);
@@ -50,6 +52,11 @@ public final class FlwMapper {
 
         if (name != null) {
             flw.setName(name);
+        }
+
+        if(!gfStatus.isEmpty() && gfStatus!= null) {
+            FlwJobStatus jobStatus = ("Active").equals(gfStatus) ? FlwJobStatus.ACTIVE : FlwJobStatus.INACTIVE;
+            flw.setJobStatus(jobStatus);
         }
 
         setFrontLineWorkerLocation(flw, location);
@@ -65,6 +72,7 @@ public final class FlwMapper {
         if (record.get(FlwConstants.UPDATED_ON) != null) {
             flw.setUpdatedDateNic((LocalDate) record.get(FlwConstants.UPDATED_ON));
         }
+
 
         return flw;
     }

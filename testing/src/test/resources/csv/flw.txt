@@ -1,9 +1,8 @@
-
 State Name : State 1
 User Name :
 Password :
 From Date (dd-mm-yyyy) :	
 To Date (dd-mm-yyyy) :	
 		
-ID	District_ID	Name	Contact_No	Updated_On	Type
-1	11	Aisha Bibi	1234567899	18-08-2016	ASHA
+ID	District_ID	Name	Contact_No	Updated_On	Type	GF_Status
+1	11	Aisha Bibi	1234567899	18-08-2016	ASHA	Active
