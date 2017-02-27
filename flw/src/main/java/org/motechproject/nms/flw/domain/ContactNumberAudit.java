@@ -19,11 +19,11 @@ public class ContactNumberAudit {
     @Field
     private Long newCallingNumber;
 
-    public ContactNumberAudit (Long flwId) {
+    public ContactNumberAudit(Long flwId) {
         this(null, flwId, null, null);
     }
 
-    public ContactNumberAudit (LocalDate importDate, Long flwId, Long oldCallingNumber, Long newCallingNumber) {
+    public ContactNumberAudit(LocalDate importDate, Long flwId, Long oldCallingNumber, Long newCallingNumber) {
         this.importDate = importDate;
         this.flwId = flwId;
         this.oldCallingNumber = oldCallingNumber;

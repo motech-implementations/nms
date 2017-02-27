@@ -278,7 +278,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     public void testASHAvalidation() throws Exception {
         frontLineWorkerImportService.importData(read("csv/anm-asha.txt"));
         List<FrontLineWorker> flws = frontLineWorkerDataService.retrieveAll();
-        assertEquals(11,flws.size());
+        assertEquals(9,flws.size());
     }
 
     /**

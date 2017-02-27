@@ -193,6 +193,34 @@ public class OpsControllerBundleIT extends BasePaxIT {
         assertFalse(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
     }
 
+    @Test
+    public void testInactiveGfValidation() throws IOException, InterruptedException {
+        stateDataService.create(state);
+        districtDataService.create(district);
+        AddFlwRequest addFlwRequest = getAddRequestInactiveGfStatus();
+        HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, addFlwRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(9876543210L);
+        assertNull(flw);
+    }
+
+    @Test
+    public void testInactiveGfUpdate() throws IOException, InterruptedException {
+        stateDataService.create(state);
+        districtDataService.create(district);
+        AddFlwRequest addFlwRequest = getAddRequestASHA();
+        HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, addFlwRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(9876543210L);
+        assertNotNull(flw);
+        addFlwRequest = getAddRequestInactiveGfStatus();
+        httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, addFlwRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+        flw = frontLineWorkerService.getByContactNumber(9876543210L);
+        assertNotNull(flw);
+        assertEquals(FlwJobStatus.INACTIVE, flw.getJobStatus());
+    }
+
     // Create valid new flw
     @Test
     public void testCreateNewFlwTalukaVillage() throws IOException, InterruptedException {
@@ -454,6 +482,18 @@ public class OpsControllerBundleIT extends BasePaxIT {
         request.setType("ANM");
         request.setGfStatus("Active");
         return request;
+    }
+
+    private AddFlwRequest getAddRequestInactiveGfStatus() {
+            AddFlwRequest request = new AddFlwRequest();
+            request.setContactNumber(9876543210L);
+            request.setName("Chinkoo Devi");
+            request.setMctsFlwId("123");
+            request.setStateId(state.getCode());
+            request.setDistrictId(district.getCode());
+            request.setType("ASHA");
+            request.setGfStatus("Inactive");
+            return request;
     }
 
     // helper to create location data

@@ -106,7 +106,10 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         Map<String, Object> location = locationService.getLocations(record);
 
         if (flw == null) {
-            frontLineWorkerService.add(createFlw(record, location));
+            FrontLineWorker frontLineWorker = createFlw(record, location);
+            if (frontLineWorker != null) {
+                frontLineWorkerService.add(frontLineWorker);
+            }
         } else {
             LocalDate mctsUpdatedDateNic = (LocalDate) record.get(FlwConstants.UPDATED_ON);
             //It updated_date_nic from mcts is not null,then it's not a new record. Compare it with the record from database and update
@@ -195,9 +198,16 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             } else { // existingFlwByMctsFlwId & existingFlwByNumber are null)
                 // new user. set fields and add
                 LOGGER.debug("Adding new flw user");
-                frontLineWorkerService.add(FlwMapper.createFlw(flw, location));
-                return true;
+                FrontLineWorker frontLineWorker = FlwMapper.createFlw(flw, location);
+                if (frontLineWorker != null) {
+                    frontLineWorkerService.add(frontLineWorker);
+                    return true;
+                } else {
+                    LOGGER.error("GF Status is INACTIVE. So cannot create record.");
+                    return false;
+                }
             }
+
         } catch (InvalidLocationException ile) {
             LOGGER.debug(ile.toString());
             return false;
