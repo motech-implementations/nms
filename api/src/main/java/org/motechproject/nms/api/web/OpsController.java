@@ -3,6 +3,7 @@ package org.motechproject.nms.api.web;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
+import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
 import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
@@ -10,6 +11,7 @@ import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.kilkari.service.MctsChildFixService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
@@ -30,7 +32,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -66,6 +71,9 @@ public class OpsController extends BaseController {
 
     @Autowired
     private FrontLineWorkerImportService frontLineWorkerImportService;
+
+    @Autowired
+    private MctsChildFixService mctsChildFixService;
 
     private final String contactNumber = "contactNumber";
 
@@ -235,6 +243,25 @@ public class OpsController extends BaseController {
         String scores = mobileAcademyService.getScoresForUser(callingNumber);
         LOGGER.info("Scores: " + scores);
         return scores;
+    }
+
+    @RequestMapping(value = "/updateMotherInChild", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public void importChildUpdate(@RequestParam MultipartFile csvFile) {
+
+        LOGGER.debug("updateMotherInChild() BEGIN");
+        try {
+            try (InputStream in = csvFile.getInputStream()) {
+                mctsChildFixService.updateMotherChild(new InputStreamReader(in));
+            }
+        } catch (CsvImportException e) {
+            LOGGER.error(csvFile.getOriginalFilename(), "/updateMotherInChild", e);
+            throw e;
+        } catch (Exception e) {
+            LOGGER.error(csvFile.getOriginalFilename(), "/updateMotherInChild", e);
+            throw new CsvImportException("An error occurred during CSV import", e);
+        }
+        LOGGER.debug("updateMotherInChild() END");
     }
 }
 
