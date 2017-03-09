@@ -345,4 +345,22 @@ public class MctsChildFixServiceBundleIT extends BasePaxIT {
         assertEquals(dob.toLocalDate(), subscribers.get(0).getChild().getDateOfBirth().toLocalDate());
         transactionManager.commit(status);
     }
+
+    //Case with invalid date format
+    @Test
+    public void testInvalidDateFormat() throws Exception {
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        MctsChild child = mctsChildDataService.create(new MctsChild("9876543210"));
+        assertNull(child.getDateOfBirth());
+        transactionManager.commit(status);
+
+        Reader reader = createDataReader("9876543210,1234567890,2016-05-05 00:00:00");
+        try {
+            mctsChildFixService.updateMotherChild(reader);
+        } catch (Exception e) {
+            assertEquals("InvalidReferenceDateException", e.getClass().getSimpleName());
+            assertEquals("Reference date 2016-05-05 00:00:00 is invalid", e.getMessage());
+        }
+    }
 }
