@@ -2,11 +2,6 @@ package org.motechproject.nms.kilkari.service.impl;
 
 
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.DateTimeFormatterBuilder;
-import org.joda.time.format.DateTimeParser;
-import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.CsvImporterBuilder;
@@ -18,10 +13,10 @@ import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.exception.InvalidReferenceDateException;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.service.MctsChildFixService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
@@ -34,11 +29,9 @@ import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.prefs.CsvPreference;
 
-import javax.jdo.Query;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -56,6 +49,7 @@ public class MctsChildFixServiceImpl implements MctsChildFixService {
     private SubscriberDataService subscriberDataService;
     private MctsMotherDataService mctsMotherDataService;
     private SubscriberService subscriberService;
+    private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
 
     private int notFoundCount;
     private int subscriberPurgedCount;
@@ -64,11 +58,13 @@ public class MctsChildFixServiceImpl implements MctsChildFixService {
     public MctsChildFixServiceImpl(SubscriberDataService subscriberDataService,
                                    MctsMotherDataService mctsMotherDataService,
                                    MctsChildDataService mctsChildDataService,
-                                   SubscriberService subscriberService) {
+                                   SubscriberService subscriberService,
+                                   MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor) {
         this.subscriberDataService = subscriberDataService;
         this.mctsMotherDataService = mctsMotherDataService;
         this.mctsChildDataService = mctsChildDataService;
         this.subscriberService = subscriberService;
+        this.mctsBeneficiaryValueProcessor = mctsBeneficiaryValueProcessor;
     }
 
     /**
@@ -81,8 +77,6 @@ public class MctsChildFixServiceImpl implements MctsChildFixService {
     @Override
     @Transactional
     public void updateMotherChild(Reader reader) throws IOException {
-
-        List<MctsChild> childRecords = getAllIndependentChildRecords();
 
         BufferedReader bufferedReader = new BufferedReader(reader);
 
@@ -100,7 +94,7 @@ public class MctsChildFixServiceImpl implements MctsChildFixService {
         LOGGER.debug("Started import");
         while (null != (record = csvImporter.read())) {
             try {
-                updateSubscriber(record, childRecords);
+                updateSubscriber(record);
                 count++;
                 if (count % KilkariConstants.PROGRESS_INTERVAL == 0) {
                     LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
@@ -119,24 +113,29 @@ public class MctsChildFixServiceImpl implements MctsChildFixService {
         LOGGER.debug("updateMotherInChild() END ({})", count > 0 ? timer.frequency(count) : timer.time());
     }
 
-    @Override
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
-    public void updateSubscriber(Map<String, Object> record, List<MctsChild> childRecords) {
+    public void updateSubscriber(Map<String, Object> record) {
 
-        String beneficiaryId = (String) record.get(KilkariConstants.BENEFICIARY_ID);
+        String childBeneficiaryId = (String) record.get(KilkariConstants.BENEFICIARY_ID);
         String motherBeneficiaryId = (String) record.get(KilkariConstants.MOTHER_ID);
         DateTime dob = (DateTime) record.get(KilkariConstants.DOB);
-        MctsChild child = containsIn(beneficiaryId, childRecords);
+        Subscriber subscriber;
+        MctsChild child = mctsChildDataService.findByBeneficiaryId(childBeneficiaryId);
 
-        if (child != null) {
+        if (child != null && child.getMother() == null) {
 
-            Subscriber subscriber = subscriberService.getSubscriberByBeneficiary(child);
+            subscriber = subscriberService.getSubscriberByBeneficiary(child);
 
             // If mother is null then just update dob in child else update dob and mother
             if (motherBeneficiaryId != null) {
-                if (subscriber != null) {
 
-                    MctsMother mother = mctsMotherDataService.create(new MctsMother(motherBeneficiaryId));
+                MctsMother mother = mctsMotherDataService.findByBeneficiaryId(motherBeneficiaryId);
+                if (mother == null) {
+                    mother = mctsMotherDataService.create(new MctsMother(motherBeneficiaryId));
+                }
+
+                if (subscriber != null) {
                     child = subscriber.getChild();
                     child.setMother(mother);
                     child.setDateOfBirth(subscriber.getDateOfBirth());
@@ -161,61 +160,35 @@ public class MctsChildFixServiceImpl implements MctsChildFixService {
                         subscriber.setMother(mother);
                     }
 
-
                 } else {
                     // update mother in child
-                    MctsMother mother = mctsMotherDataService.create(new MctsMother(motherBeneficiaryId));
-                    child = mctsChildDataService.findByBeneficiaryId(beneficiaryId);
                     child.setMother(mother);
                     child.setDateOfBirth(dob);
                     subscriberPurgedCount++;
-                    LOGGER.debug("No Subscriber found for BeneficiaryId {}", beneficiaryId);
+                    LOGGER.debug("No Subscriber found for BeneficiaryId {}", childBeneficiaryId);
                 }
             } else {
-                if (subscriber != null) {
-                    child.setDateOfBirth(subscriber.getDateOfBirth());
-                } else {
-                    child.setDateOfBirth(dob);
-                    subscriberPurgedCount++;
-                    LOGGER.debug("No Subscriber found for BeneficiaryId {}", beneficiaryId);
-                }
+                updateDobChild(subscriber, child, dob);
             }
-
-
-
+        } else if (child != null && child.getMother() != null) {
+            subscriber = subscriberService.getSubscriberByBeneficiary(child);
+            updateDobChild(subscriber, child, dob);
         } else {
             notFoundCount++;
-            LOGGER.debug("Child not found for BeneficiaryId {}", beneficiaryId);
+            LOGGER.debug("Child not found for BeneficiaryId {}", childBeneficiaryId);
         }
 
     }
 
-    private MctsChild containsIn(String beneficiaryId, List<MctsChild> childRecords) {
-        for (MctsChild childRecord : childRecords) {
-            if (childRecord.getBeneficiaryId().equals(beneficiaryId)) {
-                return childRecord;
-            }
+    private void updateDobChild(Subscriber subscriber, MctsChild child, DateTime dob) {
+        // Update child dob from subscriber else from csv
+        if (subscriber != null) {
+            child.setDateOfBirth(subscriber.getDateOfBirth());
+        } else {
+            child.setDateOfBirth(dob);
+            subscriberPurgedCount++;
+            LOGGER.debug("No Subscriber found for BeneficiaryId {}", child.getBeneficiaryId());
         }
-        return null;
-    }
-
-    public List<MctsChild> getAllIndependentChildRecords() {
-
-        SqlQueryExecution<List<MctsChild>> queryExecution = new SqlQueryExecution<List<MctsChild>>() {
-
-            @Override
-            public String getSqlQuery() {
-                return "SELECT * FROM nms_mcts_children WHERE nms_mcts_children.mother_id_OID IS NULL";
-            }
-
-            @Override
-            public List<MctsChild> execute(Query query) {
-                query.setClass(MctsChild.class);
-                return (List<MctsChild>) query.execute();
-            }
-
-        };
-        return mctsChildDataService.executeSQLQuery(queryExecution);
     }
 
     private Map<String, CellProcessor> getCsvProcessorMapping() {
@@ -228,31 +201,9 @@ public class MctsChildFixServiceImpl implements MctsChildFixService {
         mapping.put(KilkariConstants.DOB, new Optional(new GetInstanceByString<DateTime>() {
             @Override
             public DateTime retrieve(String value) {
-                return getDateByString(value);
+                return mctsBeneficiaryValueProcessor.getDateByString(value);
             }
         }));
         return mapping;
-    }
-
-    public DateTime getDateByString(String value) {
-        if (value == null) {
-            return null;
-        }
-
-        DateTime referenceDate;
-
-        try {
-            DateTimeParser[] parsers = {
-                    DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss").getParser(),
-                    DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss").getParser()};
-            DateTimeFormatter formatter = new DateTimeFormatterBuilder().append(null, parsers).toFormatter();
-
-            referenceDate = formatter.parseDateTime(value);
-
-        } catch (IllegalArgumentException e) {
-            throw new InvalidReferenceDateException(String.format("Reference date %s is invalid", value), e);
-        }
-
-        return referenceDate;
     }
 }
