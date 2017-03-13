@@ -61,4 +61,7 @@
 
     <osgi:reference id="mctsWsImportService" interface="org.motechproject.nms.mcts.service.MctsWsImportService" />
 
+    <osgi:reference id="mctsChildFixService"
+    interface="org.motechproject.nms.kilkari.service.MctsChildFixService" />
+
 </beans>

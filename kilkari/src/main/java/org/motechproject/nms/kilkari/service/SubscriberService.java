@@ -10,6 +10,8 @@ import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 
+import java.util.List;
+
 /**
  * Service interface for managing Kilkari subscribers
  */
@@ -20,7 +22,7 @@ public interface SubscriberService {
      * @param callingNumber MSISDN of the subscriber to retrieve
      * @return The subscriber.
      */
-    Subscriber getSubscriber(long callingNumber);
+    List<Subscriber> getSubscriber(long callingNumber);
 
     /**
      * Get the Kilkari subscriber corresponding to the specified MCTS beneficiary.

@@ -145,14 +145,14 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setLastMenstrualPeriod(currentDate.minusDays(90)); // startDate will be today
         subscriberDataService.create(subscriber1);
-        Subscription subscription1 = subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(),
+        Subscription subscription1 = subscriptionService.createSubscription(subscriber1, 1111111111L, rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
 
         // Should not be picked up because it's been deactivated
         Subscriber subscriber2 = new Subscriber(2222222222L, rh.kannadaLanguage(), rh.karnatakaCircle());
         subscriber2.setLastMenstrualPeriod(currentDate.minusDays(90)); // startDate will be today
         subscriberDataService.create(subscriber2);
-        Subscription subscription2 = subscriptionService.createSubscription(2222222222L, rh.kannadaLanguage(),
+        Subscription subscription2 = subscriptionService.createSubscription(subscriber2, 2222222222L, rh.kannadaLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscriptionService.deactivateSubscription(subscription2, DeactivationReason.CHILD_DEATH);
 
@@ -162,27 +162,27 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
                                                     // so setting the DOB tomorrow this should be picked up
                                                     // the day after tomorrow
         subscriberDataService.create(subscriber3);
-        subscriptionService.createSubscription(6666666666L, rh.kannadaLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(subscriber3, 6666666666L, rh.kannadaLanguage(), sh.childPack(),
                 SubscriptionOrigin.IVR);
 
         Subscriber subscriber4 = new Subscriber(4000000000L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber4.setLastMenstrualPeriod(currentDate.minusDays(90)); // startDate will be today
         subscriberDataService.create(subscriber4);
-        Subscription subscription4 = subscriptionService.createSubscription(4000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        Subscription subscription4 = subscriptionService.createSubscription(subscriber4, 4000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscription4.setStatus(SubscriptionStatus.PENDING_ACTIVATION);
         subscriptionDataService.update(subscription4);
 
         Subscriber subscriber5 = new Subscriber(5000000000L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber5.setLastMenstrualPeriod(currentDate.minusDays(92)); // startDate will be the day before yesterday
         subscriberDataService.create(subscriber5);
-        Subscription subscription5 = subscriptionService.createSubscription(5000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        Subscription subscription5 = subscriptionService.createSubscription(subscriber5, 5000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscription5.setStatus(SubscriptionStatus.PENDING_ACTIVATION);
         subscriptionDataService.update(subscription5);
 
         Subscriber subscriber6 = new Subscriber(6000000000L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber6.setLastMenstrualPeriod(currentDate.minusDays(88)); // startDate will be the day after tomorrow
         subscriberDataService.create(subscriber6);
-        Subscription subscription6 = subscriptionService.createSubscription(6000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        Subscription subscription6 = subscriptionService.createSubscription(subscriber6, 6000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscription6.setStatus(SubscriptionStatus.PENDING_ACTIVATION);
         subscriptionDataService.update(subscription6);
 
@@ -192,7 +192,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         //Should be picked up because IVR subscriptions all start today + 1 day
         Subscriber subscriber7 = new Subscriber(7777777777L, rh.kannadaLanguage(), rh.karnatakaCircle());
         subscriberDataService.create(subscriber7);
-        Subscription subscription7 = subscriptionService.createSubscription(7777777777L, rh.kannadaLanguage(),
+        Subscription subscription7 = subscriptionService.createSubscription(subscriber7, 7777777777L, rh.kannadaLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
 
         //Set the clock back to normal
@@ -201,7 +201,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         Subscriber subscriber8 = new Subscriber(8000000000L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber8.setLastMenstrualPeriod(currentDate.minusDays(72 * 7));
         subscriber8 = subscriberDataService.create(subscriber8);
-        Subscription subscription8 = subscriptionService.createSubscription(8000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
+        Subscription subscription8 = subscriptionService.createSubscription(subscriber8, 8000000000L, rh.hindiLanguage(), sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscription8.setStatus(SubscriptionStatus.ACTIVE);
         subscription8.setStartDate(subscriber8.getLastMenstrualPeriod());
         subscription8.setNeedsWelcomeMessageViaObd(false);
@@ -346,7 +346,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(125)); // weekId will be W6_1
         subscriberDataService.create(subscriber1);
-        Subscription subscription = subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(),
+        Subscription subscription = subscriptionService.createSubscription(subscriber1, 1111111111L, rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscription.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(subscription);
@@ -390,7 +390,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setDateOfBirth(DateTime.now().minusDays(28)); // weekId will be W5_1
         subscriberDataService.create(subscriber1);
-        Subscription subscription = subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(),
+        Subscription subscription = subscriptionService.createSubscription(subscriber1, 1111111111L, rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
         subscription.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(subscription);
@@ -424,7 +424,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         assertTrue("w5_1".equals(contents.get(0)));
 
         //update the date of birth of the subscriber
-        Subscriber subscriber2 = subscriberDataService.findByNumber(1111111111L);
+        Subscriber subscriber2 = subscriberDataService.findByNumber(1111111111L).get(0);
         subscriber2.setDateOfBirth(DateTime.now().minusDays(21)); // weekId will be W4_1
         subscriberService.updateStartDate(subscriber2);
 
@@ -462,7 +462,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // weekId will be W1_1
         subscriberDataService.create(subscriber1);
-        subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(), sh.pregnancyPack(),
+        subscriptionService.createSubscription(subscriber1, 1111111111L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
         transactionManager.commit(status);
@@ -504,7 +504,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setDateOfBirth(DateTime.now()); // weekId will be W1_1
         subscriberDataService.create(subscriber1);
-        subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(), sh.childPack(),
+        subscriptionService.createSubscription(subscriber1, 1111111111L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
 
         transactionManager.commit(status);
@@ -547,7 +547,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
         subscriberDataService.create(subscriber1);
-        subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),
+        subscriptionService.createSubscription(subscriber1, subscriber1.getCallingNumber(), rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
 
         transactionManager.commit(status);
@@ -565,7 +565,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         Subscriber subscriber2 = new Subscriber(2222222222L, rh.kannadaLanguage(), rh.karnatakaCircle());
         subscriber2.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
         subscriberDataService.create(subscriber2);
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.kannadaLanguage(),
+        subscriptionService.createSubscription(subscriber2, subscriber2.getCallingNumber(), rh.kannadaLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
 
         transactionManager.commit(status);

@@ -4,12 +4,15 @@ package org.motechproject.nms.kilkari.domain;
 public enum SubscriptionRejectionReason {
 
     ALREADY_SUBSCRIBED,
+    MSISDN_ALREADY_SUBSCRIBED,
+    BENEFICIARY_ALREADY_SUBSCRIBED,
     INVALID_LOCATION,
     MISSING_DOB,
     MISSING_LMP,
     INVALID_DOB,
     INVALID_LMP,
     MISSING_MSISDN,
+    MISSING_MOTHER_ID,
     WEEKLY_CALLS_NOT_ANSWERED,
     ACTIVE_CHILD_PRESENT;
 }

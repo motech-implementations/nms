@@ -343,7 +343,7 @@ public class MctsImportBundleIT extends BasePaxIT {
             assertEquals("Name y", children.get(0).getName());
 
             List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
-            assertEquals(2, mothers.size());
+            assertEquals(4, mothers.size());  // 2 records from mother import and 2 from child
             assertEquals("Name x", mothers.get(0).getName());
         } finally {
             TimeFaker.stopFakingTime();
@@ -404,7 +404,7 @@ public class MctsImportBundleIT extends BasePaxIT {
             assertEquals("Name 1", children.get(0).getName());
 
             List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
-            assertEquals(2, mothers.size());
+            assertEquals(4, mothers.size());  // 2 records from mother import and 2 from child
             assertEquals("Name 1", mothers.get(0).getName());
 
         } finally {
@@ -464,7 +464,7 @@ public class MctsImportBundleIT extends BasePaxIT {
             assertEquals("Name y", children.get(0).getName());
 
             List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
-            assertEquals(1, mothers.size());
+            assertEquals(2, mothers.size());  // 1 record from mother import and 1 from child
             assertEquals("Name x", mothers.get(0).getName());
 
         } finally {

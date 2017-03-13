@@ -42,6 +42,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -97,32 +98,33 @@ public class KilkariController extends BaseController {
             throw new IllegalArgumentException(failureReasons.toString());
         }
 
-        Subscriber subscriber = subscriberService.getSubscriber(callingNumber);
-        if (subscriber == null) {
+        List<Subscriber> subscribers = subscriberService.getSubscriber(callingNumber);
+        if (subscribers.isEmpty()) {
             throw new NotFoundException(String.format(NOT_FOUND, "callingNumber"));
         }
 
-        Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
         Set<InboxSubscriptionDetailResponse> subscriptionDetails = new HashSet<>();
         SubscriptionPackMessage inboxMessage;
         String weekId;
         String fileName;
 
-        for (Subscription subscription : subscriptions) {
+        for (Subscriber subscriber : subscribers) {
+            for (Subscription subscription : subscriber.getAllSubscriptions()) {
 
-            try {
-                inboxMessage = inboxService.getInboxMessage(subscription);
-                weekId = (inboxMessage == null) ? null : inboxMessage.getWeekId();
-                fileName = (inboxMessage == null) ? null : inboxMessage.getMessageFileName();
+                try {
+                    inboxMessage = inboxService.getInboxMessage(subscription);
+                    weekId = (inboxMessage == null) ? null : inboxMessage.getWeekId();
+                    fileName = (inboxMessage == null) ? null : inboxMessage.getMessageFileName();
 
-                subscriptionDetails.add(new InboxSubscriptionDetailResponse(subscription.getSubscriptionId(),
-                        subscription.getSubscriptionPack().getName(),
-                        weekId,
-                        fileName));
+                    subscriptionDetails.add(new InboxSubscriptionDetailResponse(subscription.getSubscriptionId(),
+                            subscription.getSubscriptionPack().getName(),
+                            weekId,
+                            fileName));
 
-            } catch (NoInboxForSubscriptionException e) {
-                // there's no inbox, don't add anything to the list
-                LOGGER.debug(String.format("Found no inbox for subscription: %s", subscription.getSubscriptionId()));
+                } catch (NoInboxForSubscriptionException e) {
+                    // there's no inbox, don't add anything to the list
+                    LOGGER.debug(String.format("Found no inbox for subscription: %s", subscription.getSubscriptionId()));
+                }
             }
         }
 
@@ -281,7 +283,7 @@ public class KilkariController extends BaseController {
             throw new NotFoundException(String.format(NOT_FOUND, "subscriptionPack"));
         }
 
-        subscriptionService.createSubscription(subscriptionRequest.getCallingNumber(), language, circle,
+        subscriptionService.createSubscription(null, subscriptionRequest.getCallingNumber(), language, circle,
                                                subscriptionPack, SubscriptionOrigin.IVR);
     }
 

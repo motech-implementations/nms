@@ -34,8 +34,10 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Set;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 /**
@@ -106,27 +108,27 @@ public class SubscriberServiceBundleIT extends BasePaxIT {
     public void testDeleteSubscriberWithOpenSubscription() {
 
 
-        Subscriber subscriber = subscriberService.getSubscriber(2000000000L);
-        assertNotNull(subscriber);
+        List<Subscriber> subscriber = subscriberService.getSubscriber(2000000000L);
+        assertFalse(subscriber.isEmpty());
 
-        Set<Subscription> subscriptions = (Set<Subscription>) subscriberDataService.getDetachedField(subscriber,
+        Set<Subscription> subscriptions = (Set<Subscription>) subscriberDataService.getDetachedField(subscriber.get(0),
                 "subscriptions");
                 Subscription subscription = subscriptions.iterator().next();
         subscription.setStatus(SubscriptionStatus.COMPLETED);
         subscriptionDataService.update(subscription);
 
         exception.expect(JdoListenerInvocationException.class);
-        subscriberDataService.delete(subscriber);
+        subscriberDataService.delete(subscriber.get(0));
     }
 
 
     @Test
     public void testDeleteSubscriberWithAllClosedSubscriptions() {
 
-        Subscriber subscriber = subscriberService.getSubscriber(2000000000L);
-        assertNotNull(subscriber);
+        List<Subscriber> subscriber = subscriberService.getSubscriber(2000000000L);
+        assertFalse(subscriber.isEmpty());
 
-        Set<Subscription> subscriptions = (Set<Subscription>) subscriberDataService.getDetachedField(subscriber,
+        Set<Subscription> subscriptions = (Set<Subscription>) subscriberDataService.getDetachedField(subscriber.get(0),
                 "subscriptions");
         for (Subscription subscription: subscriptions) {
             subscription.setStatus(SubscriptionStatus.COMPLETED);
@@ -134,6 +136,6 @@ public class SubscriberServiceBundleIT extends BasePaxIT {
             subscriptionDataService.update(subscription);
         }
 
-        subscriberDataService.delete(subscriber);
+        subscriberDataService.delete(subscriber.get(0));
     }
 }

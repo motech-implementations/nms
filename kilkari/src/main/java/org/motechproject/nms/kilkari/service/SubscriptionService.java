@@ -15,6 +15,7 @@ import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Service interface for managing Kilkari subscriptions
@@ -27,13 +28,14 @@ public interface SubscriptionService {
      * based on the subscriber's reference date (DOB or LMP) if it exists. No subscription will be created if the
      * reference date implies that the subscription would already have been completed, or if the beneficiary already
      * has a subscription to the specific pack.
+     * @param subscriber Subscriber record of the beneficiary
      * @param callingNumber MSISDN of the beneficiary
      * @param language Language of the beneficiary
      * @param subscriptionPack The subscription pack (e.g. Pregnancy, Child) for which to subscribe this beneficiary
      * @param mode How the subscription originated -- via IVR or MCTS import
      * @return The created subscription, or null if no subscription was created
      */
-    Subscription createSubscription(long callingNumber, Language language,
+    Subscription createSubscription(Subscriber subscriber, long callingNumber, Language language,
                                     SubscriptionPack subscriptionPack, SubscriptionOrigin mode);
 
     /**
@@ -41,6 +43,7 @@ public interface SubscriptionService {
      * based on the subscriber's reference date (DOB or LMP) if it exists. No subscription will be created if the
      * reference date implies that the subscription would already have been completed, or if the beneficiary already
      * has a subscription to the specific pack.
+     * @param subscriber Subscriber record of the beneficiary
      * @param callingNumber MSISDN of the beneficiary
      * @param language Language of the beneficiary
      * @param circle Circle of the beneficiary
@@ -48,7 +51,7 @@ public interface SubscriptionService {
      * @param mode How the subscription originated -- via IVR or MCTS import
      * @return The created subscription, or null if no subscription was created
      */
-    Subscription createSubscription(long callingNumber, Language language, Circle circle,
+    Subscription createSubscription(Subscriber subscriber, long callingNumber, Language language, Circle circle,
                                     SubscriptionPack subscriptionPack, SubscriptionOrigin mode);
 
     /**
@@ -198,5 +201,13 @@ public interface SubscriptionService {
      *
      */
     List<Subscription> retrieveAll();
+
+    /**
+     * Helper method that determines the subscription based on its origin and packType
+     * @param subscriptions Set of subscriptions for which the packType and origin is to be checked
+     * @param packType Type of the pack (Pregnancy/Child)
+     * @return subscription with given type and IVR origin
+     */
+    Subscription getIVRSubscription(Set<Subscription> subscriptions, SubscriptionPackType packType);
 
 }

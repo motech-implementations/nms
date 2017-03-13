@@ -186,17 +186,17 @@ public class UserControllerBundleIT extends BasePaxIT {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, rh.hindiLanguage()));
-        subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),
+        subscriptionService.createSubscription(subscriber1, subscriber1.getCallingNumber(), rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
 
         Subscriber subscriber2 = subscriberDataService.create(new Subscriber(2000000000L, rh.hindiLanguage()));
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.hindiLanguage(),
+        subscriptionService.createSubscription(subscriber2, subscriber2.getCallingNumber(), rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
-        subscriptionService.createSubscription(subscriber2.getCallingNumber(), rh.hindiLanguage(),
+        subscriptionService.createSubscription(subscriber2, subscriber2.getCallingNumber(), rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
 
         Subscriber subscriber3 = subscriberDataService.create(new Subscriber(3000000000L, rh.hindiLanguage()));
-        subscriptionService.createSubscription(subscriber3.getCallingNumber(), rh.hindiLanguage(),
+        subscriptionService.createSubscription(subscriber3, subscriber3.getCallingNumber(), rh.hindiLanguage(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
 
         transactionManager.commit(status);
@@ -209,7 +209,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, rh.hindiLanguage()));
-        subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(),
+        subscriptionService.createSubscription(subscriber1, subscriber1.getCallingNumber(), rh.hindiLanguage(),
                 sh.childPack(), SubscriptionOrigin.IVR);
         transactionManager.commit(status);
     }
@@ -1528,7 +1528,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         // create subscriber
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, rh.hindiLanguage()));
-        subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(), delhiCircle,
+        subscriptionService.createSubscription(subscriber1, subscriber1.getCallingNumber(), rh.hindiLanguage(), delhiCircle,
                 sh.childPack(), SubscriptionOrigin.IVR);
         transactionManager.commit(status);
 
@@ -1576,7 +1576,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         // create subscriber
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriber1 = subscriberDataService.create(new Subscriber(1000000000L, rh.hindiLanguage()));
-        subscriptionService.createSubscription(subscriber1.getCallingNumber(), rh.hindiLanguage(), delhiCircle,
+        subscriptionService.createSubscription(subscriber1, subscriber1.getCallingNumber(), rh.hindiLanguage(), delhiCircle,
                 sh.childPack(), SubscriptionOrigin.IVR);
         transactionManager.commit(status);
 
@@ -1605,11 +1605,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         Subscriber subscriber = subscriberDataService.create(new Subscriber(4000000000L, rh.hindiLanguage()));
-        subscriptionService.createSubscription(subscriber.getCallingNumber(),
+        subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(),
                 rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
         
         Subscription pregnancyPack = subscriptionService.createSubscription(
-                subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+                subscriber, subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.IVR);
         subscriptionService.deactivateSubscription(pregnancyPack,
                 DeactivationReason.DEACTIVATED_BY_USER);
@@ -1654,11 +1654,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         // subscriber subscribed to both packs and Pregnancy pack is completed
         Subscriber subscriber = subscriberDataService.create(new Subscriber(5000000000L, rh.hindiLanguage()));
         
-        subscriptionService.createSubscription(subscriber.getCallingNumber(),
+        subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(),
                 rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
         
         Subscription pregnancyPack=subscriptionService.createSubscription(
-                subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+                subscriber, subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.IVR);
         subscriptionService.updateStartDate(pregnancyPack, DateTime.now()
                 .minusDays(505 + 90));

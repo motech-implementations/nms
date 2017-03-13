@@ -12,7 +12,6 @@ import org.motechproject.nms.region.domain.Language;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
-import javax.jdo.annotations.Unique;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import java.util.HashSet;
@@ -28,7 +27,6 @@ import java.util.Set;
 @Entity(maxFetchDepth = -1, tableName = "nms_subscribers")
 public class Subscriber extends MdsEntity {
     @Field
-    @Unique
     @Min(value = 1000000000L, message = "callingNumber must be 10 digits")
     @Max(value = 9999999999L, message = "callingNumber must be 10 digits")
     @Column(length = 10, allowsNull = "false")

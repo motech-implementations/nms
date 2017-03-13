@@ -18,5 +18,5 @@ public interface FlwStatusUpdateAuditDataService extends MotechDataService<FlwSt
     List<FlwStatusUpdateAudit> findByContactNumber(@LookupField(name = "contactNumber") Long contactNumber);
 
     @Lookup
-    List<FlwStatusUpdateAudit> findByMcstsFlwId (@LookupField(name = "mctsFlwId") String mctsFlwId);
+    List<FlwStatusUpdateAudit> findByMcstsFlwId(@LookupField(name = "mctsFlwId") String mctsFlwId);
 }

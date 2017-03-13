@@ -501,7 +501,7 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
         Subscriber subscriber1 = new Subscriber(1111111111L, rh.hindiLanguage(), rh.delhiCircle());
         subscriber1.setLastMenstrualPeriod(DateTime.now().minusDays(90)); // startDate will be today
         subscriberDataService.create(subscriber1);
-        subscriptionService.createSubscription(1111111111L, rh.hindiLanguage(), sh.pregnancyPack(),
+        subscriptionService.createSubscription(subscriber1, 1111111111L, rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
         transactionManager.commit(status);
 

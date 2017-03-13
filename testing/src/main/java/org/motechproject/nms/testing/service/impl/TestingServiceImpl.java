@@ -82,6 +82,8 @@ public class TestingServiceImpl implements TestingService {
         "nms_subscription_packs__TRASH",
         "nms_subscribers",
         "nms_subscribers__TRASH",
+        "nms_subscriber_msisdn_tracker",
+        "nms_subscriber_msisdn_tracker__TRASH",
         "nms_districts",
         "nms_districts__TRASH",
         "nms_circles",

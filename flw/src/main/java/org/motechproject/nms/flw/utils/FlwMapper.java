@@ -20,16 +20,22 @@ import java.util.Map;
  */
 public final class FlwMapper {
 
+    private static final String ACTIVE = "Active";
+
     private FlwMapper() { }
 
     public static FrontLineWorker createFlw(Map<String, Object> record, Map<String, Object> location)
             throws InvalidLocationException {
         Long contactNumber = (Long) record.get(FlwConstants.CONTACT_NO);
+        String gfStatus = (String) record.get(FlwConstants.GF_STATUS);
+        if (gfStatus != null && !gfStatus.isEmpty() && ACTIVE.equals(gfStatus)) {
+            FrontLineWorker flw = new FrontLineWorker(contactNumber);
+            flw.setStatus(FrontLineWorkerStatus.INACTIVE);
 
-        FrontLineWorker flw = new FrontLineWorker(contactNumber);
-        flw.setStatus(FrontLineWorkerStatus.INACTIVE);
-
-        return updateFlw(flw, record, location);
+            return updateFlw(flw, record, location);
+        } else {
+            return null;
+        }
     }
 
 
@@ -54,8 +60,8 @@ public final class FlwMapper {
             flw.setName(name);
         }
 
-        if(!gfStatus.isEmpty() && gfStatus!= null) {
-            FlwJobStatus jobStatus = ("Active").equals(gfStatus) ? FlwJobStatus.ACTIVE : FlwJobStatus.INACTIVE;
+        if (gfStatus != null && !gfStatus.isEmpty()) {
+            FlwJobStatus jobStatus = ACTIVE.equals(gfStatus) ? FlwJobStatus.ACTIVE : FlwJobStatus.INACTIVE;
             flw.setJobStatus(jobStatus);
         }
 

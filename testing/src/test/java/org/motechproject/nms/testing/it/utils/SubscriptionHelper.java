@@ -144,20 +144,31 @@ public class SubscriptionHelper {
     public Subscription mksub(SubscriptionOrigin origin, DateTime startDate, SubscriptionPackType packType, Long number) {
 
         Subscription subscription;
-        Subscriber subscriber = subscriberDataService.findByNumber(number);
+        List<Subscriber> subscribers = subscriberDataService.findByNumber(number);
+        Subscriber subscriber;
 
-        if (null == subscriber) {
-            subscriber = subscriberDataService.create(new Subscriber(
-                    number,
-                    regionHelper.hindiLanguage(),
-                    regionHelper.delhiCircle()
-            ));
+        if (!subscribers.isEmpty()) {
+            if (packType == SubscriptionPackType.CHILD && subscribers.get(0).getDateOfBirth() != null) {
+                return null;
+            } else if (packType == SubscriptionPackType.PREGNANCY && subscribers.get(0).getLastMenstrualPeriod() != null) {
+                return null;
+            }
         }
 
-        if (SubscriptionPackType.PREGNANCY == packType) {
-            subscription = new Subscription(subscriber, pregnancyPack() , origin);
-        } else {
+        // create a subscriber either when there's no subscriber with the number or when the existing subscriber doesn't have the same SubscriptionPack
+        subscriber = new Subscriber(
+                number,
+                regionHelper.hindiLanguage(),
+                regionHelper.delhiCircle()
+        );
+        if (packType == SubscriptionPackType.CHILD) {
+            subscriber.setDateOfBirth(startDate);
+            subscriber = subscriberDataService.create(subscriber);
             subscription = new Subscription(subscriber, childPack(), origin);
+        } else {
+            subscriber.setLastMenstrualPeriod(startDate.minusDays(90));
+            subscriber = subscriberDataService.create(subscriber);
+            subscription = new Subscription(subscriber, pregnancyPack() , origin);
         }
 
         subscription.setStartDate(startDate);
