@@ -24,26 +24,31 @@ public class SubscriptionError {
     @Field
     private String rejectionMessage;
 
+    @Field
+    private SubscriptionOrigin importOrigin;
+
     public SubscriptionError(long contactNumber, SubscriptionRejectionReason rejectionReason,
-                             SubscriptionPackType packType) {
-        this(contactNumber, rejectionReason, packType, null);
+                             SubscriptionPackType packType, SubscriptionOrigin importOrigin) {
+        this(contactNumber, rejectionReason, packType, null, importOrigin);
     }
 
     public SubscriptionError(long contactNumber, SubscriptionRejectionReason rejectionReason,
-                             SubscriptionPackType packType, String rejectionMessage) {
+                             SubscriptionPackType packType, String rejectionMessage, SubscriptionOrigin importOrigin) {
         this.contactNumber = contactNumber;
         this.rejectionReason = rejectionReason;
         this.packType = packType;
         this.rejectionMessage = rejectionMessage;
+        this.importOrigin = importOrigin;
     }
 
     public SubscriptionError(long contactNumber, String beneficiaryId, SubscriptionRejectionReason rejectionReason,
-                             SubscriptionPackType packType, String rejectionMessage) {
+                             SubscriptionPackType packType, String rejectionMessage, SubscriptionOrigin importOrigin) {
         this.contactNumber = contactNumber;
         this.beneficiaryId = beneficiaryId;
         this.rejectionReason = rejectionReason;
         this.packType = packType;
         this.rejectionMessage = rejectionMessage;
+        this.importOrigin = importOrigin;
     }
 
     public long getContactNumber() {
@@ -84,5 +89,13 @@ public class SubscriptionError {
 
     public void setRejectionMessage(String rejectionMessage) {
         this.rejectionMessage = rejectionMessage;
+    }
+
+    public SubscriptionOrigin getImportOrigin() {
+        return importOrigin;
+    }
+
+    public void setImportOrigin(SubscriptionOrigin importOrigin) {
+        this.importOrigin = importOrigin;
     }
 }

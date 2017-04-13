@@ -13,6 +13,7 @@ public enum SubscriptionRejectionReason {
     INVALID_LMP,
     MISSING_MSISDN,
     MISSING_MOTHER_ID,
+    INVALID_CASE_NO,
     WEEKLY_CALLS_NOT_ANSWERED,
     ACTIVE_CHILD_PRESENT;
 }

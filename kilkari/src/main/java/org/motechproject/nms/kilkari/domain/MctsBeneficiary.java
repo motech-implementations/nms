@@ -18,7 +18,6 @@ import org.motechproject.nms.tracking.annotation.TrackClass;
 import org.motechproject.nms.tracking.annotation.TrackFields;
 
 import javax.jdo.annotations.Unique;
-import javax.validation.constraints.NotNull;
 
 /**
  * A beneficiary (mother or child) sourced from MCTS.
@@ -32,8 +31,12 @@ public abstract class MctsBeneficiary extends MdsEntity implements FullLocation 
     // 18-digit IDs are used for most states but not all, so a strict length constraint cannot be set for this column
     @Field
     @Unique
-    @NotNull
     private String beneficiaryId;
+
+    // RCH Registration Id
+    @Field
+    @Unique
+    private String rchId;
 
     @Field
     private String name;
@@ -69,12 +72,25 @@ public abstract class MctsBeneficiary extends MdsEntity implements FullLocation 
     }
 
     public MctsBeneficiary(String beneficiaryId) {
-        this(beneficiaryId, null);
+        this(null, beneficiaryId, null);
     }
 
-    public MctsBeneficiary(String beneficiaryId, String name) {
+    public MctsBeneficiary(String rchId, String beneficiaryId) {
+        this(rchId, beneficiaryId, null);
+    }
+
+    public MctsBeneficiary(String rchId, String beneficiaryId, String name) {
+        this.rchId = rchId;
         this.beneficiaryId = beneficiaryId;
         this.name = name;
+    }
+
+    public String getRchId() {
+        return rchId;
+    }
+
+    public void setRchId(String rchId) {
+        this.rchId = rchId;
     }
 
     public DateTime getDateOfBirth() {

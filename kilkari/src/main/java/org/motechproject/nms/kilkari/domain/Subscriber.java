@@ -56,6 +56,9 @@ public class Subscriber extends MdsEntity {
     @Field
     private MctsChild child;
 
+    @Field
+    private Long caseNo;
+
     public Subscriber() {
         this.subscriptions = new HashSet<>();
     }
@@ -123,6 +126,14 @@ public class Subscriber extends MdsEntity {
 
     public void setCircle(Circle circle) {
         this.circle = circle;
+    }
+
+    public Long getCaseNo() {
+        return caseNo;
+    }
+
+    public void setCaseNo(Long caseNo) {
+        this.caseNo = caseNo;
     }
 
     @Ignore

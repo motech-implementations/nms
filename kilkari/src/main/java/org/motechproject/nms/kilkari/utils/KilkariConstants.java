@@ -37,6 +37,16 @@ public final class KilkariConstants {
     public static final String REJECTED = "Rejected {}";
     public static final String LAST_UPDATE_DATE = "Last_Update_Date";
 
+    public static final String MCTS_ID = "MCTS_ID_No";
+    public static final String RCH_ID = "Registration_no";
+    public static final String MCTS_MOTHER_ID = "MCTS_Mother_ID_No";
+    public static final String RCH_MOTHER_ID = "Mother_Registration_no";
+    public static final String CASE_NO = "Case_no";
+    public static final String MOBILE_NO = "Mobile_no";
+    public static final String ABORTION_TYPE = "Abortion_Type";
+    public static final String DELIVERY_OUTCOMES = "Delivery_Outcomes";
+    public static final String EXECUTION_DATE = "Exec_date";
+
     public static final String UPDATE_SR_NO = "Sr No";
     public static final String UPDATE_MCTS_ID = "MCTS ID";
     public static final String UPDATE_STATE_MCTS_ID = "STATE ID";
