@@ -15,5 +15,6 @@ public enum SubscriptionRejectionReason {
     MISSING_MOTHER_ID,
     INVALID_CASE_NO,
     WEEKLY_CALLS_NOT_ANSWERED,
+    ABORT_STILLBIRTH_DEATH,
     ACTIVE_CHILD_PRESENT;
 }

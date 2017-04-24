@@ -6,6 +6,7 @@ import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.csv.service.CsvAuditService;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
 import org.slf4j.Logger;
@@ -68,7 +69,7 @@ public class MctsBeneficiaryImportController {
         int count = 0;
         try {
             try (InputStream in = csvFile.getInputStream()) {
-                count = mctsBeneficiaryImportService.importMotherData(new InputStreamReader(in));
+                count = mctsBeneficiaryImportService.importMotherData(new InputStreamReader(in), SubscriptionOrigin.MCTS_IMPORT);
                 csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/mother/import");
             }
         } catch (CsvImportException e) {
@@ -90,7 +91,7 @@ public class MctsBeneficiaryImportController {
         int count = 0;
         try {
             try (InputStream in = csvFile.getInputStream()) {
-                count = mctsBeneficiaryImportService.importChildData(new InputStreamReader(in));
+                count = mctsBeneficiaryImportService.importChildData(new InputStreamReader(in), SubscriptionOrigin.MCTS_IMPORT);
                 csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/child/import");
             }
         } catch (CsvImportException e) {

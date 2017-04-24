@@ -238,7 +238,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             LOGGER.info("Can't create a Subscription as the number {} is deactivated due to Weekly Calls Not Answered", callingNumber);
             subscriptionErrorDataService.create(new SubscriptionError(number,
                     (mode == SubscriptionOrigin.IVR) ? "" : ((subscriptionPack.getType() == SubscriptionPackType.PREGNANCY) ? subscriber.getMother().getBeneficiaryId() : subscriber.getChild().getBeneficiaryId()),
-                    SubscriptionRejectionReason.WEEKLY_CALLS_NOT_ANSWERED, subscriptionPack.getType(), ""));
+                    SubscriptionRejectionReason.WEEKLY_CALLS_NOT_ANSWERED, subscriptionPack.getType(), "", mode));
             return null;
         }
 
@@ -266,7 +266,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         subscription = (mode == SubscriptionOrigin.IVR) ?
                 createSubscriptionViaIvr(sub, subscriptionPack) :
-                createSubscriptionViaMcts(sub, subscriptionPack);
+                createSubscriptionViaMcts(sub, subscriptionPack, mode);
 
         if (subscription != null) {
             sub.getSubscriptions().add(subscription);
@@ -324,9 +324,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      *  - LMP (without DOB) is present in the MCTS record and there is an already “Active” or “Pending Activation”
      *    subscription to Pregnancy Pack on this MSISDN.
      */
-    private Subscription createSubscriptionViaMcts(Subscriber subscriber, SubscriptionPack pack) {
+    private Subscription createSubscriptionViaMcts(Subscriber subscriber, SubscriptionPack pack, SubscriptionOrigin importOrigin) {
 
-        if (!enrollmentPreconditionCheck(subscriber, pack)) {
+        if (!enrollmentPreconditionCheck(subscriber, pack, importOrigin)) {
             LOGGER.info("PreCondition test passed");
             return null;
         }
@@ -334,7 +334,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         DateTime startDate = (pack.getType() == SubscriptionPackType.CHILD) ?
                 subscriber.getDateOfBirth() : subscriber.getLastMenstrualPeriod().plusDays(KilkariConstants.THREE_MONTHS);
 
-        Subscription subscription = new Subscription(subscriber, pack, SubscriptionOrigin.MCTS_IMPORT);
+        Subscription subscription = new Subscription(subscriber, pack, importOrigin);
         subscription.setStartDate(startDate);
         subscription.setNeedsWelcomeMessageViaObd(true);
 
@@ -355,7 +355,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      * @param pack subscription pack to subscribe to
      * @return true if all field available and conditions satisfied
      */
-    private boolean enrollmentPreconditionCheck(Subscriber subscriber, SubscriptionPack pack) {
+    private boolean enrollmentPreconditionCheck(Subscriber subscriber, SubscriptionPack pack, SubscriptionOrigin importOrigin) {
         if (pack.getType() == SubscriptionPackType.CHILD) {
 
             if (subscriber.getDateOfBirth() == null) {
@@ -369,7 +369,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             if (getActiveSubscription(subscriber, SubscriptionPackType.CHILD) != null) {
                 // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(), subscriber.getChild().getBeneficiaryId(),
-                        SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD);
+                        SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD, importOrigin);
                 return false;
             }
         } else { // SubscriptionPackType.PREGNANCY
@@ -386,7 +386,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             if (getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY) != null) {
                 // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(), subscriber.getMother().getBeneficiaryId(),
-                        SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY);
+                        SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY, importOrigin);
                 return false;
             }
         }
@@ -395,8 +395,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     private void logRejectedSubscription(long callingNumber, String beneficiaryId, SubscriptionRejectionReason reason,
-                                         SubscriptionPackType packType) {
-        SubscriptionError error = new SubscriptionError(callingNumber, beneficiaryId, reason, packType, "Active subscription exists for same pack");
+                                         SubscriptionPackType packType, SubscriptionOrigin importOrigin) {
+        SubscriptionError error = new SubscriptionError(callingNumber, beneficiaryId, reason, packType, "Active subscription exists for same pack", importOrigin);
         subscriptionErrorDataService.create(error);
     }
 
@@ -522,7 +522,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         Subscriber currentSubscriber = currentSubscription.getSubscriber();
         SubscriptionPack currentPack = currentSubscription.getSubscriptionPack();
 
-        if (enrollmentPreconditionCheck(currentSubscriber, currentPack)) { // Don't need a full check but it doesn't hurt
+        if (enrollmentPreconditionCheck(currentSubscriber, currentPack, currentSubscription.getOrigin())) { // Don't need a full check but it doesn't hurt
             currentSubscription.setStatus(SubscriptionStatus.ACTIVE);
             subscriptionDataService.update(currentSubscription);
             return true;

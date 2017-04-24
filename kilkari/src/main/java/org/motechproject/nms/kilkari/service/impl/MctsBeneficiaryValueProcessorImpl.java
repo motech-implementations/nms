@@ -8,6 +8,7 @@ import org.joda.time.format.DateTimeParser;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.exception.InvalidReferenceDateException;
+import org.motechproject.nms.kilkari.exception.InvalidRegistrationIdException;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
@@ -39,6 +40,44 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
             return null;
         }
         return getOrCreateMotherInstance(value);
+    }
+
+    @Override
+    public MctsMother getOrCreateRchMotherInstance(String rchId, String mctsId) {
+
+        MctsMother motherByRchId = mctsMotherDataService.findByRchId(rchId);
+        MctsMother motherByMctsId;
+
+        if (motherByRchId == null) {
+            if (mctsId == null) {
+                motherByRchId = new MctsMother(rchId, null);
+                return motherByRchId;
+            } else {
+                motherByMctsId = mctsMotherDataService.findByBeneficiaryId(mctsId);
+                if (motherByMctsId == null) {
+                    motherByRchId = new MctsMother(rchId, mctsId);
+                    return motherByRchId;
+                } else {
+                    motherByMctsId.setRchId(rchId);
+                    return motherByMctsId;
+                }
+            }
+        } else {
+            if (mctsId == null) {
+                return motherByRchId;
+            } else {
+                motherByMctsId = mctsMotherDataService.findByBeneficiaryId(mctsId);
+                if (motherByMctsId == null) {
+                    return motherByRchId;
+                } else {
+                    if (motherByRchId.getId().equals(motherByMctsId.getId())) {
+                        return motherByRchId;
+                    } else {
+                        throw new InvalidRegistrationIdException("Invalid record");
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -89,6 +128,15 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
         }
 
         return referenceDate;
+    }
+
+    @Override
+    public Long getCaseNoByString(String value) {
+
+        if (value == null) {
+            return null;
+        }
+        return Long.parseLong(value);
     }
 
     @Override
