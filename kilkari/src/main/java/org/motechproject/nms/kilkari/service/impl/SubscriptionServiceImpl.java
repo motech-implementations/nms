@@ -218,6 +218,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
     }
 
+    public String getBeneficiaryId(Subscriber subscriber, SubscriptionOrigin mode, SubscriptionPack subscriptionPack) {
+        if (mode == SubscriptionOrigin.IVR) {
+            return "";
+        } else if (mode == SubscriptionOrigin.MCTS_IMPORT) {
+            return (subscriptionPack.getType() == SubscriptionPackType.PREGNANCY) ? subscriber.getMother().getBeneficiaryId() : subscriber.getChild().getBeneficiaryId();
+        } else {
+            return (subscriptionPack.getType() == SubscriptionPackType.PREGNANCY) ? subscriber.getMother().getRchId() : subscriber.getChild().getRchId();
+        }
+    }
+
     @Override
     public Subscription createSubscription(Subscriber subscriber, long callingNumber, Language language,
                                            SubscriptionPack subscriptionPack, SubscriptionOrigin mode) {
@@ -234,10 +244,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         // Check if the callingNumber is in Weekly_Calls_Not_Answered_Msisdn_Records
         BlockedMsisdnRecord blockedMsisdnRecord = blockedMsisdnRecordDataService.findByNumber(callingNumber);
+        String beneficiaryId = getBeneficiaryId(subscriber, mode, subscriptionPack);
         if (blockedMsisdnRecord != null) {
             LOGGER.info("Can't create a Subscription as the number {} is deactivated due to Weekly Calls Not Answered", callingNumber);
-            subscriptionErrorDataService.create(new SubscriptionError(number,
-                    (mode == SubscriptionOrigin.IVR) ? "" : ((subscriptionPack.getType() == SubscriptionPackType.PREGNANCY) ? subscriber.getMother().getBeneficiaryId() : subscriber.getChild().getBeneficiaryId()),
+            subscriptionErrorDataService.create(new SubscriptionError(number, beneficiaryId,
                     SubscriptionRejectionReason.WEEKLY_CALLS_NOT_ANSWERED, subscriptionPack.getType(), "", mode));
             return null;
         }
@@ -368,7 +378,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
             if (getActiveSubscription(subscriber, SubscriptionPackType.CHILD) != null) {
                 // reject the subscription if it already exists
-                logRejectedSubscription(subscriber.getCallingNumber(), subscriber.getChild().getBeneficiaryId(),
+                logRejectedSubscription(subscriber.getCallingNumber(), (importOrigin == SubscriptionOrigin.MCTS_IMPORT) ? subscriber.getChild().getBeneficiaryId() : subscriber.getChild().getRchId(),
                         SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD, importOrigin);
                 return false;
             }
@@ -385,7 +395,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
             if (getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY) != null) {
                 // reject the subscription if it already exists
-                logRejectedSubscription(subscriber.getCallingNumber(), subscriber.getMother().getBeneficiaryId(),
+                logRejectedSubscription(subscriber.getCallingNumber(), (importOrigin == SubscriptionOrigin.MCTS_IMPORT) ? subscriber.getMother().getBeneficiaryId() : subscriber.getMother().getRchId(),
                         SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY, importOrigin);
                 return false;
             }

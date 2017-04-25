@@ -13,7 +13,7 @@ public class SubscriptionError {
     private long contactNumber;
 
     @Field
-    private String beneficiaryId;
+    private String beneficiaryId;   // MctsId or RchId based on importOrigin
 
     @Field
     private SubscriptionRejectionReason rejectionReason;

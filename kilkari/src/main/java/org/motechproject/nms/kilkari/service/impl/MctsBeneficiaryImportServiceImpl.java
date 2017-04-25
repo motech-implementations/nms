@@ -276,7 +276,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             if (!validateCaseNo(caseNo, msisdn, mother, SubscriptionPackType.PREGNANCY, beneficiaryId, importOrigin)) {
                 return false;
             }
-            subscription = subscriberService.updateRchMotherSubscriber(msisdn, mother, lmp, caseNo, abortion || stillBirth || death);
+            Boolean deactivate = ((abortion != null) && abortion) || ((stillBirth != null) && stillBirth) || ((death != null) && death);  // NO CHECKSTYLE Boolean Expression Complexity
+            subscription = subscriberService.updateRchMotherSubscriber(msisdn, mother, lmp, caseNo, deactivate);
         }
 
         // We rejected the update/create for the subscriber
