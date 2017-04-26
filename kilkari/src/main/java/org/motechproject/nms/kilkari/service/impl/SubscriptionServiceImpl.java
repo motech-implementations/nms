@@ -244,9 +244,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         // Check if the callingNumber is in Weekly_Calls_Not_Answered_Msisdn_Records
         BlockedMsisdnRecord blockedMsisdnRecord = blockedMsisdnRecordDataService.findByNumber(callingNumber);
-        String beneficiaryId = getBeneficiaryId(subscriber, mode, subscriptionPack);
         if (blockedMsisdnRecord != null) {
             LOGGER.info("Can't create a Subscription as the number {} is deactivated due to Weekly Calls Not Answered", callingNumber);
+            String beneficiaryId = getBeneficiaryId(subscriber, mode, subscriptionPack);
             subscriptionErrorDataService.create(new SubscriptionError(number, beneficiaryId,
                     SubscriptionRejectionReason.WEEKLY_CALLS_NOT_ANSWERED, subscriptionPack.getType(), "", mode));
             return null;

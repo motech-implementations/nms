@@ -1,0 +1,2 @@
+StateID	District_ID	District_Name	Taluka_ID	Taluka_Name	HealthBlock_ID	HealthBlock_Name	PHC_ID	PHC_Name	SubCentre_ID	SubCentre_Name	Village_ID	Village_Name	Address	MCTS_ID_No	Name	Husband_Name	Mobile_no	Birthdate	LMP_Date	Abortion_Type	Delivery_Outcomes	Child1_Name	Age	MTHR_REG_DATE	Exec_date	Registration_no	Case_no
+21	3	Sambalpur	26	Govindpur P.S.	453	Bamara	41	Garposh CHC	7389	Babuniktimal	555	Village	At-Kandhabalunda, PS-Mahulpali, Dist-Sambalpur	210302604211400000	Shanti Ekka	Ses Ekka	9439986187	01-01-1988	22-11-2016	 	 	 	27	30-03-2015	27-04-2015	310302604211400000	4

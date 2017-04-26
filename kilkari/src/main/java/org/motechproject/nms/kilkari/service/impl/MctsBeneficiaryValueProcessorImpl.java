@@ -68,12 +68,13 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
             } else {
                 motherByMctsId = mctsMotherDataService.findByBeneficiaryId(mctsId);
                 if (motherByMctsId == null) {
+                    motherByRchId.setBeneficiaryId(mctsId);
                     return motherByRchId;
                 } else {
                     if (motherByRchId.getId().equals(motherByMctsId.getId())) {
                         return motherByRchId;
                     } else {
-                        throw new InvalidRegistrationIdException("Invalid record");
+                        throw new InvalidRegistrationIdException("Unrelated Mothers exists with this MctsId and RchId");
                     }
                 }
             }
