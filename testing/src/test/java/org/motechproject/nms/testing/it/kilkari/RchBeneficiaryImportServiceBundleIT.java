@@ -1195,6 +1195,72 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         transactionManager.commit(status);
     }
 
+    //Import first mother record through MCTS, purge the existing record and try to import a second mother record with the same MSISDN but different RCH Id
+    @Test
+    public void testImportMotherWithExistingMsisdn() throws Exception {
+        DateTime lmp = DateTime.now().minusDays(100);
+        String lmpString = getDateString(lmp);
+        Reader mctsReader = createMctsMotherDataReader("21\t3\t\t\t\t\t200101000811500030\tChandini Devi\t9199722680\t\t" +
+                lmpString + "\t\t\t\t");
+        mctsBeneficiaryImportService.importMotherData(mctsReader, SubscriptionOrigin.MCTS_IMPORT);
+
+        Reader rchReader = createRchMotherDataReader("21\t3\t\t\t\t\t\t200100201311500052\t121004563168\tChumuki Sahoo\t8658577903\t\t" +
+                lmpString + "\t\t\t\t\t4");
+        mctsBeneficiaryImportService.importMotherData(rchReader, SubscriptionOrigin.RCH_IMPORT);
+
+        //purging the first import
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        List<Subscriber> subscriber = subscriberDataService.findByNumber(9199722680L);
+        Set<Subscription> subscriptions = subscriber.get(0).getAllSubscriptions();
+
+        //the mother subscription should be DEACTIVATED
+        Assert.assertEquals(1, subscriptions.size());
+        transactionManager.commit(status);
+
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        for (Subscription subscription : subscriptions
+                ) {
+            subscription.setStatus(SubscriptionStatus.DEACTIVATED);
+            subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
+            subscriptionDataService.update(subscription);
+        }
+
+        subscriptionService.purgeOldInvalidSubscriptions();
+        transactionManager.commit(status);
+
+        rchReader = createRchMotherDataReader("21\t3\t\t\t\t\t\t200101000811500030\t121004563170\tShanti Ekka\t8658577903\t\t" +
+                lmpString + "\t\t\t\t\t4");
+        mctsBeneficiaryImportService.importMotherData(rchReader, SubscriptionOrigin.RCH_IMPORT);
+        //import of the third record should have failed as a record with the same MCTS id exists through MCTS import
+        List<Subscriber> subscribers = subscriberDataService.findByNumber(8658577903L);
+        assertEquals(1, subscribers.size());
+        assertSubscriptionError(8658577903L, SubscriptionPackType.PREGNANCY,
+                SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED, "121004563170");
+    }
+
+    //Import first mother record through MCTS, and try to import a second mother record with the same MSISDN but different RCH Id
+    @Test
+    public void testImportMotherWithExistingMsisdnDiffRchId() throws Exception {
+        DateTime lmp = DateTime.now().minusDays(100);
+        String lmpString = getDateString(lmp);
+        Reader mctsReader = createMctsMotherDataReader("21\t3\t\t\t\t\t200101000811500030\tChandini Devi\t9199722680\t\t" +
+                lmpString + "\t\t\t\t");
+        mctsBeneficiaryImportService.importMotherData(mctsReader, SubscriptionOrigin.MCTS_IMPORT);
+
+        Reader rchReader = createRchMotherDataReader("21\t3\t\t\t\t\t\t200100201311500052\t121004563168\tChumuki Sahoo\t8658577903\t\t" +
+                lmpString + "\t\t\t\t\t4");
+        mctsBeneficiaryImportService.importMotherData(rchReader, SubscriptionOrigin.RCH_IMPORT);
+
+        rchReader = createRchMotherDataReader("21\t3\t\t\t\t\t\t200101000811500030\t121004563170\tShanti Ekka\t8658577903\t\t" +
+                lmpString + "\t\t\t\t\t4");
+        mctsBeneficiaryImportService.importMotherData(rchReader, SubscriptionOrigin.RCH_IMPORT);
+        //import of the third record should have failed as a record with the same MCTS id exists through MCTS import
+        List<Subscriber> subscribers = subscriberDataService.findByNumber(8658577903L);
+        assertEquals(1, subscribers.size());
+        assertSubscriptionError(8658577903L, SubscriptionPackType.PREGNANCY,
+                SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED, "121004563170");
+    }
+
     private Reader createRchMotherDataReader(String... lines) {
         StringBuilder builder = new StringBuilder();
         builder.append("StateID\tDistrict_ID\tTaluka_ID\tHealthBlock_ID\tPHC_ID\tSubCentre_ID\tVillage_ID\tMCTS_ID_No\tRegistration_no\tName\tMobile_no\tBirthdate\tLMP_Date\t");

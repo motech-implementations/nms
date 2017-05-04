@@ -3,6 +3,8 @@ package org.motechproject.nms.kilkari.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Entity for logging rejected Kilkari subscriptions.
  */
@@ -25,6 +27,7 @@ public class SubscriptionError {
     private String rejectionMessage;
 
     @Field
+    @NotNull
     private SubscriptionOrigin importOrigin;
 
     public SubscriptionError(long contactNumber, SubscriptionRejectionReason rejectionReason,
