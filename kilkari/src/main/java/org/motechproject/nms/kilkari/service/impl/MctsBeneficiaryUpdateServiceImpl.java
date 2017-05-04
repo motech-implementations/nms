@@ -8,6 +8,7 @@ import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
 import org.motechproject.nms.kilkari.domain.MctsMother;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
@@ -117,8 +118,8 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
 
         // Step 2: Re-route and call the import service for the update
         return (beneficiary instanceof MctsMother) ?
-                mctsBeneficiaryImportService.importMotherRecord(record) :
-                mctsBeneficiaryImportService.importChildRecord(record);
+                mctsBeneficiaryImportService.importMotherRecord(record, SubscriptionOrigin.MCTS_IMPORT) :
+                mctsBeneficiaryImportService.importChildRecord(record, SubscriptionOrigin.MCTS_IMPORT);
     }
 
     private Map<String, Object> mapUpdateHeaders(Map<String, Object> updates, MctsBeneficiary beneficiary) {

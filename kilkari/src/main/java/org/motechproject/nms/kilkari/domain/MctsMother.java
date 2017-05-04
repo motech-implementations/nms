@@ -16,8 +16,15 @@ public class MctsMother extends MctsBeneficiary {
     @Field
     private DateTime lastMenstrualPeriod;
 
+    @Field
+    private Long maxCaseNo;
+
     public MctsMother(String beneficiaryId) {
         super(beneficiaryId);
+    }
+
+    public MctsMother(String rchId, String beneficiaryId) {
+        super(rchId, beneficiaryId);
     }
 
     public DateTime getLastMenstrualPeriod() {
@@ -26,6 +33,14 @@ public class MctsMother extends MctsBeneficiary {
 
     public void setLastMenstrualPeriod(DateTime lastMenstrualPeriod) {
         this.lastMenstrualPeriod = lastMenstrualPeriod;
+    }
+
+    public Long getMaxCaseNo() {
+        return maxCaseNo;
+    }
+
+    public void setMaxCaseNo(Long maxCaseNo) {
+        this.maxCaseNo = maxCaseNo;
     }
 
     public void deepCopyFrom(MctsMother other) {
@@ -40,5 +55,6 @@ public class MctsMother extends MctsBeneficiary {
         setHealthSubFacility(other.getHealthSubFacility());
         setVillage(other.getVillage());
         setUpdatedDateNic(other.getUpdatedDateNic());
+        setMaxCaseNo(other.getMaxCaseNo());
     }
 }

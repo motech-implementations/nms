@@ -21,6 +21,7 @@ import org.motechproject.nms.testing.it.imi.TargetFileServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.CsrServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.MctsBeneficiaryImportServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.MctsBeneficiaryUpdateServiceBundleIT;
+import org.motechproject.nms.testing.it.kilkari.RchBeneficiaryImportServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.SubscriberServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.SubscriptionServiceBundleIT;
 import org.motechproject.nms.testing.it.ma.MobileAcademyServiceBundleIT;
@@ -107,6 +108,11 @@ import org.motechproject.nms.testing.it.tracking.TrackOneToManyChangesBundleIT;
      */
     MctsWebServiceFacadeBundleIT.class,
     MctsImportBundleIT.class,
+
+    /**
+     * RCH
+     */
+    RchBeneficiaryImportServiceBundleIT.class,
 
     /**
      * Testing

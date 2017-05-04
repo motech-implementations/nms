@@ -4,7 +4,7 @@
 
     <artifactId>nms</artifactId>
     <groupId>org.motechproject.nms</groupId>
-    <version>1.0.29</version>
+    <version>1.0.30</version>
     <packaging>pom</packaging>
     <name>National Motech System</name>
 

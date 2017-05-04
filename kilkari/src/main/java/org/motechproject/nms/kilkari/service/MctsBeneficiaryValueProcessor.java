@@ -10,6 +10,8 @@ public interface MctsBeneficiaryValueProcessor {
 
     MctsMother getMotherInstanceByBeneficiaryId(String value);
 
+    MctsMother getOrCreateRchMotherInstance(String rchId, String mctsId);
+
     Boolean getAbortionDataFromString(String value);
 
     Boolean getStillBirthFromString(String value);
@@ -19,6 +21,8 @@ public interface MctsBeneficiaryValueProcessor {
     MctsChild getChildInstanceByString(String value);
 
     DateTime getDateByString(String value);
+
+    Long getCaseNoByString(String value);
 
     Long getMsisdnByString(String value);
 }

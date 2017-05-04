@@ -153,7 +153,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
     public String serviceIdFromOrigin(boolean freshCall, SubscriptionOrigin origin) {
 
-        if (origin == SubscriptionOrigin.MCTS_IMPORT) {
+        if (origin == SubscriptionOrigin.MCTS_IMPORT || origin == SubscriptionOrigin.RCH_IMPORT) {
             return freshCall ? freshCheckDND : retryCheckDND;
         }
 
