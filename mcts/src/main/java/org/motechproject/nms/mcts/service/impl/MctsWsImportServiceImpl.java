@@ -468,7 +468,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         map.put(KilkariConstants.DOB, mctsBeneficiaryValueProcessor.getDateByString(childRecord.getBirthdate()));
 
         map.put(KilkariConstants.BENEFICIARY_ID,
-                mctsBeneficiaryValueProcessor.getChildInstanceByString(childRecord.getIdNo()));
+                childRecord.getIdNo());
         map.put(KilkariConstants.MOTHER_ID,
                 mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(childRecord.getMotherId()));
         map.put(KilkariConstants.DEATH,

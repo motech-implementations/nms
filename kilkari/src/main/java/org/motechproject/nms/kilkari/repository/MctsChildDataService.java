@@ -10,4 +10,6 @@ public interface MctsChildDataService extends MotechDataService<MctsChild> {
     @Lookup
     MctsChild findByBeneficiaryId(@LookupField(name = "beneficiaryId") String beneficiaryId);
 
+    @Lookup
+    MctsChild findByRchId(@LookupField(name = "rchId") String rchId);
 }

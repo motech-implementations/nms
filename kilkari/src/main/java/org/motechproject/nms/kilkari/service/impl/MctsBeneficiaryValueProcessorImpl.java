@@ -100,12 +100,49 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
     }
 
     @Override
-    public MctsChild getChildInstanceByString(String value) {
+    public MctsChild getOrCreateChildInstance(String value) {
         MctsChild child = mctsChildDataService.findByBeneficiaryId(value);
         if (child == null) {
             child = new MctsChild(value);
         }
         return child;
+    }
+
+    @Override
+    public MctsChild getOrCreateRchChildInstance(String rchId, String mctsId) {
+        MctsChild childByRchId = mctsChildDataService.findByRchId(rchId);
+        MctsChild childByMctsId;
+        if (childByRchId == null) {
+            if (mctsId == null) {
+                childByRchId = new MctsChild(rchId, null);
+                return childByRchId;
+            } else {
+                childByMctsId = mctsChildDataService.findByBeneficiaryId(mctsId);
+                if (childByMctsId == null) {
+                    childByRchId = new MctsChild(rchId, mctsId);
+                    return childByRchId;
+                } else {
+                    childByMctsId.setRchId(rchId);
+                    return childByMctsId;
+                }
+            }
+        } else {
+            if (mctsId == null) {
+                return childByRchId;
+            } else {
+                childByMctsId = mctsChildDataService.findByBeneficiaryId(mctsId);
+                if (childByMctsId == null) {
+                    childByRchId.setBeneficiaryId(mctsId);
+                    return childByRchId;
+                } else {
+                    if (childByRchId.getId().equals(childByMctsId.getId())) {
+                        return childByRchId;
+                    } else {
+                        throw new InvalidRegistrationIdException("Unrelated children exist with the same MCTS id and RCH id");
+                    }
+                }
+            }
+        }
     }
 
     @Override

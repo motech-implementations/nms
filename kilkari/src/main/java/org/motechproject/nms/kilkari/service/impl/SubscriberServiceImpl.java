@@ -438,6 +438,83 @@ public class SubscriberServiceImpl implements SubscriberService {
         }
     }
 
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
+    public Subscription updateRchChildSubscriber(Long msisdn, MctsChild childUpdate, DateTime dob) { //NOPMD NcssMethodCount
+        District district = childUpdate.getDistrict(); // district should never be null here since we validate upstream on setLocation
+        Circle circle = district.getCircle();
+        Language language = district.getLanguage();
+        SubscriptionPack pack = subscriptionPackDataService.byType(SubscriptionPackType.CHILD);
+        List<Subscriber> subscribersByMsisdn = getSubscriber(msisdn);
+        Subscriber subscriberByRchId = getSubscriberByBeneficiary(childUpdate);
+
+        if (subscriberByRchId != null) {//subscriber exists with the provided RCH id
+            if (subscribersByMsisdn.isEmpty()) {//no subscriber with provided msisdn
+                //subscriber's number has changed
+                //update msisdn in subscriber and delete msisdn from blocked list
+                deleteBlockedMsisdn(childUpdate.getId(), subscriberByRchId.getCallingNumber(), msisdn);
+                subscriberByRchId.setCallingNumber(msisdn);
+                if (subscriberByRchId.getMother() == null) {
+                    subscriberByRchId.setMother(childUpdate.getMother());
+                }
+                Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
+                childUpdate.setDateOfBirth(dob);
+                subscriberByRchId.setDateOfBirth(dob);
+                return updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT);
+            } else {
+                //subscriber found with provided msisdn
+                for (Subscriber subscriber : subscribersByMsisdn) {
+                    if (subscriber.getId().equals(subscriberByRchId.getId())) {
+                        Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
+                        if (subscriberByRchId.getMother() == null) {
+                            subscriberByRchId.setMother(childUpdate.getMother());
+                        }
+                        childUpdate.setDateOfBirth(dob);
+                        subscriberByRchId.setDateOfBirth(dob);
+                        return updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT);
+                    }
+                }
+                subscriptionErrorDataService.create(new SubscriptionError(msisdn, childUpdate.getRchId(), SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED, pack.getType(), "Unrelated subscribers with this MSISDN and RCH id", SubscriptionOrigin.RCH_IMPORT));
+                return null;
+            }
+        } else {// no subscribers found with the provided RCH id
+            if (subscribersByMsisdn.isEmpty()) {// no subscriber exists with provided msisdn
+                Subscriber subscriberByRchMotherId = getSubscriberByBeneficiary(childUpdate.getMother());
+                if (subscriberByRchMotherId == null) {// no subscriber exists with RCH mother id either
+                    //create subscriber, beneficiary, subscription and return
+                    Subscriber subscriber = new Subscriber(msisdn, language);
+                    childUpdate.setDateOfBirth(dob);
+                    subscriber.setDateOfBirth(dob);
+                    subscriber.setMother(childUpdate.getMother());
+                    subscriber.setChild(childUpdate);
+                    create(subscriber);
+                    return subscriptionService.createSubscription(subscriber, msisdn, language, pack, SubscriptionOrigin.RCH_IMPORT);
+                } else {
+                    if(subscriberByRchMotherId.getChild() == null) {
+                        //update subscriber with child
+                        subscriberByRchMotherId.setChild(childUpdate);
+                        Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchMotherId, pack.getType());
+                        return updateOrCreateSubscription(subscriberByRchMotherId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT);
+                    } else {
+                        subscriptionErrorDataService.create(new SubscriptionError(msisdn, childUpdate.getRchId(), SubscriptionRejectionReason.ALREADY_SUBSCRIBED, pack.getType(), "Another child exists for this mother", SubscriptionOrigin.RCH_IMPORT));
+                        return null;
+                    }
+                }
+            } else {//subscriber exists with provided msisdn
+                if (subscribersByMsisdn.size() == 1 && subscribersByMsisdn.get(0).getMother().equals(childUpdate.getMother()) && subscribersByMsisdn.get(0).getChild() == null) {
+                    //update subscriber with child
+                    Subscriber subscriber = subscribersByMsisdn.get(0);
+                    subscriber.setDateOfBirth(dob);
+                    subscriber.setChild(childUpdate);
+                    Subscription subscription = subscriptionService.getActiveSubscription(subscriber, pack.getType());
+                    return updateOrCreateSubscription(subscriber, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT);
+                } else {
+                    subscriptionErrorDataService.create(new SubscriptionError(msisdn, childUpdate.getRchId(), SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED, pack.getType(), "Unrelated subscribers with this MSISDN and RCH id", SubscriptionOrigin.RCH_IMPORT));
+                    return null;
+                }
+            }
+        }
+    }
+
     public Subscription updateOrCreateSubscription(Subscriber subscriber, Subscription subscription, DateTime dateTime, SubscriptionPack pack, Language language, Circle circle, SubscriptionOrigin origin) {
         if (subscription != null && (subscription.getStatus() == SubscriptionStatus.ACTIVE || subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
             subscriptionService.updateStartDate(subscription, dateTime);

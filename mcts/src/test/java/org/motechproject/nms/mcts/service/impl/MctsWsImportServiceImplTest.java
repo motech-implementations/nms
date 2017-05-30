@@ -216,7 +216,7 @@ public class MctsWsImportServiceImplTest {
 
         record.setIdNo(String.valueOf(id));
         MctsChild mctsChild = new MctsChild(String.valueOf(id));
-        when(mctsBeneficiaryValueProcessor.getChildInstanceByString(String.valueOf(id))).thenReturn(mctsChild);
+        when(mctsBeneficiaryValueProcessor.getOrCreateChildInstance(String.valueOf(id))).thenReturn(mctsChild);
 
         String motherId = String.valueOf(id + 5);
         MctsMother mctsMother = new MctsMother(motherId);

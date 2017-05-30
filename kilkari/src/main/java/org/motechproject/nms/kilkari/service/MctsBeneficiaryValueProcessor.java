@@ -18,11 +18,13 @@ public interface MctsBeneficiaryValueProcessor {
 
     Boolean getDeathFromString(String value);
 
-    MctsChild getChildInstanceByString(String value);
+    MctsChild getOrCreateChildInstance(String value);
 
     DateTime getDateByString(String value);
 
     Long getCaseNoByString(String value);
 
     Long getMsisdnByString(String value);
+
+    MctsChild getOrCreateRchChildInstance(String childId, String mctsId);
 }

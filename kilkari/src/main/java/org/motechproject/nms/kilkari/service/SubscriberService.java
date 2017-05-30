@@ -105,4 +105,12 @@ public interface SubscriberService {
      */
     Subscriber getSubscriberByMother(long motherId);
 
+    /**
+     * Update the RCH child subscriber with msisdn and child object
+     * @param msisdn msisdn (to switch to) for new/existing child
+     * @param child child object to update
+     * @param dob reference date for the child
+     * @return new or updated subscription, null if create/update fails
+     */
+    Subscription updateRchChildSubscriber(Long msisdn, MctsChild child, DateTime dob);
 }
