@@ -9,18 +9,20 @@ import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetString;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.domain.DeactivatedBeneficiary;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionError;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.exception.MultipleSubscriberException;
+import org.motechproject.nms.kilkari.repository.DeactivatedBeneficiaryDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
@@ -45,6 +47,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -63,19 +66,22 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private SubscriptionPack pregnancyPack;
     private SubscriptionPack childPack;
     private MctsMotherDataService mctsMotherDataService;
+    private DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService;
 
     @Autowired
     public MctsBeneficiaryImportServiceImpl(SubscriptionService subscriptionService,
                                             SubscriptionErrorDataService subscriptionErrorDataService,
                                             LocationService locationService, SubscriberService subscriberService,
                                             MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor,
-                                            MctsMotherDataService mctsMotherDataService) {
+                                            MctsMotherDataService mctsMotherDataService,
+                                            DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService) {
         this.subscriptionService = subscriptionService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
         this.locationService = locationService;
         this.subscriberService = subscriberService;
         this.mctsBeneficiaryValueProcessor = mctsBeneficiaryValueProcessor;
         this.mctsMotherDataService = mctsMotherDataService;
+        this.deactivatedBeneficiaryDataService = deactivatedBeneficiaryDataService;
     }
 
 
@@ -257,6 +263,20 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return false;
         }
 
+        List<DeactivatedBeneficiary> deactivatedUsers = deactivatedBeneficiaryDataService.findByExternalId(beneficiaryId);
+        if (deactivatedUsers != null && deactivatedUsers.size() > 0) {
+            for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
+                if (deactivatedUser.getOrigin() == importOrigin) {
+                    String message = deactivatedUser.isCompletedSubscription() ? "Subscription completed" : "User deactivated";
+                    if (message.length() > 2) {
+                        subscriptionErrorDataService.create(new SubscriptionError(msisdn, beneficiaryId,
+                                SubscriptionRejectionReason.BENEFICIARY_ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY, message, importOrigin));
+                        return false;
+                    }
+                }
+            }
+        }
+
         mother.setName(name);
         mother.setDateOfBirth(motherDOB);
         mother.setUpdatedDateNic(lastUpdatedDateNic);
@@ -348,6 +368,20 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             subscriptionErrorDataService.create(new SubscriptionError(msisdn, childId,
                     SubscriptionRejectionReason.BENEFICIARY_ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD, "Updated Record exits", importOrigin));
             return false;
+        }
+
+        List<DeactivatedBeneficiary> deactivatedUsers = deactivatedBeneficiaryDataService.findByExternalId(childId);
+        if (deactivatedUsers != null && deactivatedUsers.size() > 0) {
+            for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
+                if (deactivatedUser.getOrigin() == importOrigin) {
+                    String message = deactivatedUser.isCompletedSubscription() ? "Subscription completed" : "User deactivated";
+                    if (message.length() > 2) {
+                        subscriptionErrorDataService.create(new SubscriptionError(msisdn, childId,
+                                SubscriptionRejectionReason.BENEFICIARY_ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD, message, importOrigin));
+                        return false;
+                    }
+                }
+            }
         }
 
         child.setName(name);
