@@ -764,6 +764,7 @@
         <module>mcts</module>
         <module>testing</module>
         <module>flwUpdate</module>
+        <module>rch</module>
     </modules>
 
     <build>
@@ -891,8 +892,10 @@
                     <excludes>
                         <!-- Skip Axis generated classes -->
                         <exclude>**/mcts/**/soap/*.java</exclude>
+                        <exclude>**/rch/**/soap/*.java</exclude>
                         <!-- Skip contract classes -->
                         <exclude>**/mcts/**/contract/*.java</exclude>
+                        <exclude>**/rch/**/contract/*.java</exclude>
                     </excludes>
                 </configuration>
                 <dependencies>
@@ -925,7 +928,7 @@
                     <consoleOutput>true</consoleOutput>
                     <skip>${checkstyle.skip}</skip>
                     <!-- Skip Axis generated classes -->
-                    <excludes>**/mcts/**/soap/*.java</excludes>
+                    <excludes>**/mcts/**/soap/*.java, **/rch/**/soap/*.java</excludes>
                 </configuration>
                 <executions>
                     <execution>
