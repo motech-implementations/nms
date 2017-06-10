@@ -1386,7 +1386,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         District expectedDistrict4 = districtService.findByStateAndCode(expectedState, 4L);
 
         Subscriber subscriber1 = subscriberDataService.findByNumber(9439998253L).get(0);
-        assertChild(subscriber1, "7000000000", getDateTime("28/09/2016"), "Baby1 of PANI HEMRAM", expectedState,
+        assertChild(subscriber1, "7000000000", getDateTime("28/12/2016"), "Baby1 of PANI HEMRAM", expectedState,
                 expectedDistrict4);
 
         // our RCH data file consists of just 1 record

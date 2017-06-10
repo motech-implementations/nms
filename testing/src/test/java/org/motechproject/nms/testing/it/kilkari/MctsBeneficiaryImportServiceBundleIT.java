@@ -568,12 +568,12 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         District expectedDistrict4 = districtService.findByStateAndCode(expectedState, 4L);
 
         Subscriber subscriber1 = subscriberDataService.findByNumber(9439998253L).get(0);
-        assertChild(subscriber1, "210404600521400116", getDateTime("28/09/2016"), "Baby1 of PANI HEMRAM", expectedState,
+        assertChild(subscriber1, "210404600521400116", getDateTime("28/12/2016"), "Baby1 of PANI HEMRAM", expectedState,
                 expectedDistrict4);
 
-        // although our MCTS data file contains 10 children, we only create 3 subscribers due to -1 duplicate phone numbers and
-        // -6 for old dob which has no messages
-        assertEquals(3, subscriberDataService.count());
+        // although our MCTS data file contains 10 children, we only create 1 subscriber due to -1 duplicate phone numbers and
+        // -8 for old dob which has no messages
+        assertEquals(1, subscriberDataService.count());
     }
 
     @Test
@@ -1927,5 +1927,21 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertEquals(SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED, errors.get(1).getRejectionReason());
         assertEquals("Subscriber exists with this Msisdn", errors.get(1).getRejectionMessage());
         transactionManager.commit(status);
+    }
+
+    @Test
+    public void testDummyMotherRecordLocationFields() throws Exception {
+        DateTime dob = DateTime.now().minusDays(100);
+        String dobString = getDateString(dob);
+        Reader reader = createChildDataReader("21\t3\t\t\t\t\t8876543210\tBaby1 of Shanti Ekka\t1234567890\t6000000000\t"
+                + dobString + "\t\t");
+        mctsBeneficiaryImportService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
+
+        Subscriber subscriber = subscriberDataService.findByNumber(6000000000L).get(0);
+        assertNotNull(subscriber);
+        State expectedState = stateDataService.findByCode(21L);
+        District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
+        assertEquals(expectedState, subscriber.getMother().getState());
+        assertEquals(expectedDistrict, subscriber.getMother().getDistrict());
     }
 }

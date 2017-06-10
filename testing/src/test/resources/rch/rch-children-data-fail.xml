@@ -1,0 +1,44 @@
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+    <s:Body>
+        <DS_DataResponse xmlns="http://tempuri.org/">
+            <DS_DataResult>
+                <xs:schema id="NewDataSet" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+                    <xs:element name="NewDataSet" msdata:IsDataSet="true" msdata:UseCurrentLocale="true">
+                        <xs:complexType>
+                            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                                <xs:element name="Records">
+                                    <xs:complexType>
+                                        <xs:sequence>
+                                            <xs:element name="StateID" type="xs:short" minOccurs="0"/>
+                                            <xs:element name="District_ID" type="xs:int" minOccurs="0"/>
+                                            <xs:element name="District_Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Taluka_ID" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Taluka_Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="HealthBlock_ID" type="xs:int" minOccurs="0"/>
+                                            <xs:element name="HealthBlock_Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="PHC_ID" type="xs:int" minOccurs="0"/>
+                                            <xs:element name="PHC_Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="SubCentre_ID" type="xs:int" minOccurs="0"/>
+                                            <xs:element name="SubCentre_Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Village_ID" type="xs:int" minOccurs="0
+                                            <xs:element name="Village_Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Name" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Mobile_no" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Birthdate" type="xs:dateTime" minOccurs="0"/>
+                                            <xs:element name="Registration_no" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Mother_Registration_no" type="xs:long" minOccurs="0"/>
+                                            <xs:element name="Entry_Type" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="MCTS_ID_No" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="MCTS_Mother_ID_No" type="xs:string" minOccurs="0"/>
+                                            <xs:element name="Exec_Date" type="xs:dateTime" minOccurs="0"/>
+                                        </xs:sequence>
+                                    </xs:complexType>
+                                </xs:element>
+                            </xs:choice>
+                        </xs:complexType>
+                    </xs:element>
+                </xs:schema>
+            </DS_DataResult>
+        </DS_DataResponse>
+    </s:Body>
+</s:Envelope>

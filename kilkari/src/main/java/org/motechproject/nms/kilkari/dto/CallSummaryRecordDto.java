@@ -35,6 +35,7 @@ public class CallSummaryRecordDto implements Serializable {
 
     public CallSummaryRecordDto() { }
 
+    //CHECKSTYLE:OFF
     public CallSummaryRecordDto(String subscriptionId, int statusCode, int finalStatus, String contentFileName,
                                 String weekId, String languageCode, String circleName, String targetFileTimeStamp) {
         this.subscriptionId = subscriptionId;
@@ -63,6 +64,7 @@ public class CallSummaryRecordDto implements Serializable {
         );
     }
 
+    //CHECKSTYLE:ON
     public String getSubscriptionId() {
         return subscriptionId;
     }

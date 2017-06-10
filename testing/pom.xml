@@ -100,6 +100,12 @@
             <artifactId>mcts</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>rch</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.servicemix.bundles</groupId>
             <artifactId>org.apache.servicemix.bundles.javax.mail</artifactId>
@@ -281,6 +287,9 @@
                             org.motechproject.nms.mcts.contract,
                             org.motechproject.nms.mcts.service,
                             org.motechproject.nms.mcts.soap,
+                            org.motechproject.nms.rch.contract,
+                            org.motechproject.nms.rch.service,
+                            org.motechproject.nms.rch.soap,
                             org.aopalliance.aop,
                             org.springframework.aop,
                             org.springframework.aop.framework,
