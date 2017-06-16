@@ -27,6 +27,9 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
     @Override
     public MctsMother getOrCreateMotherInstance(String value) {
+        if (value == null || "".equals(value.trim())) {
+            return null;
+        }
         MctsMother mother = mctsMotherDataService.findByBeneficiaryId(value);
         if (mother == null) {
             mother = new MctsMother(value);
@@ -36,7 +39,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
     @Override
     public MctsMother getMotherInstanceByBeneficiaryId(String value) {
-        if (value == null) {
+        if (value == null || "".equals(value.trim())) {
             return null;
         }
         return getOrCreateMotherInstance(value);
@@ -45,7 +48,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
     @Override
     public MctsMother getOrCreateRchMotherInstance(String rchId, String mctsId) {
 
-        if (rchId == null) {
+        if (rchId == null || "".equals(rchId.trim())) {
             return null;
         }
         MctsMother motherByRchId = mctsMotherDataService.findByRchId(rchId);
@@ -104,6 +107,9 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
     @Override
     public MctsChild getOrCreateChildInstance(String value) {
+        if (value == null || "".equals(value.trim())) {
+            return null;
+        }
         MctsChild child = mctsChildDataService.findByBeneficiaryId(value);
         if (child == null) {
             child = new MctsChild(value);
@@ -113,6 +119,9 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
     @Override
     public MctsChild getOrCreateRchChildInstance(String rchId, String mctsId) {
+        if (rchId == null || "".equals(rchId.trim())) {
+            return null;
+        }
         MctsChild childByRchId = mctsChildDataService.findByRchId(rchId);
         MctsChild childByMctsId;
         if (childByRchId == null) {
