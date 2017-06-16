@@ -1195,6 +1195,32 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         transactionManager.commit(status);
     }
 
+    @Test
+    public void testChangeExistingMotherMsisdn() throws Exception {
+        DateTime lmp = DateTime.now().minusDays(100);
+        String lmpString = getDateString(lmp);
+        Reader rchReader = createRchMotherDataReader("21\t3\t\t\t\t\t\t200100201311500052\t121004563168\tChumuki Sahoo\t8658577903\t\t" +
+                lmpString + "\t\t\t\t\t4");
+        mctsBeneficiaryImportService.importMotherData(rchReader, SubscriptionOrigin.RCH_IMPORT);
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        State expectedState = stateDataService.findByCode(21L);
+        District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
+        Subscriber subscriber = subscriberDataService.findByNumber(8658577903L).get(0);
+        assertNotNull(subscriber);
+        assertMother(subscriber, "121004563168", lmp, "Chumuki Sahoo", expectedState, expectedDistrict);
+        transactionManager.commit(status);
+
+        //update msisdn for the mother
+        rchReader = createRchMotherDataReader("21\t3\t\t\t\t\t\t200100201311500052\t121004563168\tChumuki Sahoo\t8658577904\t\t" +
+                lmpString + "\t\t\t\t\t4");
+        mctsBeneficiaryImportService.importMotherData(rchReader, SubscriptionOrigin.RCH_IMPORT);
+
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        subscriber = subscriberDataService.findByNumber(8658577904L).get(0);
+        assertNotNull(subscriber);
+        assertMother(subscriber, "121004563168", lmp, "Chumuki Sahoo", expectedState, expectedDistrict);
+    }
     //Import first mother record through MCTS, purge the existing record and try to import a second mother record with the same MSISDN but different RCH Id
     @Test
     public void testImportMotherWithExistingMsisdn() throws Exception {
@@ -1287,7 +1313,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         DateTime dob = DateTime.now().minusDays(100);
         String dobString = getDateString(dob);
         Reader reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t"
-                + dobString + "\t7000000000\t2000000000\t\t");
+                + dobString + "\t7000000000\t\t\t");
         mctsBeneficiaryImportService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -1453,7 +1479,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     /*
-     * To verify RCH upload is rejected when MCTS doesn’t contain DOB.
+     * To verify RCH upload is rejected when data doesn’t contain DOB.
      */
     @Test
     public void verifyFT288_1() throws Exception {
@@ -1468,7 +1494,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     /*
-     * To verify MCTS upload is rejected when location information is incorrect.
+     * To verify RCH upload is rejected when location information is incorrect.
      *
      * https://applab.atlassian.net/browse/NMS-208
      */
@@ -1679,7 +1705,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT529() throws Exception {
-        DateTime dob = DateTime.now();
+        DateTime dob = DateTime.now().minusDays(60);
         String dobString = getDateString(dob);
         //district id is missing
         Reader reader = createRchChildDataReader("21\t\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t9876453210\t9439986187\t"
@@ -1695,7 +1721,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT530() throws Exception {
-        DateTime dob = DateTime.now();
+        DateTime dob = DateTime.now().minusDays(60);
         String dobString = getDateString(dob);
         //state id with invalid value
         Reader reader = createRchChildDataReader("31\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t9876453210\t9439986187\t"
@@ -1711,7 +1737,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT531() throws Exception {
-        DateTime dob = DateTime.now();
+        DateTime dob = DateTime.now().minusDays(60);
         String dobString = getDateString(dob);
         //district id with invalid value
         Reader reader = createRchChildDataReader("21\t6\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t9876453210\t9439986187\t"
@@ -1720,6 +1746,155 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         assertNoSubscriber(9439986187L);
         assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.INVALID_LOCATION, "7000000000");
+    }
+
+    @Test
+    public void testImportChildUpdateEntryTypeStatus() throws Exception {
+        DateTime dob = DateTime.now().minusDays(60);
+        String dobString = getDateString(dob);
+        Reader reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t9876453210\t9439986187\t"
+                 + dobString + "\t7000000000\t2000000000\t\t");
+        mctsBeneficiaryImportService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        assertNotNull(subscriber);
+        Assert.assertEquals(dob.toLocalDate(), subscriber.getDateOfBirth().toLocalDate());
+        Assert.assertEquals("Baby1 of Lilima Kua", subscriber.getChild().getName());
+        transactionManager.commit(status);
+
+        //update entry type to 9
+        reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t9876453210\t9439986187\t"
+                + dobString + "\t7000000000\t2000000000\t9\t");
+        mctsBeneficiaryImportService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
+
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+        assertEquals(1, subscriptions.size());
+
+        Subscription subscription = subscriptions.iterator().next();
+        assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
+        assertEquals(DeactivationReason.CHILD_DEATH, subscription.getDeactivationReason());
+        transactionManager.commit(status);
+
+        //update entry type to 1
+        //a new subscription should be created
+        reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t9876453210\t9439986187\t"
+                + dobString + "\t7000000000\t2000000000\t1\t");
+        mctsBeneficiaryImportService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
+
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        subscriptions = subscriber.getAllSubscriptions();
+        assertEquals(2, subscriptions.size()); // the first subscription was deactivated and a new subscription was created
+
+        subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
+        assertNotNull(subscription);
+        assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+        transactionManager.commit(status);
+    }
+
+    @Test
+    public void testChildImportMotherMctsNull() throws Exception {
+        DateTime dob = DateTime.now().minusDays(60);
+        String dobString = getDateString(dob);
+        Reader reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t\t9439986187\t"
+                + dobString + "\t7000000000\t2000000000\t\t");
+        mctsBeneficiaryImportService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        assertChild(subscriber, "7000000000", dob, "Baby1 of Lilima Kua", stateDataService.findByCode(21L), districtService.findByStateAndCode(stateDataService.findByCode(21L), 3L));
+        transactionManager.commit(status);
+    }
+
+    @Test
+    public void testCreateNewChildRecordSameMsisdn() throws Exception {
+        DateTime dob = DateTime.now().minusDays(60);
+        String dobString = getDateString(dob);
+        Reader reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t9876453210\t9439986187\t"
+                + dobString + "\t7000000000\t2000000000\t\t");
+        mctsBeneficiaryImportService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
+        assertChild(subscriber, "7000000000", dob, "Baby1 of Lilima Kua", stateDataService.findByCode(21L), districtService.findByStateAndCode(stateDataService.findByCode(21L), 3L));
+        transactionManager.commit(status);
+
+        //deactivate child subscription due to death
+        subscription.setStatus(SubscriptionStatus.DEACTIVATED);
+        subscription.setEndDate(new DateTime().withDate(2016, 8, 1));
+        subscriptionDataService.update(subscription);
+        subscriptionService.purgeOldInvalidSubscriptions();
+
+        //import a new child record for the same mother with same msisdn
+        dob = DateTime.now().minusDays(30);
+        dobString = getDateString(dob);
+        reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567891\tBaby2 of Lilima Kua\t9876453210\t9439986187\t"
+                + dobString + "\t8000000000\t2000000000\t\t");
+        mctsBeneficiaryImportService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
+        List<Subscriber> subscribers = subscriberDataService.findByNumber(9439986187L);
+        assertEquals(1, subscribers.size());
+        assertChild(subscribers.get(0), "8000000000", dob, "Baby2 of Lilima Kua", stateDataService.findByCode(21L), districtService.findByStateAndCode(stateDataService.findByCode(21L), 3L));
+    }
+
+    @Test
+    public void testCreateNewChildRecordDifferentMsisdn() throws Exception {
+        DateTime dob = DateTime.now().minusDays(60);
+        String dobString = getDateString(dob);
+        Reader reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t9876453210\t9439986187\t"
+                + dobString + "\t7000000000\t2000000000\t\t");
+        mctsBeneficiaryImportService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
+        assertChild(subscriber, "7000000000", dob, "Baby1 of Lilima Kua", stateDataService.findByCode(21L), districtService.findByStateAndCode(stateDataService.findByCode(21L), 3L));
+        transactionManager.commit(status);
+
+        //deactivate child subscription due to death
+        subscription.setStatus(SubscriptionStatus.DEACTIVATED);
+        subscription.setEndDate(new DateTime().withDate(2016, 8, 1));
+        subscriptionDataService.update(subscription);
+        subscriptionService.purgeOldInvalidSubscriptions();
+
+        //import a new child record for the same mother with same msisdn
+        dob = DateTime.now().minusDays(30);
+        dobString = getDateString(dob);
+        reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567891\tBaby2 of Lilima Kua\t9876453210\t9439986188\t"
+                + dobString + "\t8000000000\t2000000000\t\t");
+        mctsBeneficiaryImportService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
+        List<Subscriber> subscribers = subscriberDataService.findByNumber(9439986188L);
+        assertEquals(1, subscribers.size());
+        assertChild(subscribers.get(0), "8000000000", dob, "Baby2 of Lilima Kua", stateDataService.findByCode(21L), districtService.findByStateAndCode(stateDataService.findByCode(21L), 3L));
+    }
+
+    @Test
+    public void testUpdateMsisdnForChildRecord() throws Exception {
+        DateTime dob = DateTime.now().minusDays(60);
+        String dobString = getDateString(dob);
+        Reader reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t9876453210\t9439986187\t"
+                + dobString + "\t7000000000\t2000000000\t\t10-05-2016");
+        mctsBeneficiaryImportService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        assertNotNull(subscriber);
+        assertChild(subscriber, "7000000000", dob, "Baby1 of Lilima Kua", stateDataService.findByCode(21L), districtService.findByStateAndCode(stateDataService.findByCode(21L), 3L));
+        transactionManager.commit(status);
+
+        //update msisdn of the existing child
+        reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t9876453210\t9439986188\t"
+                + dobString + "\t7000000000\t2000000000\t\t");
+        mctsBeneficiaryImportService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
+
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        subscriber = subscriberDataService.findByNumber(9439986188L).get(0);
+        assertNotNull(subscriber);
+        assertChild(subscriber, "7000000000", dob, "Baby1 of Lilima Kua", stateDataService.findByCode(21L), districtService.findByStateAndCode(stateDataService.findByCode(21L), 3L));
+        transactionManager.commit(status);
     }
 
     private Reader createRchMotherDataReader(String... lines) {
@@ -1740,17 +1915,6 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         StringBuilder builder = new StringBuilder();
         builder.append("StateID\tDistrict_ID\tTaluka_ID\tHealthBlock_ID\tPHC_ID\tVillage_ID\tID_No\tName\tWhom_PhoneNo\tBirthdate\tLMP_Date\t");
         builder.append("Abortion\tOutcome_Nos\tEntry_Type\tLast_Update_Date");
-        builder.append("\n");
-
-        for (String line : lines) {
-            builder.append(line).append("\n");
-        }
-        return new StringReader(builder.toString());
-    }
-
-    private Reader createMctsChildDataReader(String... lines) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("StateID\tDistrict_ID\tTaluka_ID\tHealthBlock_ID\tPHC_ID\tVillage_ID\tID_No\tName\tMother_ID\tWhom_PhoneNo\tBirthdate\tEntry_Type\tLast_Update_Date");
         builder.append("\n");
 
         for (String line : lines) {

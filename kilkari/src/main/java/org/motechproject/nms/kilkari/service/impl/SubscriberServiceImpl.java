@@ -274,7 +274,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    public Subscription updateRchMotherSubscriber(Long msisdn, MctsMother motherUpdate, DateTime lmp, Long caseNo, Boolean deactivate) {
+    public Subscription updateRchMotherSubscriber(Long msisdn, MctsMother motherUpdate, DateTime lmp, Long caseNo, Boolean deactivate) { //NOPMD NcssMethodCount
         District district = motherUpdate.getDistrict(); // district should never be null here since we validate upstream on setLocation
         Circle circle = district.getCircle();
         Language language = district.getLanguage();
@@ -314,6 +314,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 }
                 deleteBlockedMsisdn(motherUpdate.getId(), subscriberByRchId.getCallingNumber(), msisdn);
                 subscriberByRchId.setCallingNumber(msisdn);
+                subscriberByRchId.setModificationDate(DateTime.now());
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                 motherUpdate.setLastMenstrualPeriod(lmp);
                 subscriberByRchId.setLastMenstrualPeriod(lmp);
@@ -453,6 +454,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 //update msisdn in subscriber and delete msisdn from blocked list
                 deleteBlockedMsisdn(childUpdate.getId(), subscriberByRchId.getCallingNumber(), msisdn);
                 subscriberByRchId.setCallingNumber(msisdn);
+                subscriberByRchId.setModificationDate(DateTime.now());
                 if (subscriberByRchId.getMother() == null) {
                     subscriberByRchId.setMother(childUpdate.getMother());
                 }

@@ -45,6 +45,9 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
     @Override
     public MctsMother getOrCreateRchMotherInstance(String rchId, String mctsId) {
 
+        if (rchId == null) {
+            return null;
+        }
         MctsMother motherByRchId = mctsMotherDataService.findByRchId(rchId);
         MctsMother motherByMctsId;
 
@@ -85,7 +88,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
     public Boolean getAbortionDataFromString(String value) {
         String trimmedValue = value.trim();
         return "Spontaneous".equals(trimmedValue) || "MTP<12 Weeks".equals(trimmedValue) ||
-                "MTP>12 Weeks".equals(trimmedValue); // "None" or blank indicates no abortion/miscarriage
+                "MTP>12 Weeks".equals(trimmedValue) || "Induced".equals(trimmedValue); // "None" or blank indicates no abortion/miscarriage
     }
 
     @Override
@@ -96,7 +99,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
     @Override
     public Boolean getDeathFromString(String value) {
-        return "9".equals(value.trim()); // 9 indicates beneficiary death; other values do not
+        return "9".equals(value.trim()) || "Death".equalsIgnoreCase(value.trim()); // 9 indicates beneficiary death; other values do not
     }
 
     @Override
