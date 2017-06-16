@@ -335,7 +335,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             String mctsId = (String) record.get(KilkariConstants.MCTS_ID);
             child = mctsBeneficiaryValueProcessor.getOrCreateRchChildInstance(childId, mctsId);
             msisdn = (Long) record.get(KilkariConstants.MOBILE_NO);
-            mother = (MctsMother) record.get(KilkariConstants.MCTS_MOTHER_ID);
+            mother = mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance((String) record.get(KilkariConstants.RCH_MOTHER_ID), (String) record.get(KilkariConstants.MCTS_MOTHER_ID));
             lastUpdateDateNic = (LocalDate) record.get(KilkariConstants.EXECUTION_DATE);
 
         }
@@ -664,12 +664,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         MctsBeneficiaryUtils.getBeneficiaryLocationMapping(mapping);
 
         mapping.put(KilkariConstants.MCTS_ID, new Optional(new GetString()));
-        mapping.put(KilkariConstants.MCTS_MOTHER_ID, new Optional(new GetInstanceByString<MctsMother>() {
-            @Override
-            public MctsMother retrieve(String value) {
-                return mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(value);
-            }
-        }));
+        mapping.put(KilkariConstants.MCTS_MOTHER_ID, new Optional(new GetString()));
         mapping.put(KilkariConstants.MOBILE_NO, new Optional(new GetInstanceByString<Long>() {
             @Override
             public Long retrieve(String value) {
