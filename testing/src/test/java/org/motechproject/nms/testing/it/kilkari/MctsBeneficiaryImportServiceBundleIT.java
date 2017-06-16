@@ -1143,6 +1143,16 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertTrue(subscriber.isEmpty());
     }
 
+    @Test
+    public void testRecordRejectedWhenMctsIdIsEmptyString() throws Exception {
+        DateTime dob = DateTime.now().minusDays(100);
+        String dobString = getDateString(dob);
+        Reader reader = createChildDataReader("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t  \t9439986187\t"
+                + dobString + "\t\t");
+        mctsBeneficiaryImportService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
+
+        assertNoSubscriber(9439986187L);
+    }
     /*
      * To verify pregnancyPack is marked deactivated with reason abortion via CSV. 
      * checked with abortion value 'MTP<12 Weeks'
