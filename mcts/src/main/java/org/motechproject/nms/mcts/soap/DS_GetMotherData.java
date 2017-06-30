@@ -8,30 +8,38 @@
 package org.motechproject.nms.mcts.soap;
 
 public class DS_GetMotherData  implements java.io.Serializable {
-    private java.lang.String id;
+    private String id;
 
-    private java.lang.String pwd;
+    private String pwd;
 
-    private java.lang.String fdate;
+    private String fdate;
 
-    private java.lang.String tdate;
+    private String tdate;
 
-    private java.lang.String sid;
+    private String sid;
+
+    private String did;
+
+    private String pid;
 
     public DS_GetMotherData() {
     }
 
     public DS_GetMotherData(
-           java.lang.String id,
-           java.lang.String pwd,
-           java.lang.String fdate,
-           java.lang.String tdate,
-           java.lang.String sid) {
+           String id,
+           String pwd,
+           String fdate,
+           String tdate,
+           String sid,
+           String did,
+           String pid) {
            this.id = id;
            this.pwd = pwd;
            this.fdate = fdate;
            this.tdate = tdate;
            this.sid = sid;
+           this.did = did;
+           this.pid = pid;
     }
 
 
@@ -40,7 +48,7 @@ public class DS_GetMotherData  implements java.io.Serializable {
      * 
      * @return id
      */
-    public java.lang.String getId() {
+    public String getId() {
         return id;
     }
 
@@ -50,7 +58,7 @@ public class DS_GetMotherData  implements java.io.Serializable {
      * 
      * @param id
      */
-    public void setId(java.lang.String id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -60,7 +68,7 @@ public class DS_GetMotherData  implements java.io.Serializable {
      * 
      * @return pwd
      */
-    public java.lang.String getPwd() {
+    public String getPwd() {
         return pwd;
     }
 
@@ -70,7 +78,7 @@ public class DS_GetMotherData  implements java.io.Serializable {
      * 
      * @param pwd
      */
-    public void setPwd(java.lang.String pwd) {
+    public void setPwd(String pwd) {
         this.pwd = pwd;
     }
 
@@ -80,7 +88,7 @@ public class DS_GetMotherData  implements java.io.Serializable {
      * 
      * @return fdate
      */
-    public java.lang.String getFdate() {
+    public String getFdate() {
         return fdate;
     }
 
@@ -90,7 +98,7 @@ public class DS_GetMotherData  implements java.io.Serializable {
      * 
      * @param fdate
      */
-    public void setFdate(java.lang.String fdate) {
+    public void setFdate(String fdate) {
         this.fdate = fdate;
     }
 
@@ -100,7 +108,7 @@ public class DS_GetMotherData  implements java.io.Serializable {
      * 
      * @return tdate
      */
-    public java.lang.String getTdate() {
+    public String getTdate() {
         return tdate;
     }
 
@@ -110,7 +118,7 @@ public class DS_GetMotherData  implements java.io.Serializable {
      * 
      * @param tdate
      */
-    public void setTdate(java.lang.String tdate) {
+    public void setTdate(String tdate) {
         this.tdate = tdate;
     }
 
@@ -120,7 +128,7 @@ public class DS_GetMotherData  implements java.io.Serializable {
      * 
      * @return sid
      */
-    public java.lang.String getSid() {
+    public String getSid() {
         return sid;
     }
 
@@ -130,12 +138,52 @@ public class DS_GetMotherData  implements java.io.Serializable {
      * 
      * @param sid
      */
-    public void setSid(java.lang.String sid) {
+    public void setSid(String sid) {
         this.sid = sid;
     }
 
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
+
+    /**
+     * Gets the did value for this DS_GetMotherData.
+     * 
+     * @return did
+     */
+    public String getDid() {
+        return did;
+    }
+
+
+    /**
+     * Sets the did value for this DS_GetMotherData.
+     * 
+     * @param did
+     */
+    public void setDid(String did) {
+        this.did = did;
+    }
+
+
+    /**
+     * Gets the pid value for this DS_GetMotherData.
+     * 
+     * @return pid
+     */
+    public String getPid() {
+        return pid;
+    }
+
+
+    /**
+     * Sets the pid value for this DS_GetMotherData.
+     * 
+     * @param pid
+     */
+    public void setPid(String pid) {
+        this.pid = pid;
+    }
+
+    private Object __equalsCalc = null;
+    public synchronized boolean equals(Object obj) {
         if (!(obj instanceof DS_GetMotherData)) return false;
         DS_GetMotherData other = (DS_GetMotherData) obj;
         if (obj == null) return false;
@@ -160,7 +208,13 @@ public class DS_GetMotherData  implements java.io.Serializable {
               this.tdate.equals(other.getTdate()))) &&
             ((this.sid==null && other.getSid()==null) || 
              (this.sid!=null &&
-              this.sid.equals(other.getSid())));
+              this.sid.equals(other.getSid()))) &&
+            ((this.did==null && other.getDid()==null) || 
+             (this.did!=null &&
+              this.did.equals(other.getDid()))) &&
+            ((this.pid==null && other.getPid()==null) || 
+             (this.pid!=null &&
+              this.pid.equals(other.getPid())));
         __equalsCalc = null;
         return _equals;
     }
@@ -186,6 +240,12 @@ public class DS_GetMotherData  implements java.io.Serializable {
         }
         if (getSid() != null) {
             _hashCode += getSid().hashCode();
+        }
+        if (getDid() != null) {
+            _hashCode += getDid().hashCode();
+        }
+        if (getPid() != null) {
+            _hashCode += getPid().hashCode();
         }
         __hashCodeCalc = false;
         return _hashCode;
@@ -232,6 +292,20 @@ public class DS_GetMotherData  implements java.io.Serializable {
         elemField.setMinOccurs(0);
         elemField.setNillable(true);
         typeDesc.addFieldDesc(elemField);
+        elemField = new org.apache.axis.description.ElementDesc();
+        elemField.setFieldName("did");
+        elemField.setXmlName(new javax.xml.namespace.QName("http://tempuri.org/", "did"));
+        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
+        elemField.setMinOccurs(0);
+        elemField.setNillable(true);
+        typeDesc.addFieldDesc(elemField);
+        elemField = new org.apache.axis.description.ElementDesc();
+        elemField.setFieldName("pid");
+        elemField.setXmlName(new javax.xml.namespace.QName("http://tempuri.org/", "pid"));
+        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
+        elemField.setMinOccurs(0);
+        elemField.setNillable(true);
+        typeDesc.addFieldDesc(elemField);
     }
 
     /**
@@ -245,8 +319,8 @@ public class DS_GetMotherData  implements java.io.Serializable {
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
+           String mechType,
+           Class _javaType,
            javax.xml.namespace.QName _xmlType) {
         return 
           new  org.apache.axis.encoding.ser.BeanSerializer(
@@ -257,8 +331,8 @@ public class DS_GetMotherData  implements java.io.Serializable {
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
+           String mechType,
+           Class _javaType,
            javax.xml.namespace.QName _xmlType) {
         return 
           new  org.apache.axis.encoding.ser.BeanDeserializer(

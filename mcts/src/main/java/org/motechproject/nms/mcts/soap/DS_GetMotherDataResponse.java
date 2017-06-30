@@ -8,13 +8,13 @@
 package org.motechproject.nms.mcts.soap;
 
 public class DS_GetMotherDataResponse  implements java.io.Serializable {
-    private org.motechproject.nms.mcts.soap.DS_GetMotherDataResponseDS_GetMotherDataResult DS_GetMotherDataResult;
+    private DS_GetMotherDataResponseDS_GetMotherDataResult DS_GetMotherDataResult;
 
     public DS_GetMotherDataResponse() {
     }
 
     public DS_GetMotherDataResponse(
-           org.motechproject.nms.mcts.soap.DS_GetMotherDataResponseDS_GetMotherDataResult DS_GetMotherDataResult) {
+           DS_GetMotherDataResponseDS_GetMotherDataResult DS_GetMotherDataResult) {
            this.DS_GetMotherDataResult = DS_GetMotherDataResult;
     }
 
@@ -24,7 +24,7 @@ public class DS_GetMotherDataResponse  implements java.io.Serializable {
      * 
      * @return DS_GetMotherDataResult
      */
-    public org.motechproject.nms.mcts.soap.DS_GetMotherDataResponseDS_GetMotherDataResult getDS_GetMotherDataResult() {
+    public DS_GetMotherDataResponseDS_GetMotherDataResult getDS_GetMotherDataResult() {
         return DS_GetMotherDataResult;
     }
 
@@ -34,12 +34,12 @@ public class DS_GetMotherDataResponse  implements java.io.Serializable {
      * 
      * @param DS_GetMotherDataResult
      */
-    public void setDS_GetMotherDataResult(org.motechproject.nms.mcts.soap.DS_GetMotherDataResponseDS_GetMotherDataResult DS_GetMotherDataResult) {
+    public void setDS_GetMotherDataResult(DS_GetMotherDataResponseDS_GetMotherDataResult DS_GetMotherDataResult) {
         this.DS_GetMotherDataResult = DS_GetMotherDataResult;
     }
 
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
+    private Object __equalsCalc = null;
+    public synchronized boolean equals(Object obj) {
         if (!(obj instanceof DS_GetMotherDataResponse)) return false;
         DS_GetMotherDataResponse other = (DS_GetMotherDataResponse) obj;
         if (obj == null) return false;
@@ -97,8 +97,8 @@ public class DS_GetMotherDataResponse  implements java.io.Serializable {
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
+           String mechType,
+           Class _javaType,
            javax.xml.namespace.QName _xmlType) {
         return 
           new  org.apache.axis.encoding.ser.BeanSerializer(
@@ -109,8 +109,8 @@ public class DS_GetMotherDataResponse  implements java.io.Serializable {
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
+           String mechType,
+           Class _javaType,
            javax.xml.namespace.QName _xmlType) {
         return 
           new  org.apache.axis.encoding.ser.BeanDeserializer(

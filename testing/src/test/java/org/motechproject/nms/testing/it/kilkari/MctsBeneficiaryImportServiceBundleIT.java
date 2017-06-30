@@ -568,12 +568,12 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         District expectedDistrict4 = districtService.findByStateAndCode(expectedState, 4L);
 
         Subscriber subscriber1 = subscriberDataService.findByNumber(9439998253L).get(0);
-        assertChild(subscriber1, "210404600521400116", getDateTime("28/12/2016"), "Baby1 of PANI HEMRAM", expectedState,
+        assertChild(subscriber1, "210404600521400116", getDateTime("2/04/2017"), "Baby1 of PANI HEMRAM", expectedState,
                 expectedDistrict4);
 
-        // although our MCTS data file contains 10 children, we only create 1 subscriber due to -1 duplicate phone numbers and
-        // -8 for old dob which has no messages
-        assertEquals(1, subscriberDataService.count());
+        // although our MCTS data file contains 10 children, we only create 8 subscribers due to -1 duplicate phone numbers and
+        // -1 for old dob which has no messages
+        assertEquals(8, subscriberDataService.count());
     }
 
     @Test

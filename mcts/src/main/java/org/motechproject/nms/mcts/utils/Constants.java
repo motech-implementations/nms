@@ -13,6 +13,8 @@ public final class Constants {
     public static final String DAYS_TO_PULL = "mcts.days_to_pull";
     public static final String HPD_STATES = "mcts.hpd.states";
     public static final String BASE_HPD_CONFIG = "mcts.hpd.state";
+    public static final String MCTS_DID = "mcts.credentials.did";
+    public static final String MCTS_PID = "mcts.credentials.pid";
 
     /**
      * Events

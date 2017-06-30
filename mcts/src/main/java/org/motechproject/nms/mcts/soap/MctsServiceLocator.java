@@ -7,7 +7,7 @@
 
 package org.motechproject.nms.mcts.soap;
 
-public class MctsServiceLocator extends org.apache.axis.client.Service implements org.motechproject.nms.mcts.soap.MctsService {
+public class MctsServiceLocator extends org.apache.axis.client.Service implements MctsService {
 
     public MctsServiceLocator() {
     }
@@ -17,29 +17,29 @@ public class MctsServiceLocator extends org.apache.axis.client.Service implement
         super(config);
     }
 
-    public MctsServiceLocator(java.lang.String wsdlLoc, javax.xml.namespace.QName sName) throws javax.xml.rpc.ServiceException {
+    public MctsServiceLocator(String wsdlLoc, javax.xml.namespace.QName sName) throws javax.xml.rpc.ServiceException {
         super(wsdlLoc, sName);
     }
 
     // Use to get a proxy class for basicEndpoint
-    private java.lang.String basicEndpoint_address = "http://nrhm-mctsrpt.nic.in/All_States_WCF_Service/MctsService.svc/nrhm-mctsrpt.nic.in";
+    private String basicEndpoint_address = "http://nrhm-mctsrpt.nic.in/All_States_WCF_Service/MctsService.svc/nrhm-mctsrpt.nic.in";
 
-    public java.lang.String getbasicEndpointAddress() {
+    public String getbasicEndpointAddress() {
         return basicEndpoint_address;
     }
 
     // The WSDD service name defaults to the port name.
-    private java.lang.String basicEndpointWSDDServiceName = "basicEndpoint";
+    private String basicEndpointWSDDServiceName = "basicEndpoint";
 
-    public java.lang.String getbasicEndpointWSDDServiceName() {
+    public String getbasicEndpointWSDDServiceName() {
         return basicEndpointWSDDServiceName;
     }
 
-    public void setbasicEndpointWSDDServiceName(java.lang.String name) {
+    public void setbasicEndpointWSDDServiceName(String name) {
         basicEndpointWSDDServiceName = name;
     }
 
-    public org.motechproject.nms.mcts.soap.IMctsService getbasicEndpoint() throws javax.xml.rpc.ServiceException {
+    public IMctsService getbasicEndpoint() throws javax.xml.rpc.ServiceException {
        java.net.URL endpoint;
         try {
             endpoint = new java.net.URL(basicEndpoint_address);
@@ -50,9 +50,9 @@ public class MctsServiceLocator extends org.apache.axis.client.Service implement
         return getbasicEndpoint(endpoint);
     }
 
-    public org.motechproject.nms.mcts.soap.IMctsService getbasicEndpoint(java.net.URL portAddress) throws javax.xml.rpc.ServiceException {
+    public IMctsService getbasicEndpoint(java.net.URL portAddress) throws javax.xml.rpc.ServiceException {
         try {
-            org.motechproject.nms.mcts.soap.BasicEndpointStub _stub = new org.motechproject.nms.mcts.soap.BasicEndpointStub(portAddress, this);
+            BasicEndpointStub _stub = new BasicEndpointStub(portAddress, this);
             _stub.setPortName(getbasicEndpointWSDDServiceName());
             return _stub;
         }
@@ -61,7 +61,7 @@ public class MctsServiceLocator extends org.apache.axis.client.Service implement
         }
     }
 
-    public void setbasicEndpointEndpointAddress(java.lang.String address) {
+    public void setbasicEndpointEndpointAddress(String address) {
         basicEndpoint_address = address;
     }
 
@@ -72,13 +72,13 @@ public class MctsServiceLocator extends org.apache.axis.client.Service implement
      */
     public java.rmi.Remote getPort(Class serviceEndpointInterface) throws javax.xml.rpc.ServiceException {
         try {
-            if (org.motechproject.nms.mcts.soap.IMctsService.class.isAssignableFrom(serviceEndpointInterface)) {
-                org.motechproject.nms.mcts.soap.BasicEndpointStub _stub = new org.motechproject.nms.mcts.soap.BasicEndpointStub(new java.net.URL(basicEndpoint_address), this);
+            if (IMctsService.class.isAssignableFrom(serviceEndpointInterface)) {
+                BasicEndpointStub _stub = new BasicEndpointStub(new java.net.URL(basicEndpoint_address), this);
                 _stub.setPortName(getbasicEndpointWSDDServiceName());
                 return _stub;
             }
         }
-        catch (java.lang.Throwable t) {
+        catch (Throwable t) {
             throw new javax.xml.rpc.ServiceException(t);
         }
         throw new javax.xml.rpc.ServiceException("There is no stub implementation for the interface:  " + (serviceEndpointInterface == null ? "null" : serviceEndpointInterface.getName()));
@@ -93,7 +93,7 @@ public class MctsServiceLocator extends org.apache.axis.client.Service implement
         if (portName == null) {
             return getPort(serviceEndpointInterface);
         }
-        java.lang.String inputPortName = portName.getLocalPart();
+        String inputPortName = portName.getLocalPart();
         if ("basicEndpoint".equals(inputPortName)) {
             return getbasicEndpoint();
         }
@@ -121,7 +121,7 @@ public class MctsServiceLocator extends org.apache.axis.client.Service implement
     /**
     * Set the endpoint address for the specified port name.
     */
-    public void setEndpointAddress(java.lang.String portName, java.lang.String address) throws javax.xml.rpc.ServiceException {
+    public void setEndpointAddress(String portName, String address) throws javax.xml.rpc.ServiceException {
         
 if ("basicEndpoint".equals(portName)) {
             setbasicEndpointEndpointAddress(address);
@@ -135,7 +135,7 @@ if ("basicEndpoint".equals(portName)) {
     /**
     * Set the endpoint address for the specified port name.
     */
-    public void setEndpointAddress(javax.xml.namespace.QName portName, java.lang.String address) throws javax.xml.rpc.ServiceException {
+    public void setEndpointAddress(javax.xml.namespace.QName portName, String address) throws javax.xml.rpc.ServiceException {
         setEndpointAddress(portName.getLocalPart(), address);
     }
 

@@ -8,13 +8,13 @@
 package org.motechproject.nms.mcts.soap;
 
 public class DS_GetAnmAshaDataResponse  implements java.io.Serializable {
-    private org.motechproject.nms.mcts.soap.DS_GetAnmAshaDataResponseDS_GetAnmAshaDataResult DS_GetAnmAshaDataResult;
+    private DS_GetAnmAshaDataResponseDS_GetAnmAshaDataResult DS_GetAnmAshaDataResult;
 
     public DS_GetAnmAshaDataResponse() {
     }
 
     public DS_GetAnmAshaDataResponse(
-           org.motechproject.nms.mcts.soap.DS_GetAnmAshaDataResponseDS_GetAnmAshaDataResult DS_GetAnmAshaDataResult) {
+           DS_GetAnmAshaDataResponseDS_GetAnmAshaDataResult DS_GetAnmAshaDataResult) {
            this.DS_GetAnmAshaDataResult = DS_GetAnmAshaDataResult;
     }
 
@@ -24,7 +24,7 @@ public class DS_GetAnmAshaDataResponse  implements java.io.Serializable {
      * 
      * @return DS_GetAnmAshaDataResult
      */
-    public org.motechproject.nms.mcts.soap.DS_GetAnmAshaDataResponseDS_GetAnmAshaDataResult getDS_GetAnmAshaDataResult() {
+    public DS_GetAnmAshaDataResponseDS_GetAnmAshaDataResult getDS_GetAnmAshaDataResult() {
         return DS_GetAnmAshaDataResult;
     }
 
@@ -34,12 +34,12 @@ public class DS_GetAnmAshaDataResponse  implements java.io.Serializable {
      * 
      * @param DS_GetAnmAshaDataResult
      */
-    public void setDS_GetAnmAshaDataResult(org.motechproject.nms.mcts.soap.DS_GetAnmAshaDataResponseDS_GetAnmAshaDataResult DS_GetAnmAshaDataResult) {
+    public void setDS_GetAnmAshaDataResult(DS_GetAnmAshaDataResponseDS_GetAnmAshaDataResult DS_GetAnmAshaDataResult) {
         this.DS_GetAnmAshaDataResult = DS_GetAnmAshaDataResult;
     }
 
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
+    private Object __equalsCalc = null;
+    public synchronized boolean equals(Object obj) {
         if (!(obj instanceof DS_GetAnmAshaDataResponse)) return false;
         DS_GetAnmAshaDataResponse other = (DS_GetAnmAshaDataResponse) obj;
         if (obj == null) return false;
@@ -97,8 +97,8 @@ public class DS_GetAnmAshaDataResponse  implements java.io.Serializable {
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
+           String mechType,
+           Class _javaType,
            javax.xml.namespace.QName _xmlType) {
         return 
           new  org.apache.axis.encoding.ser.BeanSerializer(
@@ -109,8 +109,8 @@ public class DS_GetAnmAshaDataResponse  implements java.io.Serializable {
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
+           String mechType,
+           Class _javaType,
            javax.xml.namespace.QName _xmlType) {
         return 
           new  org.apache.axis.encoding.ser.BeanDeserializer(
