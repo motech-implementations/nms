@@ -56,6 +56,18 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>flw</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>flwUpdate</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- OSGi IT -->
         <dependency>
             <groupId>org.motechproject</groupId>
@@ -104,11 +116,11 @@
                         <Blueprint-Enabled>true</Blueprint-Enabled>
                         <Resource-Path>rch/resources</Resource-Path>
                         <Export-Package>
-                            org.motechproject.nms.rch.service;version=${project.version},
-                            org.motechproject.nms.rch.soap;version=${project.version},
-                            org.motechproject.nms.rch.contract;version=${project.version},
-                            org.motechproject.nms.rch.repository;version=${project.version},
-                            org.motechproject.nms.rch.domain;version=${project.version}
+                            org.motechproject.nms.rch.service,
+                            org.motechproject.nms.rch.soap,
+                            org.motechproject.nms.rch.contract,
+                            org.motechproject.nms.rch.repository,
+                            org.motechproject.nms.rch.domain
                         </Export-Package>
                         <Import-Package>
                             org.apache.axis.*,

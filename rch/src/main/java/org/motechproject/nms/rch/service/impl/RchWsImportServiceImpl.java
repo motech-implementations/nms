@@ -78,6 +78,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         for (Long stateId : stateIds) {
             sendImportEventForAUserType(stateId, RchUserType.MOTHER, referenceDate, endpoint, Constants.RCH_MOTHER_IMPORT_SUBJECT);
             sendImportEventForAUserType(stateId, RchUserType.CHILD, referenceDate, endpoint, Constants.RCH_CHILD_IMPORT_SUBJECT);
+            sendImportEventForAUserType(stateId, RchUserType.ASHA, referenceDate, endpoint, Constants.RCH_ASHA_IMPORT_SUBJECT);
         }
 
         LOGGER.info("Initiated import workflow from RCH for mothers and children");
@@ -107,7 +108,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
                 LOGGER.info("Responses for state id {} recorded to file successfully.", stateId);
             }
         } catch (RchWebServiceException e) {
-            String error = String.format("Cannot read mothers data from %s state with stateId: %d", stateName, stateId);
+            String error = String.format("Cannot read mothers data from %s state with state id: %d", stateName, stateId);
             LOGGER.error(error, e);
             alertService.create(RCH_WEB_SERVICE, "RCH Web Service Mother Import", e
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
@@ -139,11 +140,45 @@ public class RchWsImportServiceImpl implements RchWsImportService {
                 LOGGER.info("Child responses for state id {} recorded to file successfully.");
             }
         } catch (RchWebServiceException e) {
-            String error = String.format("Cannot read children data from %s State with stateId:%d", stateName, stateCode);
+            String error = String.format("Cannot read children data from %s state with state id: %d", stateName, stateCode);
             LOGGER.error(error, e);
             alertService.create(RCH_WEB_SERVICE, "RCH Web Service Child Import", e.getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
+        }
+    }
+
+    @MotechListener(subjects = { Constants.RCH_ASHA_IMPORT_SUBJECT })
+    @Transactional
+    @Override
+    public void importRchAshaData(MotechEvent motechEvent) {
+        LOGGER.info("Asha import entry point");
+        Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
+        LocalDate startReferenceDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate endReferenceDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
+        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
+
+        State state = stateDataService.findByCode(stateId);
+        if (state == null) {
+            String error = String.format("State with code %s does not exist in database. Skipping FLW import for this state.", stateId);
+            LOGGER.error(error);
+            rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateId, null, 0, 0, error));
+            return;
+        }
+
+        String stateName = state.getName();
+        Long stateCode = state.getCode();
+
+        try {
+            if (rchWebServiceFacade.getAnmAshaData(startReferenceDate, endReferenceDate, endpoint, stateId)) {
+                LOGGER.info("FLW responses for state id {} recorded to file successfully.");
+            }
+        } catch (RchWebServiceException e) {
+            String error = String.format("Cannot read FLW data from %s state with state id: %d", stateName, stateCode);
+            LOGGER.error(error);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service Asha Import", e.getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
         }
     }
 

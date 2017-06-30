@@ -402,7 +402,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                 try {
                     // get user property map
                     Map<String, Object> recordMap = record.toFlwRecordMap();    // temp var used for debugging
-                    frontLineWorkerImportService.importFrontLineWorker(recordMap, state);
+                    frontLineWorkerImportService.importMctsFrontLineWorker(recordMap, state);
                     saved++;
                 } catch (InvalidLocationException e) {
                     LOGGER.warn("Invalid location for FLW: ", e);
