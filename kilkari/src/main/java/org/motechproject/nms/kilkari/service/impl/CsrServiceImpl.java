@@ -17,6 +17,7 @@ import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.exception.InvalidCallRecordDataException;
 import org.motechproject.nms.kilkari.exception.NoSuchSubscriptionException;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
+import org.motechproject.nms.kilkari.repository.DeactivatedBeneficiaryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.CsrService;
 import org.motechproject.nms.kilkari.service.CsrVerifierService;
@@ -43,16 +44,19 @@ public class CsrServiceImpl implements CsrService {
     private CallRetryDataService callRetryDataService;
     private AlertService alertService;
     private CsrVerifierService csrVerifierService;
+    private DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService;
 
     @Autowired
     public CsrServiceImpl(SubscriptionDataService subscriptionDataService, SubscriptionService subscriptionService,
                           CallRetryDataService callRetryDataService, AlertService alertService,
-                          CsrVerifierService csrVerifierService) {
+                          CsrVerifierService csrVerifierService,
+                          DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService) {
         this.subscriptionDataService = subscriptionDataService;
         this.subscriptionService = subscriptionService;
         this.callRetryDataService = callRetryDataService;
         this.alertService = alertService;
         this.csrVerifierService = csrVerifierService;
+        this.deactivatedBeneficiaryDataService = deactivatedBeneficiaryDataService;
     }
 
 
@@ -68,6 +72,7 @@ public class CsrServiceImpl implements CsrService {
         // Mark the subscription completed
         subscription.setStatus(SubscriptionStatus.COMPLETED);
         subscriptionDataService.update(subscription);
+        SubscriptionServiceImpl.createDeactivatedUser(deactivatedBeneficiaryDataService, subscription, null, true);
     }
 
 
@@ -120,6 +125,7 @@ public class CsrServiceImpl implements CsrService {
                 subscription.setStatus(SubscriptionStatus.DEACTIVATED);
                 subscription.setDeactivationReason(DeactivationReason.INVALID_NUMBER);
                 subscriptionDataService.update(subscription);
+                SubscriptionServiceImpl.createDeactivatedUser(deactivatedBeneficiaryDataService, subscription, DeactivationReason.INVALID_NUMBER, false);
             }
 
             callRetryDataService.delete(existingCallRetry);
@@ -220,4 +226,5 @@ public class CsrServiceImpl implements CsrService {
             subscriptionDataService.update(subscription);
         }
     }
+
 }

@@ -14,8 +14,12 @@ import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.metrics.service.Timer;
+import org.motechproject.nms.kilkari.domain.BlockedMsisdnRecord;
 import org.motechproject.nms.kilkari.domain.CallRetry;
+import org.motechproject.nms.kilkari.domain.DeactivatedBeneficiary;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
+import org.motechproject.nms.kilkari.domain.MctsChild;
+import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionError;
@@ -24,13 +28,13 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
-import org.motechproject.nms.kilkari.domain.BlockedMsisdnRecord;
+import org.motechproject.nms.kilkari.repository.BlockedMsisdnRecordDataService;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
+import org.motechproject.nms.kilkari.repository.DeactivatedBeneficiaryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
-import org.motechproject.nms.kilkari.repository.BlockedMsisdnRecordDataService;
 import org.motechproject.nms.kilkari.service.CsrVerifierService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
@@ -73,7 +77,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private EventRelay eventRelay;
     private boolean allowMctsSubscriptions;
     private BlockedMsisdnRecordDataService blockedMsisdnRecordDataService;
-
+    private DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService;
 
     @Autowired
     public SubscriptionServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade, // NO CHECKSTYLE More than 7 parameters
@@ -84,7 +88,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                    EventRelay eventRelay,
                                    CallRetryDataService callRetryDataService,
                                    CsrVerifierService csrVerifierService,
-                                   BlockedMsisdnRecordDataService blockedMsisdnRecordDataService) {
+                                   BlockedMsisdnRecordDataService blockedMsisdnRecordDataService,
+                                   DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
@@ -95,6 +100,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.csrVerifierService = csrVerifierService;
         this.allowMctsSubscriptions = true;
         this.blockedMsisdnRecordDataService = blockedMsisdnRecordDataService;
+        this.deactivatedBeneficiaryDataService = deactivatedBeneficiaryDataService;
     }
 
 
@@ -618,6 +624,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             Subscription subscriptionDeativated = subscriptionDataService.update(subscription);
             LOGGER.info("Deactivated Subscription " + subscriptionDeativated.getSubscriptionId());
 
+            SubscriptionServiceImpl.createDeactivatedUser(deactivatedBeneficiaryDataService, subscription, reason, false);
+
             // Let's not retry calling subscribers with deactivated subscriptions
             deleteCallRetry(subscription.getSubscriptionId());
         }
@@ -735,4 +743,39 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
         return null;
     }
+
+    public static void createDeactivatedUser(DeactivatedBeneficiaryDataService service, Subscription subscription, DeactivationReason reason, boolean completed) {
+        Subscriber subscriber = subscription.getSubscriber();
+        String externalId = null;
+
+        if (subscription.getSubscriptionPack().getType() == SubscriptionPackType.CHILD) {
+            MctsChild child = subscriber.getChild();
+            if (child != null) {
+                externalId = child.getBeneficiaryId();
+                if (child.getRchId() != null) {
+                    externalId = child.getRchId();
+                }
+            }
+        } else {
+            MctsMother mother = subscriber.getMother();
+            if (mother != null) {
+                externalId = mother.getBeneficiaryId();
+                if (mother.getRchId() != null) {
+                    externalId = mother.getRchId();
+                }
+            }
+        }
+
+        if (externalId != null) {
+            DeactivatedBeneficiary deactivatedUser = new DeactivatedBeneficiary();
+            deactivatedUser.setExternalId(externalId);
+            deactivatedUser.setOrigin(subscription.getOrigin());
+            deactivatedUser.setDeactivationReason(reason);
+            deactivatedUser.setCompletedSubscription(completed);
+            deactivatedUser.setDeactivationDate(DateTime.now());
+            deactivatedUser.setServiceStartDate(subscription.getStartDate());
+            service.create(deactivatedUser);
+        }
+    }
+
 }

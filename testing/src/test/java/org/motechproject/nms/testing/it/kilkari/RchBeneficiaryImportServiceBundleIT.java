@@ -484,8 +484,8 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
-        Assert.assertEquals(2, subscriber.getAllSubscriptions().size());
-        Assert.assertEquals(1, subscriber.getActiveAndPendingSubscriptions().size());
+        Assert.assertEquals(1, subscriber.getAllSubscriptions().size());
+        Assert.assertEquals(0, subscriber.getActiveAndPendingSubscriptions().size());
         Assert.assertEquals(lmpString, getDateString(subscriber.getLastMenstrualPeriod()));
         transactionManager.commit(status);
     }
