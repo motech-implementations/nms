@@ -19,10 +19,16 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.util.Order;
+import org.motechproject.nms.flw.exception.FlwExistingRecordException;
+import org.motechproject.nms.flw.exception.FlwImportException;
+import org.motechproject.nms.flw.utils.FlwConstants;
+import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
+import org.motechproject.nms.rch.contract.RchAnmAshaDataSet;
+import org.motechproject.nms.rch.contract.RchAnmAshaRecord;
 import org.motechproject.nms.rch.contract.RchChildRecord;
 import org.motechproject.nms.rch.contract.RchChildrenDataSet;
 import org.motechproject.nms.rch.contract.RchMotherRecord;
@@ -44,6 +50,7 @@ import org.motechproject.nms.rch.utils.Constants;
 import org.motechproject.nms.rch.utils.ExecutionHelper;
 import org.motechproject.nms.rch.utils.MarshallUtils;
 import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.scheduler.contract.CronSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
@@ -84,6 +91,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String REMOTE_RESPONSE_DIR = "rch.remote_response_dir";
     private static final String READ_MOTHER_RESPONSE_FILE_EVENT = "nms.rch.read_mother_response_file";
     private static final String READ_CHILD_RESPONSE_FILE_EVENT = "nms.rch.read_child_response_file";
+    private static final String READ_ASHA_RESPONSE_FILE_EVENT = "nms.rch.read_asha_response_file";
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("dd-MM-yyyy");
     private static final String SCP_TIMEOUT_SETTING = "rch.scp_timeout";
     private static final Long SCP_TIME_OUT = 60000L;
@@ -109,6 +117,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     @Autowired
     private StateDataService stateDataService;
+
+    @Autowired
+    private FrontLineWorkerImportService frontLineWorkerImportService;
 
     @Autowired
     private RchImportFailRecordDataService rchImportFailRecordDataService;
@@ -277,7 +288,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     public void readChildResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         LOGGER.debug(event.toString());
 
-        LOGGER.info("Copying response file from remote server to local directory.");
+        LOGGER.info("Copying child response file from remote server to local directory.");
         File localResponseFile;
         try {
             localResponseFile = scpResponseToLocal((String) event.getParameters().get(FILENAME));
@@ -318,16 +329,119 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 LOGGER.info("Finished children import dispatch in {} seconds. Accepted {} children, Rejected {} children",
                         seconds, audit.getAccepted(), audit.getRejected());
 
-                // Delete MctsImportFailRecords once import is successful
+                // Delete RchImportFailRecords once import is successful
                 deleteRchImportFailRecords(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateId);
             } catch (JAXBException e) {
-                throw new RchInvalidResponseStructureException(String.format("Cannot deserialize mother data from %s location.", stateId), e);
+                throw new RchInvalidResponseStructureException(String.format("Cannot deserialize children data from %s location.", stateId), e);
             } catch (RchInvalidResponseStructureException e) {
                 String error = String.format("Cannot read children data from %s state with stateId:%d. Response Deserialization Error", stateName, stateCode);
                 LOGGER.error(error, e);
                 alertService.create(RCH_WEB_SERVICE, "RCH Web Service Child Import", e.getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
                 rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
                 rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
+            }
+        } catch (ExecutionException e) {
+            LOGGER.error("Failed to copy response file from remote server to local directory.");
+        }
+    }
+
+    @Override
+    public boolean getAnmAshaData(LocalDate from, LocalDate to, URL endpoint, Long stateId) {
+        DS_DataResponseDS_DataResult result;
+        Irchwebservices dataService = getService(endpoint);
+        boolean status = false;
+
+        try {
+            result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
+                    settingsFacade.getProperty(Constants.RCH_PASSWORD), from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString(),
+                    settingsFacade.getProperty(Constants.RCH_ASHA_USER), settingsFacade.getProperty(Constants.RCH_DTID));
+        } catch (RemoteException e) {
+            throw new RchWebServiceException("Remote Server Error. Could Not Read FLW Data.", e);
+        }
+
+        LOGGER.debug("writing response to file");
+        File responseFile = generateResponseFile(result, RchUserType.ASHA, stateId);
+        if (responseFile != null) {
+            LOGGER.info("response successfully written to file. Copying to remote directory.");
+            try {
+                scpResponseToRemote(responseFile.getName());
+                LOGGER.info("response file successfully copied to remote server");
+
+                Map<String, Object> eventParams = new HashMap<>();
+                eventParams.put(Constants.STATE_ID_PARAM, stateId);
+                eventParams.put(FILENAME, responseFile.getName());
+                eventParams.put("userType", RchUserType.ASHA);
+                MotechEvent event = new MotechEvent(READ_ASHA_RESPONSE_FILE_EVENT, eventParams);
+                readAshaResponseFromFile(event);
+                status = true;
+            } catch (ExecutionException e) {
+                LOGGER.error("error copying file to remote server.");
+            } catch (RchFileManipulationException e) {
+                LOGGER.error("file error.");
+            }
+
+        } else {
+            LOGGER.error("Error writing response to file.");
+        }
+
+        return status;
+    }
+
+    @MotechListener(subjects = { READ_ASHA_RESPONSE_FILE_EVENT })
+    public void readAshaResponseFromFile(MotechEvent event) throws RchFileManipulationException {
+        LOGGER.debug(event.toString());
+        LOGGER.info("Asha file import entry point");
+        LOGGER.info("Copying Asha response file from remote server to local directory.");
+        File localResponseFile;
+        try {
+            localResponseFile = scpResponseToLocal((String) event.getParameters().get(FILENAME));
+
+            DS_DataResponseDS_DataResult result = readResponses(localResponseFile);
+            Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
+            State importState = stateDataService.findByCode(stateId);
+
+            String stateName = importState.getName();
+            Long stateCode = importState.getCode();
+
+            LocalDate startReferenceDate = (LocalDate) event.getParameters().get(Constants.START_DATE_PARAM);
+            LocalDate endReferenceDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
+
+            try {
+                validAnmAshaDataResponse(result, stateId);
+                List ashaResultFeed = result.get_any()[1].getChildren();
+                RchAnmAshaDataSet ashaDataSet = (ashaResultFeed == null) ?
+                        null :
+                        (RchAnmAshaDataSet) MarshallUtils.unmarshall(ashaResultFeed.get(0).toString(), RchAnmAshaDataSet.class);
+
+                LOGGER.info("Starting FLW import for stateId: {}", stateId);
+                StopWatch stopWatch = new StopWatch();
+                stopWatch.start();
+
+                if (ashaDataSet == null || ashaDataSet.getRecords() == null) {
+                    String warning = String.format("No FLW data set received from RCH for %s state", stateName);
+                    LOGGER.warn(warning);
+                    rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, warning));
+                    return;
+                }
+                LOGGER.info("Received {} FLW records from RCH for {} state", sizeNullSafe(ashaDataSet.getRecords()), stateName);
+
+                RchImportAudit audit = saveImportedAshaData(ashaDataSet, stateName, stateCode, startReferenceDate, endReferenceDate);
+                rchImportAuditDataService.create(audit);
+                stopWatch.stop();
+                double seconds = stopWatch.getTime() / THOUSAND;
+                LOGGER.info("Finished FLW import dispatch in {} seconds. Accepted {} Ashas, Rejected {} Ashas",
+                        seconds, audit.getAccepted(), audit.getRejected());
+
+                // Delete RchImportFailRecords once import is successful
+                deleteRchImportFailRecords(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateId);
+            } catch (JAXBException e) {
+                throw new RchInvalidResponseStructureException(String.format("Cannot deserialize FLW data from %s location.", stateId), e);
+            } catch (RchInvalidResponseStructureException e) {
+                String error = String.format("Cannot read FLW data from %s state with stateId:%d. Response Deserialization Error", stateName, stateCode);
+                LOGGER.error(error, e);
+                alertService.create(RCH_WEB_SERVICE, "RCH Web Service FLW Import", e.getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+                rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, error));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
             }
         } catch (ExecutionException e) {
             LOGGER.error("Failed to copy response file from remote server to local directory.");
@@ -363,6 +477,16 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
         if (data.get_any()[1].getChildren() != null && data.get_any()[1].getChildren().size() < 1) {
             throw new RchInvalidResponseStructureException("Invalid children data response " + stateId);
+        }
+    }
+
+    private void validAnmAshaDataResponse(DS_DataResponseDS_DataResult data, Long stateId) {
+        if (data.get_any().length != 2) {
+            throw new RchInvalidResponseStructureException("Invalid anm asha data response for location " + stateId);
+        }
+
+        if (data.get_any()[1].getChildren() != null && data.get_any()[1].getChildren().size() < 1) {
+            throw new RchInvalidResponseStructureException("Invalid anm asha data response " + stateId);
         }
     }
 
@@ -464,6 +588,47 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
         LOGGER.info("{} state, Total: {} children imported, {} children rejected", stateName, saved, rejected);
         return new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, saved, rejected, null);
+    }
+
+    private RchImportAudit saveImportedAshaData(RchAnmAshaDataSet anmAshaDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
+        LOGGER.info("Starting ASHA import for state {}", stateName);
+
+        int saved = 0;
+        int rejected = 0;
+        State state = stateDataService.findByCode(stateCode);
+
+        for (RchAnmAshaRecord record : anmAshaDataSet.getRecords()) {
+            String designation = record.getGfType();
+            designation = (designation != null) ? designation.trim() : designation;
+            if (!(FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation))) {
+                rejected++;
+            } else {
+                try {
+                    // get user property map
+                    Map<String, Object> recordMap = record.toFlwRecordMap();    // temp var used for debugging
+                    frontLineWorkerImportService.importRchFrontLineWorker(recordMap, state);
+                    saved++;
+                } catch (InvalidLocationException e) {
+                    LOGGER.warn("Invalid location for FLW: ", e);
+                    rejected++;
+                } catch (FlwImportException e) {
+                    LOGGER.error("Existing FLW with same MSISDN but different RCH ID", e);
+                    rejected++;
+                } catch (FlwExistingRecordException e) {
+                    LOGGER.error("Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}", record.getGfId(), record.getMobileNo(), e);
+                    rejected++;
+                } catch (Exception e) {
+                    LOGGER.error("Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}",
+                            record.getGfId(), record.getMobileNo(), e);
+                    rejected++;
+                }
+            }
+            if ((saved + rejected) % THOUSAND == 0) {
+                LOGGER.debug("{} state, Progress: {} Ashas imported, {} Ashas rejected", stateName, saved, rejected);
+            }
+        }
+        LOGGER.info("{} state, Total: {} Ashas imported, {} Ashas rejected", stateName, saved, rejected);
+        return new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, saved, rejected, null);
     }
 
     private Map<String, Object> toMap(RchMotherRecord motherRecord) {

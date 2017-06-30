@@ -39,20 +39,20 @@ public final class RchImportTestHelper {
         return readRchFile("rch-children-data-one-exec-date.xml");
     }
 
-    public static String getAnmAshaResponseData() {
-        return "";
+    public static String getAnmAshaResponseData() throws IOException {
+        return readRchFile("rch-anm-asha-data.xml");
     }
 
-    public static String getAnmAshaResponseDataFail() {
-        return "";
+    public static String getAnmAshaResponseDataFail() throws IOException {
+        return readRchFile("rch-anm-asha-data-fail.xml");
     }
 
-    public static String getAnmAshaResponseDataForNoUpdateDate() {
-        return "";
+    public static String getAnmAshaResponseDataForNoUpdateDate() throws IOException {
+        return readRchFile("rch-anm-asha-data-no-exec-date.xml");
     }
 
-    public static String getAnmAshaResponseDataForOneUpdateDate() {
-        return "";
+    public static String getAnmAshaResponseDataForOneUpdateDate() throws IOException {
+        return readRchFile("rch-anm-asha-data-one-exec-date.xml");
     }
 
     private static String readRchFile(String fileName) throws IOException {

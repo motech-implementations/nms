@@ -162,4 +162,21 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         assertTrue(status);
     }
+
+    @Test
+    public void shouldSerializeAshaDataFromSoapResponse() throws IOException {
+        String response = RchImportTestHelper.getAnmAshaResponseData();
+
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("rchEndpoint", 200, response);
+
+        URL endpoint = new URL(url);
+        LocalDate referenceDate = LocalDate.now().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWebServiceFacade.getClass().getClassLoader());
+        boolean status = rchWebServiceFacade.getAnmAshaData(referenceDate, referenceDate, endpoint, 21l);
+        Thread.currentThread().setContextClassLoader(cl);
+
+        assertTrue(status);
+    }
 }

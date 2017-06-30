@@ -4,6 +4,7 @@ import org.joda.time.LocalDate;
 import org.motechproject.nms.flw.domain.FlwJobStatus;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Taluka;
@@ -32,28 +33,55 @@ public final class FlwMapper {
             FrontLineWorker flw = new FrontLineWorker(contactNumber);
             flw.setStatus(FrontLineWorkerStatus.INACTIVE);
 
-            return updateFlw(flw, record, location);
+            return updateFlw(flw, record, location, SubscriptionOrigin.MCTS_IMPORT);
         } else {
             return null;
         }
     }
 
+    // NO CHECKSTYLE Cyclomatic Complexity
+    public static FrontLineWorker createRchFlw(Map<String, Object> record, Map<String, Object> location)
+            throws InvalidLocationException {
+        Long contactNumber = (Long) record.get(FlwConstants.MOBILE_NO);
+        String gfStatus = (String) record.get(FlwConstants.GF_STATUS);
+        if (gfStatus != null && !gfStatus.isEmpty() && ACTIVE.equals(gfStatus)) {
+            FrontLineWorker flw = new FrontLineWorker(contactNumber);
+            flw.setStatus(FrontLineWorkerStatus.INACTIVE);
 
-    public static FrontLineWorker updateFlw(FrontLineWorker flw, Map<String, Object> record, Map<String, Object> location)
+            return updateFlw(flw, record, location, SubscriptionOrigin.RCH_IMPORT);
+        } else {
+            return null;
+        }
+    }
+
+    // CHECKSTYLE:OFF
+    public static FrontLineWorker updateFlw(FrontLineWorker flw, Map<String, Object> record, Map<String, Object> location, SubscriptionOrigin importOrigin)
             throws InvalidLocationException {
 
-        String mctsFlwId = (String) record.get(FlwConstants.ID);
-        Long contactNumber = (Long) record.get(FlwConstants.CONTACT_NO);
-        String name = (String) record.get(FlwConstants.NAME);
-        String type = (String) record.get(FlwConstants.TYPE);
+        String flwId;
+        Long contactNumber;
+        String name;
+        String type;
+        if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+            flwId = (String) record.get(FlwConstants.ID);
+            contactNumber = (Long) record.get(FlwConstants.CONTACT_NO);
+            name = (String) record.get(FlwConstants.NAME);
+            type = (String) record.get(FlwConstants.TYPE);
+        } else {
+            flwId = (String) record.get(FlwConstants.GF_ID);
+            contactNumber = (Long) record.get(FlwConstants.MOBILE_NO);
+            name = (String) record.get(FlwConstants.GF_NAME);
+            type = (String) record.get(FlwConstants.GF_TYPE);
+        }
+
         String gfStatus = (String) record.get(FlwConstants.GF_STATUS);
 
         if (contactNumber != null) {
             flw.setContactNumber(contactNumber);
         }
 
-        if (mctsFlwId != null) {
-            flw.setMctsFlwId(mctsFlwId);
+        if (flwId != null) {
+            flw.setMctsFlwId(flwId);
         }
 
         if (name != null) {
@@ -75,14 +103,21 @@ public final class FlwMapper {
             flw.setDesignation(type);
         }
 
-        if (record.get(FlwConstants.UPDATED_ON) != null) {
-            flw.setUpdatedDateNic((LocalDate) record.get(FlwConstants.UPDATED_ON));
+        LocalDate date;
+        if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+            date = (LocalDate) record.get(FlwConstants.UPDATED_ON);
+        } else {
+            date = (LocalDate) record.get(FlwConstants.EXEC_DATE);
+        }
+        if (date != null) {
+            flw.setUpdatedDateNic(date);
         }
 
 
         return flw;
     }
 
+    //CHECKSTYLE:ON
     public static FrontLineWorker setFrontLineWorkerLocation(FrontLineWorker flw, Map<String, Object> locations) throws InvalidLocationException {
         if (locations.get(FlwConstants.STATE_ID) == null && locations.get(FlwConstants.DISTRICT_ID) == null) {
             throw new InvalidLocationException("Missing mandatory state and district fields");

@@ -8,6 +8,7 @@ import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.csv.service.CsvAuditService;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerUpdateImportService;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,7 @@ public class FrontLineWorkerImportController {
         return e.getMessage();
     }
 
+    @SuppressWarnings("PMD")
     @RequestMapping(value = "/update/language", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void updateFrontLineWorkersLanguage(@RequestParam MultipartFile csvFile) {
@@ -61,6 +63,7 @@ public class FrontLineWorkerImportController {
         }
     }
 
+    @SuppressWarnings("PMD")
     @RequestMapping(value = "/update/msisdn", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void updateFrontLineWorkersMSISDN(@RequestParam MultipartFile csvFile) {
@@ -81,13 +84,14 @@ public class FrontLineWorkerImportController {
         }
     }
 
+    @SuppressWarnings("PMD")
     @RequestMapping(value = "/import", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void importFrontLineWorkers(@RequestParam MultipartFile csvFile) {
 
         try {
             try (InputStream in = csvFile.getInputStream()) {
-                frontLineWorkerImportService.importData(new InputStreamReader(in));
+                frontLineWorkerImportService.importData(new InputStreamReader(in), SubscriptionOrigin.MCTS_IMPORT);
                 csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/flwUpdate/import");
             }
         } catch (CsvImportDataException e) {
@@ -97,6 +101,27 @@ public class FrontLineWorkerImportController {
         } catch (Exception e) {
             logError(csvFile.getOriginalFilename(), "/flwUpdate/import", e, "front_line_workers_import_error",
                     "Front line workers import error");
+            throw new CsvImportException("An error occurred during CSV import", e);
+        }
+    }
+
+    @SuppressWarnings("PMD")
+    @RequestMapping(value = "/rchImport", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public void importRchFrontLineWorkers(@RequestParam MultipartFile csvFile) {
+
+        try {
+            try (InputStream in = csvFile.getInputStream()) {
+                frontLineWorkerImportService.importData(new InputStreamReader(in), SubscriptionOrigin.RCH_IMPORT);
+                csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/flwUpdate/import");
+            }
+        } catch (CsvImportDataException e) {
+            logError(csvFile.getOriginalFilename(), "/flwUpdate/rchImport", e, "rch_front_line_workers_import_error",
+                    "RCH Front line workers import error");
+            throw e;
+        } catch (Exception e) {
+            logError(csvFile.getOriginalFilename(), "/flwUpdate/rchImport", e, "rch_front_line_workers_import_error",
+                    "RCH Front line workers import error");
             throw new CsvImportException("An error occurred during CSV import", e);
         }
     }

@@ -25,6 +25,13 @@ public final class FlwConstants {
     public static final String ASHA_TYPE = "ASHA";
     public static final String GF_STATUS = "GF_Status";
 
+    //RCH import constants
+    public static final String GF_ID = "GF_ID";
+    public static final String MOBILE_NO = "Mobile_no";
+    public static final String GF_NAME = "GF_Name";
+    public static final String GF_TYPE = "GF_type";
+    public static final String EXEC_DATE = "Exec_Date";
+
     private FlwConstants() {
     }
 }
