@@ -594,7 +594,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         District expectedDistrict = rh.newDelhiDistrict();
 
         subscriber = subscriberDataService.findByNumber(2222222221L).get(0);
-        assertMother(subscriber, "11111222299999999", getDateTime("30/4/2016"), "Shanti", expectedState, expectedDistrict);
+        assertMother(subscriber, "11111222299999999", getDateTime("28/2/2017"), "Shanti", expectedState, expectedDistrict);
     }
 
     private void assertMother(Subscriber subscriber, String motherId, DateTime lmp, String name, State state, District district) {
@@ -1938,6 +1938,36 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertEquals("Subscriber exists with this Msisdn", errors.get(1).getRejectionMessage());
         transactionManager.commit(status);
     }
+
+    @Test
+    public void verifySelfDeactivatedUserIsNotImported() throws Exception {
+        DateTime lmp = DateTime.now().minus(100);
+        String lmpString = getDateString(lmp);
+
+        // create subscriber and subscription
+        Reader reader = createMotherDataReader("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
+                lmpString + "\t\t\t\t");
+        mctsBeneficiaryImportService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        //Mark subscription deactivate
+        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
+        subscriptionService.deactivateSubscription(subscription, DeactivationReason.DEACTIVATED_BY_USER);
+        transactionManager.commit(status);
+
+        //try to import same user
+        lmpString = getDateString(lmp.minus(101));
+        reader = createMotherDataReader("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" + lmpString
+                + "\t\t\t\t");
+        mctsBeneficiaryImportService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        assertEquals(1, subscriber.getAllSubscriptions().size());
+        assertEquals(0, subscriber.getActiveAndPendingSubscriptions().size());
+        transactionManager.commit(status);
+    }
+
 
     @Test
     public void testDummyMotherRecordLocationFields() throws Exception {
