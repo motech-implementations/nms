@@ -38,8 +38,8 @@ public class DS_GetAnmAshaDataResponseDS_GetAnmAshaDataResult  implements java.i
         this._any = _any;
     }
 
-    private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
+    private Object __equalsCalc = null;
+    public synchronized boolean equals(Object obj) {
         if (!(obj instanceof DS_GetAnmAshaDataResponseDS_GetAnmAshaDataResult)) return false;
         DS_GetAnmAshaDataResponseDS_GetAnmAshaDataResult other = (DS_GetAnmAshaDataResponseDS_GetAnmAshaDataResult) obj;
         if (obj == null) return false;
@@ -68,7 +68,7 @@ public class DS_GetAnmAshaDataResponseDS_GetAnmAshaDataResult  implements java.i
             for (int i=0;
                  i<java.lang.reflect.Array.getLength(get_any());
                  i++) {
-                java.lang.Object obj = java.lang.reflect.Array.get(get_any(), i);
+                Object obj = java.lang.reflect.Array.get(get_any(), i);
                 if (obj != null &&
                     !obj.getClass().isArray()) {
                     _hashCode += obj.hashCode();
@@ -98,8 +98,8 @@ public class DS_GetAnmAshaDataResponseDS_GetAnmAshaDataResult  implements java.i
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
+           String mechType,
+           Class _javaType,
            javax.xml.namespace.QName _xmlType) {
         return 
           new  org.apache.axis.encoding.ser.BeanSerializer(
@@ -110,8 +110,8 @@ public class DS_GetAnmAshaDataResponseDS_GetAnmAshaDataResult  implements java.i
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(
-           java.lang.String mechType, 
-           java.lang.Class _javaType,  
+           String mechType,
+           Class _javaType,
            javax.xml.namespace.QName _xmlType) {
         return 
           new  org.apache.axis.encoding.ser.BeanDeserializer(

@@ -8,7 +8,7 @@
 package org.motechproject.nms.mcts.soap;
 
 public interface IMctsService extends java.rmi.Remote {
-    public org.motechproject.nms.mcts.soap.DS_GetChildDataResponseDS_GetChildDataResult DS_GetChildData(java.lang.String id, java.lang.String pwd, java.lang.String fdate, java.lang.String tdate, java.lang.String sid) throws java.rmi.RemoteException;
-    public org.motechproject.nms.mcts.soap.DS_GetMotherDataResponseDS_GetMotherDataResult DS_GetMotherData(java.lang.String id, java.lang.String pwd, java.lang.String fdate, java.lang.String tdate, java.lang.String sid) throws java.rmi.RemoteException;
-    public org.motechproject.nms.mcts.soap.DS_GetAnmAshaDataResponseDS_GetAnmAshaDataResult DS_GetAnmAshaData(java.lang.String id, java.lang.String pwd, java.lang.String fdate, java.lang.String tdate, java.lang.String sid) throws java.rmi.RemoteException;
+    public DS_GetChildDataResponseDS_GetChildDataResult DS_GetChildData(String id, String pwd, String fdate, String tdate, String sid, String did, String pid) throws java.rmi.RemoteException;
+    public DS_GetMotherDataResponseDS_GetMotherDataResult DS_GetMotherData(String id, String pwd, String fdate, String tdate, String sid, String did, String pid) throws java.rmi.RemoteException;
+    public DS_GetAnmAshaDataResponseDS_GetAnmAshaDataResult DS_GetAnmAshaData(String id, String pwd, String fdate, String tdate, String sid, String did, String pid) throws java.rmi.RemoteException;
 }
