@@ -397,6 +397,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         getMapping(mapping);
         mapping.put(FlwConstants.GF_TYPE, new Optional(new GetString()));
         mapping.put(FlwConstants.EXEC_DATE, new Optional(new GetLocalDate()));
+        mapping.put(FlwConstants.GF_STATUS, new Optional(new GetString()));
 
         return mapping;
     }
