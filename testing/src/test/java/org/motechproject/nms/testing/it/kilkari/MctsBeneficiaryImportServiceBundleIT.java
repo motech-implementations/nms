@@ -852,8 +852,8 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
-        assertEquals(2, subscriber.getAllSubscriptions().size());
-        assertEquals(1, subscriber.getActiveAndPendingSubscriptions().size());
+        assertEquals(1, subscriber.getAllSubscriptions().size());
+        assertEquals(0, subscriber.getActiveAndPendingSubscriptions().size());
         assertEquals(lmpString, getDateString(subscriber.getLastMenstrualPeriod()));
         transactionManager.commit(status);
     }
@@ -937,8 +937,8 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
-        assertEquals(2, subscriber.getAllSubscriptions().size());
-        assertEquals(1, subscriber.getActiveAndPendingSubscriptions().size());
+        assertEquals(1, subscriber.getAllSubscriptions().size());
+        assertEquals(0, subscriber.getActiveAndPendingSubscriptions().size());
         assertEquals(dobString, getDateString(subscriber.getDateOfBirth()));
         transactionManager.commit(status);
     }

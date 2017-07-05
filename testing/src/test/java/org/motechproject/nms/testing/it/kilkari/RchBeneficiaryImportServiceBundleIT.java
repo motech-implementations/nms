@@ -1406,13 +1406,13 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
     @Test
     public void testImportChildDataFromSampleFile() throws Exception {
-        mctsBeneficiaryImportService.importChildData(read("csv/rch_child.txt"), SubscriptionOrigin.RCH_IMPORT);
+        mctsBeneficiaryImportService.importChildData(read("csv/RCHChild.csv"), SubscriptionOrigin.RCH_IMPORT);
 
         State expectedState = stateDataService.findByCode(21L);
         District expectedDistrict4 = districtService.findByStateAndCode(expectedState, 4L);
 
-        Subscriber subscriber1 = subscriberDataService.findByNumber(9439998253L).get(0);
-        assertChild(subscriber1, "7000000000", getDateTime("28/12/2016"), "Baby1 of PANI HEMRAM", expectedState,
+        Subscriber subscriber1 = subscriberDataService.findByNumber(9696969696L).get(0);
+        assertChild(subscriber1, "1122336523", getDateTime("24/03/2017"), "test", expectedState,
                 expectedDistrict4);
 
         // our RCH data file consists of just 1 record
@@ -1574,8 +1574,8 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
-        Assert.assertEquals(2, subscriber.getAllSubscriptions().size());
-        Assert.assertEquals(1, subscriber.getActiveAndPendingSubscriptions().size());
+        Assert.assertEquals(1, subscriber.getAllSubscriptions().size());
+        Assert.assertEquals(0, subscriber.getActiveAndPendingSubscriptions().size());
         Assert.assertEquals(dobString, getDateString(subscriber.getDateOfBirth()));
         transactionManager.commit(status);
     }
@@ -1779,7 +1779,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         transactionManager.commit(status);
 
         //update entry type to 1
-        //a new subscription should be created
+        //a new subscription should not be created as a child once deactivated by death cannot be reactivated with same RCH id
         reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t9876453210\t9439986187\t"
                 + dobString + "\t7000000000\t2000000000\t1\t");
         mctsBeneficiaryImportService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
@@ -1787,11 +1787,8 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
         subscriptions = subscriber.getAllSubscriptions();
-        assertEquals(2, subscriptions.size()); // the first subscription was deactivated and a new subscription was created
-
-        subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
-        assertNotNull(subscription);
-        assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+        assertEquals(1, subscriptions.size()); // the first subscription was deactivated and a new subscription was not created
+        assertEquals(DeactivationReason.CHILD_DEATH, subscriptions.iterator().next().getDeactivationReason());
         transactionManager.commit(status);
     }
 

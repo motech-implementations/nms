@@ -266,6 +266,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
                 Map<String, Object> eventParams = new HashMap<>();
                 eventParams.put(Constants.STATE_ID_PARAM, stateId);
+                eventParams.put(Constants.START_DATE_PARAM, from);
+                eventParams.put(Constants.END_DATE_PARAM, to);
                 eventParams.put(FILENAME, responseFile.getName());
                 eventParams.put("userType", RchUserType.CHILD);
                 MotechEvent event = new MotechEvent(READ_CHILD_RESPONSE_FILE_EVENT, eventParams);
@@ -371,13 +373,15 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 eventParams.put(Constants.STATE_ID_PARAM, stateId);
                 eventParams.put(FILENAME, responseFile.getName());
                 eventParams.put("userType", RchUserType.ASHA);
+                eventParams.put(Constants.START_DATE_PARAM, from);
+                eventParams.put(Constants.END_DATE_PARAM, to);
                 MotechEvent event = new MotechEvent(READ_ASHA_RESPONSE_FILE_EVENT, eventParams);
-                readAshaResponseFromFile(event);
+                String cronExpression = Constants.DEFAULT_RCH_IMPORT_CRON_EXPRESSION;
+                CronSchedulableJob job = new CronSchedulableJob(event, cronExpression);
+                schedulerService.safeScheduleJob(job);
                 status = true;
             } catch (ExecutionException e) {
                 LOGGER.error("error copying file to remote server.");
-            } catch (RchFileManipulationException e) {
-                LOGGER.error("file error.");
             }
 
         } else {

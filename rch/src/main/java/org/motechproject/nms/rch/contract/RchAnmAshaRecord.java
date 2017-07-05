@@ -226,6 +226,7 @@ public class RchAnmAshaRecord {
         map.put(FlwConstants.GF_NAME, getGfName());
         map.put(FlwConstants.GF_TYPE, getGfType());
         map.put(FlwConstants.EXEC_DATE, "".equals(getExecDate()) ? null : LocalDate.parse(getExecDate(), DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")));
+        map.put(FlwConstants.GF_STATUS, getGfStatus());
         return map;
     }
 }

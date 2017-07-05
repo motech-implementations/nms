@@ -63,7 +63,7 @@
         <dependency>
             <groupId>org.motechproject.nms</groupId>
             <artifactId>kilkari</artifactId>
-            <version>1.0.30</version>
+            <version>${project.version}</version>
         </dependency>
 
     </dependencies>
