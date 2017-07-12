@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * omponent responsible for scheduling and handling the RCH import job.
+ * component responsible for scheduling and handling the RCH import job.
  */
 @Component
 public class RchImportJobHandler {

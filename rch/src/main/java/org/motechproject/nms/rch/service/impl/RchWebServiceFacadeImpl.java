@@ -746,14 +746,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return true;
     }
 
-    private void deleteRchImportFailRecords(final LocalDate startReferenceDate, final LocalDate endReferenceDate, final RchUserType mctsUserType, final Long stateId) {
+    private void deleteRchImportFailRecords(final LocalDate startReferenceDate, final LocalDate endReferenceDate, final RchUserType rchUserType, final Long stateId) {
 
         LOGGER.debug("Deleting nms_rch_failures records which are successfully imported");
         if (startReferenceDate.equals(endReferenceDate)) {
             LOGGER.debug("No failed imports in the past 7days ");
         } else {
             QueryParams queryParams = new QueryParams(new Order("importDate", Order.Direction.ASC));
-            List<RchImportFailRecord> failedImports = rchImportFailRecordDataService.getByStateAndImportdateAndUsertype(stateId, startReferenceDate, mctsUserType, queryParams);
+            List<RchImportFailRecord> failedImports = rchImportFailRecordDataService.getByStateAndImportdateAndUsertype(stateId, startReferenceDate, rchUserType, queryParams);
             int counter = 0;
             for (RchImportFailRecord eachFailedImport: failedImports) {
                 rchImportFailRecordDataService.delete(eachFailedImport);

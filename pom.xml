@@ -765,6 +765,7 @@
         <module>testing</module>
         <module>flwUpdate</module>
         <module>rch</module>
+        <module>rejection-handler</module>
     </modules>
 
     <build>
