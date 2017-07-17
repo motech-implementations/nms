@@ -183,6 +183,11 @@
             <artifactId>motech-platform-server-config</artifactId>
             <version>${motech.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>region</artifactId>
+            <version>1.0.31</version>
+        </dependency>
 
     </dependencies>
 
