@@ -27,6 +27,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
+import org.motechproject.nms.mcts.domain.RejectionReasons;
 import org.motechproject.nms.rch.contract.RchAnmAshaDataSet;
 import org.motechproject.nms.rch.contract.RchAnmAshaRecord;
 import org.motechproject.nms.rch.contract.RchChildRecord;
@@ -52,6 +53,8 @@ import org.motechproject.nms.rch.utils.MarshallUtils;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.rejectionhandler.domain.FlwImportRejection;
+import org.motechproject.nms.rejectionhandler.service.FlwRejectionService;
 import org.motechproject.scheduler.contract.CronSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
@@ -117,6 +120,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     @Autowired
     private StateDataService stateDataService;
+
+    @Autowired
+    private FlwRejectionService flwRejectionService;
 
     @Autowired
     private FrontLineWorkerImportService frontLineWorkerImportService;
@@ -605,25 +611,31 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             String designation = record.getGfType();
             designation = (designation != null) ? designation.trim() : designation;
             if (!(FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation))) {
+                flwRejectionRch(record, false, RejectionReasons.FLW_TYPE_NOT_ASHA.toString());
                 rejected++;
             } else {
                 try {
                     // get user property map
                     Map<String, Object> recordMap = record.toFlwRecordMap();    // temp var used for debugging
                     frontLineWorkerImportService.importRchFrontLineWorker(recordMap, state);
+                    flwRejectionRch(record, true, null);
                     saved++;
                 } catch (InvalidLocationException e) {
                     LOGGER.warn("Invalid location for FLW: ", e);
+                    flwRejectionRch(record, false, RejectionReasons.INVALID_LOCATION_TYPE.toString());
                     rejected++;
                 } catch (FlwImportException e) {
                     LOGGER.error("Existing FLW with same MSISDN but different RCH ID", e);
+                    flwRejectionRch(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString());
                     rejected++;
                 } catch (FlwExistingRecordException e) {
                     LOGGER.error("Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}", record.getGfId(), record.getMobileNo(), e);
+                    flwRejectionRch(record, false, RejectionReasons.RECORD_ALREADY_EXISTS.toString());
                     rejected++;
                 } catch (Exception e) {
                     LOGGER.error("Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}",
                             record.getGfId(), record.getMobileNo(), e);
+                    flwRejectionRch(record, false, RejectionReasons.FLW_IMPORT_ERROR.toString());
                     rejected++;
                 }
             }
@@ -714,6 +726,33 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
 
         return hpdMap;
+    }
+
+    private void flwRejectionRch(RchAnmAshaRecord record, Boolean accepted, String rejectionReason) {
+        FlwImportRejection flwImportRejection = null;
+        flwImportRejection.setStateId(record.getStateId());
+        flwImportRejection.setDistrictId(record.getDistrictId());
+        flwImportRejection.setDistrictName(record.getDistrictName());
+        flwImportRejection.setTalukaId(record.getTalukaId());
+        flwImportRejection.setHealthBlockId(record.getHealthBlockId());
+        flwImportRejection.setHealthBlockName(record.getHealthBlockName());
+        flwImportRejection.setPhcId(record.getPhcId());
+        flwImportRejection.setPhcName(record.getPhcName());
+        flwImportRejection.setSubcentreId(record.getSubCentreId());
+        flwImportRejection.setSubcentreName(record.getSubCentreName());
+        flwImportRejection.setVillageId(record.getVillageId());
+        flwImportRejection.setVillageName(record.getVillageName());
+        flwImportRejection.setFlwId(record.getGfId());
+        flwImportRejection.setMsisdn(record.getMobileNo());
+        flwImportRejection.setGfName(record.getGfName());
+        flwImportRejection.setType(record.getGfType());
+        flwImportRejection.setGfStatus(record.getGfStatus());
+        flwImportRejection.setExecDate(record.getExecDate());
+        flwImportRejection.setSource("RCH-Import");
+        flwImportRejection.setAccepted(accepted);
+        flwImportRejection.setRejectionReason(rejectionReason);
+
+        flwRejectionService.createUpdate(flwImportRejection);
     }
 
     private Set<Long> getHpdForState(Long stateId) {

@@ -1,6 +1,5 @@
 package org.motechproject.nms.rejectionhandler.service.impl;
 
-import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.rejectionhandler.domain.FlwImportRejection;
 import org.motechproject.nms.rejectionhandler.repository.FlwImportRejectionDataService;
 import org.motechproject.nms.rejectionhandler.service.FlwRejectionService;
@@ -22,22 +21,22 @@ public class FlwRejectionServiceImpl implements FlwRejectionService {
 
     @Override
     public FlwImportRejection findByFlwIdAndStateId(Long flwId, Long stateId) {
-        return flwImportRejectionDataService.findByFlwIdAndStateId(flwId,stateId);
+        return flwImportRejectionDataService.findByFlwIdAndStateId(flwId, stateId);
     }
 
     @Override
     public void createUpdate(FlwImportRejection flwImportRejection) {
 
-        FlwImportRejection flwImportRejection1 = findByFlwIdAndStateId(flwImportRejection.getFlwId(),flwImportRejection.getStateId());
+        FlwImportRejection flwImportRejection1 = findByFlwIdAndStateId(flwImportRejection.getFlwId(), flwImportRejection.getStateId());
 
-        if (flwImportRejection1 == null && flwImportRejection.getAccepted().equals(false)) {
+        if (flwImportRejection1 == null && !flwImportRejection.getAccepted()) {
             flwImportRejection.setAction("CREATED");
             flwImportRejectionDataService.create(flwImportRejection);
-        } else if (flwImportRejection1 == null && flwImportRejection.getAccepted().equals(true)) {
+        } else if (flwImportRejection1 == null && flwImportRejection.getAccepted()) {
             LOGGER.debug(String.format("There is no rejection data for flwId %s and stateId %s", flwImportRejection.getFlwId().toString(), flwImportRejection.getStateId().toString()));
-        } else if (flwImportRejection1 != null && flwImportRejection1.getAccepted().equals(false)) {
+        } else if (flwImportRejection1 != null && !flwImportRejection1.getAccepted()) {
             flwImportRejectionDataService.update(flwImportRejection);
-        } else if (flwImportRejection1 != null && flwImportRejection1.getAccepted().equals(true)) {
+        } else if (flwImportRejection1 != null && flwImportRejection1.getAccepted()) {
             flwImportRejection.setAction("UPDATED");
             flwImportRejectionDataService.update(flwImportRejection);
         }
