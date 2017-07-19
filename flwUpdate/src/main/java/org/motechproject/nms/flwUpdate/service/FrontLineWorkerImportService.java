@@ -20,5 +20,5 @@ public interface FrontLineWorkerImportService {
      * Used to create or update an FLW from mcts or other sync services
      * @param flwRecord key-value pair of properties for flw
      */
-    boolean createUpdate(Map<String, Object> flwRecord);
+    boolean createUpdate(Map<String, Object> flwRecord, SubscriptionOrigin importOrigin);
 }

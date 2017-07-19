@@ -150,25 +150,24 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     settingsFacade.getProperty(Constants.RCH_PASSWORD), from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString(),
                     settingsFacade.getProperty(Constants.RCH_MOTHER_USER), settingsFacade.getProperty(Constants.RCH_DTID));
         } catch (RemoteException e) {
-            throw new RchWebServiceException("Remote Server Error. Could Not Read Mother Data.", e);
+            throw new RchWebServiceException("Remote Server Error. Could Not Read RCH Mother Data.", e);
         }
 
-        LOGGER.debug("writing response to file");
+        LOGGER.debug("writing RCH mother response to file");
         File responseFile = generateResponseFile(result, RchUserType.MOTHER, stateId);
         if (responseFile != null) {
-            LOGGER.info("response successfully written to file. Copying to remote directory.");
+            LOGGER.info("RCH mother response successfully written to file. Copying to remote directory.");
             try {
                 scpResponseToRemote(responseFile.getName());
-                LOGGER.info("response file successfully copied to remote server");
+                LOGGER.info("RCH mother response file successfully copied to remote server");
 
                 Map<String, Object> eventParams = new HashMap<>();
                 eventParams.put(Constants.START_DATE_PARAM, from);
                 eventParams.put(Constants.END_DATE_PARAM, to);
                 eventParams.put(Constants.STATE_ID_PARAM, stateId);
                 eventParams.put(FILENAME, responseFile.getName());
-                eventParams.put("userType", RchUserType.MOTHER);
                 MotechEvent event = new MotechEvent(READ_MOTHER_RESPONSE_FILE_EVENT, eventParams);
-                String cronExpression = Constants.DEFAULT_RCH_IMPORT_CRON_EXPRESSION;
+                String cronExpression = Constants.DEFAULT_RCH_MOTHER_IMPORT_CRON_EXPRESSION;
                 CronSchedulableJob job = new CronSchedulableJob(event, cronExpression);
                 schedulerService.safeScheduleJob(job);
                 status = true;
@@ -186,13 +185,13 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     public void readMotherResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         LOGGER.debug(event.toString());
 
-        LOGGER.info("Copying mother response file from remote server to local directory.");
+        LOGGER.info("Copying RCH mother response file from remote server to local directory.");
         File localResponseFile;
         try {
             localResponseFile = scpResponseToLocal((String) event.getParameters().get(FILENAME));
 
             if (localResponseFile != null) {
-               LOGGER.info("Mother response file successfully copied from remote server to local directory.");
+               LOGGER.info("RCH Mother response file successfully copied from remote server to local directory.");
             }
             DS_DataResponseDS_DataResult result = readResponses(localResponseFile);
             Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
@@ -212,7 +211,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                         null :
                         (RchMothersDataSet) MarshallUtils.unmarshall(motherResultFeed.get(0).toString(), RchMothersDataSet.class);
 
-                LOGGER.info("Starting mother import");
+                LOGGER.info("Starting RCH mother import");
                 StopWatch stopWatch = new StopWatch();
                 stopWatch.start();
 
@@ -222,21 +221,21 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, warning));
                     return;
                 }
-                LOGGER.info("Received {} mother records from MCTS for {} state", sizeNullSafe(mothersDataSet.getRecords()), stateName);
+                LOGGER.info("Received {} mother records from RCH for {} state", sizeNullSafe(mothersDataSet.getRecords()), stateName);
 
                 RchImportAudit audit = saveImportedMothersData(mothersDataSet, stateName, stateCode, startDate, endDate);
                 rchImportAuditDataService.create(audit);
                 stopWatch.stop();
                 double seconds = stopWatch.getTime() / THOUSAND;
-                LOGGER.info("Finished mother import dispatch in {} seconds. Accepted {} mothers, Rejected {} mothers",
+                LOGGER.info("Finished RCH mother import dispatch in {} seconds. Accepted {} mothers, Rejected {} mothers",
                         seconds, audit.getAccepted(), audit.getRejected());
 
                 deleteRchImportFailRecords(startDate, endDate, RchUserType.MOTHER, stateId);
 
             } catch (JAXBException e) {
-                throw new RchInvalidResponseStructureException(String.format("Cannot deserialize mother data from %s location.", stateId), e);
+                throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH mother data from %s location.", stateId), e);
             } catch (RchInvalidResponseStructureException e) {
-                String error = String.format("Cannot read mothers data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
+                String error = String.format("Cannot read RCH mothers data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
                 LOGGER.error(error, e);
                 alertService.create(RCH_WEB_SERVICE, "RCH Web Service Mother Import", e
                         .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
@@ -259,25 +258,24 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     settingsFacade.getProperty(Constants.RCH_PASSWORD), from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString(),
                     settingsFacade.getProperty(Constants.RCH_CHILD_USER), settingsFacade.getProperty(Constants.RCH_DTID));
         } catch (RemoteException e) {
-            throw new RchWebServiceException("Remote Server Error. Could Not Read Children Data.", e);
+            throw new RchWebServiceException("Remote Server Error. Could Not Read RCH Children Data.", e);
         }
 
-        LOGGER.debug("writing response to file");
+        LOGGER.debug("writing RCH children response to file");
         File responseFile = generateResponseFile(result, RchUserType.CHILD, stateId);
         if (responseFile != null) {
-            LOGGER.info("response successfully written to file. Copying to remote directory.");
+            LOGGER.info("RCH children response successfully written to file. Copying to remote directory.");
             try {
                 scpResponseToRemote(responseFile.getName());
-                LOGGER.info("response file successfully copied to remote server");
+                LOGGER.info("RCH children response file successfully copied to remote server");
 
                 Map<String, Object> eventParams = new HashMap<>();
                 eventParams.put(Constants.STATE_ID_PARAM, stateId);
                 eventParams.put(Constants.START_DATE_PARAM, from);
                 eventParams.put(Constants.END_DATE_PARAM, to);
                 eventParams.put(FILENAME, responseFile.getName());
-                eventParams.put("userType", RchUserType.CHILD);
                 MotechEvent event = new MotechEvent(READ_CHILD_RESPONSE_FILE_EVENT, eventParams);
-                String cronExpression = Constants.DEFAULT_RCH_IMPORT_CRON_EXPRESSION;
+                String cronExpression = Constants.DEFAULT_RCH_CHILD_IMPORT_CRON_EXPRESSION;
                 CronSchedulableJob job = new CronSchedulableJob(event, cronExpression);
                 schedulerService.safeScheduleJob(job);
                 status = true;
@@ -296,7 +294,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     public void readChildResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         LOGGER.debug(event.toString());
 
-        LOGGER.info("Copying child response file from remote server to local directory.");
+        LOGGER.info("Copying RCH child response file from remote server to local directory.");
         File localResponseFile;
         try {
             localResponseFile = scpResponseToLocal((String) event.getParameters().get(FILENAME));
@@ -318,7 +316,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                         null :
                         (RchChildrenDataSet) MarshallUtils.unmarshall(childResultFeed.get(0).toString(), RchChildrenDataSet.class);
 
-                LOGGER.info("Starting children import for stateId: {}", stateId);
+                LOGGER.info("Starting RCH children import for stateId: {}", stateId);
                 StopWatch stopWatch = new StopWatch();
                 stopWatch.start();
 
@@ -340,9 +338,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 // Delete RchImportFailRecords once import is successful
                 deleteRchImportFailRecords(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateId);
             } catch (JAXBException e) {
-                throw new RchInvalidResponseStructureException(String.format("Cannot deserialize children data from %s location.", stateId), e);
+                throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH children data from %s location.", stateId), e);
             } catch (RchInvalidResponseStructureException e) {
-                String error = String.format("Cannot read children data from %s state with stateId:%d. Response Deserialization Error", stateName, stateCode);
+                String error = String.format("Cannot read RCH children data from %s state with stateId:%d. Response Deserialization Error", stateName, stateCode);
                 LOGGER.error(error, e);
                 alertService.create(RCH_WEB_SERVICE, "RCH Web Service Child Import", e.getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
                 rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
@@ -364,32 +362,30 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     settingsFacade.getProperty(Constants.RCH_PASSWORD), from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString(),
                     settingsFacade.getProperty(Constants.RCH_ASHA_USER), settingsFacade.getProperty(Constants.RCH_DTID));
         } catch (RemoteException e) {
-            throw new RchWebServiceException("Remote Server Error. Could Not Read FLW Data.", e);
+            throw new RchWebServiceException("Remote Server Error. Could Not Read RCH FLW Data.", e);
         }
 
-        LOGGER.debug("writing response to file");
+        LOGGER.debug("writing RCH Asha response to file");
         File responseFile = generateResponseFile(result, RchUserType.ASHA, stateId);
         if (responseFile != null) {
-            LOGGER.info("response successfully written to file. Copying to remote directory.");
+            LOGGER.info("RCH asha response successfully written to file. Copying to remote directory.");
             try {
                 scpResponseToRemote(responseFile.getName());
-                LOGGER.info("response file successfully copied to remote server");
+                LOGGER.info("RCH asha response file successfully copied to remote server");
 
                 Map<String, Object> eventParams = new HashMap<>();
                 eventParams.put(Constants.STATE_ID_PARAM, stateId);
                 eventParams.put(FILENAME, responseFile.getName());
-                eventParams.put("userType", RchUserType.ASHA);
                 eventParams.put(Constants.START_DATE_PARAM, from);
                 eventParams.put(Constants.END_DATE_PARAM, to);
                 MotechEvent event = new MotechEvent(READ_ASHA_RESPONSE_FILE_EVENT, eventParams);
-                String cronExpression = Constants.DEFAULT_RCH_IMPORT_CRON_EXPRESSION;
+                String cronExpression = Constants.DEFAULT_RCH_ASHA_IMPORT_CRON_EXPRESSION;
                 CronSchedulableJob job = new CronSchedulableJob(event, cronExpression);
                 schedulerService.safeScheduleJob(job);
                 status = true;
             } catch (ExecutionException e) {
                 LOGGER.error("error copying file to remote server.");
             }
-
         } else {
             LOGGER.error("Error writing response to file.");
         }
@@ -400,8 +396,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     @MotechListener(subjects = { READ_ASHA_RESPONSE_FILE_EVENT })
     public void readAshaResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         LOGGER.debug(event.toString());
-        LOGGER.info("Asha file import entry point");
-        LOGGER.info("Copying Asha response file from remote server to local directory.");
+        LOGGER.info("RCH Asha file import entry point");
+        LOGGER.info("Copying RCH Asha response file from remote server to local directory.");
         File localResponseFile;
         try {
             localResponseFile = scpResponseToLocal((String) event.getParameters().get(FILENAME));
@@ -423,7 +419,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                         null :
                         (RchAnmAshaDataSet) MarshallUtils.unmarshall(ashaResultFeed.get(0).toString(), RchAnmAshaDataSet.class);
 
-                LOGGER.info("Starting FLW import for stateId: {}", stateId);
+                LOGGER.info("Starting RCH FLW import for stateId: {}", stateId);
                 StopWatch stopWatch = new StopWatch();
                 stopWatch.start();
 
@@ -439,15 +435,15 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rchImportAuditDataService.create(audit);
                 stopWatch.stop();
                 double seconds = stopWatch.getTime() / THOUSAND;
-                LOGGER.info("Finished FLW import dispatch in {} seconds. Accepted {} Ashas, Rejected {} Ashas",
+                LOGGER.info("Finished RCH FLW import dispatch in {} seconds. Accepted {} Ashas, Rejected {} Ashas",
                         seconds, audit.getAccepted(), audit.getRejected());
 
                 // Delete RchImportFailRecords once import is successful
                 deleteRchImportFailRecords(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateId);
             } catch (JAXBException e) {
-                throw new RchInvalidResponseStructureException(String.format("Cannot deserialize FLW data from %s location.", stateId), e);
+                throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH FLW data from %s location.", stateId), e);
             } catch (RchInvalidResponseStructureException e) {
-                String error = String.format("Cannot read FLW data from %s state with stateId:%d. Response Deserialization Error", stateName, stateCode);
+                String error = String.format("Cannot read RCH FLW data from %s state with stateId:%d. Response Deserialization Error", stateName, stateCode);
                 LOGGER.error(error, e);
                 alertService.create(RCH_WEB_SERVICE, "RCH Web Service FLW Import", e.getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
                 rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, error));
@@ -531,7 +527,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
     private RchImportAudit saveImportedMothersData(RchMothersDataSet mothersDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
-        LOGGER.info("Starting mother import for state {}", stateName);
+        LOGGER.info("Starting RCH mother import for state {}", stateName);
 
         int saved = 0;
         int rejected = 0;
@@ -551,20 +547,20 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     rejected++;
                 }
             } catch (RuntimeException e) {
-                LOGGER.error("Mother import Error. Cannot import Mother with ID: {} for state ID: {}",
+                LOGGER.error("RCH Mother import Error. Cannot import Mother with ID: {} for state ID: {}",
                         record.getRegistrationNo(), stateCode, e);
                 rejected++;
             }
             if ((saved + rejected) % THOUSAND == 0) {
-                LOGGER.debug("{} state, Progress: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
+                LOGGER.debug("RCH import: {} state, Progress: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
             }
         }
-        LOGGER.info("{} state, Total: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
+        LOGGER.info("RCH import: {} state, Total: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
         return new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, saved, rejected, null);
     }
 
     private RchImportAudit saveImportedChildrenData(RchChildrenDataSet childrenDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
-        LOGGER.info("Starting children import for state {}", stateName);
+        LOGGER.info("Starting RCH children import for state {}", stateName);
 
         int saved = 0;
         int rejected = 0;
@@ -587,21 +583,21 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
 
             } catch (RuntimeException e) {
-                LOGGER.error("Child import Error. Cannot import Child with ID: {} for state:{} with state ID: {}",
+                LOGGER.error("RCH Child import Error. Cannot import Child with ID: {} for state:{} with state ID: {}",
                         record.getRegistrationNo(), stateName, stateCode, e);
                 rejected++;
             }
 
             if ((saved + rejected) % THOUSAND == 0) {
-                LOGGER.debug("{} state, Progress: {} children imported, {} children rejected", stateName, saved, rejected);
+                LOGGER.debug("RCH import: {} state, Progress: {} children imported, {} children rejected", stateName, saved, rejected);
             }
         }
-        LOGGER.info("{} state, Total: {} children imported, {} children rejected", stateName, saved, rejected);
+        LOGGER.info("RCH import: {} state, Total: {} children imported, {} children rejected", stateName, saved, rejected);
         return new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, saved, rejected, null);
     }
 
     private RchImportAudit saveImportedAshaData(RchAnmAshaDataSet anmAshaDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
-        LOGGER.info("Starting ASHA import for state {}", stateName);
+        LOGGER.info("Starting RCH ASHA import for state {}", stateName);
 
         int saved = 0;
         int rejected = 0;
@@ -633,17 +629,17 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     flwRejectionRch(record, false, RejectionReasons.RECORD_ALREADY_EXISTS.toString());
                     rejected++;
                 } catch (Exception e) {
-                    LOGGER.error("Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}",
+                    LOGGER.error("RCH Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}",
                             record.getGfId(), record.getMobileNo(), e);
                     flwRejectionRch(record, false, RejectionReasons.FLW_IMPORT_ERROR.toString());
                     rejected++;
                 }
             }
             if ((saved + rejected) % THOUSAND == 0) {
-                LOGGER.debug("{} state, Progress: {} Ashas imported, {} Ashas rejected", stateName, saved, rejected);
+                LOGGER.debug("RCH import: {} state, Progress: {} Ashas imported, {} Ashas rejected", stateName, saved, rejected);
             }
         }
-        LOGGER.info("{} state, Total: {} Ashas imported, {} Ashas rejected", stateName, saved, rejected);
+        LOGGER.info("RCH import: {} state, Total: {} Ashas imported, {} Ashas rejected", stateName, saved, rejected);
         return new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, saved, rejected, null);
     }
 
@@ -812,7 +808,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private void scpResponseToRemote(String fileName) {
         String remoteDir = settingsFacade.getProperty(REMOTE_RESPONSE_DIR);
-        String command = "cp " + localResponseFile(fileName) + " " + remoteDir;
+        String command = "scp " + localResponseFile(fileName) + " " + remoteDir;
         ExecutionHelper execHelper = new ExecutionHelper();
         execHelper.exec(command, getScpTimeout());
     }
@@ -820,7 +816,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private File scpResponseToLocal(String fileName) {
         String localDir = settingsFacade.getProperty(LOCAL_RESPONSE_DIR);
 
-        String command = "cp " + remoteResponseFile(fileName) + " " + localDir;
+        String command = "scp " + remoteResponseFile(fileName) + " " + localDir;
         ExecutionHelper execHelper = new ExecutionHelper();
         execHelper.exec(command, getScpTimeout());
         return new File(localResponseFile(fileName));

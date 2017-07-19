@@ -212,78 +212,131 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    public boolean createUpdate(Map<String, Object> flw) { //NOPMD NcssMethodCount
+    public boolean createUpdate(Map<String, Object> flw, SubscriptionOrigin importOrigin) { //NOPMD NcssMethodCount
 
         long stateId = (long) flw.get(FlwConstants.STATE_ID);
         long districtId = (long) flw.get(FlwConstants.DISTRICT_ID);
-        String mctsFlwId = flw.get(FlwConstants.ID).toString();
-        long contactNumber = (long) flw.get(FlwConstants.CONTACT_NO);
+        String flwId = importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT) ? flw.get(FlwConstants.ID).toString() : flw.get(FlwConstants.GF_ID).toString();
+        long contactNumber = importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT) ? (long) flw.get(FlwConstants.CONTACT_NO) : (long) flw.get(FlwConstants.MOBILE_NO);
 
         State state = locationService.getState(stateId);
         if (state == null) {
-            flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, FlwErrorReason.INVALID_LOCATION_STATE));
+            flwErrorDataService.create(new FlwError(flwId, stateId, districtId, FlwErrorReason.INVALID_LOCATION_STATE));
             return false;
         }
         District district = locationService.getDistrict(stateId, districtId);
         if (district == null) {
-            flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, FlwErrorReason.INVALID_LOCATION_DISTRICT));
+            flwErrorDataService.create(new FlwError(flwId, stateId, districtId, FlwErrorReason.INVALID_LOCATION_DISTRICT));
             return false;
         }
 
         FrontLineWorker existingFlwByNumber = frontLineWorkerService.getByContactNumber(contactNumber);
-        FrontLineWorker existingFlwByMctsFlwId = frontLineWorkerService.getByMctsFlwIdAndState(mctsFlwId, state);
+        FrontLineWorker existingFlwByFlwId = frontLineWorkerService.getByMctsFlwIdAndState(flwId, state);
         Map<String, Object> location = new HashMap<>();
         try {
             location = locationService.getLocations(flw, false);
 
-            if (existingFlwByMctsFlwId != null && existingFlwByNumber != null) {
+            if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+                if (existingFlwByFlwId != null && existingFlwByNumber != null) {
 
-                if (existingFlwByMctsFlwId.getMctsFlwId().equalsIgnoreCase(existingFlwByNumber.getMctsFlwId()) &&
-                        existingFlwByMctsFlwId.getState().equals(existingFlwByNumber.getState())) {
-                    // we are trying to update the same existing flw. set fields and update
-                    LOGGER.debug("Updating existing user with same phone number");
-                    frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByMctsFlwId, flw, location, SubscriptionOrigin.MCTS_IMPORT));
+                    if (existingFlwByFlwId.getMctsFlwId().equalsIgnoreCase(existingFlwByNumber.getMctsFlwId()) &&
+                            existingFlwByFlwId.getState().equals(existingFlwByNumber.getState())) {
+                        // we are trying to update the same existing flw. set fields and update
+                        LOGGER.debug("Updating existing user with same phone number");
+                        frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOrigin.MCTS_IMPORT));
+                        return true;
+                    } else {
+                        // we are trying to update 2 different users and/or phone number used by someone else
+                        LOGGER.debug("Existing flw but phone number(update) already in use");
+                        flwErrorDataService.create(new FlwError(flwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
+                        return false;
+                    }
+                } else if (existingFlwByFlwId != null && existingFlwByNumber == null) {
+                    // trying to update the phone number of the person. possible migration scenario
+                    // making design decision that flw will lose all progress when phone number is changed. Usage and tracking is not
+                    // worth the effort & we don't really know that its the same flw
+                    LOGGER.debug("Updating phone number for flw");
+                    long existingContactNumber = existingFlwByFlwId.getContactNumber();
+                    FrontLineWorker flwInstance = FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOrigin.MCTS_IMPORT);
+                    updateFlwMaMsisdn(flwInstance, existingContactNumber, contactNumber);
                     return true;
-                } else {
-                    // we are trying to update 2 different users and/or phone number used by someone else
-                    LOGGER.debug("Existing flw but phone number(update) already in use");
-                    flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
-                    return false;
+                } else if (existingFlwByFlwId == null && existingFlwByNumber != null) {
+
+                    if (existingFlwByNumber.getMctsFlwId() == null) {
+                        // we just got data from mcts for a previous anonymous user that subscribed by phone number
+                        // merging those records
+                        LOGGER.debug("Merging mcts data with previously anonymous user");
+                        frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByNumber, flw, location, SubscriptionOrigin.MCTS_IMPORT));
+                        return true;
+                    } else {
+                        // phone number used by someone else.
+                        LOGGER.debug("New flw but phone number(update) already in use");
+                        flwErrorDataService.create(new FlwError(flwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
+                        return false;
+                    }
+
+                } else { // existingFlwByMctsFlwId & existingFlwByNumber are null)
+                    // new user. set fields and add
+                    LOGGER.debug("Adding new flw user");
+                    FrontLineWorker frontLineWorker = FlwMapper.createFlw(flw, location);
+                    if (frontLineWorker != null) {
+                        frontLineWorkerService.add(frontLineWorker);
+                        return true;
+                    } else {
+                        LOGGER.error("GF Status is INACTIVE. So cannot create record.");
+                        return false;
+                    }
                 }
-            } else if (existingFlwByMctsFlwId != null && existingFlwByNumber == null) {
-                // trying to update the phone number of the person. possible migration scenario
-                // making design decision that flw will lose all progress when phone number is changed. Usage and tracking is not
-                // worth the effort & we don't really know that its the same flw
-                LOGGER.debug("Updating phone number for flw");
-                long existingContactNumber = existingFlwByMctsFlwId.getContactNumber();
-                FrontLineWorker flwInstance = FlwMapper.updateFlw(existingFlwByMctsFlwId, flw, location, SubscriptionOrigin.MCTS_IMPORT);
-                updateFlwMaMsisdn(flwInstance, existingContactNumber, contactNumber);
-                return true;
-            } else if (existingFlwByMctsFlwId == null && existingFlwByNumber != null) {
+            } else {
+                if (existingFlwByFlwId != null && existingFlwByNumber != null) {
 
-                if (existingFlwByNumber.getMctsFlwId() == null) {
-                    // we just got data from mcts for a previous anonymous user that subscribed by phone number
-                    // merging those records
-                    LOGGER.debug("Merging mcts data with previously anonymous user");
-                    frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByNumber, flw, location, SubscriptionOrigin.MCTS_IMPORT));
+                    if (existingFlwByFlwId.getMctsFlwId().equalsIgnoreCase(existingFlwByNumber.getMctsFlwId()) &&
+                            existingFlwByFlwId.getState().equals(existingFlwByNumber.getState())) {
+                        // we are trying to update the same existing flw. set fields and update
+                        LOGGER.debug("Updating existing user with same phone number");
+                        frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOrigin.RCH_IMPORT));
+                        return true;
+                    } else {
+                        // we are trying to update 2 different users and/or phone number used by someone else
+                        LOGGER.debug("Existing flw but phone number(update) already in use");
+                        flwErrorDataService.create(new FlwError(flwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
+                        return false;
+                    }
+                } else if (existingFlwByFlwId != null && existingFlwByNumber == null) {
+                    // trying to update the phone number of the person. possible migration scenario
+                    // making design decision that flw will lose all progress when phone number is changed. Usage and tracking is not
+                    // worth the effort & we don't really know that its the same flw
+                    LOGGER.debug("Updating phone number for flw");
+                    long existingContactNumber = existingFlwByFlwId.getContactNumber();
+                    FrontLineWorker flwInstance = FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOrigin.RCH_IMPORT);
+                    updateFlwMaMsisdn(flwInstance, existingContactNumber, contactNumber);
                     return true;
-                } else {
-                    // phone number used by someone else.
-                    LOGGER.debug("New flw but phone number(update) already in use");
-                    flwErrorDataService.create(new FlwError(mctsFlwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
-                    return false;
-                }
+                } else if (existingFlwByFlwId == null && existingFlwByNumber != null) {
 
-            } else { // existingFlwByMctsFlwId & existingFlwByNumber are null)
-                // new user. set fields and add
-                LOGGER.debug("Adding new flw user");
-                FrontLineWorker frontLineWorker = FlwMapper.createFlw(flw, location);
-                if (frontLineWorker != null) {
-                    frontLineWorkerService.add(frontLineWorker);
-                    return true;
-                } else {
-                    LOGGER.error("GF Status is INACTIVE. So cannot create record.");
-                    return false;
+                    if (existingFlwByNumber.getMctsFlwId() == null) {
+                        // we just got data from rch for a previous anonymous user that subscribed by phone number
+                        // merging those records
+                        LOGGER.debug("Merging rch data with previously anonymous user");
+                        frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByNumber, flw, location, SubscriptionOrigin.RCH_IMPORT));
+                        return true;
+                    } else {
+                        // phone number used by someone else.
+                        LOGGER.debug("New flw but phone number(update) already in use");
+                        flwErrorDataService.create(new FlwError(flwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
+                        return false;
+                    }
+
+                } else { // existingFlwByMctsFlwId & existingFlwByNumber are null)
+                    // new user. set fields and add
+                    LOGGER.debug("Adding new RCH flw user");
+                    FrontLineWorker frontLineWorker = FlwMapper.createRchFlw(flw, location);
+                    if (frontLineWorker != null) {
+                        frontLineWorkerService.add(frontLineWorker);
+                        return true;
+                    } else {
+                        LOGGER.error("GF Status is INACTIVE. So cannot create record.");
+                        return false;
+                    }
                 }
             }
 

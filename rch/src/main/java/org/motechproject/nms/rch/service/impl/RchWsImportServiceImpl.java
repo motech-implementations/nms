@@ -95,7 +95,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
-            String error = String.format("State with code %s doesn't exist in database. Skipping Mother importing for this state", stateId);
+            String error = String.format("State with code %s doesn't exist in database. Skipping RCH Mother import for this state", stateId);
             LOGGER.error(error);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.MOTHER, stateId, null, 0, 0, error));
             return;
@@ -105,10 +105,10 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         Long stateCode = state.getCode();
         try {
             if (rchWebServiceFacade.getMothersData(startDate, endDate, endpoint, stateId)) {
-                LOGGER.info("Responses for state id {} recorded to file successfully.", stateId);
+                LOGGER.info("RCH Responses for state id {} recorded to file successfully.", stateId);
             }
         } catch (RchWebServiceException e) {
-            String error = String.format("Cannot read mothers data from %s state with state id: %d", stateName, stateId);
+            String error = String.format("Cannot read RCH mothers data from %s state with state id: %d", stateName, stateId);
             LOGGER.error(error, e);
             alertService.create(RCH_WEB_SERVICE, "RCH Web Service Mother Import", e
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
@@ -127,7 +127,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
-            String error = String.format("State with code %s does not exist in database. Skipping Children import for this state", stateId);
+            String error = String.format("State with code %s does not exist in database. Skipping RCH Children import for this state", stateId);
             LOGGER.error(error);
             rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateId, null, 0, 0, error));
             return;
@@ -137,10 +137,10 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         try {
 
             if (rchWebServiceFacade.getChildrenData(startReferenceDate, endReferenceDate, endpoint, stateId)) {
-                LOGGER.info("Child responses for state id {} recorded to file successfully.");
+                LOGGER.info("RCH Child responses for state id {} recorded to file successfully.");
             }
         } catch (RchWebServiceException e) {
-            String error = String.format("Cannot read children data from %s state with state id: %d", stateName, stateCode);
+            String error = String.format("Cannot read RCH children data from %s state with state id: %d", stateName, stateCode);
             LOGGER.error(error, e);
             alertService.create(RCH_WEB_SERVICE, "RCH Web Service Child Import", e.getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
@@ -160,7 +160,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
-            String error = String.format("State with code %s does not exist in database. Skipping FLW import for this state.", stateId);
+            String error = String.format("State with code %s does not exist in database. Skipping RCH FLW import for this state.", stateId);
             LOGGER.error(error);
             rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateId, null, 0, 0, error));
             return;
@@ -171,7 +171,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         try {
             if (rchWebServiceFacade.getAnmAshaData(startReferenceDate, endReferenceDate, endpoint, stateId)) {
-                LOGGER.info("FLW responses for state id {} recorded to file successfully.");
+                LOGGER.info("RCH FLW responses for state id {} recorded to file successfully.");
             }
         } catch (RchWebServiceException e) {
             String error = String.format("Cannot read FLW data from %s state with state id: %d", stateName, stateCode);

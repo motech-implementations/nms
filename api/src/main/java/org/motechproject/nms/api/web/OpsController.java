@@ -3,6 +3,7 @@ package org.motechproject.nms.api.web;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
+import org.motechproject.nms.api.web.contract.AddRchFlwRequest;
 import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
@@ -10,6 +11,7 @@ import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.MctsChildFixService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
@@ -203,9 +205,71 @@ public class OpsController extends BaseController {
             flwProperties.put(FlwConstants.CENSUS_VILLAGE_ID, addFlwRequest.getVillageId());
         }
 
-        frontLineWorkerImportService.createUpdate(flwProperties);
+        frontLineWorkerImportService.createUpdate(flwProperties, SubscriptionOrigin.MCTS_IMPORT);
     }
 
+    @RequestMapping(value = "/createUpdateRchFlw",
+            method = RequestMethod.POST,
+            headers = { "Content-type=application/json" })
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public void createUpdateRchFlw(@RequestBody AddRchFlwRequest addRchFlwRequest) {
+        log("REQUEST: /ops/createUpdateRchFlw", String.format(
+                "callingNumber=%s, rchId=%s, name=%s, state=%d, district=%d",
+                LogHelper.obscure(addRchFlwRequest.getMsisdn()),
+                addRchFlwRequest.getFlwId(),
+                addRchFlwRequest.getName(),
+                addRchFlwRequest.getStateId(),
+                addRchFlwRequest.getDistrictId()));
+
+        StringBuilder failureReasons = new StringBuilder();
+        validateField10Digits(failureReasons, contactNumber, addRchFlwRequest.getMsisdn());
+        validateFieldPositiveLong(failureReasons, contactNumber, addRchFlwRequest.getMsisdn());
+        validateFieldPresent(failureReasons, "rchFlwId", addRchFlwRequest.getFlwId());
+        validateFieldPresent(failureReasons, "stateId", addRchFlwRequest.getStateId());
+        validateFieldPresent(failureReasons, "districtId", addRchFlwRequest.getDistrictId());
+        validateFieldString(failureReasons, "name", addRchFlwRequest.getName());
+        validateFieldGfStatus(failureReasons, "gfStatus", addRchFlwRequest.getGfStatus());
+        validatetypeASHA(failureReasons, "gfType", addRchFlwRequest.getFlwId(), addRchFlwRequest.getMsisdn(), addRchFlwRequest.getGfType());
+
+        if (failureReasons.length() > 0) {
+            throw new IllegalArgumentException(failureReasons.toString());
+        }
+
+        Map<String, Object> flwProperties = new HashMap<>();
+        flwProperties.put(FlwConstants.NAME, addRchFlwRequest.getName());
+        flwProperties.put(FlwConstants.GF_ID, addRchFlwRequest.getFlwId());
+        flwProperties.put(FlwConstants.MOBILE_NO, addRchFlwRequest.getMsisdn());
+        flwProperties.put(FlwConstants.STATE_ID, addRchFlwRequest.getStateId());
+        flwProperties.put(FlwConstants.DISTRICT_ID, addRchFlwRequest.getDistrictId());
+        flwProperties.put(FlwConstants.GF_STATUS, addRchFlwRequest.getGfStatus());
+
+        if (addRchFlwRequest.getGfType() != null) {
+            flwProperties.put(FlwConstants.GF_TYPE, addRchFlwRequest.getGfType());
+        }
+
+        if (addRchFlwRequest.getTalukaId() != null) {
+            flwProperties.put(FlwConstants.TALUKA_ID, addRchFlwRequest.getTalukaId());
+        }
+
+        if (addRchFlwRequest.getPhcId() != null) {
+            flwProperties.put(FlwConstants.PHC_ID, addRchFlwRequest.getPhcId());
+        }
+
+        if (addRchFlwRequest.getHealthblockId() != null) {
+            flwProperties.put(FlwConstants.HEALTH_BLOCK_ID, addRchFlwRequest.getHealthblockId());
+        }
+
+        if (addRchFlwRequest.getSubcentreId() != null) {
+            flwProperties.put(FlwConstants.SUB_CENTRE_ID, addRchFlwRequest.getSubcentreId());
+        }
+
+        if (addRchFlwRequest.getVillageId() != null) {
+            flwProperties.put(FlwConstants.CENSUS_VILLAGE_ID, addRchFlwRequest.getVillageId());
+        }
+
+        frontLineWorkerImportService.createUpdate(flwProperties, SubscriptionOrigin.RCH_IMPORT);
+    }
 
     @RequestMapping("/getbookmark")
     @ResponseBody

@@ -897,6 +897,7 @@
                         <!-- Skip contract classes -->
                         <exclude>**/mcts/**/contract/*.java</exclude>
                         <exclude>**/rch/**/contract/*.java</exclude>
+                        <exclude>**/api/**/contract/*.java</exclude>
                     </excludes>
                 </configuration>
                 <dependencies>

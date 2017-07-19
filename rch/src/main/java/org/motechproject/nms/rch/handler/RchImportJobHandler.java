@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * component responsible for scheduling and handling the RCH import job.
+ * Component responsible for scheduling and handling the RCH import job.
  */
 @Component
 public class RchImportJobHandler {
@@ -58,8 +58,8 @@ public class RchImportJobHandler {
         }
 
         LOGGER.info("Created RCH Import Event");
-        CronSchedulableJob mctsImportJob = new CronSchedulableJob(new MotechEvent(Constants.RCH_IMPORT_EVENT), cronExpression);
-        motechSchedulerService.safeScheduleJob(mctsImportJob);
+        CronSchedulableJob rchImportJob = new CronSchedulableJob(new MotechEvent(Constants.RCH_IMPORT_EVENT), cronExpression);
+        motechSchedulerService.safeScheduleJob(rchImportJob);
     }
 
     @MotechListener(subjects = Constants.RCH_IMPORT_EVENT)
