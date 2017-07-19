@@ -29,6 +29,7 @@ import org.motechproject.nms.mcts.contract.MothersDataSet;
 import org.motechproject.nms.mcts.domain.MctsImportAudit;
 import org.motechproject.nms.mcts.domain.MctsImportFailRecord;
 import org.motechproject.nms.mcts.domain.MctsUserType;
+import org.motechproject.nms.mcts.domain.RejectionReasons;
 import org.motechproject.nms.mcts.exception.MctsInvalidResponseStructureException;
 import org.motechproject.nms.mcts.exception.MctsWebServiceException;
 import org.motechproject.nms.mcts.repository.MctsImportAuditDataService;
@@ -39,6 +40,8 @@ import org.motechproject.nms.mcts.utils.Constants;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.rejectionhandler.domain.FlwImportRejection;
+import org.motechproject.nms.rejectionhandler.service.FlwRejectionService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,6 +88,9 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     @Autowired
     private MctsImportFailRecordDataService mctsImportFailRecordDataService;
+
+    @Autowired
+    private FlwRejectionService flwRejectionService;
 
     @Autowired
     @Qualifier("mctsSettings")
@@ -397,25 +403,31 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             String designation = record.getType();
             designation = (designation != null) ? designation.trim() : designation;
             if (!(FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation))) {
+                flwRejectionMcts(record, false, RejectionReasons.FLW_TYPE_NOT_ASHA.toString());
                 rejected++;
             } else {
                 try {
                     // get user property map
                     Map<String, Object> recordMap = record.toFlwRecordMap();    // temp var used for debugging
                     frontLineWorkerImportService.importMctsFrontLineWorker(recordMap, state);
+                    flwRejectionMcts(record, true, null);
                     saved++;
                 } catch (InvalidLocationException e) {
                     LOGGER.warn("Invalid location for FLW: ", e);
+                    flwRejectionMcts(record, false, RejectionReasons.INVALID_LOCATION_TYPE.toString());
                     rejected++;
                 } catch (FlwImportException e) {
                     LOGGER.error("Existing FLW with same MSISDN but different MCTS ID", e);
+                    flwRejectionMcts(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString());
                     rejected++;
                 } catch (FlwExistingRecordException e) {
                     LOGGER.error("Cannot import FLW with ID: {}, and MSISDN (Contact_No): {}", record.getId(), record.getContactNo(), e);
+                    flwRejectionMcts(record, false, RejectionReasons.RECORD_ALREADY_EXISTS.toString());
                     rejected++;
                 } catch (Exception e) {
                     LOGGER.error("Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Contact_No): {}",
                             record.getId(), record.getContactNo(), e);
+                    flwRejectionMcts(record, false, RejectionReasons.FLW_IMPORT_ERROR.toString());
                     rejected++;
                 }
             }
@@ -530,6 +542,55 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
         return true;
     }
+
+    private void flwRejectionMcts(AnmAshaRecord record, Boolean accepted, String rejectionReason) {
+        FlwImportRejection flwImportRejection = null;
+        flwImportRejection.setStateId(record.getStateId());
+        flwImportRejection.setDistrictId(record.getDistrictId());
+        flwImportRejection.setDistrictName(record.getDistrictName());
+        flwImportRejection.setTalukaId(record.getTalukaId());
+        flwImportRejection.setHealthBlockId(record.getHealthBlockId());
+        flwImportRejection.setHealthBlockName(record.getHealthBlockName());
+        flwImportRejection.setPhcId(record.getPhcId());
+        flwImportRejection.setPhcName(record.getPhcName());
+        flwImportRejection.setSubcentreId(record.getSubCentreId());
+        flwImportRejection.setSubcentreName(record.getSubCentreName());
+        flwImportRejection.setVillageId(record.getVillageId());
+        flwImportRejection.setVillageName(record.getVillageName());
+        flwImportRejection.setFlwId(record.getId());
+        flwImportRejection.setMsisdn(record.getContactNo());
+        flwImportRejection.setGfName(record.getName());
+        flwImportRejection.setType(record.getType());
+        flwImportRejection.setGfStatus(record.getGfStatus());
+        flwImportRejection.setRegDate(record.getRegDate());
+        flwImportRejection.setSex(record.getSex());
+        flwImportRejection.setSmsReply(record.getSmsReply());
+        flwImportRejection.setAadharNo(record.getAadharNo());
+        flwImportRejection.setCreatedOn(record.getCreatedOn());
+        flwImportRejection.setUpdatedOn(record.getUpdatedOn());
+        flwImportRejection.setBankId(record.getBankId());
+        flwImportRejection.setBranchName(record.getBranchName());
+        flwImportRejection.setIfscIdCode(record.getIfscIdCode());
+        flwImportRejection.setBankName(record.getBankName());
+        flwImportRejection.setAccountNumber(record.getAccNo());
+        flwImportRejection.setAadharLinked(record.getIsAadharLinked());
+        flwImportRejection.setVerifyDate(record.getVerifyDate());
+        flwImportRejection.setVerifierName(record.getVerifierName());
+        flwImportRejection.setVerifierId(record.getVerifierId());
+        flwImportRejection.setCallAns(record.getCallAns());
+        flwImportRejection.setPhoneNoCorrect(record.getIsPhoneNoCorrect());
+        flwImportRejection.setNoCallReason(record.getNoCallReason());
+        flwImportRejection.setNoPhoneReason(record.getNoPhoneReason());
+        flwImportRejection.setVerifierRemarks(record.getVerifierRemarks());
+        flwImportRejection.setGfAddress(record.getGfAddress());
+        flwImportRejection.setHusbandName(record.getHusbandName());
+        flwImportRejection.setSource("MCTS-Import");
+        flwImportRejection.setAccepted(accepted);
+        flwImportRejection.setRejectionReason(rejectionReason);
+
+        flwRejectionService.createUpdate(flwImportRejection);
+    }
+
 
     private Map<Long, Set<Long>> getHpdFilters() {
         Map<Long, Set<Long>> hpdMap = new HashMap<>();

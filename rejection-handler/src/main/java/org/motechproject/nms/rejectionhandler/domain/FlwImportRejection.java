@@ -1,10 +1,7 @@
 package org.motechproject.nms.rejectionhandler.domain;
 
-import org.joda.time.LocalDate;
-import org.motechproject.commons.date.util.DateUtil;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-import org.motechproject.nms.rch.domain.RchUserType;
 
 import java.util.Date;
 
@@ -24,7 +21,7 @@ public class FlwImportRejection {
     private String districtName;
 
     @Field
-    private Long talukaId;
+    private String talukaId;
 
     @Field
     private String talukaName;
@@ -57,22 +54,19 @@ public class FlwImportRejection {
     private Long flwId;
 
     @Field
-    private Long msisdn;
+    private String msisdn;
 
     @Field
     private String gfName;
 
     @Field
-    private String gfType;
-
-    @Field
     private String gfStatus;
 
     @Field
-    private Date execDate;
+    private String execDate;
 
     @Field
-    private Date regDate;
+    private String regDate;
 
     @Field
     private String sex;
@@ -84,16 +78,16 @@ public class FlwImportRejection {
     private String smsReply;
 
     @Field
-    private String aadharNo;
+    private Integer aadharNo;
 
     @Field
-    private Date createdOn;
+    private String createdOn;
 
     @Field
-    private Date updatedOn;
+    private String updatedOn;
 
     @Field
-    private Long bankId;
+    private Integer bankId;
 
     @Field
     private String branchName;
@@ -111,13 +105,13 @@ public class FlwImportRejection {
     private Boolean isAadharLinked;
 
     @Field
-    private Date verifyDate;
+    private String verifyDate;
 
     @Field
     private String verifierName;
 
     @Field
-    private String verifierId;
+    private Integer verifierId;
 
     @Field
     private Boolean callAns;
@@ -126,10 +120,10 @@ public class FlwImportRejection {
     private Boolean isPhoneNoCorrect;
 
     @Field
-    private String noCallReason;
+    private Integer noCallReason;
 
     @Field
-    private String noPhoneReason;
+    private Integer noPhoneReason;
 
     @Field
     private String verifierRemarks;
@@ -158,64 +152,6 @@ public class FlwImportRejection {
     @Field
     private String action;
 
-    public FlwImportRejection(Long stateId, Long districtId, String districtName, Long talukaId, String talukaName, Long healthBlockId,
-                              String healthBlockName, Long phcId, String phcName, Long subcentreId, String subcentreName, Long villageId,
-                              String villageName, Long flwId, Long msisdn, String gfName, String gfType, String gfStatus, Date execDate,
-                              Date regDate, String sex, String type, String smsReply, String aadharNo, Date createdOn, Date updatedOn,
-                              Long bankId, String branchName, String ifscIdCode, String bankName, String accountNumber, Boolean isAadharLinked,
-                              Date verifyDate, String verifierName, String verifierId, Boolean callAns, Boolean isPhoneNoCorrect, String noCallReason,
-                              String noPhoneReason, String verifierRemarks, String gfAddress, String husbandName, Boolean accepted, String rejectionReason,
-                              String source, Date creationDate, Date modificationDate, String action) {
-        this.stateId = stateId;
-        this.districtId = districtId;
-        this.districtName = districtName;
-        this.talukaId = talukaId;
-        this.talukaName = talukaName;
-        this.healthBlockId = healthBlockId;
-        this.healthBlockName = healthBlockName;
-        this.phcId = phcId;
-        this.phcName = phcName;
-        this.subcentreId = subcentreId;
-        this.subcentreName = subcentreName;
-        this.villageId = villageId;
-        this.villageName = villageName;
-        this.flwId = flwId;
-        this.msisdn = msisdn;
-        this.gfName = gfName;
-        this.gfType = gfType;
-        this.gfStatus = gfStatus;
-        this.execDate = execDate;
-        this.regDate = regDate;
-        this.sex = sex;
-        this.type = type;
-        this.smsReply = smsReply;
-        this.aadharNo = aadharNo;
-        this.createdOn = createdOn;
-        this.updatedOn = updatedOn;
-        this.bankId = bankId;
-        this.branchName = branchName;
-        this.ifscIdCode = ifscIdCode;
-        this.bankName = bankName;
-        this.accountNumber = accountNumber;
-        this.isAadharLinked = isAadharLinked;
-        this.verifyDate = verifyDate;
-        this.verifierName = verifierName;
-        this.verifierId = verifierId;
-        this.callAns = callAns;
-        this.isPhoneNoCorrect = isPhoneNoCorrect;
-        this.noCallReason = noCallReason;
-        this.noPhoneReason = noPhoneReason;
-        this.verifierRemarks = verifierRemarks;
-        this.gfAddress = gfAddress;
-        this.husbandName = husbandName;
-        this.accepted = accepted;
-        this.rejectionReason = rejectionReason;
-        this.source = source;
-        this.creationDate = creationDate;
-        this.modificationDate = modificationDate;
-        this.action = action;
-    }
-
     public Long getStateId() {
         return stateId;
     }
@@ -240,7 +176,7 @@ public class FlwImportRejection {
         this.districtName = districtName;
     }
 
-    public Long getTalukaId() {
+    public String getTalukaId() {
         return talukaId;
     }
 
@@ -252,7 +188,7 @@ public class FlwImportRejection {
         this.action = action;
     }
 
-    public void setTalukaId(Long talukaId) {
+    public void setTalukaId(String talukaId) {
         this.talukaId = talukaId;
     }
 
@@ -336,11 +272,11 @@ public class FlwImportRejection {
         this.flwId = flwId;
     }
 
-    public Long getMsisdn() {
+    public String getMsisdn() {
         return msisdn;
     }
 
-    public void setMsisdn(Long msisdn) {
+    public void setMsisdn(String msisdn) {
         this.msisdn = msisdn;
     }
 
@@ -352,14 +288,6 @@ public class FlwImportRejection {
         this.gfName = gfName;
     }
 
-    public String getGfType() {
-        return gfType;
-    }
-
-    public void setGfType(String gfType) {
-        this.gfType = gfType;
-    }
-
     public String getGfStatus() {
         return gfStatus;
     }
@@ -368,19 +296,19 @@ public class FlwImportRejection {
         this.gfStatus = gfStatus;
     }
 
-    public Date getExecDate() {
+    public String getExecDate() {
         return execDate;
     }
 
-    public void setExecDate(Date execDate) {
+    public void setExecDate(String execDate) {
         this.execDate = execDate;
     }
 
-    public Date getRegDate() {
+    public String getRegDate() {
         return regDate;
     }
 
-    public void setRegDate(Date regDate) {
+    public void setRegDate(String regDate) {
         this.regDate = regDate;
     }
 
@@ -408,35 +336,35 @@ public class FlwImportRejection {
         this.smsReply = smsReply;
     }
 
-    public String getAadharNo() {
+    public Integer getAadharNo() {
         return aadharNo;
     }
 
-    public void setAadharNo(String aadharNo) {
+    public void setAadharNo(Integer aadharNo) {
         this.aadharNo = aadharNo;
     }
 
-    public Date getCreatedOn() {
+    public String getCreatedOn() {
         return createdOn;
     }
 
-    public void setCreatedOn(Date createdOn) {
+    public void setCreatedOn(String createdOn) {
         this.createdOn = createdOn;
     }
 
-    public Date getUpdatedOn() {
+    public String getUpdatedOn() {
         return updatedOn;
     }
 
-    public void setUpdatedOn(Date updatedOn) {
+    public void setUpdatedOn(String updatedOn) {
         this.updatedOn = updatedOn;
     }
 
-    public Long getBankId() {
+    public Integer getBankId() {
         return bankId;
     }
 
-    public void setBankId(Long bankId) {
+    public void setBankId(Integer bankId) {
         this.bankId = bankId;
     }
 
@@ -480,11 +408,11 @@ public class FlwImportRejection {
         isAadharLinked = aadharLinked;
     }
 
-    public Date getVerifyDate() {
+    public String getVerifyDate() {
         return verifyDate;
     }
 
-    public void setVerifyDate(Date verifyDate) {
+    public void setVerifyDate(String verifyDate) {
         this.verifyDate = verifyDate;
     }
 
@@ -496,11 +424,11 @@ public class FlwImportRejection {
         this.verifierName = verifierName;
     }
 
-    public String getVerifierId() {
+    public Integer getVerifierId() {
         return verifierId;
     }
 
-    public void setVerifierId(String verifierId) {
+    public void setVerifierId(Integer verifierId) {
         this.verifierId = verifierId;
     }
 
@@ -520,19 +448,19 @@ public class FlwImportRejection {
         isPhoneNoCorrect = phoneNoCorrect;
     }
 
-    public String getNoCallReason() {
+    public Integer getNoCallReason() {
         return noCallReason;
     }
 
-    public void setNoCallReason(String noCallReason) {
+    public void setNoCallReason(Integer noCallReason) {
         this.noCallReason = noCallReason;
     }
 
-    public String getNoPhoneReason() {
+    public Integer getNoPhoneReason() {
         return noPhoneReason;
     }
 
-    public void setNoPhoneReason(String noPhoneReason) {
+    public void setNoPhoneReason(Integer noPhoneReason) {
         this.noPhoneReason = noPhoneReason;
     }
 
