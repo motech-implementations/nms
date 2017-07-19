@@ -11,11 +11,17 @@
     <osgi:service ref="rchWsImportService"
                   interface="org.motechproject.nms.rch.service.RchWsImportService" />
 
+    <osgi:service ref="rchImportFacilitatorService"
+                  interface="org.motechproject.nms.rch.service.RchImportFacilitatorService" />
+
     <osgi:reference id="rchImportAuditDataService"
                     interface="org.motechproject.nms.rch.repository.RchImportAuditDataService" />
 
     <osgi:reference id="rchImportFailRecordDataService"
                     interface="org.motechproject.nms.rch.repository.RchImportFailRecordDataService" />
+
+    <osgi:reference id="rchImportFacilitatorDataService"
+                    interface="org.motechproject.nms.rch.repository.RchImportFacilitatorDataService" />
 
     <osgi:reference id="schedulerService"
                     interface="org.motechproject.scheduler.service.MotechSchedulerService" />

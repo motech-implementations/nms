@@ -38,7 +38,9 @@ public final class Constants {
     /**
      * Scheduler
      */
-    public static final String DEFAULT_RCH_IMPORT_CRON_EXPRESSION = "0 0 20 * * ? *";
+    public static final String DEFAULT_RCH_MOTHER_IMPORT_CRON_EXPRESSION = "0 0 20 * * ? *";
+    public static final String DEFAULT_RCH_CHILD_IMPORT_CRON_EXPRESSION = "0 5 20 * * ? *";
+    public static final String DEFAULT_RCH_ASHA_IMPORT_CRON_EXPRESSION = "0 10 20 * * ? *";
 
     private Constants() {
     }
