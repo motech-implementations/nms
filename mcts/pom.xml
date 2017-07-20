@@ -134,6 +134,8 @@
                             org.motechproject.nms.region.domain,
                             org.motechproject.nms.region.exception,
                             org.motechproject.nms.region.repository,
+                            org.motechproject.nms.rejectionhandler.repository,
+                            org.motechproject.nms.rejectionhandler.service,
                             javax.mail,
                             net.sf.cglib.proxy,
                             net.sf.cglib.core,

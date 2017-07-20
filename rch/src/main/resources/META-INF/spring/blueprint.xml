@@ -38,6 +38,12 @@
     <osgi:reference id="mctsBeneficiaryImportService"
                     interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService"/>
 
+    <osgi:reference id="flwImportRejectionDataService"
+                    interface="org.motechproject.nms.rejectionhandler.repository.FlwImportRejectionDataService"/>
+
+    <osgi:reference id="flwRejectionService"
+                    interface="org.motechproject.nms.rejectionhandler.service.FlwRejectionService"/>
+
     <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
 
     <osgi:reference id="eventRelay" interface="org.motechproject.event.listener.EventRelay"/>

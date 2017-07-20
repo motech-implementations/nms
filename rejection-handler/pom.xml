@@ -90,6 +90,7 @@
                         <Context-Path>rejection-handler</Context-Path>
                         <Export-Package>
                             org.motechproject.nms.rejectionhandler.domain;version=${project.version},
+                            org.motechproject.nms.rejectionhandler.repository;version=${project.version},
                             org.motechproject.nms.rejectionhandler.service;version=${project.version}
                         </Export-Package>
                         <Import-Package>

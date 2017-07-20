@@ -9,11 +9,11 @@
     <context:annotation-config />
     <context:component-scan base-package="org.motechproject.nms.rejectionhandler" />
 
-    <bean id="rejectionHandlerSettings" class="org.motechproject.server.config.SettingsFacade" autowire="byType">
-        <property name="configFiles">
-            <list>
-                <value>classpath:rejection-handler.properties</value>
-            </list>
-        </property>
-    </bean>
+    <!--<bean id="rejectionHandlerSettings" class="org.motechproject.server.config.SettingsFacade" autowire="byType">-->
+        <!--<property name="configFiles">-->
+            <!--<list>-->
+                <!--<value>classpath:rejection-handler.properties</value>-->
+            <!--</list>-->
+        <!--</property>-->
+    <!--</bean>-->
 </beans>

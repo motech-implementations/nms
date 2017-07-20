@@ -544,7 +544,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
     }
 
     private void flwRejectionMcts(AnmAshaRecord record, Boolean accepted, String rejectionReason) {
-        FlwImportRejection flwImportRejection = null;
+        FlwImportRejection flwImportRejection = new FlwImportRejection();
         flwImportRejection.setStateId(record.getStateId());
         flwImportRejection.setDistrictId(record.getDistrictId());
         flwImportRejection.setDistrictName(record.getDistrictName());

@@ -725,7 +725,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
     private void flwRejectionRch(RchAnmAshaRecord record, Boolean accepted, String rejectionReason) {
-        FlwImportRejection flwImportRejection = null;
+        FlwImportRejection flwImportRejection = new FlwImportRejection();
         flwImportRejection.setStateId(record.getStateId());
         flwImportRejection.setDistrictId(record.getDistrictId());
         flwImportRejection.setDistrictName(record.getDistrictName());
