@@ -3,6 +3,8 @@ package org.motechproject.nms.rejectionhandler.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+import javax.persistence.*;
+
 import java.util.Date;
 
 /**
@@ -10,6 +12,11 @@ import java.util.Date;
  */
 @Entity(tableName = "nms_child_rejects")
 public class ChildImportAudit {
+
+    @Id
+    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @Field
+    private Long ChildRejectId;
 
     @Field
     private Long stateId;
@@ -238,6 +245,41 @@ public class ChildImportAudit {
 
     @Field
     private Integer entryType;
+
+    @Field
+    private String registrationNo;
+
+    @Field
+    private String MCTSMotherIDNo;
+
+    @Field
+    private Date ExecDate;
+
+    @Field
+    private Boolean accepted;
+
+    @Field
+    private String rejectionReason;
+
+    @Field
+    private String source;
+
+    @Field
+    private Date creationDate;
+
+    @Field
+    private Date modificationDate;
+
+    @Field
+    private String action;
+
+    public Long getChildRejectId() {
+        return ChildRejectId;
+    }
+
+    public void setChildRejectId(Long childRejectId) {
+        ChildRejectId = childRejectId;
+    }
 
     public Long getStateId() {
         return stateId;
@@ -845,5 +887,77 @@ public class ChildImportAudit {
 
     public void setEntryType(Integer entryType) {
         this.entryType = entryType;
+    }
+
+    public String getRegistrationNo() {
+        return registrationNo;
+    }
+
+    public void setRegistrationNo(String registrationNo) {
+        this.registrationNo = registrationNo;
+    }
+
+    public String getMCTSMotherIDNo() {
+        return MCTSMotherIDNo;
+    }
+
+    public void setMCTSMotherIDNo(String MCTSMotherIDNo) {
+        this.MCTSMotherIDNo = MCTSMotherIDNo;
+    }
+
+    public Date getExecDate() {
+        return ExecDate;
+    }
+
+    public void setExecDate(Date execDate) {
+        ExecDate = execDate;
+    }
+
+    public Boolean getAccepted() {
+        return accepted;
+    }
+
+    public void setAccepted(Boolean accepted) {
+        this.accepted = accepted;
+    }
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public Date getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(Date creationDate) {
+        this.creationDate = creationDate;
+    }
+
+    public Date getModificationDate() {
+        return modificationDate;
+    }
+
+    public void setModificationDate(Date modificationDate) {
+        this.modificationDate = modificationDate;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public void setAction(String action) {
+        this.action = action;
     }
 }

@@ -3,6 +3,9 @@ package org.motechproject.nms.rejectionhandler.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import java.util.Date;
 
 /**
@@ -10,6 +13,11 @@ import java.util.Date;
  */
 @Entity(tableName = "nms_mother_rejects")
 public class MotherImportAudit {
+
+    @Id
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @Field
+    private Long ChildRejectId;
 
     @Field
     private Long stateId;
@@ -310,6 +318,17 @@ public class MotherImportAudit {
 
     @Field
     private Date modificationDate;
+
+    @Field
+    private String action;
+
+    public Long getChildRejectId() {
+        return ChildRejectId;
+    }
+
+    public void setChildRejectId(Long childRejectId) {
+        ChildRejectId = childRejectId;
+    }
 
     public Long getStateId() {
         return stateId;
@@ -1109,5 +1128,13 @@ public class MotherImportAudit {
 
     public void setModificationDate(Date modificationDate) {
         this.modificationDate = modificationDate;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public void setAction(String action) {
+        this.action = action;
     }
 }
