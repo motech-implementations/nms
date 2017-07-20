@@ -36,6 +36,8 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.rejectionhandler.domain.FlwImportRejection;
+import org.motechproject.nms.rejectionhandler.repository.FlwImportRejectionDataService;
 import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServlet;
 import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletForASHAValidation;
 import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletForFail;
@@ -107,6 +109,9 @@ public class MctsImportBundleIT extends BasePaxIT {
 
     @Inject
     private SettingsService settingsService;
+
+    @Inject
+    private FlwImportRejectionDataService flwImportRejectionDataService;
 
     @Before
     public void setUp() throws ServletException, NamespaceException {
@@ -458,6 +463,9 @@ public class MctsImportBundleIT extends BasePaxIT {
             List<MctsImportFailRecord> mctsImportFailRecords = mctsImportFailRecordDataService.retrieveAll();
             assertEquals(0, mctsImportFailRecords.size());
             assertEquals("Name a", flws.get(0).getName());
+            
+            List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
+            assertEquals(1, flwImportRejections.size());
 
             List<MctsChild> children = mctsChildDataService.retrieveAll();
             assertEquals(1, children.size());

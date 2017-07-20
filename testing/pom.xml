@@ -106,6 +106,12 @@
             <artifactId>rch</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>rejection-handler</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.servicemix.bundles</groupId>
             <artifactId>org.apache.servicemix.bundles.javax.mail</artifactId>
@@ -290,6 +296,8 @@
                             org.motechproject.nms.rch.contract,
                             org.motechproject.nms.rch.service,
                             org.motechproject.nms.rch.soap,
+                            org.motechproject.nms.rejectionhandler.repository,
+                            org.motechproject.nms.rejectionhandler.service,
                             org.aopalliance.aop,
                             org.springframework.aop,
                             org.springframework.aop.framework,
