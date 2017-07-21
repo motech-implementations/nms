@@ -93,8 +93,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String LOCAL_RESPONSE_DIR = "rch.local_response_dir";
     private static final String REMOTE_RESPONSE_DIR = "rch.remote_response_dir";
     private static final String READ_MOTHER_RESPONSE_FILE_EVENT = "nms.rch.read_mother_response_file";
+    private static final String READ_MOTHER_ODISHA = READ_MOTHER_RESPONSE_FILE_EVENT + "_21";
+    private static final String READ_MOTHER_MP = READ_MOTHER_RESPONSE_FILE_EVENT + "_23";
     private static final String READ_CHILD_RESPONSE_FILE_EVENT = "nms.rch.read_child_response_file";
+    private static final String READ_CHILD_ODISHA = READ_CHILD_RESPONSE_FILE_EVENT + "_21";
+    private static final String READ_CHILD_MP = READ_CHILD_RESPONSE_FILE_EVENT + "_23";
     private static final String READ_ASHA_RESPONSE_FILE_EVENT = "nms.rch.read_asha_response_file";
+    private static final String READ_ASHA_ODISHA = READ_ASHA_RESPONSE_FILE_EVENT + "_21";
+    private static final String READ_ASHA_MP = READ_ASHA_RESPONSE_FILE_EVENT + "_23";
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("dd-MM-yyyy");
     private static final String SCP_TIMEOUT_SETTING = "rch.scp_timeout";
     private static final Long SCP_TIME_OUT = 60000L;
@@ -166,7 +172,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 eventParams.put(Constants.END_DATE_PARAM, to);
                 eventParams.put(Constants.STATE_ID_PARAM, stateId);
                 eventParams.put(FILENAME, responseFile.getName());
-                MotechEvent event = new MotechEvent(READ_MOTHER_RESPONSE_FILE_EVENT, eventParams);
+                MotechEvent event = new MotechEvent(READ_MOTHER_RESPONSE_FILE_EVENT + "_" + stateId.toString(), eventParams);
                 String cronExpression = Constants.DEFAULT_RCH_MOTHER_IMPORT_CRON_EXPRESSION;
                 CronSchedulableJob job = new CronSchedulableJob(event, cronExpression);
                 schedulerService.safeScheduleJob(job);
@@ -181,7 +187,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return status;
     }
 
-    @MotechListener(subjects = { READ_MOTHER_RESPONSE_FILE_EVENT })
+    @MotechListener(subjects = { READ_MOTHER_ODISHA, READ_MOTHER_MP })
     public void readMotherResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         LOGGER.debug(event.toString());
 
@@ -274,7 +280,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 eventParams.put(Constants.START_DATE_PARAM, from);
                 eventParams.put(Constants.END_DATE_PARAM, to);
                 eventParams.put(FILENAME, responseFile.getName());
-                MotechEvent event = new MotechEvent(READ_CHILD_RESPONSE_FILE_EVENT, eventParams);
+                MotechEvent event = new MotechEvent(READ_CHILD_RESPONSE_FILE_EVENT + "_" + stateId.toString(), eventParams);
                 String cronExpression = Constants.DEFAULT_RCH_CHILD_IMPORT_CRON_EXPRESSION;
                 CronSchedulableJob job = new CronSchedulableJob(event, cronExpression);
                 schedulerService.safeScheduleJob(job);
@@ -290,7 +296,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return status;
     }
 
-    @MotechListener(subjects = { READ_CHILD_RESPONSE_FILE_EVENT })
+    @MotechListener(subjects = { READ_CHILD_ODISHA, READ_CHILD_MP })
     public void readChildResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         LOGGER.debug(event.toString());
 
@@ -378,7 +384,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 eventParams.put(FILENAME, responseFile.getName());
                 eventParams.put(Constants.START_DATE_PARAM, from);
                 eventParams.put(Constants.END_DATE_PARAM, to);
-                MotechEvent event = new MotechEvent(READ_ASHA_RESPONSE_FILE_EVENT, eventParams);
+                MotechEvent event = new MotechEvent(READ_ASHA_RESPONSE_FILE_EVENT + "_" + stateId.toString(), eventParams);
                 String cronExpression = Constants.DEFAULT_RCH_ASHA_IMPORT_CRON_EXPRESSION;
                 CronSchedulableJob job = new CronSchedulableJob(event, cronExpression);
                 schedulerService.safeScheduleJob(job);
@@ -393,7 +399,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return status;
     }
 
-    @MotechListener(subjects = { READ_ASHA_RESPONSE_FILE_EVENT })
+    @MotechListener(subjects = { READ_ASHA_ODISHA, READ_ASHA_MP })
     public void readAshaResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         LOGGER.debug(event.toString());
         LOGGER.info("RCH Asha file import entry point");

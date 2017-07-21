@@ -14,6 +14,6 @@ import java.util.List;
  */
 public interface RchImportFacilitatorDataService extends MotechDataService<RchImportFacilitator> {
     @Lookup
-    List<String> getFilesByCreationDateAndUserType(@LookupField(name = "creationDate") LocalDate creationDate,
-                                                          @LookupField(name = "userType") RchUserType userType);
+    List<RchImportFacilitator> getFilesByCreationDateAndUserType(@LookupField(name = "creationDate") LocalDate creationDate,
+                                                                 @LookupField(name = "userType") RchUserType userType);
 }
