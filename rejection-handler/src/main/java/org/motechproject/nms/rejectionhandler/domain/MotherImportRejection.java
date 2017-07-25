@@ -12,7 +12,7 @@ import java.util.Date;
  * Created by beehyv on 13/7/17.
  */
 @Entity(tableName = "nms_mother_rejects")
-public class MotherImportAudit {
+public class MotherImportRejection {
 
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
@@ -29,7 +29,7 @@ public class MotherImportAudit {
     private String districtName;
 
     @Field
-    private Long talukaId;
+    private String talukaId;
 
     @Field
     private String talukaName;
@@ -83,7 +83,7 @@ public class MotherImportAudit {
     private String whomPhoneNumber;
 
     @Field
-    private Date birthDate;
+    private String birthDate;
 
     @Field
     private String JSYBeneficiary;
@@ -113,31 +113,31 @@ public class MotherImportAudit {
     private String facilityName;
 
     @Field
-    private Date lmpDate;
+    private String lmpDate;
 
     @Field
-    private Date ANC1Date;
+    private String ANC1Date;
 
     @Field
-    private Date ANC2Date;
+    private String ANC2Date;
 
     @Field
-    private Date ANC3Date;
+    private String ANC3Date;
 
     @Field
-    private Date ANC4Date;
+    private String ANC4Date;
 
     @Field
-    private Date TT1Date;
+    private String TT1Date;
 
     @Field
-    private Date TT2Date;
+    private String TT2Date;
 
     @Field
-    private Date TTBoosterDate;
+    private String TTBoosterDate;
 
     @Field
-    private Date IFA100GivenDate;
+    private String IFA100GivenDate;
 
     @Field
     private String anemia;
@@ -149,7 +149,7 @@ public class MotherImportAudit {
     private String RTISTI;
 
     @Field
-    private Date dlyDate;
+    private String dlyDate;
 
     @Field
     private String dlyPlaceHomeType;
@@ -167,10 +167,10 @@ public class MotherImportAudit {
     private String dlyComplication;
 
     @Field
-    private Date dischargeDate;
+    private String dischargeDate;
 
     @Field
-    private Date JSYPaidDate;
+    private String JSYPaidDate;
 
     @Field
     private String abortion;
@@ -197,7 +197,7 @@ public class MotherImportAudit {
     private String child1Sex;
 
     @Field
-    private Integer child1Wt;
+    private Double child1Wt;
 
     @Field
     private String child1Brestfeeding;
@@ -209,7 +209,7 @@ public class MotherImportAudit {
     private String child2Sex;
 
     @Field
-    private Integer child2Wt;
+    private Double child2Wt;
 
     @Field
     private String child2Brestfeeding;
@@ -221,7 +221,7 @@ public class MotherImportAudit {
     private String child3Sex;
 
     @Field
-    private Integer child3Wt;
+    private Double child3Wt;
 
     @Field
     private String child3Brestfeeding;
@@ -233,7 +233,7 @@ public class MotherImportAudit {
     private String child4Sex;
 
     @Field
-    private Integer child4Wt;
+    private Double child4Wt;
 
     @Field
     private String child4Brestfeeding;
@@ -242,10 +242,10 @@ public class MotherImportAudit {
     private Integer age;
 
     @Field
-    private Date MTHRREGDATE;
+    private String MTHRREGDATE;
 
     @Field
-    private Date lastUpdateDate;
+    private String lastUpdateDate;
 
     @Field
     private String remarks;
@@ -281,16 +281,16 @@ public class MotherImportAudit {
     private Integer EID;
 
     @Field
-    private Date EIDTime;
+    private String EIDTime;
 
     @Field
-    private String entryType;
+    private Integer entryType;
 
     @Field
     private String registrationNo;
 
     @Field
-    private Integer caseNo;
+    private Long caseNo;
 
     @Field
     private String mobileNo;
@@ -299,10 +299,10 @@ public class MotherImportAudit {
     private String abortionType;
 
     @Field
-    private Integer deliveryOutcomes;
+    private String deliveryOutcomes;
 
     @Field
-    private Date execDate;
+    private String execDate;
 
     @Field
     private Boolean accepted;
@@ -354,11 +354,11 @@ public class MotherImportAudit {
         this.districtName = districtName;
     }
 
-    public Long getTalukaId() {
+    public String getTalukaId() {
         return talukaId;
     }
 
-    public void setTalukaId(Long talukaId) {
+    public void setTalukaId(String talukaId) {
         this.talukaId = talukaId;
     }
 
@@ -498,11 +498,11 @@ public class MotherImportAudit {
         this.whomPhoneNumber = whomPhoneNumber;
     }
 
-    public Date getBirthDate() {
+    public String getBirthDate() {
         return birthDate;
     }
 
-    public void setBirthDate(Date birthDate) {
+    public void setBirthDate(String birthDate) {
         this.birthDate = birthDate;
     }
 
@@ -578,75 +578,75 @@ public class MotherImportAudit {
         this.facilityName = facilityName;
     }
 
-    public Date getLmpDate() {
+    public String getLmpDate() {
         return lmpDate;
     }
 
-    public void setLmpDate(Date lmpDate) {
+    public void setLmpDate(String lmpDate) {
         this.lmpDate = lmpDate;
     }
 
-    public Date getANC1Date() {
+    public String getANC1Date() {
         return ANC1Date;
     }
 
-    public void setANC1Date(Date ANC1Date) {
+    public void setANC1Date(String ANC1Date) {
         this.ANC1Date = ANC1Date;
     }
 
-    public Date getANC2Date() {
+    public String getANC2Date() {
         return ANC2Date;
     }
 
-    public void setANC2Date(Date ANC2Date) {
+    public void setANC2Date(String ANC2Date) {
         this.ANC2Date = ANC2Date;
     }
 
-    public Date getANC3Date() {
+    public String getANC3Date() {
         return ANC3Date;
     }
 
-    public void setANC3Date(Date ANC3Date) {
+    public void setANC3Date(String ANC3Date) {
         this.ANC3Date = ANC3Date;
     }
 
-    public Date getANC4Date() {
+    public String getANC4Date() {
         return ANC4Date;
     }
 
-    public void setANC4Date(Date ANC4Date) {
+    public void setANC4Date(String ANC4Date) {
         this.ANC4Date = ANC4Date;
     }
 
-    public Date getTT1Date() {
+    public String getTT1Date() {
         return TT1Date;
     }
 
-    public void setTT1Date(Date TT1Date) {
+    public void setTT1Date(String TT1Date) {
         this.TT1Date = TT1Date;
     }
 
-    public Date getTT2Date() {
+    public String getTT2Date() {
         return TT2Date;
     }
 
-    public void setTT2Date(Date TT2Date) {
+    public void setTT2Date(String TT2Date) {
         this.TT2Date = TT2Date;
     }
 
-    public Date getTTBoosterDate() {
+    public String getTTBoosterDate() {
         return TTBoosterDate;
     }
 
-    public void setTTBoosterDate(Date TTBoosterDate) {
+    public void setTTBoosterDate(String TTBoosterDate) {
         this.TTBoosterDate = TTBoosterDate;
     }
 
-    public Date getIFA100GivenDate() {
+    public String getIFA100GivenDate() {
         return IFA100GivenDate;
     }
 
-    public void setIFA100GivenDate(Date IFA100GivenDate) {
+    public void setIFA100GivenDate(String IFA100GivenDate) {
         this.IFA100GivenDate = IFA100GivenDate;
     }
 
@@ -674,11 +674,11 @@ public class MotherImportAudit {
         this.RTISTI = RTISTI;
     }
 
-    public Date getDlyDate() {
+    public String getDlyDate() {
         return dlyDate;
     }
 
-    public void setDlyDate(Date dlyDate) {
+    public void setDlyDate(String dlyDate) {
         this.dlyDate = dlyDate;
     }
 
@@ -722,19 +722,19 @@ public class MotherImportAudit {
         this.dlyComplication = dlyComplication;
     }
 
-    public Date getDischargeDate() {
+    public String getDischargeDate() {
         return dischargeDate;
     }
 
-    public void setDischargeDate(Date dischargeDate) {
+    public void setDischargeDate(String dischargeDate) {
         this.dischargeDate = dischargeDate;
     }
 
-    public Date getJSYPaidDate() {
+    public String getJSYPaidDate() {
         return JSYPaidDate;
     }
 
-    public void setJSYPaidDate(Date JSYPaidDate) {
+    public void setJSYPaidDate(String JSYPaidDate) {
         this.JSYPaidDate = JSYPaidDate;
     }
 
@@ -802,11 +802,11 @@ public class MotherImportAudit {
         this.child1Sex = child1Sex;
     }
 
-    public Integer getChild1Wt() {
+    public Double getChild1Wt() {
         return child1Wt;
     }
 
-    public void setChild1Wt(Integer child1Wt) {
+    public void setChild1Wt(Double child1Wt) {
         this.child1Wt = child1Wt;
     }
 
@@ -834,11 +834,11 @@ public class MotherImportAudit {
         this.child2Sex = child2Sex;
     }
 
-    public Integer getChild2Wt() {
+    public Double getChild2Wt() {
         return child2Wt;
     }
 
-    public void setChild2Wt(Integer child2Wt) {
+    public void setChild2Wt(Double child2Wt) {
         this.child2Wt = child2Wt;
     }
 
@@ -866,11 +866,11 @@ public class MotherImportAudit {
         this.child3Sex = child3Sex;
     }
 
-    public Integer getChild3Wt() {
+    public Double getChild3Wt() {
         return child3Wt;
     }
 
-    public void setChild3Wt(Integer child3Wt) {
+    public void setChild3Wt(Double child3Wt) {
         this.child3Wt = child3Wt;
     }
 
@@ -898,11 +898,11 @@ public class MotherImportAudit {
         this.child4Sex = child4Sex;
     }
 
-    public Integer getChild4Wt() {
+    public Double getChild4Wt() {
         return child4Wt;
     }
 
-    public void setChild4Wt(Integer child4Wt) {
+    public void setChild4Wt(Double child4Wt) {
         this.child4Wt = child4Wt;
     }
 
@@ -922,19 +922,19 @@ public class MotherImportAudit {
         this.age = age;
     }
 
-    public Date getMTHRREGDATE() {
+    public String getMTHRREGDATE() {
         return MTHRREGDATE;
     }
 
-    public void setMTHRREGDATE(Date MTHRREGDATE) {
+    public void setMTHRREGDATE(String MTHRREGDATE) {
         this.MTHRREGDATE = MTHRREGDATE;
     }
 
-    public Date getLastUpdateDate() {
+    public String getLastUpdateDate() {
         return lastUpdateDate;
     }
 
-    public void setLastUpdateDate(Date lastUpdateDate) {
+    public void setLastUpdateDate(String lastUpdateDate) {
         this.lastUpdateDate = lastUpdateDate;
     }
 
@@ -1026,19 +1026,19 @@ public class MotherImportAudit {
         this.EID = EID;
     }
 
-    public Date getEIDTime() {
+    public String getEIDTime() {
         return EIDTime;
     }
 
-    public void setEIDTime(Date EIDTime) {
+    public void setEIDTime(String EIDTime) {
         this.EIDTime = EIDTime;
     }
 
-    public String getEntryType() {
+    public Integer getEntryType() {
         return entryType;
     }
 
-    public void setEntryType(String entryType) {
+    public void setEntryType(Integer entryType) {
         this.entryType = entryType;
     }
 
@@ -1050,11 +1050,11 @@ public class MotherImportAudit {
         this.registrationNo = registrationNo;
     }
 
-    public Integer getCaseNo() {
+    public Long getCaseNo() {
         return caseNo;
     }
 
-    public void setCaseNo(Integer caseNo) {
+    public void setCaseNo(Long caseNo) {
         this.caseNo = caseNo;
     }
 
@@ -1074,19 +1074,19 @@ public class MotherImportAudit {
         this.abortionType = abortionType;
     }
 
-    public Integer getDeliveryOutcomes() {
+    public String getDeliveryOutcomes() {
         return deliveryOutcomes;
     }
 
-    public void setDeliveryOutcomes(Integer deliveryOutcomes) {
+    public void setDeliveryOutcomes(String deliveryOutcomes) {
         this.deliveryOutcomes = deliveryOutcomes;
     }
 
-    public Date getExecDate() {
+    public String getExecDate() {
         return execDate;
     }
 
-    public void setExecDate(Date execDate) {
+    public void setExecDate(String execDate) {
         this.execDate = execDate;
     }
 

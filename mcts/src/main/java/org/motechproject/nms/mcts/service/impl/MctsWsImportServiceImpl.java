@@ -14,6 +14,7 @@ import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.util.Order;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
@@ -41,7 +42,10 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.rejectionhandler.domain.FlwImportRejection;
+import org.motechproject.nms.rejectionhandler.service.ActionFinderService;
+import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
 import org.motechproject.nms.rejectionhandler.service.FlwRejectionService;
+import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +61,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static org.motechproject.nms.rejectionhandler.utils.ObjectListCleaner.*;
+import static org.motechproject.nms.rejectionhandler.utils.RejectedObjectConverter.*;
 
 @Service("mctsWsImportService")
 public class MctsWsImportServiceImpl implements MctsWsImportService {
@@ -90,11 +97,20 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
     private MctsImportFailRecordDataService mctsImportFailRecordDataService;
 
     @Autowired
+    @Qualifier("mctsSettings")
+    private SettingsFacade settingsFacade;
+
+    @Autowired
     private FlwRejectionService flwRejectionService;
 
     @Autowired
-    @Qualifier("mctsSettings")
-    private SettingsFacade settingsFacade;
+    private MotherRejectionService motherRejectionService;
+
+    @Autowired
+    private ChildRejectionService childRejectionService;
+
+    @Autowired
+    private ActionFinderService actionFinderService;
 
     /**
      * Event relay service to handle async notifications
@@ -209,11 +225,21 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     private MctsImportAudit saveImportedMothersData(MothersDataSet mothersDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
         LOGGER.info("Starting mother import for state {}", stateName);
+        List<List<MotherRecord>> motherRecordsSet = cleanMotherRecords(mothersDataSet.getRecords());
+        List<MotherRecord> rejectedMotherRecords = motherRecordsSet.get(0);
+        String action = "";
+        for (MotherRecord record : rejectedMotherRecords){
+            action = actionFinderService.MotherActionFinder(record);
+            LOGGER.error("Existing Mother Record with same MSISDN in the data set");
+            motherRejectionService.createOrUpdateMother(motherRejectionMcts(record,false,RejectionReasons.MSISDN_ALREADY_IN_USE.toString(),action));
+        }
+        List<MotherRecord> acceptedMotherRecords = motherRecordsSet.get(1);
 
         int saved = 0;
         int rejected = 0;
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
-        for (MotherRecord record : mothersDataSet.getRecords()) {
+        for (MotherRecord record : acceptedMotherRecords) {
+            action = actionFinderService.MotherActionFinder(record);
             try {
                 // get user property map
                 Map<String, Object> recordMap = toMap(record);
@@ -299,12 +325,22 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     private MctsImportAudit saveImportedChildrenData(ChildrenDataSet childrenDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
         LOGGER.info("Starting children import for state {}", stateName);
+        List<List<ChildRecord>> childRecordsSet = cleanChildRecords(childrenDataSet.getRecords());
+        List<ChildRecord> rejectedChildRecords = childRecordsSet.get(0);
+        String action = "";
+        for (ChildRecord record : rejectedChildRecords){
+            action = actionFinderService.ChildActionFinder(record);
+            LOGGER.error("Existing Child Record with same MSISDN in the data set");
+            childRejectionService.createOrUpdateChild(childRejectionMcts(record,false,RejectionReasons.MSISDN_ALREADY_IN_USE.toString(),action));
+        }
+        List<ChildRecord> acceptedChildRecords = childRecordsSet.get(1);
 
         int saved = 0;
         int rejected = 0;
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
 
-        for (ChildRecord record : childrenDataSet.getRecords()) {
+        for (ChildRecord record : acceptedChildRecords) {
+            action = actionFinderService.ChildActionFinder(record);
             try {
                 // get user property map
                 Map<String, Object> recordMap = toMap(record);
@@ -395,39 +431,49 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         String stateName = state.getName();
         Long stateCode = state.getCode();
         LOGGER.info("Starting ASHA import for state {}", stateName);
+        List<List<AnmAshaRecord>> ashaRecordsSet = cleanFlwRecords(anmAshaDataSet.getRecords());
+        List<AnmAshaRecord> rejectedAshaRecords = ashaRecordsSet.get(0);
+        String action = "";
+        for (AnmAshaRecord record : rejectedAshaRecords){
+            action = actionFinderService.flwActionFinder(record);
+            LOGGER.error("Existing Asha Record with same MSISDN in the data set");
+            flwRejectionService.createUpdate(flwRejectionMcts(record,false,RejectionReasons.MSISDN_ALREADY_IN_USE.toString(),action));
+        }
+        List<AnmAshaRecord> acceptedAshaRecords = ashaRecordsSet.get(1);
 
         int saved = 0;
         int rejected = 0;
 
-        for (AnmAshaRecord record : anmAshaDataSet.getRecords()) {
+        for (AnmAshaRecord record : acceptedAshaRecords) {
+            action = actionFinderService.flwActionFinder(record);
             String designation = record.getType();
             designation = (designation != null) ? designation.trim() : designation;
             if (!(FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation))) {
-                flwRejectionMcts(record, false, RejectionReasons.FLW_TYPE_NOT_ASHA.toString());
+                flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.FLW_TYPE_NOT_ASHA.toString(),action));
                 rejected++;
             } else {
                 try {
                     // get user property map
                     Map<String, Object> recordMap = record.toFlwRecordMap();    // temp var used for debugging
                     frontLineWorkerImportService.importMctsFrontLineWorker(recordMap, state);
-                    flwRejectionMcts(record, true, null);
+                    flwRejectionService.createUpdate(flwRejectionMcts(record, true, null,action));
                     saved++;
                 } catch (InvalidLocationException e) {
                     LOGGER.warn("Invalid location for FLW: ", e);
-                    flwRejectionMcts(record, false, RejectionReasons.INVALID_LOCATION_TYPE.toString());
+                    flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.INVALID_LOCATION_TYPE.toString(),action));
                     rejected++;
                 } catch (FlwImportException e) {
                     LOGGER.error("Existing FLW with same MSISDN but different MCTS ID", e);
-                    flwRejectionMcts(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString());
+                    flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(),action));
                     rejected++;
                 } catch (FlwExistingRecordException e) {
                     LOGGER.error("Cannot import FLW with ID: {}, and MSISDN (Contact_No): {}", record.getId(), record.getContactNo(), e);
-                    flwRejectionMcts(record, false, RejectionReasons.RECORD_ALREADY_EXISTS.toString());
+                    flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.RECORD_ALREADY_EXISTS.toString(),action));
                     rejected++;
                 } catch (Exception e) {
                     LOGGER.error("Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Contact_No): {}",
                             record.getId(), record.getContactNo(), e);
-                    flwRejectionMcts(record, false, RejectionReasons.FLW_IMPORT_ERROR.toString());
+                    flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.FLW_IMPORT_ERROR.toString(),action));
                     rejected++;
                 }
             }
@@ -543,53 +589,6 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         return true;
     }
 
-    private void flwRejectionMcts(AnmAshaRecord record, Boolean accepted, String rejectionReason) {
-        FlwImportRejection flwImportRejection = new FlwImportRejection();
-        flwImportRejection.setStateId(record.getStateId());
-        flwImportRejection.setDistrictId(record.getDistrictId());
-        flwImportRejection.setDistrictName(record.getDistrictName());
-        flwImportRejection.setTalukaId(record.getTalukaId());
-        flwImportRejection.setHealthBlockId(record.getHealthBlockId());
-        flwImportRejection.setHealthBlockName(record.getHealthBlockName());
-        flwImportRejection.setPhcId(record.getPhcId());
-        flwImportRejection.setPhcName(record.getPhcName());
-        flwImportRejection.setSubcentreId(record.getSubCentreId());
-        flwImportRejection.setSubcentreName(record.getSubCentreName());
-        flwImportRejection.setVillageId(record.getVillageId());
-        flwImportRejection.setVillageName(record.getVillageName());
-        flwImportRejection.setFlwId(record.getId());
-        flwImportRejection.setMsisdn(record.getContactNo());
-        flwImportRejection.setGfName(record.getName());
-        flwImportRejection.setType(record.getType());
-        flwImportRejection.setGfStatus(record.getGfStatus());
-        flwImportRejection.setRegDate(record.getRegDate());
-        flwImportRejection.setSex(record.getSex());
-        flwImportRejection.setSmsReply(record.getSmsReply());
-        flwImportRejection.setAadharNo(record.getAadharNo());
-        flwImportRejection.setCreatedOn(record.getCreatedOn());
-        flwImportRejection.setUpdatedOn(record.getUpdatedOn());
-        flwImportRejection.setBankId(record.getBankId());
-        flwImportRejection.setBranchName(record.getBranchName());
-        flwImportRejection.setIfscIdCode(record.getIfscIdCode());
-        flwImportRejection.setBankName(record.getBankName());
-        flwImportRejection.setAccountNumber(record.getAccNo());
-        flwImportRejection.setAadharLinked(record.getIsAadharLinked());
-        flwImportRejection.setVerifyDate(record.getVerifyDate());
-        flwImportRejection.setVerifierName(record.getVerifierName());
-        flwImportRejection.setVerifierId(record.getVerifierId());
-        flwImportRejection.setCallAns(record.getCallAns());
-        flwImportRejection.setPhoneNoCorrect(record.getIsPhoneNoCorrect());
-        flwImportRejection.setNoCallReason(record.getNoCallReason());
-        flwImportRejection.setNoPhoneReason(record.getNoPhoneReason());
-        flwImportRejection.setVerifierRemarks(record.getVerifierRemarks());
-        flwImportRejection.setGfAddress(record.getGfAddress());
-        flwImportRejection.setHusbandName(record.getHusbandName());
-        flwImportRejection.setSource("MCTS-Import");
-        flwImportRejection.setAccepted(accepted);
-        flwImportRejection.setRejectionReason(rejectionReason);
-
-        flwRejectionService.createUpdate(flwImportRejection);
-    }
 
 
     private Map<Long, Set<Long>> getHpdFilters() {
