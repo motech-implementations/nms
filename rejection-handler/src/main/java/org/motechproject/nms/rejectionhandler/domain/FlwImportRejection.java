@@ -1,9 +1,8 @@
 package org.motechproject.nms.rejectionhandler.domain;
 
+import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-
-import java.util.Date;
 
 /**
  * Created by vishnu on 12/7/17.
@@ -144,10 +143,10 @@ public class FlwImportRejection {
     private String source;
 
     @Field
-    private Date creationDate;
+    private DateTime creationDate;
 
     @Field
-    private Date modificationDate;
+    private DateTime modificationDate;
 
     @Field
     private String action;
@@ -512,19 +511,19 @@ public class FlwImportRejection {
         this.source = source;
     }
 
-    public Date getCreationDate() {
+    public DateTime getCreationDate() {
         return creationDate;
     }
 
-    public void setCreationDate(Date creationDate) {
+    public void setCreationDate(DateTime creationDate) {
         this.creationDate = creationDate;
     }
 
-    public Date getModificationDate() {
+    public DateTime getModificationDate() {
         return modificationDate;
     }
 
-    public void setModificationDate(Date modificationDate) {
+    public void setModificationDate(DateTime modificationDate) {
         this.modificationDate = modificationDate;
     }
 }
