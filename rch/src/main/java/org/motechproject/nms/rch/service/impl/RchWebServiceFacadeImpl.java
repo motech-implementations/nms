@@ -21,12 +21,14 @@ import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.util.Order;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
+import org.motechproject.nms.mcts.contract.AnmAshaRecord;
 import org.motechproject.nms.mcts.domain.RejectionReasons;
 import org.motechproject.nms.rch.contract.RchAnmAshaDataSet;
 import org.motechproject.nms.rch.contract.RchAnmAshaRecord;
@@ -54,6 +56,10 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.rejectionhandler.domain.FlwImportRejection;
+import org.motechproject.nms.rejectionhandler.service.ActionFinderService;
+import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
+import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
+import org.motechproject.nms.rejectionhandler.utils.*;
 import org.motechproject.nms.rejectionhandler.service.FlwRejectionService;
 import org.motechproject.scheduler.contract.CronSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
@@ -85,6 +91,9 @@ import java.util.List;
 import java.util.Collection;
 import java.util.Set;
 import java.util.HashSet;
+
+import static org.motechproject.nms.rejectionhandler.utils.ObjectListCleaner.*;
+import static org.motechproject.nms.rejectionhandler.utils.RejectedObjectConverter.*;
 
 @Service("rchWebServiceFacade")
 public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
@@ -128,9 +137,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private StateDataService stateDataService;
 
     @Autowired
-    private FlwRejectionService flwRejectionService;
-
-    @Autowired
     private FrontLineWorkerImportService frontLineWorkerImportService;
 
     @Autowired
@@ -144,6 +150,18 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     @Autowired
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
+
+    @Autowired
+    private FlwRejectionService flwRejectionService;
+
+    @Autowired
+    private MotherRejectionService motherRejectionService;
+
+    @Autowired
+    private ChildRejectionService childRejectionService;
+
+    @Autowired
+    private ActionFinderService actionFinderService;
 
     @Override
     public boolean getMothersData(LocalDate from, LocalDate to, URL endpoint, Long stateId) {
@@ -534,11 +552,20 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private RchImportAudit saveImportedMothersData(RchMothersDataSet mothersDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
         LOGGER.info("Starting RCH mother import for state {}", stateName);
-
+        List<List<RchMotherRecord>> rchMotherRecordsSet = cleanRchMotherRecords(mothersDataSet.getRecords());
+        List<RchMotherRecord> rejectedRchMothers = rchMotherRecordsSet.get(0);
+        String action = "";
+        for (RchMotherRecord record : rejectedRchMothers){
+            action = actionFinderService.RchMotherActionFinder(record);
+            LOGGER.error("Existing Mother Record with same MSISDN in the data set");
+            motherRejectionService.createOrUpdateMother(motherRejectionRch(record,false,RejectionReasons.MSISDN_ALREADY_IN_USE.toString(),action));
+        }
+        List<RchMotherRecord> acceptedRchMothers = rchMotherRecordsSet.get(1);
         int saved = 0;
         int rejected = 0;
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
-        for (RchMotherRecord record : mothersDataSet.getRecords()) {
+        for (RchMotherRecord record : acceptedRchMothers) {
+            action = actionFinderService.RchMotherActionFinder(record);
             try {
                 // get user property map
                 Map<String, Object> recordMap = toMap(record);
@@ -567,12 +594,22 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private RchImportAudit saveImportedChildrenData(RchChildrenDataSet childrenDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
         LOGGER.info("Starting RCH children import for state {}", stateName);
+        List<List<RchChildRecord>> rchChildRecordsSet = cleanRchChildRecords(childrenDataSet.getRecords());
+        List<RchChildRecord> rejectedRchChildren = rchChildRecordsSet.get(0);
+        String action = "";
+        for (RchChildRecord record : rejectedRchChildren){
+            action = actionFinderService.RchChildActionFinder(record);
+            LOGGER.error("Existing Child Record with same MSISDN in the data set");
+            childRejectionService.createOrUpdateChild(childRejectionRch(record,false,RejectionReasons.MSISDN_ALREADY_IN_USE.toString(),action));
+        }
+        List<RchChildRecord> acceptedRchChildren = rchChildRecordsSet.get(1);
 
         int saved = 0;
         int rejected = 0;
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
 
-        for (RchChildRecord record : childrenDataSet.getRecords()) {
+        for (RchChildRecord record : acceptedRchChildren) {
+            action = actionFinderService.RchChildActionFinder(record);
             try {
                 // get user property map
                 Map<String, Object> recordMap = toMap(record);
@@ -604,40 +641,50 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private RchImportAudit saveImportedAshaData(RchAnmAshaDataSet anmAshaDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
         LOGGER.info("Starting RCH ASHA import for state {}", stateName);
+        List<List<RchAnmAshaRecord>> rchAshaRecordsSet = cleanRchFlwRecords(anmAshaDataSet.getRecords());
+        List<RchAnmAshaRecord> rejectedRchAshas = rchAshaRecordsSet.get(0);
+        String action = "";
+        for (RchAnmAshaRecord record : rejectedRchAshas){
+            action = actionFinderService.RchFlwActionFinder(record);
+            LOGGER.error("Existing Asha Record with same MSISDN in the data set");
+            flwRejectionService.createUpdate(flwRejectionRch(record,false,RejectionReasons.MSISDN_ALREADY_IN_USE.toString(),action));
+        }
+        List<RchAnmAshaRecord> acceptedRchAshas = rchAshaRecordsSet.get(1);
 
         int saved = 0;
         int rejected = 0;
         State state = stateDataService.findByCode(stateCode);
 
-        for (RchAnmAshaRecord record : anmAshaDataSet.getRecords()) {
+        for (RchAnmAshaRecord record : acceptedRchAshas) {
+            action = actionFinderService.RchFlwActionFinder(record);
             String designation = record.getGfType();
-            designation = (designation != null) ? designation.trim() : designation;
+            designation = (designation != null ? designation.trim() : designation);
             if (!(FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation))) {
-                flwRejectionRch(record, false, RejectionReasons.FLW_TYPE_NOT_ASHA.toString());
+                flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.FLW_TYPE_NOT_ASHA.toString(),action));
                 rejected++;
             } else {
                 try {
                     // get user property map
                     Map<String, Object> recordMap = record.toFlwRecordMap();    // temp var used for debugging
                     frontLineWorkerImportService.importRchFrontLineWorker(recordMap, state);
-                    flwRejectionRch(record, true, null);
+                    flwRejectionService.createUpdate(flwRejectionRch(record, true, null,action));
                     saved++;
                 } catch (InvalidLocationException e) {
                     LOGGER.warn("Invalid location for FLW: ", e);
-                    flwRejectionRch(record, false, RejectionReasons.INVALID_LOCATION_TYPE.toString());
+                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.INVALID_LOCATION_TYPE.toString(),action));
                     rejected++;
                 } catch (FlwImportException e) {
                     LOGGER.error("Existing FLW with same MSISDN but different RCH ID", e);
-                    flwRejectionRch(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString());
+                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(),action));
                     rejected++;
                 } catch (FlwExistingRecordException e) {
                     LOGGER.error("Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}", record.getGfId(), record.getMobileNo(), e);
-                    flwRejectionRch(record, false, RejectionReasons.RECORD_ALREADY_EXISTS.toString());
+                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.RECORD_ALREADY_EXISTS.toString(),action));
                     rejected++;
                 } catch (Exception e) {
                     LOGGER.error("RCH Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}",
                             record.getGfId(), record.getMobileNo(), e);
-                    flwRejectionRch(record, false, RejectionReasons.FLW_IMPORT_ERROR.toString());
+                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.FLW_IMPORT_ERROR.toString(),action));
                     rejected++;
                 }
             }
@@ -730,32 +777,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return hpdMap;
     }
 
-    private void flwRejectionRch(RchAnmAshaRecord record, Boolean accepted, String rejectionReason) {
-        FlwImportRejection flwImportRejection = new FlwImportRejection();
-        flwImportRejection.setStateId(record.getStateId());
-        flwImportRejection.setDistrictId(record.getDistrictId());
-        flwImportRejection.setDistrictName(record.getDistrictName());
-        flwImportRejection.setTalukaId(record.getTalukaId());
-        flwImportRejection.setHealthBlockId(record.getHealthBlockId());
-        flwImportRejection.setHealthBlockName(record.getHealthBlockName());
-        flwImportRejection.setPhcId(record.getPhcId());
-        flwImportRejection.setPhcName(record.getPhcName());
-        flwImportRejection.setSubcentreId(record.getSubCentreId());
-        flwImportRejection.setSubcentreName(record.getSubCentreName());
-        flwImportRejection.setVillageId(record.getVillageId());
-        flwImportRejection.setVillageName(record.getVillageName());
-        flwImportRejection.setFlwId(record.getGfId());
-        flwImportRejection.setMsisdn(record.getMobileNo());
-        flwImportRejection.setGfName(record.getGfName());
-        flwImportRejection.setType(record.getGfType());
-        flwImportRejection.setGfStatus(record.getGfStatus());
-        flwImportRejection.setExecDate(record.getExecDate());
-        flwImportRejection.setSource("RCH-Import");
-        flwImportRejection.setAccepted(accepted);
-        flwImportRejection.setRejectionReason(rejectionReason);
-
-        flwRejectionService.createUpdate(flwImportRejection);
-    }
 
     private Set<Long> getHpdForState(Long stateId) {
 

@@ -11,7 +11,7 @@ import java.util.Date;
  * Created by beehyvsc on 12/7/17.
  */
 @Entity(tableName = "nms_child_rejects")
-public class ChildImportAudit {
+public class ChildImportRejection {
 
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -28,7 +28,7 @@ public class ChildImportAudit {
     private String districtName;
 
     @Field
-    private Long talukaId;
+    private String talukaId;
 
     @Field
     private String talukaName;
@@ -76,6 +76,9 @@ public class ChildImportAudit {
     private String name;
 
     @Field
+    private String mobileNo;
+
+    @Field
     private String motherName;
 
     @Field
@@ -88,7 +91,7 @@ public class ChildImportAudit {
     private String whomPhoneNumber;
 
     @Field
-    private Date birthDate;
+    private String birthDate;
 
     @Field
     private String placeOfDelivery;
@@ -226,7 +229,7 @@ public class ChildImportAudit {
     private String measles2Dt;
 
     @Field
-    private Integer weightOfChild;
+    private Double weightOfChild;
 
     @Field
     private Integer childAadhaarNo;
@@ -253,7 +256,7 @@ public class ChildImportAudit {
     private String MCTSMotherIDNo;
 
     @Field
-    private Date ExecDate;
+    private String ExecDate;
 
     @Field
     private Boolean accepted;
@@ -305,11 +308,11 @@ public class ChildImportAudit {
         this.districtName = districtName;
     }
 
-    public Long getTalukaId() {
+    public String getTalukaId() {
         return talukaId;
     }
 
-    public void setTalukaId(Long talukaId) {
+    public void setTalukaId(String talukaId) {
         this.talukaId = talukaId;
     }
 
@@ -433,6 +436,14 @@ public class ChildImportAudit {
         this.name = name;
     }
 
+    public String getMobileNo() {
+        return mobileNo;
+    }
+
+    public void setMobileNo(String mobileNo) {
+        this.mobileNo = mobileNo;
+    }
+
     public String getMotherName() {
         return motherName;
     }
@@ -465,11 +476,11 @@ public class ChildImportAudit {
         this.whomPhoneNumber = whomPhoneNumber;
     }
 
-    public Date getBirthDate() {
+    public String getBirthDate() {
         return birthDate;
     }
 
-    public void setBirthDate(Date birthDate) {
+    public void setBirthDate(String birthDate) {
         this.birthDate = birthDate;
     }
 
@@ -833,11 +844,11 @@ public class ChildImportAudit {
         this.measles2Dt = measles2Dt;
     }
 
-    public Integer getWeightOfChild() {
+    public Double getWeightOfChild() {
         return weightOfChild;
     }
 
-    public void setWeightOfChild(Integer weightOfChild) {
+    public void setWeightOfChild(Double weightOfChild) {
         this.weightOfChild = weightOfChild;
     }
 
@@ -905,11 +916,11 @@ public class ChildImportAudit {
         this.MCTSMotherIDNo = MCTSMotherIDNo;
     }
 
-    public Date getExecDate() {
+    public String getExecDate() {
         return ExecDate;
     }
 
-    public void setExecDate(Date execDate) {
+    public void setExecDate(String execDate) {
         ExecDate = execDate;
     }
 
