@@ -14,22 +14,23 @@ import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.util.Order;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
-import org.motechproject.nms.flw.utils.FlwConstants;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.mcts.contract.AnmAshaDataSet;
-import org.motechproject.nms.mcts.contract.AnmAshaRecord;
-import org.motechproject.nms.mcts.contract.ChildRecord;
+import org.motechproject.nms.kilkari.contract.AnmAshaRecord;
+import org.motechproject.nms.kilkari.contract.ChildRecord;
 import org.motechproject.nms.mcts.contract.ChildrenDataSet;
-import org.motechproject.nms.mcts.contract.MotherRecord;
+import org.motechproject.nms.kilkari.contract.MotherRecord;
 import org.motechproject.nms.mcts.contract.MothersDataSet;
 import org.motechproject.nms.mcts.domain.MctsImportAudit;
 import org.motechproject.nms.mcts.domain.MctsImportFailRecord;
 import org.motechproject.nms.mcts.domain.MctsUserType;
-import org.motechproject.nms.mcts.domain.RejectionReasons;
+import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.mcts.exception.MctsInvalidResponseStructureException;
 import org.motechproject.nms.mcts.exception.MctsWebServiceException;
 import org.motechproject.nms.mcts.repository.MctsImportAuditDataService;
@@ -40,7 +41,7 @@ import org.motechproject.nms.mcts.utils.Constants;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.rejectionhandler.service.ActionFinderService;
+import org.motechproject.nms.kilkari.service.ActionFinderService;
 import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
 import org.motechproject.nms.rejectionhandler.service.FlwRejectionService;
 import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
@@ -60,8 +61,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.motechproject.nms.rejectionhandler.utils.ObjectListCleaner.*;
-import static org.motechproject.nms.rejectionhandler.utils.RejectedObjectConverter.*;
+import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.*;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.*;
 
 @Service("mctsWsImportService")
 public class MctsWsImportServiceImpl implements MctsWsImportService {
@@ -109,6 +110,9 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     @Autowired
     private ActionFinderService actionFinderService;
+
+    @Autowired
+    private FrontLineWorkerService frontLineWorkerService;
 
     /**
      * Event relay service to handle async notifications
@@ -619,5 +623,13 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         }
 
         return districtSet;
+    }
+
+    private String flwActionFinder(AnmAshaRecord record) {
+        if(frontLineWorkerService.getByMctsFlwIdAndState(record.getId().toString(),stateDataService.findByCode(record.getStateId()))==null){
+            return "CREATE";
+        } else {
+            return "UPDATE";
+        }
     }
 }

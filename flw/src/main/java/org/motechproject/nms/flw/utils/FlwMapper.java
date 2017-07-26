@@ -5,6 +5,7 @@ import org.motechproject.nms.flw.domain.FlwJobStatus;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Taluka;

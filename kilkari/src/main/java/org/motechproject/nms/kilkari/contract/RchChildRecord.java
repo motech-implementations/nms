@@ -1,4 +1,4 @@
-package org.motechproject.nms.rch.contract;
+package org.motechproject.nms.kilkari.contract;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -36,19 +36,6 @@ public class RchChildRecord {
         return stateId;
     }
 
-    @XmlElement(name = "StateID")
-    public void setStateId(Long stateId) {
-        this.stateId = stateId;
-    }
-
-    public Long getDistrictId() {
-        return districtId;
-    }
-
-    @XmlElement(name = "District_ID")
-    public void setDistrictId(Long districtId) {
-        this.districtId = districtId;
-    }
 
     public String getDistrictName() {
         return districtName;
@@ -68,6 +55,20 @@ public class RchChildRecord {
         this.talukaId = talukaId;
     }
 
+    @XmlElement(name = "StateID")
+    public void setStateId(Long stateId) {
+        this.stateId = stateId;
+    }
+
+    public Long getDistrictId() {
+        return districtId;
+    }
+
+    @XmlElement(name = "District_ID")
+    public void setDistrictId(Long districtId) {
+        this.districtId = districtId;
+    }
+
     public String getTalukaName() {
         return talukaName;
     }
@@ -79,6 +80,19 @@ public class RchChildRecord {
 
     public Long getHealthBlockId() {
         return healthBlockId;
+    }
+
+    public String getSubCentreName() {
+        return subCentreName;
+    }
+
+    @XmlElement(name = "SubCentre_Name")
+    public void setSubCentreName(String subCentreName) {
+        this.subCentreName = subCentreName;
+    }
+
+    public Long getVillageId() {
+        return villageId;
     }
 
     @XmlElement(name = "HealthBlock_ID")
@@ -120,19 +134,6 @@ public class RchChildRecord {
     @XmlElement(name = "SubCentre_ID")
     public void setSubCentreId(Long subCentreId) {
         this.subCentreId = subCentreId;
-    }
-
-    public String getSubCentreName() {
-        return subCentreName;
-    }
-
-    @XmlElement(name = "SubCentre_Name")
-    public void setSubCentreName(String subCentreName) {
-        this.subCentreName = subCentreName;
-    }
-
-    public Long getVillageId() {
-        return villageId;
     }
 
     @XmlElement(name = "Village_ID")

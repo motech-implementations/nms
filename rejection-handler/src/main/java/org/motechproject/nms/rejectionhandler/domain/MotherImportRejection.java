@@ -17,7 +17,7 @@ public class MotherImportRejection {
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     @Field
-    private Long ChildRejectId;
+    private Long childRejectId;
 
     @Field
     private Long stateId;
@@ -62,7 +62,7 @@ public class MotherImportRejection {
     private Integer yr;
 
     @Field
-    private String GPVillage;
+    private String gPVillage;
 
     @Field
     private String address;
@@ -86,7 +86,7 @@ public class MotherImportRejection {
     private String birthDate;
 
     @Field
-    private String JSYBeneficiary;
+    private String jSYBeneficiary;
 
     @Field
     private String caste;
@@ -95,10 +95,10 @@ public class MotherImportRejection {
     private String subcenterName1;
 
     @Field
-    private String ANMName;
+    private String aNMName;
 
     @Field
-    private String ANMPhone;
+    private String aNMPhone;
 
     @Field
     private String ashaName;
@@ -116,37 +116,37 @@ public class MotherImportRejection {
     private String lmpDate;
 
     @Field
-    private String ANC1Date;
+    private String aNC1Date;
 
     @Field
-    private String ANC2Date;
+    private String aNC2Date;
 
     @Field
-    private String ANC3Date;
+    private String aNC3Date;
 
     @Field
-    private String ANC4Date;
+    private String aNC4Date;
 
     @Field
-    private String TT1Date;
+    private String tT1Date;
 
     @Field
-    private String TT2Date;
+    private String tT2Date;
 
     @Field
-    private String TTBoosterDate;
+    private String tTBoosterDate;
 
     @Field
-    private String IFA100GivenDate;
+    private String iFA100GivenDate;
 
     @Field
     private String anemia;
 
     @Field
-    private String ANCComplication;
+    private String aNCComplication;
 
     @Field
-    private String RTISTI;
+    private String rTISTI;
 
     @Field
     private String dlyDate;
@@ -170,22 +170,22 @@ public class MotherImportRejection {
     private String dischargeDate;
 
     @Field
-    private String JSYPaidDate;
+    private String jSYPaidDate;
 
     @Field
     private String abortion;
 
     @Field
-    private String PNCHomeVisit;
+    private String pNCHomeVisit;
 
     @Field
-    private String PNCComplication;
+    private String pNCComplication;
 
     @Field
-    private String PPCMethod;
+    private String pPCMethod;
 
     @Field
-    private String PNCCheckup;
+    private String pNCCheckup;
 
     @Field
     private Integer outcomeNos;
@@ -242,7 +242,7 @@ public class MotherImportRejection {
     private Integer age;
 
     @Field
-    private String MTHRREGDATE;
+    private String mTHRREGDATE;
 
     @Field
     private String lastUpdateDate;
@@ -251,10 +251,10 @@ public class MotherImportRejection {
     private String remarks;
 
     @Field
-    private Integer ANMID;
+    private Integer aNMID;
 
     @Field
-    private Integer ASHAID;
+    private Integer aSHAID;
 
     @Field
     private Boolean callAns;
@@ -275,13 +275,13 @@ public class MotherImportRejection {
     private Integer aadharNo;
 
     @Field
-    private Integer BPLAPL;
+    private Integer bPLAPL;
 
     @Field
-    private Integer EID;
+    private Integer eID;
 
     @Field
-    private String EIDTime;
+    private String eIDTime;
 
     @Field
     private Integer entryType;
@@ -323,11 +323,11 @@ public class MotherImportRejection {
     private String action;
 
     public Long getChildRejectId() {
-        return ChildRejectId;
+        return childRejectId;
     }
 
     public void setChildRejectId(Long childRejectId) {
-        ChildRejectId = childRejectId;
+        this.childRejectId = childRejectId;
     }
 
     public Long getStateId() {
@@ -442,12 +442,12 @@ public class MotherImportRejection {
         this.yr = yr;
     }
 
-    public String getGPVillage() {
-        return GPVillage;
+    public String getgPVillage() {
+        return gPVillage;
     }
 
-    public void setGPVillage(String GPVillage) {
-        this.GPVillage = GPVillage;
+    public void setgPVillage(String gPVillage) {
+        this.gPVillage = gPVillage;
     }
 
     public String getAddress() {
@@ -506,12 +506,12 @@ public class MotherImportRejection {
         this.birthDate = birthDate;
     }
 
-    public String getJSYBeneficiary() {
-        return JSYBeneficiary;
+    public String getjSYBeneficiary() {
+        return jSYBeneficiary;
     }
 
-    public void setJSYBeneficiary(String JSYBeneficiary) {
-        this.JSYBeneficiary = JSYBeneficiary;
+    public void setjSYBeneficiary(String jSYBeneficiary) {
+        this.jSYBeneficiary = jSYBeneficiary;
     }
 
     public String getCaste() {
@@ -530,20 +530,20 @@ public class MotherImportRejection {
         this.subcenterName1 = subcenterName1;
     }
 
-    public String getANMName() {
-        return ANMName;
+    public String getaNMName() {
+        return aNMName;
     }
 
-    public void setANMName(String ANMName) {
-        this.ANMName = ANMName;
+    public void setaNMName(String aNMName) {
+        this.aNMName = aNMName;
     }
 
-    public String getANMPhone() {
-        return ANMPhone;
+    public String getaNMPhone() {
+        return aNMPhone;
     }
 
-    public void setANMPhone(String ANMPhone) {
-        this.ANMPhone = ANMPhone;
+    public void setaNMPhone(String aNMPhone) {
+        this.aNMPhone = aNMPhone;
     }
 
     public String getAshaName() {
@@ -586,68 +586,68 @@ public class MotherImportRejection {
         this.lmpDate = lmpDate;
     }
 
-    public String getANC1Date() {
-        return ANC1Date;
+    public String getaNC1Date() {
+        return aNC1Date;
     }
 
-    public void setANC1Date(String ANC1Date) {
-        this.ANC1Date = ANC1Date;
+    public void setaNC1Date(String aNC1Date) {
+        this.aNC1Date = aNC1Date;
     }
 
-    public String getANC2Date() {
-        return ANC2Date;
+    public String getaNC2Date() {
+        return aNC2Date;
     }
 
-    public void setANC2Date(String ANC2Date) {
-        this.ANC2Date = ANC2Date;
+    public void setaNC2Date(String aNC2Date) {
+        this.aNC2Date = aNC2Date;
     }
 
-    public String getANC3Date() {
-        return ANC3Date;
+    public String getaNC3Date() {
+        return aNC3Date;
     }
 
-    public void setANC3Date(String ANC3Date) {
-        this.ANC3Date = ANC3Date;
+    public void setaNC3Date(String aNC3Date) {
+        this.aNC3Date = aNC3Date;
     }
 
-    public String getANC4Date() {
-        return ANC4Date;
+    public String getaNC4Date() {
+        return aNC4Date;
     }
 
-    public void setANC4Date(String ANC4Date) {
-        this.ANC4Date = ANC4Date;
+    public void setaNC4Date(String aNC4Date) {
+        this.aNC4Date = aNC4Date;
     }
 
-    public String getTT1Date() {
-        return TT1Date;
+    public String gettT1Date() {
+        return tT1Date;
     }
 
-    public void setTT1Date(String TT1Date) {
-        this.TT1Date = TT1Date;
+    public void settT1Date(String tT1Date) {
+        this.tT1Date = tT1Date;
     }
 
-    public String getTT2Date() {
-        return TT2Date;
+    public String gettT2Date() {
+        return tT2Date;
     }
 
-    public void setTT2Date(String TT2Date) {
-        this.TT2Date = TT2Date;
+    public void settT2Date(String tT2Date) {
+        this.tT2Date = tT2Date;
     }
 
-    public String getTTBoosterDate() {
-        return TTBoosterDate;
+    public String gettTBoosterDate() {
+        return tTBoosterDate;
     }
 
-    public void setTTBoosterDate(String TTBoosterDate) {
-        this.TTBoosterDate = TTBoosterDate;
+    public void settTBoosterDate(String tTBoosterDate) {
+        this.tTBoosterDate = tTBoosterDate;
     }
 
-    public String getIFA100GivenDate() {
-        return IFA100GivenDate;
+    public String getiFA100GivenDate() {
+        return iFA100GivenDate;
     }
 
-    public void setIFA100GivenDate(String IFA100GivenDate) {
-        this.IFA100GivenDate = IFA100GivenDate;
+    public void setiFA100GivenDate(String iFA100GivenDate) {
+        this.iFA100GivenDate = iFA100GivenDate;
     }
 
     public String getAnemia() {
@@ -658,20 +658,20 @@ public class MotherImportRejection {
         this.anemia = anemia;
     }
 
-    public String getANCComplication() {
-        return ANCComplication;
+    public String getaNCComplication() {
+        return aNCComplication;
     }
 
-    public void setANCComplication(String ANCComplication) {
-        this.ANCComplication = ANCComplication;
+    public void setaNCComplication(String aNCComplication) {
+        this.aNCComplication = aNCComplication;
     }
 
-    public String getRTISTI() {
-        return RTISTI;
+    public String getrTISTI() {
+        return rTISTI;
     }
 
-    public void setRTISTI(String RTISTI) {
-        this.RTISTI = RTISTI;
+    public void setrTISTI(String rTISTI) {
+        this.rTISTI = rTISTI;
     }
 
     public String getDlyDate() {
@@ -730,12 +730,12 @@ public class MotherImportRejection {
         this.dischargeDate = dischargeDate;
     }
 
-    public String getJSYPaidDate() {
-        return JSYPaidDate;
+    public String getjSYPaidDate() {
+        return jSYPaidDate;
     }
 
-    public void setJSYPaidDate(String JSYPaidDate) {
-        this.JSYPaidDate = JSYPaidDate;
+    public void setjSYPaidDate(String jSYPaidDate) {
+        this.jSYPaidDate = jSYPaidDate;
     }
 
     public String getAbortion() {
@@ -746,36 +746,36 @@ public class MotherImportRejection {
         this.abortion = abortion;
     }
 
-    public String getPNCHomeVisit() {
-        return PNCHomeVisit;
+    public String getpNCHomeVisit() {
+        return pNCHomeVisit;
     }
 
-    public void setPNCHomeVisit(String PNCHomeVisit) {
-        this.PNCHomeVisit = PNCHomeVisit;
+    public void setpNCHomeVisit(String pNCHomeVisit) {
+        this.pNCHomeVisit = pNCHomeVisit;
     }
 
-    public String getPNCComplication() {
-        return PNCComplication;
+    public String getpNCComplication() {
+        return pNCComplication;
     }
 
-    public void setPNCComplication(String PNCComplication) {
-        this.PNCComplication = PNCComplication;
+    public void setpNCComplication(String pNCComplication) {
+        this.pNCComplication = pNCComplication;
     }
 
-    public String getPPCMethod() {
-        return PPCMethod;
+    public String getpPCMethod() {
+        return pPCMethod;
     }
 
-    public void setPPCMethod(String PPCMethod) {
-        this.PPCMethod = PPCMethod;
+    public void setpPCMethod(String pPCMethod) {
+        this.pPCMethod = pPCMethod;
     }
 
-    public String getPNCCheckup() {
-        return PNCCheckup;
+    public String getpNCCheckup() {
+        return pNCCheckup;
     }
 
-    public void setPNCCheckup(String PNCCheckup) {
-        this.PNCCheckup = PNCCheckup;
+    public void setpNCCheckup(String pNCCheckup) {
+        this.pNCCheckup = pNCCheckup;
     }
 
     public Integer getOutcomeNos() {
@@ -922,12 +922,12 @@ public class MotherImportRejection {
         this.age = age;
     }
 
-    public String getMTHRREGDATE() {
-        return MTHRREGDATE;
+    public String getmTHRREGDATE() {
+        return mTHRREGDATE;
     }
 
-    public void setMTHRREGDATE(String MTHRREGDATE) {
-        this.MTHRREGDATE = MTHRREGDATE;
+    public void setmTHRREGDATE(String mTHRREGDATE) {
+        this.mTHRREGDATE = mTHRREGDATE;
     }
 
     public String getLastUpdateDate() {
@@ -946,20 +946,20 @@ public class MotherImportRejection {
         this.remarks = remarks;
     }
 
-    public Integer getANMID() {
-        return ANMID;
+    public Integer getaNMID() {
+        return aNMID;
     }
 
-    public void setANMID(Integer ANMID) {
-        this.ANMID = ANMID;
+    public void setaNMID(Integer aNMID) {
+        this.aNMID = aNMID;
     }
 
-    public Integer getASHAID() {
-        return ASHAID;
+    public Integer getaSHAID() {
+        return aSHAID;
     }
 
-    public void setASHAID(Integer ASHAID) {
-        this.ASHAID = ASHAID;
+    public void setaSHAID(Integer aSHAID) {
+        this.aSHAID = aSHAID;
     }
 
     public Boolean getCallAns() {
@@ -1010,28 +1010,28 @@ public class MotherImportRejection {
         this.aadharNo = aadharNo;
     }
 
-    public Integer getBPLAPL() {
-        return BPLAPL;
+    public Integer getbPLAPL() {
+        return bPLAPL;
     }
 
-    public void setBPLAPL(Integer BPLAPL) {
-        this.BPLAPL = BPLAPL;
+    public void setbPLAPL(Integer bPLAPL) {
+        this.bPLAPL = bPLAPL;
     }
 
-    public Integer getEID() {
-        return EID;
+    public Integer geteID() {
+        return eID;
     }
 
-    public void setEID(Integer EID) {
-        this.EID = EID;
+    public void seteID(Integer eID) {
+        this.eID = eID;
     }
 
-    public String getEIDTime() {
-        return EIDTime;
+    public String geteIDTime() {
+        return eIDTime;
     }
 
-    public void setEIDTime(String EIDTime) {
-        this.EIDTime = EIDTime;
+    public void seteIDTime(String eIDTime) {
+        this.eIDTime = eIDTime;
     }
 
     public Integer getEntryType() {

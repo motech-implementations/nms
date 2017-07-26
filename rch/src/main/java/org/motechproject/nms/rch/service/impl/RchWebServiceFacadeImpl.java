@@ -21,18 +21,19 @@ import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.util.Order;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
-import org.motechproject.nms.flw.utils.FlwConstants;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
-import org.motechproject.nms.mcts.domain.RejectionReasons;
+import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.rch.contract.RchAnmAshaDataSet;
-import org.motechproject.nms.rch.contract.RchAnmAshaRecord;
-import org.motechproject.nms.rch.contract.RchChildRecord;
+import org.motechproject.nms.kilkari.contract.RchAnmAshaRecord;
+import org.motechproject.nms.kilkari.contract.RchChildRecord;
 import org.motechproject.nms.rch.contract.RchChildrenDataSet;
-import org.motechproject.nms.rch.contract.RchMotherRecord;
+import org.motechproject.nms.kilkari.contract.RchMotherRecord;
 import org.motechproject.nms.rch.contract.RchMothersDataSet;
 import org.motechproject.nms.rch.domain.RchImportAudit;
 import org.motechproject.nms.rch.domain.RchImportFacilitator;
@@ -55,7 +56,7 @@ import org.motechproject.nms.rch.utils.MarshallUtils;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.rejectionhandler.service.ActionFinderService;
+import org.motechproject.nms.kilkari.service.ActionFinderService;
 import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
 import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
 import org.motechproject.nms.rejectionhandler.service.FlwRejectionService;
@@ -86,8 +87,8 @@ import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.*;
 
-import static org.motechproject.nms.rejectionhandler.utils.ObjectListCleaner.*;
-import static org.motechproject.nms.rejectionhandler.utils.RejectedObjectConverter.*;
+import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.*;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.*;
 
 @Service("rchWebServiceFacade")
 public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
@@ -96,14 +97,11 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String LOCAL_RESPONSE_DIR = "rch.local_response_dir";
     private static final String REMOTE_RESPONSE_DIR = "rch.remote_response_dir";
     private static final String READ_MOTHER_RESPONSE_FILE_EVENT = "nms.rch.read_mother_response_file";
-    private static final String READ_MOTHER_ODISHA = READ_MOTHER_RESPONSE_FILE_EVENT + "_21";
-    private static final String READ_MOTHER_MP = READ_MOTHER_RESPONSE_FILE_EVENT + "_23";
+
+
     private static final String READ_CHILD_RESPONSE_FILE_EVENT = "nms.rch.read_child_response_file";
-    private static final String READ_CHILD_ODISHA = READ_CHILD_RESPONSE_FILE_EVENT + "_21";
-    private static final String READ_CHILD_MP = READ_CHILD_RESPONSE_FILE_EVENT + "_23";
     private static final String READ_ASHA_RESPONSE_FILE_EVENT = "nms.rch.read_asha_response_file";
-    private static final String READ_ASHA_ODISHA = READ_ASHA_RESPONSE_FILE_EVENT + "_21";
-    private static final String READ_ASHA_MP = READ_ASHA_RESPONSE_FILE_EVENT + "_23";
+
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("dd-MM-yyyy");
     private static final String SCP_TIMEOUT_SETTING = "rch.scp_timeout";
     private static final Long SCP_TIME_OUT = 60000L;
@@ -162,6 +160,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     @Autowired
     private ActionFinderService actionFinderService;
+
+    @Autowired
+    private FrontLineWorkerService frontLineWorkerService;
 
     @Override
     public boolean getMothersData(LocalDate from, LocalDate to, URL endpoint, Long stateId) {
@@ -982,6 +983,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         } catch (final Exception e) {
             throw new Exception("Unable to get Axis TypeDesc for "
                     + objClass.getName(), e); //NOPMD
+        }
+    }
+
+    private String RchFlwActionFinder(RchAnmAshaRecord record) {
+        if(frontLineWorkerService.getByMctsFlwIdAndState(record.getGfId().toString(),stateDataService.findByCode(record.getStateId()))==null){
+            return "CREATE";
+        } else {
+            return "UPDATE";
         }
     }
 }

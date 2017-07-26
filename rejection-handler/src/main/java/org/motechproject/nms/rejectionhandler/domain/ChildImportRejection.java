@@ -3,8 +3,9 @@ package org.motechproject.nms.rejectionhandler.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
-import javax.persistence.*;
-
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import java.util.Date;
 
 /**
@@ -14,9 +15,9 @@ import java.util.Date;
 public class ChildImportRejection {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Field
-    private Long ChildRejectId;
+    private Long childRejectId;
 
     @Field
     private Long stateId;
@@ -26,6 +27,15 @@ public class ChildImportRejection {
 
     @Field
     private String districtName;
+
+    @Field
+    private Long phcId;
+
+    @Field
+    private String phcName;
+
+    @Field
+    private Long subcentreId;
 
     @Field
     private String talukaId;
@@ -39,14 +49,6 @@ public class ChildImportRejection {
     @Field
     private String healthBlockName;
 
-    @Field
-    private Long phcId;
-
-    @Field
-    private String phcName;
-
-    @Field
-    private Long subcentreId;
 
     @Field
     private String subcentreName;
@@ -64,7 +66,7 @@ public class ChildImportRejection {
     private String cityMaholla;
 
     @Field
-    private String GPVillage;
+    private String gPVillage;
 
     @Field
     private String address;
@@ -83,6 +85,27 @@ public class ChildImportRejection {
 
     @Field
     private String motherId;
+
+    @Field
+    private String ashaPhone;
+
+    @Field
+    private String bCGDt;
+
+    @Field
+    private String oPV0Dt;
+
+    @Field
+    private String hepatitisB1Dt;
+
+    @Field
+    private String dPT1Dt;
+
+    @Field
+    private String oPV1Dt;
+
+    @Field
+    private String hepatitisB2Dt;
 
     @Field
     private String phoneNumberWhom;
@@ -106,118 +129,86 @@ public class ChildImportRejection {
     private String subcenterName1;
 
     @Field
-    private String ANMName;
+    private String aNMName;
 
     @Field
-    private String ANMPhone;
+    private String aNMPhone;
 
     @Field
     private String ashaName;
 
     @Field
-    private String ashaPhone;
+    private String dPT2Dt;
 
     @Field
-    private String BCGDt;
+    private String oPV2Dt;
 
     @Field
-    private String OPV0Dt;
+    private String hepatitisB3Dt;
 
     @Field
-    private String HepatitisB1Dt;
+    private String dPT3Dt;
 
     @Field
-    private String DPT1Dt;
+    private String oPV3Dt;
 
     @Field
-    private String OPV1Dt;
+    private String hepatitisB4Dt;
 
     @Field
-    private String HepatitisB2Dt;
+    private String measlesDt;
 
     @Field
-    private String DPT2Dt;
+    private String vitADose1Dt;
 
     @Field
-    private String OPV2Dt;
+    private String mRDt;
 
     @Field
-    private String HepatitisB3Dt;
+    private String dPTBoosterDt;
 
     @Field
-    private String DPT3Dt;
+    private String oPVBoosterDt;
 
     @Field
-    private String OPV3Dt;
+    private String vitADose2Dt;
 
     @Field
-    private String HepatitisB4Dt;
+    private String vitADose3Dt;
 
     @Field
-    private String MeaslesDt;
+    private String tT10Dt;
 
     @Field
-    private String VitADose1Dt;
+    private String jEDt;
 
     @Field
-    private String MRDt;
+    private String vitADose9Dt;
 
     @Field
-    private String DPTBoosterDt;
+    private String dT5Dt;
 
     @Field
-    private String OPVBoosterDt;
+    private String tT16Dt;
 
     @Field
-    private String VitADose2Dt;
+    private String cLDRegDATE;
+
 
     @Field
-    private String VitADose3Dt;
-
-    @Field
-    private String JEDt;
-
-    @Field
-    private String VitADose9Dt;
-
-    @Field
-    private String DT5Dt;
-
-    @Field
-    private String TT10Dt;
-
-    @Field
-    private String TT16Dt;
-
-    @Field
-    private String CLDRegDATE;
-
-    @Field
-    private String sex;
-
-    @Field
-    private String VitADose5Dt;
-
-    @Field
-    private String VitADose6Dt;
-
-    @Field
-    private String VitADose7Dt;
-
-    @Field
-    private String VitADose8Dt;
+    private Integer ashaID;
 
     @Field
     private String lastUpdateDate;
 
     @Field
+    private String vitADose6Dt;
+
+    @Field
     private String remarks;
 
     @Field
-    private Integer ANMID;
-
-    @Field
-    private Integer ashaID;
+    private Integer aNMID;
 
     @Field
     private Integer createdBy;
@@ -238,31 +229,37 @@ public class ChildImportRejection {
     private Integer childEID;
 
     @Field
+    private String sex;
+
+    @Field
+    private String vitADose5Dt;
+
+    @Field
+    private String vitADose7Dt;
+
+    @Field
+    private String vitADose8Dt;
+
+    @Field
     private String childEIDTime;
 
     @Field
     private String fatherName;
 
     @Field
-    private String birthCertificateNumber;
-
-    @Field
-    private Integer entryType;
-
-    @Field
-    private String registrationNo;
-
-    @Field
-    private String MCTSMotherIDNo;
-
-    @Field
-    private String ExecDate;
+    private String execDate;
 
     @Field
     private Boolean accepted;
 
     @Field
     private String rejectionReason;
+
+    @Field
+    private String birthCertificateNumber;
+
+    @Field
+    private Integer entryType;
 
     @Field
     private String source;
@@ -273,15 +270,23 @@ public class ChildImportRejection {
     @Field
     private Date modificationDate;
 
+
+    @Field
+    private String registrationNo;
+
+    @Field
+    private String mCTSMotherIDNo;
+
+
     @Field
     private String action;
 
     public Long getChildRejectId() {
-        return ChildRejectId;
+        return childRejectId;
     }
 
     public void setChildRejectId(Long childRejectId) {
-        ChildRejectId = childRejectId;
+        this.childRejectId = childRejectId;
     }
 
     public Long getStateId() {
@@ -306,6 +311,30 @@ public class ChildImportRejection {
 
     public void setDistrictName(String districtName) {
         this.districtName = districtName;
+    }
+
+    public Long getPhcId() {
+        return phcId;
+    }
+
+    public void setPhcId(Long phcId) {
+        this.phcId = phcId;
+    }
+
+    public String getPhcName() {
+        return phcName;
+    }
+
+    public void setPhcName(String phcName) {
+        this.phcName = phcName;
+    }
+
+    public Long getSubcentreId() {
+        return subcentreId;
+    }
+
+    public void setSubcentreId(Long subcentreId) {
+        this.subcentreId = subcentreId;
     }
 
     public String getTalukaId() {
@@ -338,30 +367,6 @@ public class ChildImportRejection {
 
     public void setHealthBlockName(String healthBlockName) {
         this.healthBlockName = healthBlockName;
-    }
-
-    public Long getPhcId() {
-        return phcId;
-    }
-
-    public void setPhcId(Long phcId) {
-        this.phcId = phcId;
-    }
-
-    public String getPhcName() {
-        return phcName;
-    }
-
-    public void setPhcName(String phcName) {
-        this.phcName = phcName;
-    }
-
-    public Long getSubcentreId() {
-        return subcentreId;
-    }
-
-    public void setSubcentreId(Long subcentreId) {
-        this.subcentreId = subcentreId;
     }
 
     public String getSubcentreName() {
@@ -404,12 +409,12 @@ public class ChildImportRejection {
         this.cityMaholla = cityMaholla;
     }
 
-    public String getGPVillage() {
-        return GPVillage;
+    public String getgPVillage() {
+        return gPVillage;
     }
 
-    public void setGPVillage(String GPVillage) {
-        this.GPVillage = GPVillage;
+    public void setgPVillage(String gPVillage) {
+        this.gPVillage = gPVillage;
     }
 
     public String getAddress() {
@@ -460,6 +465,62 @@ public class ChildImportRejection {
         this.motherId = motherId;
     }
 
+    public String getAshaPhone() {
+        return ashaPhone;
+    }
+
+    public void setAshaPhone(String ashaPhone) {
+        this.ashaPhone = ashaPhone;
+    }
+
+    public String getbCGDt() {
+        return bCGDt;
+    }
+
+    public void setbCGDt(String bCGDt) {
+        this.bCGDt = bCGDt;
+    }
+
+    public String getoPV0Dt() {
+        return oPV0Dt;
+    }
+
+    public void setoPV0Dt(String oPV0Dt) {
+        this.oPV0Dt = oPV0Dt;
+    }
+
+    public String getHepatitisB1Dt() {
+        return hepatitisB1Dt;
+    }
+
+    public void setHepatitisB1Dt(String hepatitisB1Dt) {
+        this.hepatitisB1Dt = hepatitisB1Dt;
+    }
+
+    public String getdPT1Dt() {
+        return dPT1Dt;
+    }
+
+    public void setdPT1Dt(String dPT1Dt) {
+        this.dPT1Dt = dPT1Dt;
+    }
+
+    public String getoPV1Dt() {
+        return oPV1Dt;
+    }
+
+    public void setoPV1Dt(String oPV1Dt) {
+        this.oPV1Dt = oPV1Dt;
+    }
+
+    public String getHepatitisB2Dt() {
+        return hepatitisB2Dt;
+    }
+
+    public void setHepatitisB2Dt(String hepatitisB2Dt) {
+        this.hepatitisB2Dt = hepatitisB2Dt;
+    }
+
     public String getPhoneNumberWhom() {
         return phoneNumberWhom;
     }
@@ -500,6 +561,18 @@ public class ChildImportRejection {
         this.bloodGroup = bloodGroup;
     }
 
+    public void setaNMName(String aNMName) {
+        this.aNMName = aNMName;
+    }
+
+    public String getaNMPhone() {
+        return aNMPhone;
+    }
+
+    public void setaNMPhone(String aNMPhone) {
+        this.aNMPhone = aNMPhone;
+    }
+
     public String getCaste() {
         return caste;
     }
@@ -516,20 +589,8 @@ public class ChildImportRejection {
         this.subcenterName1 = subcenterName1;
     }
 
-    public String getANMName() {
-        return ANMName;
-    }
-
-    public void setANMName(String ANMName) {
-        this.ANMName = ANMName;
-    }
-
-    public String getANMPhone() {
-        return ANMPhone;
-    }
-
-    public void setANMPhone(String ANMPhone) {
-        this.ANMPhone = ANMPhone;
+    public String getaNMName() {
+        return aNMName;
     }
 
     public String getAshaName() {
@@ -540,252 +601,164 @@ public class ChildImportRejection {
         this.ashaName = ashaName;
     }
 
-    public String getAshaPhone() {
-        return ashaPhone;
+    public String getdPT2Dt() {
+        return dPT2Dt;
     }
 
-    public void setAshaPhone(String ashaPhone) {
-        this.ashaPhone = ashaPhone;
+    public void setdPT2Dt(String dPT2Dt) {
+        this.dPT2Dt = dPT2Dt;
     }
 
-    public String getBCGDt() {
-        return BCGDt;
+    public String getoPV2Dt() {
+        return oPV2Dt;
     }
 
-    public void setBCGDt(String BCGDt) {
-        this.BCGDt = BCGDt;
-    }
-
-    public String getOPV0Dt() {
-        return OPV0Dt;
-    }
-
-    public void setOPV0Dt(String OPV0Dt) {
-        this.OPV0Dt = OPV0Dt;
-    }
-
-    public String getHepatitisB1Dt() {
-        return HepatitisB1Dt;
-    }
-
-    public void setHepatitisB1Dt(String hepatitisB1Dt) {
-        HepatitisB1Dt = hepatitisB1Dt;
-    }
-
-    public String getDPT1Dt() {
-        return DPT1Dt;
-    }
-
-    public void setDPT1Dt(String DPT1Dt) {
-        this.DPT1Dt = DPT1Dt;
-    }
-
-    public String getOPV1Dt() {
-        return OPV1Dt;
-    }
-
-    public void setOPV1Dt(String OPV1Dt) {
-        this.OPV1Dt = OPV1Dt;
-    }
-
-    public String getHepatitisB2Dt() {
-        return HepatitisB2Dt;
-    }
-
-    public void setHepatitisB2Dt(String hepatitisB2Dt) {
-        HepatitisB2Dt = hepatitisB2Dt;
-    }
-
-    public String getDPT2Dt() {
-        return DPT2Dt;
-    }
-
-    public void setDPT2Dt(String DPT2Dt) {
-        this.DPT2Dt = DPT2Dt;
-    }
-
-    public String getOPV2Dt() {
-        return OPV2Dt;
-    }
-
-    public void setOPV2Dt(String OPV2Dt) {
-        this.OPV2Dt = OPV2Dt;
+    public void setoPV2Dt(String oPV2Dt) {
+        this.oPV2Dt = oPV2Dt;
     }
 
     public String getHepatitisB3Dt() {
-        return HepatitisB3Dt;
+        return hepatitisB3Dt;
     }
 
     public void setHepatitisB3Dt(String hepatitisB3Dt) {
-        HepatitisB3Dt = hepatitisB3Dt;
+        this.hepatitisB3Dt = hepatitisB3Dt;
     }
 
-    public String getDPT3Dt() {
-        return DPT3Dt;
+    public String getdPT3Dt() {
+        return dPT3Dt;
     }
 
-    public void setDPT3Dt(String DPT3Dt) {
-        this.DPT3Dt = DPT3Dt;
+    public void setdPT3Dt(String dPT3Dt) {
+        this.dPT3Dt = dPT3Dt;
     }
 
-    public String getOPV3Dt() {
-        return OPV3Dt;
+    public String getoPV3Dt() {
+        return oPV3Dt;
     }
 
-    public void setOPV3Dt(String OPV3Dt) {
-        this.OPV3Dt = OPV3Dt;
+    public void setoPV3Dt(String oPV3Dt) {
+        this.oPV3Dt = oPV3Dt;
     }
 
     public String getHepatitisB4Dt() {
-        return HepatitisB4Dt;
+        return hepatitisB4Dt;
     }
 
     public void setHepatitisB4Dt(String hepatitisB4Dt) {
-        HepatitisB4Dt = hepatitisB4Dt;
+        this.hepatitisB4Dt = hepatitisB4Dt;
     }
 
     public String getMeaslesDt() {
-        return MeaslesDt;
+        return measlesDt;
     }
 
     public void setMeaslesDt(String measlesDt) {
-        MeaslesDt = measlesDt;
+        this.measlesDt = measlesDt;
     }
 
     public String getVitADose1Dt() {
-        return VitADose1Dt;
+        return vitADose1Dt;
     }
 
     public void setVitADose1Dt(String vitADose1Dt) {
-        VitADose1Dt = vitADose1Dt;
+        this.vitADose1Dt = vitADose1Dt;
     }
 
-    public String getMRDt() {
-        return MRDt;
+    public String getmRDt() {
+        return mRDt;
     }
 
-    public void setMRDt(String MRDt) {
-        this.MRDt = MRDt;
+    public void setmRDt(String mRDt) {
+        this.mRDt = mRDt;
     }
 
-    public String getDPTBoosterDt() {
-        return DPTBoosterDt;
+    public String getdPTBoosterDt() {
+        return dPTBoosterDt;
     }
 
-    public void setDPTBoosterDt(String DPTBoosterDt) {
-        this.DPTBoosterDt = DPTBoosterDt;
+    public void setdPTBoosterDt(String dPTBoosterDt) {
+        this.dPTBoosterDt = dPTBoosterDt;
     }
 
-    public String getOPVBoosterDt() {
-        return OPVBoosterDt;
+    public String getoPVBoosterDt() {
+        return oPVBoosterDt;
     }
 
-    public void setOPVBoosterDt(String OPVBoosterDt) {
-        this.OPVBoosterDt = OPVBoosterDt;
+    public void setoPVBoosterDt(String oPVBoosterDt) {
+        this.oPVBoosterDt = oPVBoosterDt;
     }
 
     public String getVitADose2Dt() {
-        return VitADose2Dt;
+        return vitADose2Dt;
     }
 
     public void setVitADose2Dt(String vitADose2Dt) {
-        VitADose2Dt = vitADose2Dt;
+        this.vitADose2Dt = vitADose2Dt;
     }
 
     public String getVitADose3Dt() {
-        return VitADose3Dt;
+        return vitADose3Dt;
     }
 
     public void setVitADose3Dt(String vitADose3Dt) {
-        VitADose3Dt = vitADose3Dt;
+        this.vitADose3Dt = vitADose3Dt;
     }
 
-    public String getJEDt() {
-        return JEDt;
+    public String gettT10Dt() {
+        return tT10Dt;
     }
 
-    public void setJEDt(String JEDt) {
-        this.JEDt = JEDt;
+    public void settT10Dt(String tT10Dt) {
+        this.tT10Dt = tT10Dt;
+    }
+
+    public String getjEDt() {
+        return jEDt;
+    }
+
+    public void setjEDt(String jEDt) {
+        this.jEDt = jEDt;
     }
 
     public String getVitADose9Dt() {
-        return VitADose9Dt;
+        return vitADose9Dt;
     }
 
     public void setVitADose9Dt(String vitADose9Dt) {
-        VitADose9Dt = vitADose9Dt;
+        this.vitADose9Dt = vitADose9Dt;
     }
 
-    public String getDT5Dt() {
-        return DT5Dt;
+    public String getdT5Dt() {
+        return dT5Dt;
     }
 
-    public void setDT5Dt(String DT5Dt) {
-        this.DT5Dt = DT5Dt;
+    public void setdT5Dt(String dT5Dt) {
+        this.dT5Dt = dT5Dt;
     }
 
-    public String getTT10Dt() {
-        return TT10Dt;
+    public String gettT16Dt() {
+        return tT16Dt;
     }
 
-    public void setTT10Dt(String TT10Dt) {
-        this.TT10Dt = TT10Dt;
+    public void settT16Dt(String tT16Dt) {
+        this.tT16Dt = tT16Dt;
     }
 
-    public String getTT16Dt() {
-        return TT16Dt;
+    public String getcLDRegDATE() {
+        return cLDRegDATE;
     }
 
-    public void setTT16Dt(String TT16Dt) {
-        this.TT16Dt = TT16Dt;
+    public void setcLDRegDATE(String cLDRegDATE) {
+        this.cLDRegDATE = cLDRegDATE;
     }
 
-    public String getCLDRegDATE() {
-        return CLDRegDATE;
+    public Integer getAshaID() {
+        return ashaID;
     }
 
-    public void setCLDRegDATE(String CLDRegDATE) {
-        this.CLDRegDATE = CLDRegDATE;
-    }
-
-    public String getSex() {
-        return sex;
-    }
-
-    public void setSex(String sex) {
-        this.sex = sex;
-    }
-
-    public String getVitADose5Dt() {
-        return VitADose5Dt;
-    }
-
-    public void setVitADose5Dt(String vitADose5Dt) {
-        VitADose5Dt = vitADose5Dt;
-    }
-
-    public String getVitADose6Dt() {
-        return VitADose6Dt;
-    }
-
-    public void setVitADose6Dt(String vitADose6Dt) {
-        VitADose6Dt = vitADose6Dt;
-    }
-
-    public String getVitADose7Dt() {
-        return VitADose7Dt;
-    }
-
-    public void setVitADose7Dt(String vitADose7Dt) {
-        VitADose7Dt = vitADose7Dt;
-    }
-
-    public String getVitADose8Dt() {
-        return VitADose8Dt;
-    }
-
-    public void setVitADose8Dt(String vitADose8Dt) {
-        VitADose8Dt = vitADose8Dt;
+    public void setAshaID(Integer ashaID) {
+        this.ashaID = ashaID;
     }
 
     public String getLastUpdateDate() {
@@ -796,6 +769,14 @@ public class ChildImportRejection {
         this.lastUpdateDate = lastUpdateDate;
     }
 
+    public String getVitADose6Dt() {
+        return vitADose6Dt;
+    }
+
+    public void setVitADose6Dt(String vitADose6Dt) {
+        this.vitADose6Dt = vitADose6Dt;
+    }
+
     public String getRemarks() {
         return remarks;
     }
@@ -804,20 +785,12 @@ public class ChildImportRejection {
         this.remarks = remarks;
     }
 
-    public Integer getANMID() {
-        return ANMID;
+    public Integer getaNMID() {
+        return aNMID;
     }
 
-    public void setANMID(Integer ANMID) {
-        this.ANMID = ANMID;
-    }
-
-    public Integer getAshaID() {
-        return ashaID;
-    }
-
-    public void setAshaID(Integer ashaID) {
-        this.ashaID = ashaID;
+    public void setaNMID(Integer aNMID) {
+        this.aNMID = aNMID;
     }
 
     public Integer getCreatedBy() {
@@ -868,6 +841,38 @@ public class ChildImportRejection {
         this.childEID = childEID;
     }
 
+    public String getSex() {
+        return sex;
+    }
+
+    public void setSex(String sex) {
+        this.sex = sex;
+    }
+
+    public String getVitADose5Dt() {
+        return vitADose5Dt;
+    }
+
+    public void setVitADose5Dt(String vitADose5Dt) {
+        this.vitADose5Dt = vitADose5Dt;
+    }
+
+    public String getVitADose7Dt() {
+        return vitADose7Dt;
+    }
+
+    public void setVitADose7Dt(String vitADose7Dt) {
+        this.vitADose7Dt = vitADose7Dt;
+    }
+
+    public String getVitADose8Dt() {
+        return vitADose8Dt;
+    }
+
+    public void setVitADose8Dt(String vitADose8Dt) {
+        this.vitADose8Dt = vitADose8Dt;
+    }
+
     public String getChildEIDTime() {
         return childEIDTime;
     }
@@ -884,44 +889,12 @@ public class ChildImportRejection {
         this.fatherName = fatherName;
     }
 
-    public String getBirthCertificateNumber() {
-        return birthCertificateNumber;
-    }
-
-    public void setBirthCertificateNumber(String birthCertificateNumber) {
-        this.birthCertificateNumber = birthCertificateNumber;
-    }
-
-    public Integer getEntryType() {
-        return entryType;
-    }
-
-    public void setEntryType(Integer entryType) {
-        this.entryType = entryType;
-    }
-
-    public String getRegistrationNo() {
-        return registrationNo;
-    }
-
-    public void setRegistrationNo(String registrationNo) {
-        this.registrationNo = registrationNo;
-    }
-
-    public String getMCTSMotherIDNo() {
-        return MCTSMotherIDNo;
-    }
-
-    public void setMCTSMotherIDNo(String MCTSMotherIDNo) {
-        this.MCTSMotherIDNo = MCTSMotherIDNo;
-    }
-
     public String getExecDate() {
-        return ExecDate;
+        return execDate;
     }
 
     public void setExecDate(String execDate) {
-        ExecDate = execDate;
+        this.execDate = execDate;
     }
 
     public Boolean getAccepted() {
@@ -938,6 +911,22 @@ public class ChildImportRejection {
 
     public void setRejectionReason(String rejectionReason) {
         this.rejectionReason = rejectionReason;
+    }
+
+    public String getBirthCertificateNumber() {
+        return birthCertificateNumber;
+    }
+
+    public void setBirthCertificateNumber(String birthCertificateNumber) {
+        this.birthCertificateNumber = birthCertificateNumber;
+    }
+
+    public Integer getEntryType() {
+        return entryType;
+    }
+
+    public void setEntryType(Integer entryType) {
+        this.entryType = entryType;
     }
 
     public String getSource() {
@@ -962,6 +951,22 @@ public class ChildImportRejection {
 
     public void setModificationDate(Date modificationDate) {
         this.modificationDate = modificationDate;
+    }
+
+    public String getRegistrationNo() {
+        return registrationNo;
+    }
+
+    public void setRegistrationNo(String registrationNo) {
+        this.registrationNo = registrationNo;
+    }
+
+    public String getmCTSMotherIDNo() {
+        return mCTSMotherIDNo;
+    }
+
+    public void setmCTSMotherIDNo(String mCTSMotherIDNo) {
+        this.mCTSMotherIDNo = mCTSMotherIDNo;
     }
 
     public String getAction() {

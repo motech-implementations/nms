@@ -1,5 +1,7 @@
 package org.motechproject.nms.rch.contract;
 
+import org.motechproject.nms.kilkari.contract.RchAnmAshaRecord;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;

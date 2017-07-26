@@ -1,8 +1,9 @@
 package org.motechproject.nms.rejectionhandler.domain;
 
-import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+
+import java.util.Date;
 
 /**
  * Created by vishnu on 12/7/17.
@@ -143,21 +144,14 @@ public class FlwImportRejection {
     private String source;
 
     @Field
-    private DateTime creationDate;
+    private Date creationDate;
 
     @Field
-    private DateTime modificationDate;
+    private Date modificationDate;
 
     @Field
     private String action;
 
-    public Long getStateId() {
-        return stateId;
-    }
-
-    public void setStateId(Long stateId) {
-        this.stateId = stateId;
-    }
 
     public Long getDistrictId() {
         return districtId;
@@ -167,36 +161,16 @@ public class FlwImportRejection {
         this.districtId = districtId;
     }
 
+    public Long getStateId() {
+        return stateId;
+    }
+
+    public void setStateId(Long stateId) {
+        this.stateId = stateId;
+    }
+
     public String getDistrictName() {
         return districtName;
-    }
-
-    public void setDistrictName(String districtName) {
-        this.districtName = districtName;
-    }
-
-    public String getTalukaId() {
-        return talukaId;
-    }
-
-    public String getAction() {
-        return action;
-    }
-
-    public void setAction(String action) {
-        this.action = action;
-    }
-
-    public void setTalukaId(String talukaId) {
-        this.talukaId = talukaId;
-    }
-
-    public String getTalukaName() {
-        return talukaName;
-    }
-
-    public void setTalukaName(String talukaName) {
-        this.talukaName = talukaName;
     }
 
     public Long getHealthBlockId() {
@@ -219,6 +193,38 @@ public class FlwImportRejection {
         return phcId;
     }
 
+    public void setDistrictName(String districtName) {
+        this.districtName = districtName;
+    }
+
+    public String getTalukaId() {
+        return talukaId;
+    }
+
+    public void setTalukaId(String talukaId) {
+        this.talukaId = talukaId;
+    }
+
+    public String getTalukaName() {
+        return talukaName;
+    }
+
+    public void setTalukaName(String talukaName) {
+        this.talukaName = talukaName;
+    }
+
+    public String getSubcentreName() {
+        return subcentreName;
+    }
+
+    public void setSubcentreName(String subcentreName) {
+        this.subcentreName = subcentreName;
+    }
+
+    public Long getVillageId() {
+        return villageId;
+    }
+
     public void setPhcId(Long phcId) {
         this.phcId = phcId;
     }
@@ -237,18 +243,6 @@ public class FlwImportRejection {
 
     public void setSubcentreId(Long subcentreId) {
         this.subcentreId = subcentreId;
-    }
-
-    public String getSubcentreName() {
-        return subcentreName;
-    }
-
-    public void setSubcentreName(String subcentreName) {
-        this.subcentreName = subcentreName;
-    }
-
-    public Long getVillageId() {
-        return villageId;
     }
 
     public void setVillageId(Long villageId) {
@@ -471,6 +465,18 @@ public class FlwImportRejection {
         this.verifierRemarks = verifierRemarks;
     }
 
+    public Boolean getAccepted() {
+        return accepted;
+    }
+
+    public void setAccepted(Boolean accepted) {
+        this.accepted = accepted;
+    }
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
     public String getGfAddress() {
         return gfAddress;
     }
@@ -487,16 +493,12 @@ public class FlwImportRejection {
         this.husbandName = husbandName;
     }
 
-    public Boolean getAccepted() {
-        return accepted;
+    public Date getCreationDate() {
+        return creationDate;
     }
 
-    public void setAccepted(Boolean accepted) {
-        this.accepted = accepted;
-    }
-
-    public String getRejectionReason() {
-        return rejectionReason;
+    public void setCreationDate(Date creationDate) {
+        this.creationDate = creationDate;
     }
 
     public void setRejectionReason(String rejectionReason) {
@@ -511,20 +513,20 @@ public class FlwImportRejection {
         this.source = source;
     }
 
-    public DateTime getCreationDate() {
-        return creationDate;
-    }
-
-    public void setCreationDate(DateTime creationDate) {
-        this.creationDate = creationDate;
-    }
-
-    public DateTime getModificationDate() {
+    public Date getModificationDate() {
         return modificationDate;
     }
 
-    public void setModificationDate(DateTime modificationDate) {
+    public void setModificationDate(Date modificationDate) {
         this.modificationDate = modificationDate;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public void setAction(String action) {
+        this.action = action;
     }
 }
 

@@ -20,7 +20,7 @@ import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.repository.ContactNumberAuditDataService;
 import org.motechproject.nms.flw.repository.FlwErrorDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.flw.utils.FlwConstants;
+import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.flw.utils.FlwMapper;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
