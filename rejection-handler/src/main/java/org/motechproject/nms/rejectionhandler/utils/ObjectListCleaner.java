@@ -42,19 +42,19 @@ public class ObjectListCleaner {
         return full;
     }
 
-    public static List<List<RchMotherRecord>> cleanRchMotherRecords(List<RchMotherRecord> motherRecords) {
+    public static List<List<RchMotherRecord>> cleanRchMotherRecords(List<RchMotherRecord> rchMotherRecords) {
         List<RchMotherRecord> rejectedRecords = new ArrayList<>();
         List<RchMotherRecord> acceptedRecords = new ArrayList<>();
         List<List<RchMotherRecord>> full = new ArrayList<>();
         HashMap<String,Integer> motherPhoneMap = new HashMap<>();
-        for(RchMotherRecord record : motherRecords){
+        for(RchMotherRecord record : rchMotherRecords){
             if(motherPhoneMap.containsKey(record.getMobileNo())){
                 motherPhoneMap.put(record.getMobileNo(),motherPhoneMap.get(record.getMobileNo())+1);
             }else{
                 motherPhoneMap.put(record.getMobileNo(),1);
             }
         }
-        for(RchMotherRecord record : motherRecords){
+        for(RchMotherRecord record : rchMotherRecords){
             Integer count = motherPhoneMap.get(record.getMobileNo());
             if(count>1){
                 rejectedRecords.add(record);
@@ -67,19 +67,19 @@ public class ObjectListCleaner {
         return full;
     }
 
-    public static List<List<ChildRecord>> cleanChildRecords(List<ChildRecord> motherRecords) {
+    public static List<List<ChildRecord>> cleanChildRecords(List<ChildRecord> childRecords) {
         List<ChildRecord> rejectedRecords = new ArrayList<>();
         List<ChildRecord> acceptedRecords = new ArrayList<>();
         List<List<ChildRecord>> full = new ArrayList<>();
         HashMap<String,Integer> motherPhoneMap = new HashMap<>();
-        for(ChildRecord record : motherRecords){
+        for(ChildRecord record : childRecords){
             if(motherPhoneMap.containsKey(record.getWhomPhoneNo())){
                 motherPhoneMap.put(record.getWhomPhoneNo(),motherPhoneMap.get(record.getWhomPhoneNo())+1);
             }else{
                 motherPhoneMap.put(record.getWhomPhoneNo(),1);
             }
         }
-        for(ChildRecord record : motherRecords){
+        for(ChildRecord record : childRecords){
             Integer count = motherPhoneMap.get(record.getWhomPhoneNo());
             if(count>1){
                 rejectedRecords.add(record);
@@ -92,19 +92,19 @@ public class ObjectListCleaner {
         return full;
     }
 
-    public static List<List<RchChildRecord>> cleanRchChildRecords(List<RchChildRecord> motherRecords) {
+    public static List<List<RchChildRecord>> cleanRchChildRecords(List<RchChildRecord> rchChildRecords) {
         List<RchChildRecord> rejectedRecords = new ArrayList<>();
         List<RchChildRecord> acceptedRecords = new ArrayList<>();
         List<List<RchChildRecord>> full = new ArrayList<>();
         HashMap<String,Integer> motherPhoneMap = new HashMap<>();
-        for(RchChildRecord record : motherRecords){
+        for(RchChildRecord record : rchChildRecords){
             if(motherPhoneMap.containsKey(record.getMobileNo())){
                 motherPhoneMap.put(record.getMobileNo(),motherPhoneMap.get(record.getMobileNo())+1);
             }else{
                 motherPhoneMap.put(record.getMobileNo(),1);
             }
         }
-        for(RchChildRecord record : motherRecords){
+        for(RchChildRecord record : rchChildRecords){
             Integer count = motherPhoneMap.get(record.getMobileNo());
             if(count>1){
                 rejectedRecords.add(record);
@@ -117,19 +117,19 @@ public class ObjectListCleaner {
         return full;
     }
 
-    public static List<List<AnmAshaRecord>> cleanFlwRecords(List<AnmAshaRecord> motherRecords) {
+    public static List<List<AnmAshaRecord>> cleanFlwRecords(List<AnmAshaRecord> anmAshaRecords) {
         List<AnmAshaRecord> rejectedRecords = new ArrayList<>();
         List<AnmAshaRecord> acceptedRecords = new ArrayList<>();
         List<List<AnmAshaRecord>> full = new ArrayList<>();
         HashMap<String,Integer> motherPhoneMap = new HashMap<>();
-        for(AnmAshaRecord record : motherRecords){
+        for(AnmAshaRecord record : anmAshaRecords){
             if(motherPhoneMap.containsKey(record.getContactNo())){
                 motherPhoneMap.put(record.getContactNo(),motherPhoneMap.get(record.getContactNo())+1);
             }else{
                 motherPhoneMap.put(record.getContactNo(),1);
             }
         }
-        for(AnmAshaRecord record : motherRecords){
+        for(AnmAshaRecord record : anmAshaRecords){
             Integer count = motherPhoneMap.get(record.getContactNo());
             if(count>1){
                 rejectedRecords.add(record);
@@ -142,19 +142,19 @@ public class ObjectListCleaner {
         return full;
     }
 
-    public static List<List<RchAnmAshaRecord>> cleanRchFlwRecords(List<RchAnmAshaRecord> motherRecords) {
+    public static List<List<RchAnmAshaRecord>> cleanRchFlwRecords(List<RchAnmAshaRecord> rchAnmAshaRecords) {
         List<RchAnmAshaRecord> rejectedRecords = new ArrayList<>();
         List<RchAnmAshaRecord> acceptedRecords = new ArrayList<>();
         List<List<RchAnmAshaRecord>> full = new ArrayList<>();
         HashMap<String,Integer> motherPhoneMap = new HashMap<>();
-        for(RchAnmAshaRecord record : motherRecords){
+        for(RchAnmAshaRecord record : rchAnmAshaRecords){
             if(motherPhoneMap.containsKey(record.getMobileNo())){
                 motherPhoneMap.put(record.getMobileNo(),motherPhoneMap.get(record.getMobileNo())+1);
             }else{
                 motherPhoneMap.put(record.getMobileNo(),1);
             }
         }
-        for(RchAnmAshaRecord record : motherRecords){
+        for(RchAnmAshaRecord record : rchAnmAshaRecords){
             Integer count = motherPhoneMap.get(record.getMobileNo());
             if(count>1){
                 rejectedRecords.add(record);
