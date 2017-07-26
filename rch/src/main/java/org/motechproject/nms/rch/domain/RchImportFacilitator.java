@@ -5,7 +5,7 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
 /**
- * Entity to store file name and date to facilitate import into db
+ * Created by vishnu on 21/7/17.
  */
 @Entity(tableName = "nms_rch_import_facilitator")
 public class RchImportFacilitator {
@@ -22,21 +22,25 @@ public class RchImportFacilitator {
     @Field
     private Long stateId;
 
+
     @Field
     private RchUserType userType;
 
     @Field
-    private LocalDate creationDate;
+    private LocalDate importDate;
 
-    public RchImportFacilitator(String fileName, LocalDate startDate, LocalDate endDate,
-                                Long stateId, RchUserType userType, LocalDate creationDate) {
+    public RchImportFacilitator() {
+    }
+
+    public RchImportFacilitator(String fileName, LocalDate startDate, LocalDate endDate, Long stateId, RchUserType userType, LocalDate importDate) {
         this.fileName = fileName;
         this.startDate = startDate;
         this.endDate = endDate;
         this.stateId = stateId;
         this.userType = userType;
-        this.creationDate = creationDate;
+        this.importDate = importDate;
     }
+
     public String getFileName() {
         return fileName;
     }
@@ -69,6 +73,7 @@ public class RchImportFacilitator {
         this.stateId = stateId;
     }
 
+
     public RchUserType getUserType() {
         return userType;
     }
@@ -77,11 +82,11 @@ public class RchImportFacilitator {
         this.userType = userType;
     }
 
-    public LocalDate getCreationDate() {
-        return creationDate;
+    public LocalDate getImportDate() {
+        return importDate;
     }
 
-    public void setCreationDate(LocalDate creationDate) {
-        this.creationDate = creationDate;
+    public void setImportDate(LocalDate importDate) {
+        this.importDate = importDate;
     }
 }
