@@ -16,13 +16,23 @@ import java.util.Map;
 /**
  * Created by beehyv on 20/7/17.
  */
-public class RejectedObjectConverter {
+public final class RejectedObjectConverter {
+
+    private RejectedObjectConverter() {
+    }
 
     public static FlwImportRejection flwRejectionRch(RchAnmAshaRecord record, Boolean accepted, String rejectionReason, String action) {
         FlwImportRejection flwImportRejection = new FlwImportRejection();
         flwImportRejection.setStateId(record.getStateId());
         flwImportRejection.setDistrictId(record.getDistrictId());
         flwImportRejection.setDistrictName(record.getDistrictName());
+        flwImportRejection.setMsisdn(record.getMobileNo());
+        flwImportRejection.setGfName(record.getGfName());
+        flwImportRejection.setType(record.getGfType());
+        flwImportRejection.setGfStatus(record.getGfStatus());
+        flwImportRejection.setExecDate(record.getExecDate());
+        flwImportRejection.setSource("RCH-Import");
+        flwImportRejection.setAccepted(accepted);
         flwImportRejection.setTalukaId(record.getTalukaId());
         flwImportRejection.setHealthBlockId(record.getHealthBlockId());
         flwImportRejection.setHealthBlockName(record.getHealthBlockName());
@@ -33,13 +43,6 @@ public class RejectedObjectConverter {
         flwImportRejection.setVillageId(record.getVillageId());
         flwImportRejection.setVillageName(record.getVillageName());
         flwImportRejection.setFlwId(record.getGfId());
-        flwImportRejection.setMsisdn(record.getMobileNo());
-        flwImportRejection.setGfName(record.getGfName());
-        flwImportRejection.setType(record.getGfType());
-        flwImportRejection.setGfStatus(record.getGfStatus());
-        flwImportRejection.setExecDate(record.getExecDate());
-        flwImportRejection.setSource("RCH-Import");
-        flwImportRejection.setAccepted(accepted);
         flwImportRejection.setRejectionReason(rejectionReason);
         flwImportRejection.setAction(action);
 
@@ -95,8 +98,14 @@ public class RejectedObjectConverter {
         return flwImportRejection;
     }
 
-    public static ChildImportRejection childRejectionRch(RchChildRecord record, Boolean accepted, String rejectionReason, String action){
+    public static ChildImportRejection childRejectionRch(RchChildRecord record, Boolean accepted, String rejectionReason, String action) {
         ChildImportRejection childImportRejection = new ChildImportRejection();
+        childImportRejection.setSubcentreId(record.getSubCentreId());
+        childImportRejection.setSubcentreName(record.getSubCentreName());
+        childImportRejection.setVillageId(record.getVillageId());
+        childImportRejection.setVillageName(record.getVillageName());
+        childImportRejection.setName(record.getName());
+        childImportRejection.setMobileNo(record.getMobileNo());
         childImportRejection.setStateId(record.getStateId());
         childImportRejection.setDistrictId(record.getDistrictId());
         childImportRejection.setDistrictName(record.getDistrictName());
@@ -106,12 +115,6 @@ public class RejectedObjectConverter {
         childImportRejection.setHealthBlockName(record.getHealthBlockName());
         childImportRejection.setPhcId(record.getPhcId());
         childImportRejection.setPhcName(record.getPhcName());
-        childImportRejection.setSubcentreId(record.getSubCentreId());
-        childImportRejection.setSubcentreName(record.getSubCentreName());
-        childImportRejection.setVillageId(record.getVillageId());
-        childImportRejection.setVillageName(record.getVillageName());
-        childImportRejection.setName(record.getName());
-        childImportRejection.setMobileNo(record.getMobileNo());
         childImportRejection.setBirthDate(record.getBirthdate());
         childImportRejection.setRegistrationNo(record.getRegistrationNo());
         childImportRejection.setEntryType(record.getEntryType());
@@ -126,7 +129,7 @@ public class RejectedObjectConverter {
         return childImportRejection;
     }
 
-    public static ChildImportRejection childRejectionMcts(ChildRecord record, Boolean accepted, String rejectionReason, String action){ //NOPMD NcssMethodCount
+    public static ChildImportRejection childRejectionMcts(ChildRecord record, Boolean accepted, String rejectionReason, String action) { //NOPMD NcssMethodCount
         ChildImportRejection childImportRejection = new ChildImportRejection();
         childImportRejection.setStateId(record.getStateID());
         childImportRejection.setDistrictId(record.getDistrictId());
@@ -213,7 +216,7 @@ public class RejectedObjectConverter {
         return childImportRejection;
     }
 
-    public static MotherImportRejection motherRejectionRch(RchMotherRecord record, Boolean accepted, String rejectionReason, String action){
+    public static MotherImportRejection motherRejectionRch(RchMotherRecord record, Boolean accepted, String rejectionReason, String action) {
         MotherImportRejection motherImportRejection = new MotherImportRejection();
         motherImportRejection.setStateId(record.getStateId());
         motherImportRejection.setDistrictId(record.getDistrictId());
@@ -248,7 +251,7 @@ public class RejectedObjectConverter {
         return motherImportRejection;
     }
 
-    public static MotherImportRejection motherRejectionMcts(MotherRecord record, Boolean accepted, String rejectionReason, String action){ //NOPMD NcssMethodCount
+    public static MotherImportRejection motherRejectionMcts(MotherRecord record, Boolean accepted, String rejectionReason, String action) { //NOPMD NcssMethodCount
         MotherImportRejection motherImportRejection = new MotherImportRejection();
         motherImportRejection.setStateId(record.getStateId());
         motherImportRejection.setDistrictId(record.getDistrictId());
@@ -348,33 +351,33 @@ public class RejectedObjectConverter {
         return motherImportRejection;
     }
 
-    public static MotherRecord convertMapToMother(Map<String, Object> record){
+    public static MotherRecord convertMapToMother(Map<String, Object> record) {
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.convertValue(record,MotherRecord.class);
+        return mapper.convertValue(record, MotherRecord.class);
     }
 
-    public static RchMotherRecord convertMapToRchMother(Map<String, Object> record){
+    public static RchMotherRecord convertMapToRchMother(Map<String, Object> record) {
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.convertValue(record,RchMotherRecord.class);
+        return mapper.convertValue(record, RchMotherRecord.class);
     }
 
-    public static ChildRecord convertMapToChild(Map<String, Object> record){
+    public static ChildRecord convertMapToChild(Map<String, Object> record) {
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.convertValue(record,ChildRecord.class);
+        return mapper.convertValue(record, ChildRecord.class);
     }
 
-    public static RchChildRecord convertMapToRchChild(Map<String, Object> record){
+    public static RchChildRecord convertMapToRchChild(Map<String, Object> record) {
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.convertValue(record,RchChildRecord.class);
+        return mapper.convertValue(record, RchChildRecord.class);
     }
 
-    public static AnmAshaRecord convertMapToAsha(Map<String, Object> record){
+    public static AnmAshaRecord convertMapToAsha(Map<String, Object> record) {
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.convertValue(record,AnmAshaRecord.class);
+        return mapper.convertValue(record, AnmAshaRecord.class);
     }
 
-    public static RchAnmAshaRecord convertMapToRchAsha(Map<String, Object> record){
+    public static RchAnmAshaRecord convertMapToRchAsha(Map<String, Object> record) {
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.convertValue(record,RchAnmAshaRecord.class);
+        return mapper.convertValue(record, RchAnmAshaRecord.class);
     }
 }

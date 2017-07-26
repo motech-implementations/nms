@@ -95,6 +95,20 @@ public class RchChildRecord {
         return villageId;
     }
 
+    public Long getSubCentreId() {
+        return subCentreId;
+    }
+
+    @XmlElement(name = "SubCentre_ID")
+    public void setSubCentreId(Long subCentreId) {
+        this.subCentreId = subCentreId;
+    }
+
+    @XmlElement(name = "Village_ID")
+    public void setVillageId(Long villageId) {
+        this.villageId = villageId;
+    }
+
     @XmlElement(name = "HealthBlock_ID")
     public void setHealthBlockId(Long healthBlockId) {
         this.healthBlockId = healthBlockId;
@@ -125,20 +139,6 @@ public class RchChildRecord {
     @XmlElement(name = "PHC_Name")
     public void setPhcName(String phcName) {
         this.phcName = phcName;
-    }
-
-    public Long getSubCentreId() {
-        return subCentreId;
-    }
-
-    @XmlElement(name = "SubCentre_ID")
-    public void setSubCentreId(Long subCentreId) {
-        this.subCentreId = subCentreId;
-    }
-
-    @XmlElement(name = "Village_ID")
-    public void setVillageId(Long villageId) {
-        this.villageId = villageId;
     }
 
     public String getVillageName() {

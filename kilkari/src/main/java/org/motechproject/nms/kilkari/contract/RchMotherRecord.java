@@ -53,6 +53,28 @@ public class RchMotherRecord {
         this.districtId = districtId;
     }
 
+    public Long getHealthBlockId() {
+        return healthBlockId;
+    }
+
+    @XmlElement(name = "HealthBlock_ID")
+    public void setHealthBlockId(Long healthBlockId) {
+        this.healthBlockId = healthBlockId;
+    }
+
+    public String getHealthBlockName() {
+        return healthBlockName;
+    }
+
+    @XmlElement(name = "HealthBlock_Name")
+    public void setHealthBlockName(String healthBlockName) {
+        this.healthBlockName = healthBlockName;
+    }
+
+    public Long getPhcId() {
+        return phcId;
+    }
+
     public String getDistrictName() {
         return districtName;
     }
@@ -78,28 +100,6 @@ public class RchMotherRecord {
     @XmlElement(name = "Taluka_Name")
     public void setTalukaName(String talukaName) {
         this.talukaName = talukaName;
-    }
-
-    public Long getHealthBlockId() {
-        return healthBlockId;
-    }
-
-    @XmlElement(name = "HealthBlock_ID")
-    public void setHealthBlockId(Long healthBlockId) {
-        this.healthBlockId = healthBlockId;
-    }
-
-    public String getHealthBlockName() {
-        return healthBlockName;
-    }
-
-    @XmlElement(name = "HealthBlock_Name")
-    public void setHealthBlockName(String healthBlockName) {
-        this.healthBlockName = healthBlockName;
-    }
-
-    public Long getPhcId() {
-        return phcId;
     }
 
     @XmlElement(name = "PHC_ID")

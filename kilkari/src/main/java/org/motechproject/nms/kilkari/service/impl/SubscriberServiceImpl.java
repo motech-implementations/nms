@@ -375,7 +375,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     } else if (subscriber.getMother() != null) {
                         if (childUpdate.getMother().equals(subscriber.getMother())) { // If existing mother is of child then update only if no other active child is present for same msisdn
                             subscriberByMctsId = subscriber;
-                         } else {  // We got here because this record is of MCTS mother. Check if it has IVR child
+                        } else {  // We got here because this record is of MCTS mother. Check if it has IVR child
                             Subscription childSubscription = splitSubscribers(subscriber, msisdn, childUpdate, dob, pack, language, circle);
                             if (childSubscription != null) {
                                 return childSubscription;
@@ -448,8 +448,8 @@ public class SubscriberServiceImpl implements SubscriberService {
         List<Subscriber> subscribersByMsisdn = getSubscriber(msisdn);
         Subscriber subscriberByRchId = getSubscriberByBeneficiary(childUpdate);
 
-        if (subscriberByRchId != null) {//subscriber exists with the provided RCH id
-            if (subscribersByMsisdn.isEmpty()) {//no subscriber with provided msisdn
+        if (subscriberByRchId != null) { //subscriber exists with the provided RCH id
+            if (subscribersByMsisdn.isEmpty()) { //no subscriber with provided msisdn
                 //subscriber's number has changed
                 //update msisdn in subscriber and delete msisdn from blocked list
                 deleteBlockedMsisdn(childUpdate.getId(), subscriberByRchId.getCallingNumber(), msisdn);
@@ -478,10 +478,10 @@ public class SubscriberServiceImpl implements SubscriberService {
                 subscriptionErrorDataService.create(new SubscriptionError(msisdn, childUpdate.getRchId(), SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED, pack.getType(), "Unrelated subscribers with this MSISDN and RCH id", SubscriptionOrigin.RCH_IMPORT));
                 return null;
             }
-        } else {// no subscribers found with the provided RCH id
-            if (subscribersByMsisdn.isEmpty()) {// no subscriber exists with provided msisdn
+        } else { // no subscribers found with the provided RCH id
+            if (subscribersByMsisdn.isEmpty()) { // no subscriber exists with provided msisdn
                 Subscriber subscriberByRchMotherId = getSubscriberByBeneficiary(childUpdate.getMother());
-                if (subscriberByRchMotherId == null) {// no subscriber exists with RCH mother id either
+                if (subscriberByRchMotherId == null) { // no subscriber exists with RCH mother id either
                     //create subscriber, beneficiary, subscription and return
                     Subscriber subscriber = new Subscriber(msisdn, language);
                     childUpdate.setDateOfBirth(dob);
@@ -491,7 +491,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     create(subscriber);
                     return subscriptionService.createSubscription(subscriber, msisdn, language, pack, SubscriptionOrigin.RCH_IMPORT);
                 } else {
-                    if(subscriberByRchMotherId.getChild() == null) {
+                    if (subscriberByRchMotherId.getChild() == null) {
                         //update subscriber with child
                         subscriberByRchMotherId.setChild(childUpdate);
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchMotherId, pack.getType());
@@ -501,7 +501,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                         return null;
                     }
                 }
-            } else {//subscriber exists with provided msisdn
+            } else { //subscriber exists with provided msisdn
                 if (subscribersByMsisdn.size() == 1 && subscribersByMsisdn.get(0).getMother().equals(childUpdate.getMother()) && subscribersByMsisdn.get(0).getChild() == null) {
                     //update subscriber with child
                     Subscriber subscriber = subscribersByMsisdn.get(0);
@@ -577,7 +577,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     public void deleteAllowed(Subscriber subscriber) {
-        for (Subscription subscription: subscriber.getSubscriptions()) {
+        for (Subscription subscription : subscriber.getSubscriptions()) {
             subscriptionService.deletePreconditionCheck(subscription);
         }
     }
@@ -587,7 +587,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         LOGGER.info("Recieved Release Number {} for Deactivation.", callingNumber);
         List<Subscriber> subscriberByMsisdns = this.getSubscriber(callingNumber);
         if (subscriberByMsisdns.isEmpty()) {
-            LOGGER.info("Subscriber for msisdn {} is not found." , callingNumber);
+            LOGGER.info("Subscriber for msisdn {} is not found.", callingNumber);
             throw new IllegalArgumentException(String.format(KilkariConstants.SUBSCRIBER_NOT_FOUND, callingNumber));
         }
         LOGGER.info("Found Subscriber for msisdn {} .", callingNumber);

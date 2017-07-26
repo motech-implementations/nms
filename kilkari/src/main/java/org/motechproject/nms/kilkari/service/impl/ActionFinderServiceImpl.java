@@ -26,8 +26,8 @@ public class ActionFinderServiceImpl implements ActionFinderService {
     private MctsChildDataService mctsChildDataService;
 
     @Override
-    public String MotherActionFinder(MotherRecord record) {
-        if(mctsMotherDataService.findByBeneficiaryId(record.getIdNo())==null){
+    public String motherActionFinder(MotherRecord record) {
+        if (mctsMotherDataService.findByBeneficiaryId(record.getIdNo()) == null) {
             return create;
         } else {
             return update;
@@ -35,8 +35,8 @@ public class ActionFinderServiceImpl implements ActionFinderService {
     }
 
     @Override
-    public String RchMotherActionFinder(RchMotherRecord record) {
-        if(mctsMotherDataService.findByRchId(record.getRegistrationNo())==null){
+    public String rchMotherActionFinder(RchMotherRecord record) {
+        if (mctsMotherDataService.findByRchId(record.getRegistrationNo()) == null) {
             return create;
         } else {
             return update;
@@ -44,17 +44,17 @@ public class ActionFinderServiceImpl implements ActionFinderService {
     }
 
     @Override
-    public String ChildActionFinder(ChildRecord record) {
-        if(mctsChildDataService.findByBeneficiaryId(record.getIdNo())==null){
+    public String childActionFinder(ChildRecord record) {
+        if (mctsChildDataService.findByBeneficiaryId(record.getIdNo()) == null) {
             return create;
-        } else{
+        } else {
             return update;
         }
     }
 
     @Override
-    public String RchChildActionFinder(RchChildRecord record) {
-        if(mctsChildDataService.findByRchId(record.getRegistrationNo())==null){
+    public String rchChildActionFinder(RchChildRecord record) {
+        if (mctsChildDataService.findByRchId(record.getRegistrationNo()) == null) {
             return create;
         } else {
             return update;
