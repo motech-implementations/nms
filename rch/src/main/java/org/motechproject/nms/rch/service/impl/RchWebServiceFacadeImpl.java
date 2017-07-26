@@ -21,14 +21,12 @@ import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.util.Order;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
-import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.utils.FlwConstants;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
-import org.motechproject.nms.mcts.contract.AnmAshaRecord;
 import org.motechproject.nms.mcts.domain.RejectionReasons;
 import org.motechproject.nms.rch.contract.RchAnmAshaDataSet;
 import org.motechproject.nms.rch.contract.RchAnmAshaRecord;
@@ -57,11 +55,9 @@ import org.motechproject.nms.rch.utils.MarshallUtils;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.rejectionhandler.domain.FlwImportRejection;
 import org.motechproject.nms.rejectionhandler.service.ActionFinderService;
 import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
 import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
-import org.motechproject.nms.rejectionhandler.utils.*;
 import org.motechproject.nms.rejectionhandler.service.FlwRejectionService;
 import org.motechproject.scheduler.contract.CronSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
@@ -693,7 +689,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     saved++;
                 } catch (InvalidLocationException e) {
                     LOGGER.warn("Invalid location for FLW: ", e);
-                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.INVALID_LOCATION_TYPE.toString(),action));
+                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.INVALID_LOCATION.toString(),action));
                     rejected++;
                 } catch (FlwImportException e) {
                     LOGGER.error("Existing FLW with same MSISDN but different RCH ID", e);
