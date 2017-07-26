@@ -1,4 +1,4 @@
-package org.motechproject.nms.flw.utils;
+package org.motechproject.nms.kilkari.utils;
 
 public final class FlwConstants {
 

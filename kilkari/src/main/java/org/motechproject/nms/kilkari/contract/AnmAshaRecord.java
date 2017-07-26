@@ -1,8 +1,8 @@
-package org.motechproject.nms.mcts.contract;
+package org.motechproject.nms.kilkari.contract;
 
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
-import org.motechproject.nms.flw.utils.FlwConstants;
+import org.motechproject.nms.kilkari.utils.FlwConstants;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -74,42 +74,6 @@ public class AnmAshaRecord {
         this.stateId = stateID;
     }
 
-    public Long getDistrictId() {
-        return districtId;
-    }
-
-    @XmlElement(name = "District_ID")
-    public void setDistrictId(Long districtId) {
-        this.districtId = districtId;
-    }
-
-    public String getDistrictName() {
-        return districtName;
-    }
-
-    @XmlElement(name = "District_Name")
-    public void setDistrictName(String districtName) {
-        this.districtName = districtName;
-    }
-
-    public String getTalukaId() {
-        return talukaId;
-    }
-
-    @XmlElement(name = "Taluka_ID")
-    public void setTalukaId(String talukaId) {
-        this.talukaId = talukaId;
-    }
-
-    public String getTalukaName() {
-        return talukaName;
-    }
-
-    @XmlElement(name = "Taluka_Name")
-    public void setTalukaName(String talukaName) {
-        this.talukaName = talukaName;
-    }
-
     public Long getHealthBlockId() {
         return healthBlockId;
     }
@@ -144,6 +108,42 @@ public class AnmAshaRecord {
     @XmlElement(name = "PHC_Name")
     public void setPhcName(String phcName) {
         this.phcName = phcName;
+    }
+
+    public Long getDistrictId() {
+        return districtId;
+    }
+
+    @XmlElement(name = "District_ID")
+    public void setDistrictId(Long districtId) {
+        this.districtId = districtId;
+    }
+
+    public String getDistrictName() {
+        return districtName;
+    }
+
+    @XmlElement(name = "District_Name")
+    public void setDistrictName(String districtName) {
+        this.districtName = districtName;
+    }
+
+    public String getTalukaId() {
+        return talukaId;
+    }
+
+    @XmlElement(name = "Taluka_ID")
+    public void setTalukaId(String talukaId) {
+        this.talukaId = talukaId;
+    }
+
+    public String getTalukaName() {
+        return talukaName;
+    }
+
+    @XmlElement(name = "Taluka_Name")
+    public void setTalukaName(String talukaName) {
+        this.talukaName = talukaName;
     }
 
     public Long getSubCentreId() {

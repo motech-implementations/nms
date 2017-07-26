@@ -1,16 +1,15 @@
-package org.motechproject.nms.rejectionhandler.utils;
+package org.motechproject.nms.kilkari.utils;
 
-import org.motechproject.nms.mcts.contract.AnmAshaRecord;
-import org.motechproject.nms.mcts.contract.ChildRecord;
-import org.motechproject.nms.mcts.contract.MotherRecord;
-import org.motechproject.nms.rch.contract.RchAnmAshaRecord;
-import org.motechproject.nms.rch.contract.RchChildRecord;
-import org.motechproject.nms.rch.contract.RchMotherRecord;
+import org.motechproject.nms.kilkari.contract.RchAnmAshaRecord;
+import org.motechproject.nms.kilkari.contract.RchChildRecord;
+import org.motechproject.nms.kilkari.contract.RchMotherRecord;
+import org.motechproject.nms.kilkari.contract.AnmAshaRecord;
+import org.motechproject.nms.kilkari.contract.ChildRecord;
+import org.motechproject.nms.kilkari.contract.MotherRecord;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by beehyv on 24/7/17.

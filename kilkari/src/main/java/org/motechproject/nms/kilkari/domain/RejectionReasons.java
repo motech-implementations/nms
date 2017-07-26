@@ -1,4 +1,4 @@
-package org.motechproject.nms.mcts.domain;
+package org.motechproject.nms.kilkari.domain;
 
 /**
  * Created by vishnu on 17/7/17.

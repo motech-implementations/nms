@@ -1,4 +1,4 @@
-package org.motechproject.nms.mcts.contract;
+package org.motechproject.nms.kilkari.contract;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

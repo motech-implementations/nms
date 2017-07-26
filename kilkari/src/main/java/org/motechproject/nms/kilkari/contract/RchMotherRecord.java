@@ -1,19 +1,14 @@
-package org.motechproject.nms.rch.contract;
+package org.motechproject.nms.kilkari.contract;
 
-import org.joda.time.LocalDate;
-import org.joda.time.format.DateTimeFormat;
-import org.motechproject.nms.flw.utils.FlwConstants;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
-import java.util.HashMap;
-import java.util.Map;
 
 @XmlType
 @XmlAccessorType(XmlAccessType.NONE)
-public class RchAnmAshaRecord {
+public class RchMotherRecord {
 
     private Long stateId;
     private Long districtId;
@@ -28,12 +23,17 @@ public class RchAnmAshaRecord {
     private String subCentreName;
     private Long villageId;
     private String villageName;
-    private Long gfId;
+    private String mctsIdNo;
+    private String registrationNo;
+    private Long caseNo;
+    private String name;
     private String mobileNo;
-    private String gfName;
-    private String gfType;
+    private String lmpDate;
+    private String birthDate;
+    private String abortionType;
+    private String deliveryOutcomes;
+    private Integer entryType;
     private String execDate;
-    private String gfStatus;
 
     public Long getStateId() {
         return stateId;
@@ -152,13 +152,40 @@ public class RchAnmAshaRecord {
         this.villageName = villageName;
     }
 
-    public Long getGfId() {
-        return gfId;
+    public String getMctsIdNo() {
+        return mctsIdNo;
     }
 
-    @XmlElement(name = "GF_ID")
-    public void setGfId(Long gfId) {
-        this.gfId = gfId;
+    @XmlElement(name = "MCTS_ID_No")
+    public void setMctsIdNo(String mctsIdNo) {
+        this.mctsIdNo = mctsIdNo;
+    }
+
+    public String getRegistrationNo() {
+        return registrationNo;
+    }
+
+    @XmlElement(name = "Registration_no")
+    public void setRegistrationNo(String registrationNo) {
+        this.registrationNo = registrationNo;
+    }
+
+    public Long getCaseNo() {
+        return caseNo;
+    }
+
+    @XmlElement(name = "Case_no")
+    public void setCaseNo(Long caseNo) {
+        this.caseNo = caseNo;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    @XmlElement(name = "Name")
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getMobileNo() {
@@ -170,22 +197,49 @@ public class RchAnmAshaRecord {
         this.mobileNo = mobileNo;
     }
 
-    public String getGfName() {
-        return gfName;
+    public String getLmpDate() {
+        return lmpDate;
     }
 
-    @XmlElement(name = "GF_Name")
-    public void setGfName(String gfName) {
-        this.gfName = gfName;
+    @XmlElement(name = "LMP_Date")
+    public void setLmpDate(String lmpDate) {
+        this.lmpDate = lmpDate;
     }
 
-    public String getGfType() {
-        return gfType;
+    public String getBirthDate() {
+        return birthDate;
     }
 
-    @XmlElement(name = "GF_type")
-    public void setGfType(String gfType) {
-        this.gfType = gfType;
+    @XmlElement(name = "Birthdate")
+    public void setBirthDate(String birthDate) {
+        this.birthDate = birthDate;
+    }
+
+    public String getAbortionType() {
+        return abortionType;
+    }
+
+    @XmlElement(name = "Abortion_Type")
+    public void setAbortionType(String abortionType) {
+        this.abortionType = abortionType;
+    }
+
+    public String getDeliveryOutcomes() {
+        return deliveryOutcomes;
+    }
+
+    @XmlElement(name = "Delivery_Outcomes")
+    public void setDeliveryOutcomes(String deliveryOutcomes) {
+        this.deliveryOutcomes = deliveryOutcomes;
+    }
+
+    public Integer getEntryType() {
+        return entryType;
+    }
+
+    @XmlElement(name = "Entry_Type")
+    public void setEntryType(Integer entryType) {
+        this.entryType = entryType;
     }
 
     public String getExecDate() {
@@ -195,38 +249,5 @@ public class RchAnmAshaRecord {
     @XmlElement(name = "Exec_Date")
     public void setExecDate(String execDate) {
         this.execDate = execDate;
-    }
-
-    public String getGfStatus() {
-        return gfStatus;
-    }
-
-    @XmlElement(name = "GF_Status")
-    public void setGfStatus(String gfStatus) {
-        this.gfStatus = gfStatus;
-    }
-
-    public Map<String, Object> toFlwRecordMap() {
-        Map<String, Object> map = new HashMap<>();
-        map.put(FlwConstants.STATE_ID, getStateId());
-        map.put(FlwConstants.DISTRICT_ID, getDistrictId());
-        map.put(FlwConstants.DISTRICT_NAME, getDistrictName());
-        map.put(FlwConstants.TALUKA_ID, getTalukaId());
-        map.put(FlwConstants.TALUKA_NAME, getTalukaName());
-        map.put(FlwConstants.HEALTH_BLOCK_ID, getHealthBlockId());
-        map.put(FlwConstants.HEALTH_BLOCK_NAME, getHealthBlockName());
-        map.put(FlwConstants.PHC_ID, getPhcId());
-        map.put(FlwConstants.PHC_NAME, getPhcName());
-        map.put(FlwConstants.SUB_CENTRE_ID, getSubCentreId());
-        map.put(FlwConstants.SUB_CENTRE_NAME, getSubCentreName());
-        map.put(FlwConstants.CENSUS_VILLAGE_ID, getVillageId());
-        map.put(FlwConstants.VILLAGE_NAME, getVillageName());
-        map.put(FlwConstants.GF_ID, getGfId() == null ? null : getGfId().toString());
-        map.put(FlwConstants.MOBILE_NO, getMobileNo() == null ? null : Long.parseLong(getMobileNo()));
-        map.put(FlwConstants.GF_NAME, getGfName());
-        map.put(FlwConstants.GF_TYPE, getGfType());
-        map.put(FlwConstants.EXEC_DATE, "".equals(getExecDate()) ? null : LocalDate.parse(getExecDate(), DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")));
-        map.put(FlwConstants.GF_STATUS, getGfStatus());
-        return map;
     }
 }

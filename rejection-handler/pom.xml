@@ -41,26 +41,17 @@
             <version>${motech.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>kilkari</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>flw</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>flwUpdate</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+
         <!-- https://mvnrepository.com/artifact/javax.persistence/persistence-api -->
         <dependency>
             <groupId>javax.persistence</groupId>
             <artifactId>persistence-api</artifactId>
             <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>tracking</artifactId>
+            <version>1.0.31</version>
         </dependency>
     </dependencies>
 

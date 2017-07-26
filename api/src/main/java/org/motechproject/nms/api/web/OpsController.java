@@ -5,7 +5,7 @@ import org.motechproject.event.listener.EventRelay;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
 import org.motechproject.nms.api.web.contract.AddRchFlwRequest;
 import org.motechproject.nms.csv.exception.CsvImportException;
-import org.motechproject.nms.flw.utils.FlwConstants;
+import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
 import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;

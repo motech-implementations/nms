@@ -31,10 +31,10 @@ import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
-import org.motechproject.nms.mcts.domain.RejectionReasons;
+import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.service.LocationService;
-import org.motechproject.nms.rejectionhandler.service.ActionFinderService;
+import org.motechproject.nms.kilkari.service.ActionFinderService;
 import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
 import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
 import org.slf4j.Logger;
@@ -54,7 +54,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.motechproject.nms.rejectionhandler.utils.RejectedObjectConverter.*;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.*;
 
 /**
  * Implementation of the {@link MctsBeneficiaryImportService} interface.

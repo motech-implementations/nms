@@ -59,6 +59,7 @@
             <artifactId>rejection-handler</artifactId>
             <version>1.0.31</version>
         </dependency>
+
     </dependencies>
 
     <repositories>
