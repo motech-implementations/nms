@@ -35,6 +35,24 @@ public class RchAnmAshaRecord {
     private String execDate;
     private String gfStatus;
 
+    @XmlElement(name = "Taluka_Name")
+    public void setTalukaName(String talukaName) {
+        this.talukaName = talukaName;
+    }
+
+    public Long getHealthBlockId() {
+        return healthBlockId;
+    }
+
+    @XmlElement(name = "HealthBlock_ID")
+    public void setHealthBlockId(Long healthBlockId) {
+        this.healthBlockId = healthBlockId;
+    }
+
+    public String getHealthBlockName() {
+        return healthBlockName;
+    }
+
     public String getDistrictName() {
         return districtName;
     }
@@ -57,23 +75,6 @@ public class RchAnmAshaRecord {
         return talukaName;
     }
 
-    @XmlElement(name = "Taluka_Name")
-    public void setTalukaName(String talukaName) {
-        this.talukaName = talukaName;
-    }
-
-    public Long getHealthBlockId() {
-        return healthBlockId;
-    }
-
-    @XmlElement(name = "HealthBlock_ID")
-    public void setHealthBlockId(Long healthBlockId) {
-        this.healthBlockId = healthBlockId;
-    }
-
-    public String getHealthBlockName() {
-        return healthBlockName;
-    }
 
     public Long getStateId() {
         return stateId;
@@ -91,56 +92,6 @@ public class RchAnmAshaRecord {
     @XmlElement(name = "District_ID")
     public void setDistrictId(Long districtId) {
         this.districtId = districtId;
-    }
-
-    @XmlElement(name = "HealthBlock_Name")
-    public void setHealthBlockName(String healthBlockName) {
-        this.healthBlockName = healthBlockName;
-    }
-
-    public Long getPhcId() {
-        return phcId;
-    }
-
-    @XmlElement(name = "PHC_ID")
-    public void setPhcId(Long phcId) {
-        this.phcId = phcId;
-    }
-
-    public String getPhcName() {
-        return phcName;
-    }
-
-    @XmlElement(name = "PHC_Name")
-    public void setPhcName(String phcName) {
-        this.phcName = phcName;
-    }
-
-    public Long getSubCentreId() {
-        return subCentreId;
-    }
-
-    @XmlElement(name = "SubCentre_ID")
-    public void setSubCentreId(Long subCentreId) {
-        this.subCentreId = subCentreId;
-    }
-
-    public String getSubCentreName() {
-        return subCentreName;
-    }
-
-    @XmlElement(name = "SubCentre_Name")
-    public void setSubCentreName(String subCentreName) {
-        this.subCentreName = subCentreName;
-    }
-
-    public Long getVillageId() {
-        return villageId;
-    }
-
-    @XmlElement(name = "Village_ID")
-    public void setVillageId(Long villageId) {
-        this.villageId = villageId;
     }
 
     public String getVillageName() {
@@ -165,6 +116,14 @@ public class RchAnmAshaRecord {
         return mobileNo;
     }
 
+    @XmlElement(name = "HealthBlock_Name")
+    public void setHealthBlockName(String healthBlockName) {
+        this.healthBlockName = healthBlockName;
+    }
+
+    public Long getPhcId() {
+        return phcId;
+    }
     @XmlElement(name = "Mobile_no")
     public void setMobileNo(String mobileNo) {
         this.mobileNo = mobileNo;
@@ -172,6 +131,47 @@ public class RchAnmAshaRecord {
 
     public String getGfName() {
         return gfName;
+    }
+
+    @XmlElement(name = "SubCentre_ID")
+    public void setSubCentreId(Long subCentreId) {
+        this.subCentreId = subCentreId;
+    }
+
+    public String getSubCentreName() {
+        return subCentreName;
+    }
+
+    @XmlElement(name = "SubCentre_Name")
+    public void setSubCentreName(String subCentreName) {
+        this.subCentreName = subCentreName;
+    }
+
+    public Long getVillageId() {
+        return villageId;
+    }
+
+    @XmlElement(name = "PHC_ID")
+    public void setPhcId(Long phcId) {
+        this.phcId = phcId;
+    }
+
+    public String getPhcName() {
+        return phcName;
+    }
+
+    @XmlElement(name = "PHC_Name")
+    public void setPhcName(String phcName) {
+        this.phcName = phcName;
+    }
+
+    public Long getSubCentreId() {
+        return subCentreId;
+    }
+
+    @XmlElement(name = "Village_ID")
+    public void setVillageId(Long villageId) {
+        this.villageId = villageId;
     }
 
     @XmlElement(name = "GF_Name")

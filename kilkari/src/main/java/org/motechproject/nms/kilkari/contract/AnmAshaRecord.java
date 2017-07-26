@@ -78,65 +78,6 @@ public class AnmAshaRecord {
         return healthBlockId;
     }
 
-    @XmlElement(name = "HealthBlock_ID")
-    public void setHealthBlockId(Long healthBlockId) {
-        this.healthBlockId = healthBlockId;
-    }
-
-    public String getHealthBlockName() {
-        return healthBlockName;
-    }
-
-    @XmlElement(name = "HealthBlock_Name")
-    public void setHealthBlockName(String healthBlockName) {
-        this.healthBlockName = healthBlockName;
-    }
-
-    public Long getPhcId() {
-        return phcId;
-    }
-
-    @XmlElement(name = "PHC_ID")
-    public void setPhcId(Long phcId) {
-        this.phcId = phcId;
-    }
-
-    public String getPhcName() {
-        return phcName;
-    }
-
-    @XmlElement(name = "PHC_Name")
-    public void setPhcName(String phcName) {
-        this.phcName = phcName;
-    }
-
-    public Long getDistrictId() {
-        return districtId;
-    }
-
-    @XmlElement(name = "District_ID")
-    public void setDistrictId(Long districtId) {
-        this.districtId = districtId;
-    }
-
-    public String getDistrictName() {
-        return districtName;
-    }
-
-    @XmlElement(name = "District_Name")
-    public void setDistrictName(String districtName) {
-        this.districtName = districtName;
-    }
-
-    public String getTalukaId() {
-        return talukaId;
-    }
-
-    @XmlElement(name = "Taluka_ID")
-    public void setTalukaId(String talukaId) {
-        this.talukaId = talukaId;
-    }
-
     public String getTalukaName() {
         return talukaName;
     }
@@ -146,13 +87,13 @@ public class AnmAshaRecord {
         this.talukaName = talukaName;
     }
 
-    public Long getSubCentreId() {
-        return subCentreId;
+    @XmlElement(name = "Village_Name")
+    public void setVillageName(String villageName) {
+        this.villageName = villageName;
     }
 
-    @XmlElement(name = "SubCentre_ID")
-    public void setSubCentreId(Long subCentreId) {
-        this.subCentreId = subCentreId;
+    public String getRegDate() {
+        return regDate;
     }
 
     public String getSubCentreName() {
@@ -177,13 +118,36 @@ public class AnmAshaRecord {
         return villageName;
     }
 
-    @XmlElement(name = "Village_Name")
-    public void setVillageName(String villageName) {
-        this.villageName = villageName;
+    public Long getSubCentreId() {
+        return subCentreId;
     }
 
-    public String getRegDate() {
-        return regDate;
+    @XmlElement(name = "SubCentre_ID")
+    public void setSubCentreId(Long subCentreId) {
+        this.subCentreId = subCentreId;
+    }
+
+    @XmlElement(name = "District_ID")
+    public void setDistrictId(Long districtId) {
+        this.districtId = districtId;
+    }
+
+    public String getDistrictName() {
+        return districtName;
+    }
+
+    @XmlElement(name = "District_Name")
+    public void setDistrictName(String districtName) {
+        this.districtName = districtName;
+    }
+
+    public String getTalukaId() {
+        return talukaId;
+    }
+
+    @XmlElement(name = "Taluka_ID")
+    public void setTalukaId(String talukaId) {
+        this.talukaId = talukaId;
     }
 
     @XmlElement(name = "Reg_Date")
@@ -254,6 +218,19 @@ public class AnmAshaRecord {
         this.createdOn = createdOn;
     }
 
+    public String getPhcName() {
+        return phcName;
+    }
+
+    @XmlElement(name = "PHC_Name")
+    public void setPhcName(String phcName) {
+        this.phcName = phcName;
+    }
+
+    public Long getDistrictId() {
+        return districtId;
+    }
+
     public String getUpdatedOn() {
         return updatedOn;
     }
@@ -265,6 +242,29 @@ public class AnmAshaRecord {
 
     public Integer getBankId() {
         return bankId;
+    }
+
+    @XmlElement(name = "HealthBlock_ID")
+    public void setHealthBlockId(Long healthBlockId) {
+        this.healthBlockId = healthBlockId;
+    }
+
+    public String getHealthBlockName() {
+        return healthBlockName;
+    }
+
+    @XmlElement(name = "HealthBlock_Name")
+    public void setHealthBlockName(String healthBlockName) {
+        this.healthBlockName = healthBlockName;
+    }
+
+    public Long getPhcId() {
+        return phcId;
+    }
+
+    @XmlElement(name = "PHC_ID")
+    public void setPhcId(Long phcId) {
+        this.phcId = phcId;
     }
 
     @XmlElement(name = "Bank_ID")
@@ -416,6 +416,11 @@ public class AnmAshaRecord {
         Map<String, Object> map = new HashMap<>();
         map.put(FlwConstants.ID, getId() == null ? null : getId().toString());
         map.put(FlwConstants.CONTACT_NO, getContactNo() == null ? null : Long.parseLong(getContactNo()));
+        map.put(FlwConstants.PHC_NAME, getPhcName());
+        map.put(FlwConstants.SUB_CENTRE_ID, getSubCentreId());
+        map.put(FlwConstants.SUB_CENTRE_NAME, getSubCentreName());
+        map.put(FlwConstants.CENSUS_VILLAGE_ID, getVillageId());
+        map.put(FlwConstants.VILLAGE_NAME, getVillageName());
         map.put(FlwConstants.NAME, getName());
         map.put(FlwConstants.DISTRICT_ID, getDistrictId());
         map.put(FlwConstants.DISTRICT_NAME, getDistrictName());
@@ -424,11 +429,6 @@ public class AnmAshaRecord {
         map.put(FlwConstants.HEALTH_BLOCK_ID, getHealthBlockId());
         map.put(FlwConstants.HEALTH_BLOCK_NAME, getHealthBlockName());
         map.put(FlwConstants.PHC_ID, getPhcId());
-        map.put(FlwConstants.PHC_NAME, getPhcName());
-        map.put(FlwConstants.SUB_CENTRE_ID, getSubCentreId());
-        map.put(FlwConstants.SUB_CENTRE_NAME, getSubCentreName());
-        map.put(FlwConstants.CENSUS_VILLAGE_ID, getVillageId());
-        map.put(FlwConstants.VILLAGE_NAME, getVillageName());
         map.put(FlwConstants.TYPE, getType());
         map.put(FlwConstants.GF_STATUS, getGfStatus());
         map.put(FlwConstants.UPDATED_ON, "".equals(getUpdatedOn()) ? null : LocalDate.parse(getUpdatedOn(), DateTimeFormat.forPattern("dd-MM-yyyy")));

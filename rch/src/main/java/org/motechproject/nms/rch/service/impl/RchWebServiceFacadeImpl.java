@@ -85,10 +85,19 @@ import java.lang.reflect.Method;
 import java.io.StringWriter;
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.*;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.*;
+import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanRchMotherRecords;
+import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanRchChildRecords;
+import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanRchFlwRecords;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.motherRejectionRch;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionRch;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.flwRejectionRch;
 
 @Service("rchWebServiceFacade")
 public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
@@ -213,9 +222,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LOGGER.debug(event.toString());
         LOGGER.info("Copying RCH mother response file from remote server to local directory.");
         try {
-            List<RchImportFacilitator> rchImportFacilitatorsMother = rchImportFacilitatorDataService.getByImportDateAndUsertype(LocalDate.now(),RchUserType.MOTHER);
-            for (RchImportFacilitator rchImportFacilitatorMother:rchImportFacilitatorsMother
-                 ) {
+            List<RchImportFacilitator> rchImportFacilitatorsMother = rchImportFacilitatorDataService.getByImportDateAndUsertype(LocalDate.now(), RchUserType.MOTHER);
+            for (RchImportFacilitator rchImportFacilitatorMother : rchImportFacilitatorsMother
+                    ) {
                 File localResponseFile = scpResponseToLocal((String) event.getParameters().get(FILENAME));
                 if (localResponseFile != null) {
                     LOGGER.info("RCH Mother response file successfully copied from remote server to local directory.");
@@ -304,7 +313,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 eventParams.put(Constants.START_DATE_PARAM, from);
                 eventParams.put(Constants.END_DATE_PARAM, to);
                 eventParams.put(FILENAME, responseFile.getName());
-                MotechEvent event = new MotechEvent(READ_CHILD_RESPONSE_FILE_EVENT , eventParams);
+                MotechEvent event = new MotechEvent(READ_CHILD_RESPONSE_FILE_EVENT, eventParams);
                 String cronExpression = Constants.DEFAULT_RCH_CHILD_IMPORT_CRON_EXPRESSION;
                 CronSchedulableJob job = new CronSchedulableJob(event, cronExpression);
                 schedulerService.safeScheduleJob(job);
@@ -320,15 +329,15 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return status;
     }
 
-    @MotechListener(subjects = READ_CHILD_RESPONSE_FILE_EVENT )
+    @MotechListener(subjects = READ_CHILD_RESPONSE_FILE_EVENT)
     public void readChildResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         LOGGER.debug(event.toString());
 
         LOGGER.info("Copying RCH child response file from remote server to local directory.");
         try {
-            List<RchImportFacilitator> rchImportFacilitatorsChild = rchImportFacilitatorDataService.getByImportDateAndUsertype(LocalDate.now(),RchUserType.CHILD);
-            for (RchImportFacilitator rchImportFacilitatorChild: rchImportFacilitatorsChild
-                 ) {
+            List<RchImportFacilitator> rchImportFacilitatorsChild = rchImportFacilitatorDataService.getByImportDateAndUsertype(LocalDate.now(), RchUserType.CHILD);
+            for (RchImportFacilitator rchImportFacilitatorChild : rchImportFacilitatorsChild
+                    ) {
                 File localResponseFile = localResponseFile = scpResponseToLocal((String) event.getParameters().get(FILENAME));
                 DS_DataResponseDS_DataResult result = readResponses(localResponseFile);
                 Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
@@ -411,7 +420,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 eventParams.put(FILENAME, responseFile.getName());
                 eventParams.put(Constants.START_DATE_PARAM, from);
                 eventParams.put(Constants.END_DATE_PARAM, to);
-                MotechEvent event = new MotechEvent(READ_ASHA_RESPONSE_FILE_EVENT , eventParams);
+                MotechEvent event = new MotechEvent(READ_ASHA_RESPONSE_FILE_EVENT, eventParams);
                 String cronExpression = Constants.DEFAULT_RCH_ASHA_IMPORT_CRON_EXPRESSION;
                 CronSchedulableJob job = new CronSchedulableJob(event, cronExpression);
                 schedulerService.safeScheduleJob(job);
@@ -426,7 +435,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return status;
     }
 
-    @MotechListener(subjects = READ_ASHA_RESPONSE_FILE_EVENT )
+    @MotechListener(subjects = READ_ASHA_RESPONSE_FILE_EVENT)
     public void readAshaResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         LOGGER.debug(event.toString());
         LOGGER.info("RCH Asha file import entry point");
@@ -434,8 +443,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
         try {
             List<RchImportFacilitator> rchImportFacilitatorsAsha = rchImportFacilitatorDataService.getByImportDateAndUsertype(LocalDate.now(), RchUserType.ASHA);
-            for (RchImportFacilitator reRchImportFacilitatorAsha: rchImportFacilitatorsAsha
-                 ) {
+            for (RchImportFacilitator reRchImportFacilitatorAsha : rchImportFacilitatorsAsha
+                    ) {
                 File localResponseFile = scpResponseToLocal((String) event.getParameters().get(FILENAME));
                 DS_DataResponseDS_DataResult result = readResponses(localResponseFile);
                 Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
@@ -563,7 +572,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private static String[] motherListenerSubjects() {
         String motherListenerSubject[] = new String[STATEIDS.length];
-        for (int i=0;i<STATEIDS.length;i++) {
+        for (int i = 0; i < STATEIDS.length; i++) {
             motherListenerSubject[i] = (READ_MOTHER_RESPONSE_FILE_EVENT + '_' + STATEIDS[i]);
         }
         return motherListenerSubject;
@@ -574,17 +583,17 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         List<List<RchMotherRecord>> rchMotherRecordsSet = cleanRchMotherRecords(mothersDataSet.getRecords());
         List<RchMotherRecord> rejectedRchMothers = rchMotherRecordsSet.get(0);
         String action = "";
-        for (RchMotherRecord record : rejectedRchMothers){
-            action = actionFinderService.RchMotherActionFinder(record);
+        for (RchMotherRecord record : rejectedRchMothers) {
+            action = actionFinderService.rchMotherActionFinder(record);
             LOGGER.error("Existing Mother Record with same MSISDN in the data set");
-            motherRejectionService.createOrUpdateMother(motherRejectionRch(record,false,RejectionReasons.MSISDN_ALREADY_IN_USE.toString(),action));
+            motherRejectionService.createOrUpdateMother(motherRejectionRch(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
         }
         List<RchMotherRecord> acceptedRchMothers = rchMotherRecordsSet.get(1);
         int saved = 0;
         int rejected = 0;
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
         for (RchMotherRecord record : acceptedRchMothers) {
-            action = actionFinderService.RchMotherActionFinder(record);
+            action = actionFinderService.rchMotherActionFinder(record);
             try {
                 // get user property map
                 Map<String, Object> recordMap = toMap(record);
@@ -616,10 +625,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         List<List<RchChildRecord>> rchChildRecordsSet = cleanRchChildRecords(childrenDataSet.getRecords());
         List<RchChildRecord> rejectedRchChildren = rchChildRecordsSet.get(0);
         String action = "";
-        for (RchChildRecord record : rejectedRchChildren){
-            action = actionFinderService.RchChildActionFinder(record);
+        for (RchChildRecord record : rejectedRchChildren) {
+            action = actionFinderService.rchChildActionFinder(record);
             LOGGER.error("Existing Child Record with same MSISDN in the data set");
-            childRejectionService.createOrUpdateChild(childRejectionRch(record,false,RejectionReasons.MSISDN_ALREADY_IN_USE.toString(),action));
+            childRejectionService.createOrUpdateChild(childRejectionRch(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
         }
         List<RchChildRecord> acceptedRchChildren = rchChildRecordsSet.get(1);
 
@@ -628,7 +637,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
 
         for (RchChildRecord record : acceptedRchChildren) {
-            action = actionFinderService.RchChildActionFinder(record);
+            action = actionFinderService.rchChildActionFinder(record);
             try {
                 // get user property map
                 Map<String, Object> recordMap = toMap(record);
@@ -663,10 +672,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         List<List<RchAnmAshaRecord>> rchAshaRecordsSet = cleanRchFlwRecords(anmAshaDataSet.getRecords());
         List<RchAnmAshaRecord> rejectedRchAshas = rchAshaRecordsSet.get(0);
         String action = "";
-        for (RchAnmAshaRecord record : rejectedRchAshas){
-            action = actionFinderService.RchFlwActionFinder(record);
+        for (RchAnmAshaRecord record : rejectedRchAshas) {
+            action = this.RchFlwActionFinder(record);
             LOGGER.error("Existing Asha Record with same MSISDN in the data set");
-            flwRejectionService.createUpdate(flwRejectionRch(record,false,RejectionReasons.MSISDN_ALREADY_IN_USE.toString(),action));
+            flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
         }
         List<RchAnmAshaRecord> acceptedRchAshas = rchAshaRecordsSet.get(1);
 
@@ -675,35 +684,35 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         State state = stateDataService.findByCode(stateCode);
 
         for (RchAnmAshaRecord record : acceptedRchAshas) {
-            action = actionFinderService.RchFlwActionFinder(record);
+            action = this.RchFlwActionFinder(record);
             String designation = record.getGfType();
             designation = (designation != null ? designation.trim() : designation);
             if (!(FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation))) {
-                flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.FLW_TYPE_NOT_ASHA.toString(),action));
+                flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.FLW_TYPE_NOT_ASHA.toString(), action));
                 rejected++;
             } else {
                 try {
                     // get user property map
                     Map<String, Object> recordMap = record.toFlwRecordMap();    // temp var used for debugging
                     frontLineWorkerImportService.importRchFrontLineWorker(recordMap, state);
-                    flwRejectionService.createUpdate(flwRejectionRch(record, true, null,action));
+                    flwRejectionService.createUpdate(flwRejectionRch(record, true, null, action));
                     saved++;
                 } catch (InvalidLocationException e) {
                     LOGGER.warn("Invalid location for FLW: ", e);
-                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.INVALID_LOCATION.toString(),action));
+                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.INVALID_LOCATION.toString(), action));
                     rejected++;
                 } catch (FlwImportException e) {
                     LOGGER.error("Existing FLW with same MSISDN but different RCH ID", e);
-                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(),action));
+                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
                     rejected++;
                 } catch (FlwExistingRecordException e) {
                     LOGGER.error("Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}", record.getGfId(), record.getMobileNo(), e);
-                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.RECORD_ALREADY_EXISTS.toString(),action));
+                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.RECORD_ALREADY_EXISTS.toString(), action));
                     rejected++;
                 } catch (Exception e) {
                     LOGGER.error("RCH Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}",
                             record.getGfId(), record.getMobileNo(), e);
-                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.FLW_IMPORT_ERROR.toString(),action));
+                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.FLW_IMPORT_ERROR.toString(), action));
                     rejected++;
                 }
             }
@@ -836,7 +845,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             QueryParams queryParams = new QueryParams(new Order("importDate", Order.Direction.ASC));
             List<RchImportFailRecord> failedImports = rchImportFailRecordDataService.getByStateAndImportdateAndUsertype(stateId, startReferenceDate, rchUserType, queryParams);
             int counter = 0;
-            for (RchImportFailRecord eachFailedImport: failedImports) {
+            for (RchImportFailRecord eachFailedImport : failedImports) {
                 rchImportFailRecordDataService.delete(eachFailedImport);
                 counter++;
             }
@@ -976,9 +985,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         final Class<? extends Object> objClass = obj.getClass();
         try {
             final Method methodGetTypeDesc = objClass.getMethod("getTypeDesc",
-                    new Class[] {});
+                    new Class[]{});
             final TypeDesc typeDesc = (TypeDesc) methodGetTypeDesc.invoke(obj,
-                    new Object[] {});
+                    new Object[]{});
             return (typeDesc);
         } catch (final Exception e) {
             throw new Exception("Unable to get Axis TypeDesc for "
@@ -987,7 +996,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
     private String RchFlwActionFinder(RchAnmAshaRecord record) {
-        if(frontLineWorkerService.getByMctsFlwIdAndState(record.getGfId().toString(),stateDataService.findByCode(record.getStateId()))==null){
+        if (frontLineWorkerService.getByMctsFlwIdAndState(record.getGfId().toString(), stateDataService.findByCode(record.getStateId())) == null) {
             return "CREATE";
         } else {
             return "UPDATE";
