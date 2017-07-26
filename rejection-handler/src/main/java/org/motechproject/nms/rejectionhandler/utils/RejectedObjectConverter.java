@@ -1,5 +1,6 @@
 package org.motechproject.nms.rejectionhandler.utils;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.motechproject.nms.mcts.contract.AnmAshaRecord;
 import org.motechproject.nms.mcts.contract.ChildRecord;
 import org.motechproject.nms.mcts.contract.MotherRecord;
@@ -9,6 +10,8 @@ import org.motechproject.nms.rch.contract.RchMotherRecord;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.FlwImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
+
+import java.util.Map;
 
 /**
  * Created by beehyv on 20/7/17.
@@ -345,4 +348,33 @@ public class RejectedObjectConverter {
         return motherImportRejection;
     }
 
+    public static MotherRecord convertMapToMother(Map<String, Object> record){
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.convertValue(record,MotherRecord.class);
+    }
+
+    public static RchMotherRecord convertMapToRchMother(Map<String, Object> record){
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.convertValue(record,RchMotherRecord.class);
+    }
+
+    public static ChildRecord convertMapToChild(Map<String, Object> record){
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.convertValue(record,ChildRecord.class);
+    }
+
+    public static RchChildRecord convertMapToRchChild(Map<String, Object> record){
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.convertValue(record,RchChildRecord.class);
+    }
+
+    public static AnmAshaRecord convertMapToAsha(Map<String, Object> record){
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.convertValue(record,AnmAshaRecord.class);
+    }
+
+    public static RchAnmAshaRecord convertMapToRchAsha(Map<String, Object> record){
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.convertValue(record,RchAnmAshaRecord.class);
+    }
 }
