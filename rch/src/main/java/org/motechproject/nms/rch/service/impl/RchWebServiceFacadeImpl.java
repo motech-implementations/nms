@@ -221,18 +221,18 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             List<RchImportFacilitator> rchImportFacilitatorsMother = rchImportFacilitatorDataService.getByImportDateAndUsertype(LocalDate.now(), RchUserType.MOTHER);
             for (RchImportFacilitator rchImportFacilitatorMother : rchImportFacilitatorsMother
                     ) {
-                File localResponseFile = scpResponseToLocal((String) event.getParameters().get(FILENAME));
+                File localResponseFile = scpResponseToLocal(rchImportFacilitatorMother.getFileName());
                 if (localResponseFile != null) {
                     LOGGER.info("RCH Mother response file successfully copied from remote server to local directory.");
                     DS_DataResponseDS_DataResult result = readResponses(localResponseFile);
-                    Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
+                    Long stateId = rchImportFacilitatorMother.getStateId();
                     State state = stateDataService.findByCode(stateId);
 
                     String stateName = state.getName() != null ? state.getName() : " ";
                     Long stateCode = state.getCode() != null ? state.getCode() : 1L;
 
-                    LocalDate startDate = (LocalDate) event.getParameters().get(Constants.START_DATE_PARAM);
-                    LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
+                    LocalDate startDate = rchImportFacilitatorMother.getStartDate();
+                    LocalDate endDate = rchImportFacilitatorMother.getEndDate();
 
                     try {
                         validMothersDataResponse(result, stateId);
@@ -334,16 +334,17 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             List<RchImportFacilitator> rchImportFacilitatorsChild = rchImportFacilitatorDataService.getByImportDateAndUsertype(LocalDate.now(), RchUserType.CHILD);
             for (RchImportFacilitator rchImportFacilitatorChild : rchImportFacilitatorsChild
                     ) {
-                File localResponseFile = scpResponseToLocal((String) event.getParameters().get(FILENAME));
+
+                File localResponseFile = scpResponseToLocal(rchImportFacilitatorChild.getFileName());
                 DS_DataResponseDS_DataResult result = readResponses(localResponseFile);
-                Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
+                Long stateId = rchImportFacilitatorChild.getStateId();
                 State state = stateDataService.findByCode(stateId);
 
                 String stateName = state.getName();
                 Long stateCode = state.getCode();
 
-                LocalDate startReferenceDate = (LocalDate) event.getParameters().get(Constants.START_DATE_PARAM);
-                LocalDate endReferenceDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
+                LocalDate startReferenceDate = rchImportFacilitatorChild.getStartDate();
+                LocalDate endReferenceDate = rchImportFacilitatorChild.getEndDate();
                 try {
                     validChildrenDataResponse(result, stateId);
                     List childResultFeed = result.get_any()[1].getChildren();
@@ -439,18 +440,18 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
         try {
             List<RchImportFacilitator> rchImportFacilitatorsAsha = rchImportFacilitatorDataService.getByImportDateAndUsertype(LocalDate.now(), RchUserType.ASHA);
-            for (RchImportFacilitator reRchImportFacilitatorAsha : rchImportFacilitatorsAsha
+            for (RchImportFacilitator rchImportFacilitatorAsha : rchImportFacilitatorsAsha
                     ) {
-                File localResponseFile = scpResponseToLocal((String) event.getParameters().get(FILENAME));
+                File localResponseFile = scpResponseToLocal(rchImportFacilitatorAsha.getFileName());
                 DS_DataResponseDS_DataResult result = readResponses(localResponseFile);
-                Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
+                Long stateId = rchImportFacilitatorAsha.getStateId();
                 State importState = stateDataService.findByCode(stateId);
 
                 String stateName = importState.getName();
                 Long stateCode = importState.getCode();
 
-                LocalDate startReferenceDate = (LocalDate) event.getParameters().get(Constants.START_DATE_PARAM);
-                LocalDate endReferenceDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
+                LocalDate startReferenceDate = rchImportFacilitatorAsha.getStartDate();
+                LocalDate endReferenceDate = rchImportFacilitatorAsha.getEndDate();
                 try {
                     validAnmAshaDataResponse(result, stateId);
                     List ashaResultFeed = result.get_any()[1].getChildren();
