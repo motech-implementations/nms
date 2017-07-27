@@ -26,7 +26,7 @@ public class ExecutionHelper {
      * Inspired by http://stackoverflow.com/questions/808276/how-to-add-a-timeout-value-when-using-javas-runtime-exec
      */
 
-    public void exec(String command, long timeout) throws ExecutionException {
+    public void exec(String command, long timeout) {
         LOGGER.debug(command);
 
         Runtime runtime = Runtime.getRuntime();
