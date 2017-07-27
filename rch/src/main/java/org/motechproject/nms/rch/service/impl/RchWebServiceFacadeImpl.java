@@ -67,7 +67,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.xml.sax.helpers.AttributesImpl;
 
@@ -117,9 +116,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String RCH_WEB_SERVICE = "RCH Web Service";
     private static final double THOUSAND = 1000d;
     private static final String FILENAME = "fileName";
-
-    @Value("${rch.states}")
-    private static String[] STATEIDS;
 
     @Autowired
     @Qualifier("rchSettings")
@@ -217,7 +213,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return status;
     }
 
-    @MotechListener(subjects = READ_MOTHER_RESPONSE_FILE_EVENT)
+    @MotechListener(subjects = READ_MOTHER_RESPONSE_FILE_EVENT) //NO CHECKSTYLE Cyclomatic Complexity
     public void readMotherResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         LOGGER.debug(event.toString());
         LOGGER.info("Copying RCH mother response file from remote server to local directory.");
@@ -338,7 +334,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             List<RchImportFacilitator> rchImportFacilitatorsChild = rchImportFacilitatorDataService.getByImportDateAndUsertype(LocalDate.now(), RchUserType.CHILD);
             for (RchImportFacilitator rchImportFacilitatorChild : rchImportFacilitatorsChild
                     ) {
-                File localResponseFile = localResponseFile = scpResponseToLocal((String) event.getParameters().get(FILENAME));
+                File localResponseFile = scpResponseToLocal((String) event.getParameters().get(FILENAME));
                 DS_DataResponseDS_DataResult result = readResponses(localResponseFile);
                 Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
                 State state = stateDataService.findByCode(stateId);
@@ -570,13 +566,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return localResponseFile;
     }
 
-    private static String[] motherListenerSubjects() {
-        String motherListenerSubject[] = new String[STATEIDS.length];
-        for (int i = 0; i < STATEIDS.length; i++) {
-            motherListenerSubject[i] = (READ_MOTHER_RESPONSE_FILE_EVENT + '_' + STATEIDS[i]);
-        }
-        return motherListenerSubject;
-    }
 
     private RchImportAudit saveImportedMothersData(RchMothersDataSet mothersDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
         LOGGER.info("Starting RCH mother import for state {}", stateName);
@@ -673,7 +662,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         List<RchAnmAshaRecord> rejectedRchAshas = rchAshaRecordsSet.get(0);
         String action = "";
         for (RchAnmAshaRecord record : rejectedRchAshas) {
-            action = this.RchFlwActionFinder(record);
+            action = this.rchFlwActionFinder(record);
             LOGGER.error("Existing Asha Record with same MSISDN in the data set");
             flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
         }
@@ -684,7 +673,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         State state = stateDataService.findByCode(stateCode);
 
         for (RchAnmAshaRecord record : acceptedRchAshas) {
-            action = this.RchFlwActionFinder(record);
+            action = this.rchFlwActionFinder(record);
             String designation = record.getGfType();
             designation = (designation != null ? designation.trim() : designation);
             if (!(FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation))) {
@@ -995,7 +984,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
     }
 
-    private String RchFlwActionFinder(RchAnmAshaRecord record) {
+    private String rchFlwActionFinder(RchAnmAshaRecord record) {
         if (frontLineWorkerService.getByMctsFlwIdAndState(record.getGfId().toString(), stateDataService.findByCode(record.getStateId())) == null) {
             return "CREATE";
         } else {
