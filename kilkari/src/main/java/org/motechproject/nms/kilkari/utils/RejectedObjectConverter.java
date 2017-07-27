@@ -371,13 +371,4 @@ public final class RejectedObjectConverter {
         return mapper.convertValue(record, RchChildRecord.class);
     }
 
-    public static AnmAshaRecord convertMapToAsha(Map<String, Object> record) {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.convertValue(record, AnmAshaRecord.class);
-    }
-
-    public static RchAnmAshaRecord convertMapToRchAsha(Map<String, Object> record) {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.convertValue(record, RchAnmAshaRecord.class);
-    }
 }
