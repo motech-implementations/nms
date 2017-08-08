@@ -7,12 +7,12 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.30</version>
+        <version>1.0.31</version>
         <relativePath>../</relativePath>
     </parent>
 
     <artifactId>testing</artifactId>
-    <version>1.0.30</version>
+    <version>1.0.31</version>
     <packaging>bundle</packaging>
     <name>Testing module</name>
 
@@ -98,6 +98,18 @@
         <dependency>
             <groupId>org.motechproject.nms</groupId>
             <artifactId>mcts</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>rch</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>rejection-handler</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -276,11 +288,17 @@
                             org.motechproject.osgi.web,
                             org.motechproject.nms.region.service,
                             org.motechproject.nms.kilkari.service,
+                            org.motechproject.nms.kilkari.contract,
                             org.motechproject.nms.csv.service,
                             org.motechproject.nms.tracking.repository,
                             org.motechproject.nms.mcts.contract,
                             org.motechproject.nms.mcts.service,
                             org.motechproject.nms.mcts.soap,
+                            org.motechproject.nms.rch.contract,
+                            org.motechproject.nms.rch.service,
+                            org.motechproject.nms.rch.soap,
+                            org.motechproject.nms.rejectionhandler.repository,
+                            org.motechproject.nms.rejectionhandler.service,
                             org.aopalliance.aop,
                             org.springframework.aop,
                             org.springframework.aop.framework,

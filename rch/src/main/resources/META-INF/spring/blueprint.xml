@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:osgi="http://www.eclipse.org/gemini/blueprint/schema/blueprint"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd http://www.eclipse.org/gemini/blueprint/schema/blueprint http://www.eclipse.org/gemini/blueprint/schema/blueprint/gemini-blueprint.xsd">
+
+    <import resource="classpath*:META-INF/motech/*.xml" />
+
+    <osgi:service ref="rchWebServiceFacade"
+                  interface="org.motechproject.nms.rch.service.RchWebServiceFacade" />
+
+    <osgi:service ref="rchImportFacilitatorService"
+                  interface="org.motechproject.nms.rch.service.RchImportFacilitatorService" />
+
+    <osgi:service ref="rchWsImportService"
+                  interface="org.motechproject.nms.rch.service.RchWsImportService" />
+
+    <osgi:reference id="rchImportAuditDataService"
+                    interface="org.motechproject.nms.rch.repository.RchImportAuditDataService" />
+
+    <osgi:reference id="rchImportFacilitatorDataService"
+                    interface="org.motechproject.nms.rch.repository.RchImportFacilitatorDataService" />
+
+    <osgi:reference id="rchImportFailRecordDataService"
+                    interface="org.motechproject.nms.rch.repository.RchImportFailRecordDataService" />
+
+    <osgi:reference id="schedulerService"
+                    interface="org.motechproject.scheduler.service.MotechSchedulerService" />
+
+    <osgi:reference id="stateDataService"
+                    interface="org.motechproject.nms.region.repository.StateDataService" />
+
+    <osgi:reference id="mctsBeneficiaryValueProcessor"
+                    interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor"/>
+
+    <osgi:reference id="frontLineWorkerImportService"
+                    interface="org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService" />
+
+    <osgi:reference id="frontLineWorkerService"
+                    interface="org.motechproject.nms.flw.service.FrontLineWorkerService" />
+
+    <osgi:reference id="mctsBeneficiaryImportService"
+                    interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService"/>
+
+    <osgi:reference id="actionFinderService"
+                    interface="org.motechproject.nms.kilkari.service.ActionFinderService"/>
+
+    <osgi:reference id="flwRejectionService"
+                    interface="org.motechproject.nms.rejectionhandler.service.FlwRejectionService"/>
+
+    <osgi:reference id="childRejectionService"
+                    interface="org.motechproject.nms.rejectionhandler.service.ChildRejectionService"/>
+
+    <osgi:reference id="motherRejectionService"
+                    interface="org.motechproject.nms.rejectionhandler.service.MotherRejectionService"/>
+
+    <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
+
+    <osgi:reference id="eventRelay" interface="org.motechproject.event.listener.EventRelay"/>
+
+
+</beans>

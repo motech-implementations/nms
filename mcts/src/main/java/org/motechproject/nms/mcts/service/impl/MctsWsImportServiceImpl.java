@@ -14,21 +14,23 @@ import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.util.Order;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
-import org.motechproject.nms.flw.utils.FlwConstants;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.mcts.contract.AnmAshaDataSet;
-import org.motechproject.nms.mcts.contract.AnmAshaRecord;
-import org.motechproject.nms.mcts.contract.ChildRecord;
+import org.motechproject.nms.kilkari.contract.AnmAshaRecord;
+import org.motechproject.nms.kilkari.contract.ChildRecord;
 import org.motechproject.nms.mcts.contract.ChildrenDataSet;
-import org.motechproject.nms.mcts.contract.MotherRecord;
+import org.motechproject.nms.kilkari.contract.MotherRecord;
 import org.motechproject.nms.mcts.contract.MothersDataSet;
 import org.motechproject.nms.mcts.domain.MctsImportAudit;
 import org.motechproject.nms.mcts.domain.MctsImportFailRecord;
 import org.motechproject.nms.mcts.domain.MctsUserType;
+import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.mcts.exception.MctsInvalidResponseStructureException;
 import org.motechproject.nms.mcts.exception.MctsWebServiceException;
 import org.motechproject.nms.mcts.repository.MctsImportAuditDataService;
@@ -39,6 +41,10 @@ import org.motechproject.nms.mcts.utils.Constants;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.kilkari.service.ActionFinderService;
+import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
+import org.motechproject.nms.rejectionhandler.service.FlwRejectionService;
+import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +60,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanMotherRecords;
+import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanChildRecords;
+import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanFlwRecords;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.motherRejectionMcts;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionMcts;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.flwRejectionMcts;
 
 @Service("mctsWsImportService")
 public class MctsWsImportServiceImpl implements MctsWsImportService {
@@ -89,6 +102,21 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
     @Autowired
     @Qualifier("mctsSettings")
     private SettingsFacade settingsFacade;
+
+    @Autowired
+    private FlwRejectionService flwRejectionService;
+
+    @Autowired
+    private MotherRejectionService motherRejectionService;
+
+    @Autowired
+    private ChildRejectionService childRejectionService;
+
+    @Autowired
+    private ActionFinderService actionFinderService;
+
+    @Autowired
+    private FrontLineWorkerService frontLineWorkerService;
 
     /**
      * Event relay service to handle async notifications
@@ -203,11 +231,21 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     private MctsImportAudit saveImportedMothersData(MothersDataSet mothersDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
         LOGGER.info("Starting mother import for state {}", stateName);
+        List<List<MotherRecord>> motherRecordsSet = cleanMotherRecords(mothersDataSet.getRecords());
+        List<MotherRecord> rejectedMotherRecords = motherRecordsSet.get(0);
+        String action = "";
+        for (MotherRecord record : rejectedMotherRecords) {
+            action = actionFinderService.motherActionFinder(record);
+            LOGGER.error("Existing Mother Record with same MSISDN in the data set");
+            motherRejectionService.createOrUpdateMother(motherRejectionMcts(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+        }
+        List<MotherRecord> acceptedMotherRecords = motherRecordsSet.get(1);
 
         int saved = 0;
         int rejected = 0;
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
-        for (MotherRecord record : mothersDataSet.getRecords()) {
+        for (MotherRecord record : acceptedMotherRecords) {
+            action = actionFinderService.motherActionFinder(record);
             try {
                 // get user property map
                 Map<String, Object> recordMap = toMap(record);
@@ -293,12 +331,22 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     private MctsImportAudit saveImportedChildrenData(ChildrenDataSet childrenDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
         LOGGER.info("Starting children import for state {}", stateName);
+        List<List<ChildRecord>> childRecordsSet = cleanChildRecords(childrenDataSet.getRecords());
+        List<ChildRecord> rejectedChildRecords = childRecordsSet.get(0);
+        String action = "";
+        for (ChildRecord record : rejectedChildRecords) {
+            action = actionFinderService.childActionFinder(record);
+            LOGGER.error("Existing Child Record with same MSISDN in the data set");
+            childRejectionService.createOrUpdateChild(childRejectionMcts(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+        }
+        List<ChildRecord> acceptedChildRecords = childRecordsSet.get(1);
 
         int saved = 0;
         int rejected = 0;
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
 
-        for (ChildRecord record : childrenDataSet.getRecords()) {
+        for (ChildRecord record : acceptedChildRecords) {
+            action = actionFinderService.childActionFinder(record);
             try {
                 // get user property map
                 Map<String, Object> recordMap = toMap(record);
@@ -389,33 +437,49 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         String stateName = state.getName();
         Long stateCode = state.getCode();
         LOGGER.info("Starting ASHA import for state {}", stateName);
+        List<List<AnmAshaRecord>> ashaRecordsSet = cleanFlwRecords(anmAshaDataSet.getRecords());
+        List<AnmAshaRecord> rejectedAshaRecords = ashaRecordsSet.get(0);
+        String action = "";
+        for (AnmAshaRecord record : rejectedAshaRecords) {
+            action = this.flwActionFinder(record);
+            LOGGER.error("Existing Asha Record with same MSISDN in the data set");
+            flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+        }
+        List<AnmAshaRecord> acceptedAshaRecords = ashaRecordsSet.get(1);
 
         int saved = 0;
         int rejected = 0;
 
-        for (AnmAshaRecord record : anmAshaDataSet.getRecords()) {
+        for (AnmAshaRecord record : acceptedAshaRecords) {
+            action = this.flwActionFinder(record);
             String designation = record.getType();
             designation = (designation != null) ? designation.trim() : designation;
             if (!(FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation))) {
+                flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.FLW_TYPE_NOT_ASHA.toString(), action));
                 rejected++;
             } else {
                 try {
                     // get user property map
                     Map<String, Object> recordMap = record.toFlwRecordMap();    // temp var used for debugging
-                    frontLineWorkerImportService.importFrontLineWorker(recordMap, state);
+                    frontLineWorkerImportService.importMctsFrontLineWorker(recordMap, state);
+                    flwRejectionService.createUpdate(flwRejectionMcts(record, true, null, action));
                     saved++;
                 } catch (InvalidLocationException e) {
                     LOGGER.warn("Invalid location for FLW: ", e);
+                    flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.INVALID_LOCATION.toString(), action));
                     rejected++;
                 } catch (FlwImportException e) {
                     LOGGER.error("Existing FLW with same MSISDN but different MCTS ID", e);
+                    flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
                     rejected++;
                 } catch (FlwExistingRecordException e) {
                     LOGGER.error("Cannot import FLW with ID: {}, and MSISDN (Contact_No): {}", record.getId(), record.getContactNo(), e);
+                    flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.RECORD_ALREADY_EXISTS.toString(), action));
                     rejected++;
                 } catch (Exception e) {
                     LOGGER.error("Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Contact_No): {}",
                             record.getId(), record.getContactNo(), e);
+                    flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.FLW_IMPORT_ERROR.toString(), action));
                     rejected++;
                 }
             }
@@ -436,7 +500,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             QueryParams queryParams = new QueryParams(new Order("importDate", Order.Direction.ASC));
             List<MctsImportFailRecord> failedImports = mctsImportFailRecordDataService.getByStateAndImportdateAndUsertype(stateId, startReferenceDate, mctsUserType, queryParams);
             int counter = 0;
-            for (MctsImportFailRecord eachFailedImport: failedImports) {
+            for (MctsImportFailRecord eachFailedImport : failedImports) {
                 mctsImportFailRecordDataService.delete(eachFailedImport);
                 counter++;
             }
@@ -468,7 +532,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         map.put(KilkariConstants.DOB, mctsBeneficiaryValueProcessor.getDateByString(childRecord.getBirthdate()));
 
         map.put(KilkariConstants.BENEFICIARY_ID,
-                mctsBeneficiaryValueProcessor.getChildInstanceByString(childRecord.getIdNo()));
+                childRecord.getIdNo());
         map.put(KilkariConstants.MOTHER_ID,
                 mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(childRecord.getMotherId()));
         map.put(KilkariConstants.DEATH,
@@ -512,8 +576,9 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     /**
      * Helper to check if the user exists in HPD filter state
+     *
      * @param hpdFilters set of districts group by state
-     * @param stateId stateId of user
+     * @param stateId    stateId of user
      * @param districtId districtId of user
      * @return true, if the user exists in the hpd district filter or if state is not HPD filtered
      */
@@ -530,6 +595,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
         return true;
     }
+
 
     private Map<Long, Set<Long>> getHpdFilters() {
         Map<Long, Set<Long>> hpdMap = new HashMap<>();
@@ -561,5 +627,13 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         }
 
         return districtSet;
+    }
+
+    private String flwActionFinder(AnmAshaRecord record) {
+        if (frontLineWorkerService.getByMctsFlwIdAndState(record.getId().toString(), stateDataService.findByCode(record.getStateId())) == null) {
+            return "CREATE";
+        } else {
+            return "UPDATE";
+        }
     }
 }

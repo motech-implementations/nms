@@ -7,12 +7,12 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.30</version>
+        <version>1.0.31</version>
         <relativePath>../</relativePath>
     </parent>
 
     <artifactId>flwUpdate</artifactId>
-    <version>1.0.30</version>
+    <version>1.0.31</version>
     <packaging>bundle</packaging>
     <name>FLW Update Module</name>
 
@@ -37,6 +37,12 @@
         <dependency>
             <groupId>org.motechproject.nms</groupId>
             <artifactId>mobile-academy</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>kilkari</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -96,6 +102,13 @@
                             org.apache.commons.fileupload,
                             org.springframework.web.multipart.commons,
                             org.motechproject.event.listener,
+                            org.motechproject.nms.kilkari.utils,
+                            org.motechproject.nms.kilkari.domain,
+                            org.motechproject.nms.flw.utils,
+                            org.motechproject.nms.flw.domain,
+                            org.motechproject.nms.flw.exception,
+                            org.motechproject.nms.flw.repository,
+                            org.motechproject.nms.flw.service,
                             *
                         </Import-Package>
                     </instructions>

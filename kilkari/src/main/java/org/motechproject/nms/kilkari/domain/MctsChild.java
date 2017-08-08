@@ -21,6 +21,10 @@ public class MctsChild extends MctsBeneficiary {
         super(beneficiaryId);
     }
 
+    public MctsChild(String rchId, String beneficiaryId) {
+        super(rchId, beneficiaryId);
+    }
+
     public MctsChild(String beneficiaryId, String name, MctsMother mother) {
         super(beneficiaryId, name);
         this.mother = mother;

@@ -5,12 +5,12 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.30</version>
+        <version>1.0.31</version>
         <relativePath>../</relativePath>
     </parent>
 
     <artifactId>kilkari</artifactId>
-    <version>1.0.30</version>
+    <version>1.0.31</version>
     <packaging>bundle</packaging>
     <name>Kilkari module</name>
 
@@ -54,6 +54,12 @@
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>rejection-handler</artifactId>
+            <version>1.0.31</version>
+        </dependency>
+
     </dependencies>
 
     <repositories>
@@ -92,7 +98,8 @@
                             org.motechproject.nms.kilkari.domain;version=${project.version},
                             org.motechproject.nms.kilkari.exception;version=${project.version},
                             org.motechproject.nms.kilkari.dto;version=${project.version},
-                            org.motechproject.nms.kilkari.utils;version=${project.version}
+                            org.motechproject.nms.kilkari.utils;version=${project.version},
+                            org.motechproject.nms.kilkari.contract;version=${project.version}
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,
@@ -107,6 +114,8 @@
                             org.springframework.web.multipart.commons,
                             org.springframework.cache.support,
                             org.springframework.cache.concurrent,
+                            org.motechproject.nms.rejectionhandler.service,
+                            org.motechproject.nms.rejectionhandler.domain,
                             net.sf.cglib.proxy,
                             net.sf.cglib.core,
                             *

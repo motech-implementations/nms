@@ -153,7 +153,9 @@ public class TestingServiceImpl implements TestingService {
         "nms_deactivation_subscription_audit_records",
         "nms_deactivation_subscription_audit_records__TRASH",
         "TRACKING_MODULE_CHANGELOG",
-        "TRACKING_MODULE_CHANGELOG__TRASH"
+        "TRACKING_MODULE_CHANGELOG__TRASH",
+        "nms_deactivated_beneficiary",
+        "nms_deactivated_beneficiary__TRASH"
     };
 
     /**

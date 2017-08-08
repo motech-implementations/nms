@@ -14,17 +14,17 @@ import org.motechproject.commons.date.util.DateUtil;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
-import org.motechproject.nms.flw.utils.FlwConstants;
+import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.mcts.contract.AnmAshaDataSet;
-import org.motechproject.nms.mcts.contract.AnmAshaRecord;
-import org.motechproject.nms.mcts.contract.ChildRecord;
+import org.motechproject.nms.kilkari.contract.AnmAshaRecord;
+import org.motechproject.nms.kilkari.contract.ChildRecord;
 import org.motechproject.nms.mcts.contract.ChildrenDataSet;
-import org.motechproject.nms.mcts.contract.MotherRecord;
+import org.motechproject.nms.kilkari.contract.MotherRecord;
 import org.motechproject.nms.mcts.contract.MothersDataSet;
 import org.motechproject.nms.mcts.service.MctsWebServiceFacade;
 import org.motechproject.nms.mcts.utils.Constants;
@@ -216,7 +216,7 @@ public class MctsWsImportServiceImplTest {
 
         record.setIdNo(String.valueOf(id));
         MctsChild mctsChild = new MctsChild(String.valueOf(id));
-        when(mctsBeneficiaryValueProcessor.getChildInstanceByString(String.valueOf(id))).thenReturn(mctsChild);
+        when(mctsBeneficiaryValueProcessor.getOrCreateChildInstance(String.valueOf(id))).thenReturn(mctsChild);
 
         String motherId = String.valueOf(id + 5);
         MctsMother mctsMother = new MctsMother(motherId);

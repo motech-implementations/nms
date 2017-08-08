@@ -73,6 +73,26 @@ public class RchBeneficiaryImportController {
         LOGGER.debug("importMotherData() END ({})", count > 0 ? timer.frequency(count) : timer.time());
     }
 
+    @RequestMapping(value = "rch/child/import", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public void importChildData(@RequestParam MultipartFile csvFile) {
+        LOGGER.debug("RCH importChildData() BEGIN");
+        Timer timer = new Timer("kid", "kids");
+        int count = 0;
+        try {
+            try (InputStream in = csvFile.getInputStream()) {
+                count = mctsBeneficiaryImportService.importChildData(new InputStreamReader(in), SubscriptionOrigin.RCH_IMPORT);
+                csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/rch/child/import");
+            }
+        } catch (CsvImportException e) {
+            logError(csvFile.getOriginalFilename(), "/kilkari/rch/child/import", e);
+        } catch (Exception e) {
+            logError(csvFile.getOriginalFilename(), "/kilkari/rch/child/import", e);
+            throw new CsvImportException("An error occured during CSV import", e);
+        }
+        LOGGER.debug("importChildData() END ({})", count > 0 ? timer.frequency(count) : timer.time());
+    }
+
     private void logError(String fileName, String endpoint, Exception exception) {
         LOGGER.error(exception.getMessage(), exception);
         csvAuditService.auditFailure(fileName, endpoint, exception.getMessage());

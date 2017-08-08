@@ -27,6 +27,9 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
     @Override
     public MctsMother getOrCreateMotherInstance(String value) {
+        if (value == null || "".equals(value.trim())) {
+            return null;
+        }
         MctsMother mother = mctsMotherDataService.findByBeneficiaryId(value);
         if (mother == null) {
             mother = new MctsMother(value);
@@ -36,7 +39,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
     @Override
     public MctsMother getMotherInstanceByBeneficiaryId(String value) {
-        if (value == null) {
+        if (value == null || "".equals(value.trim())) {
             return null;
         }
         return getOrCreateMotherInstance(value);
@@ -45,6 +48,9 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
     @Override
     public MctsMother getOrCreateRchMotherInstance(String rchId, String mctsId) {
 
+        if (rchId == null || "".equals(rchId.trim())) {
+            return null;
+        }
         MctsMother motherByRchId = mctsMotherDataService.findByRchId(rchId);
         MctsMother motherByMctsId;
 
@@ -83,29 +89,84 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
     @Override
     public Boolean getAbortionDataFromString(String value) {
-        String trimmedValue = value.trim();
-        return "Spontaneous".equals(trimmedValue) || "MTP<12 Weeks".equals(trimmedValue) ||
-                "MTP>12 Weeks".equals(trimmedValue); // "None" or blank indicates no abortion/miscarriage
+        if (value != null) {
+            String trimmedValue = value.trim();
+            return "Spontaneous".equals(trimmedValue) || "MTP<12 Weeks".equals(trimmedValue) ||
+                    "MTP>12 Weeks".equals(trimmedValue) || "Induced".equals(trimmedValue); // "None" or blank indicates no abortion/miscarriage
+        } else {
+            return null;
+        }
     }
 
     @Override
     public Boolean getStillBirthFromString(String value) {
-        return "0".equals(value.trim()); // This value indicates the number of live births that resulted from this pregnancy.
-        // 0 implies stillbirth, other values (including blank) do not.
+        if (value != null) {
+            return "0".equals(value.trim()); // This value indicates the number of live births that resulted from this pregnancy.
+            // 0 implies stillbirth, other values (including blank) do not.
+        } else {
+            return null;
+        }
     }
 
     @Override
     public Boolean getDeathFromString(String value) {
-        return "9".equals(value.trim()); // 9 indicates beneficiary death; other values do not
+        if (value != null) {
+            return "9".equals(value.trim()) || "Death".equalsIgnoreCase(value.trim()); // 9 indicates beneficiary death; other values do not
+        } else {
+            return null;
+        }
     }
 
     @Override
-    public MctsChild getChildInstanceByString(String value) {
+    public MctsChild getOrCreateChildInstance(String value) {
+        if (value == null || "".equals(value.trim())) {
+            return null;
+        }
         MctsChild child = mctsChildDataService.findByBeneficiaryId(value);
         if (child == null) {
             child = new MctsChild(value);
         }
         return child;
+    }
+
+    @Override
+    public MctsChild getOrCreateRchChildInstance(String rchId, String mctsId) {
+        if (rchId == null || "".equals(rchId.trim())) {
+            return null;
+        }
+        MctsChild childByRchId = mctsChildDataService.findByRchId(rchId);
+        MctsChild childByMctsId;
+        if (childByRchId == null) {
+            if (mctsId == null) {
+                childByRchId = new MctsChild(rchId, null);
+                return childByRchId;
+            } else {
+                childByMctsId = mctsChildDataService.findByBeneficiaryId(mctsId);
+                if (childByMctsId == null) {
+                    childByRchId = new MctsChild(rchId, mctsId);
+                    return childByRchId;
+                } else {
+                    childByMctsId.setRchId(rchId);
+                    return childByMctsId;
+                }
+            }
+        } else {
+            if (mctsId == null) {
+                return childByRchId;
+            } else {
+                childByMctsId = mctsChildDataService.findByBeneficiaryId(mctsId);
+                if (childByMctsId == null) {
+                    childByRchId.setBeneficiaryId(mctsId);
+                    return childByRchId;
+                } else {
+                    if (childByRchId.getId().equals(childByMctsId.getId())) {
+                        return childByRchId;
+                    } else {
+                        throw new InvalidRegistrationIdException("Unrelated children exist with the same MCTS id and RCH id");
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -119,7 +180,8 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
         try {
             DateTimeParser[] parsers = {
                     DateTimeFormat.forPattern("dd-MM-yyyy").getParser(),
-                    DateTimeFormat.forPattern("dd/MM/yyyy").getParser()};
+                    DateTimeFormat.forPattern("dd/MM/yyyy").getParser(),
+                    DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ").getParser()};
             DateTimeFormatter formatter = new DateTimeFormatterBuilder().append(null, parsers).toFormatter();
 
             referenceDate = formatter.parseDateTime(value);

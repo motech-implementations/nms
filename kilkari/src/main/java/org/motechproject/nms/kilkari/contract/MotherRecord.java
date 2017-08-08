@@ -1,4 +1,4 @@
-package org.motechproject.nms.mcts.contract;
+package org.motechproject.nms.kilkari.contract;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -99,6 +99,37 @@ public class MotherRecord {
     private String eIdTime;
     private Integer entryType;
 
+    @XmlElement(name = "HealthBlock_Name")
+    public void setHealthBlockName(String healthBlockName) {
+        this.healthBlockName = healthBlockName;
+    }
+
+    public Long getPhcid() {
+        return phcid;
+    }
+
+    @XmlElement(name = "PHC_ID")
+    public void setPhcid(Long phcid) {
+        this.phcid = phcid;
+    }
+
+    public String getPhcName() {
+        return phcName;
+    }
+
+    public Long getVillageId() {
+        return villageId;
+    }
+
+    @XmlElement(name = "Village_ID")
+    public void setVillageId(Long villageId) {
+        this.villageId = villageId;
+    }
+
+    public String getVillageName() {
+        return villageName;
+    }
+
     public Long getStateId() {
         return stateId;
     }
@@ -110,6 +141,29 @@ public class MotherRecord {
 
     public Long getDistrictId() {
         return districtId;
+    }
+
+    @XmlElement(name = "PHC_Name")
+    public void setPhcName(String phcName) {
+        this.phcName = phcName;
+    }
+
+    public Long getSubCentreid() {
+        return subCentreid;
+    }
+
+    @XmlElement(name = "SubCentre_ID")
+    public void setSubCentreid(Long subCentreid) {
+        this.subCentreid = subCentreid;
+    }
+
+    public String getSubCentreName() {
+        return subCentreName;
+    }
+
+    @XmlElement(name = "SubCentre_Name")
+    public void setSubCentreName(String subCentreName) {
+        this.subCentreName = subCentreName;
     }
 
     @XmlElement(name = "District_ID")
@@ -155,60 +209,6 @@ public class MotherRecord {
 
     public String getHealthBlockName() {
         return healthBlockName;
-    }
-
-    @XmlElement(name = "HealthBlock_Name")
-    public void setHealthBlockName(String healthBlockName) {
-        this.healthBlockName = healthBlockName;
-    }
-
-    public Long getPhcid() {
-        return phcid;
-    }
-
-    @XmlElement(name = "PHC_ID")
-    public void setPhcid(Long phcid) {
-        this.phcid = phcid;
-    }
-
-    public String getPhcName() {
-        return phcName;
-    }
-
-    @XmlElement(name = "PHC_Name")
-    public void setPhcName(String phcName) {
-        this.phcName = phcName;
-    }
-
-    public Long getSubCentreid() {
-        return subCentreid;
-    }
-
-    @XmlElement(name = "SubCentre_ID")
-    public void setSubCentreid(Long subCentreid) {
-        this.subCentreid = subCentreid;
-    }
-
-    public String getSubCentreName() {
-        return subCentreName;
-    }
-
-    @XmlElement(name = "SubCentre_Name")
-    public void setSubCentreName(String subCentreName) {
-        this.subCentreName = subCentreName;
-    }
-
-    public Long getVillageId() {
-        return villageId;
-    }
-
-    @XmlElement(name = "Village_ID")
-    public void setVillageId(Long villageId) {
-        this.villageId = villageId;
-    }
-
-    public String getVillageName() {
-        return villageName;
     }
 
     @XmlElement(name = "Village_Name")

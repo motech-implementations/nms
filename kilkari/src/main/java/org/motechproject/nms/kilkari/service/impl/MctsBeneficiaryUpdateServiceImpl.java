@@ -136,7 +136,7 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
         }
 
         if (updates.containsKey(KilkariConstants.UPDATE_MCTS_ID)) {
-            updates.put(KilkariConstants.BENEFICIARY_ID, beneficiary);
+            updates.put(KilkariConstants.BENEFICIARY_ID, beneficiary.getBeneficiaryId());
         }
 
         return updates;
