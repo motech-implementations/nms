@@ -10,4 +10,16 @@
 
     <osgi:reference id="flwImportRejectionDataService"
                     interface="org.motechproject.nms.rejectionhandler.repository.FlwImportRejectionDataService" />
+
+    <osgi:service ref="motherRejectionService"
+                  interface="org.motechproject.nms.rejectionhandler.service.MotherRejectionService" />
+
+    <osgi:reference id="motherRejectionDataService"
+                    interface="org.motechproject.nms.rejectionhandler.repository.MotherRejectionDataService" />
+
+    <osgi:service ref="childRejectionService"
+                  interface="org.motechproject.nms.rejectionhandler.service.ChildRejectionService" />
+
+    <osgi:reference id="childImportRejectionDataService"
+                    interface="org.motechproject.nms.rejectionhandler.repository.ChildRejectionDataService" />
 </beans>

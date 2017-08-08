@@ -89,20 +89,32 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
     @Override
     public Boolean getAbortionDataFromString(String value) {
-        String trimmedValue = value.trim();
-        return "Spontaneous".equals(trimmedValue) || "MTP<12 Weeks".equals(trimmedValue) ||
-                "MTP>12 Weeks".equals(trimmedValue) || "Induced".equals(trimmedValue); // "None" or blank indicates no abortion/miscarriage
+        if (value != null) {
+            String trimmedValue = value.trim();
+            return "Spontaneous".equals(trimmedValue) || "MTP<12 Weeks".equals(trimmedValue) ||
+                    "MTP>12 Weeks".equals(trimmedValue) || "Induced".equals(trimmedValue); // "None" or blank indicates no abortion/miscarriage
+        } else {
+            return null;
+        }
     }
 
     @Override
     public Boolean getStillBirthFromString(String value) {
-        return "0".equals(value.trim()); // This value indicates the number of live births that resulted from this pregnancy.
-        // 0 implies stillbirth, other values (including blank) do not.
+        if (value != null) {
+            return "0".equals(value.trim()); // This value indicates the number of live births that resulted from this pregnancy.
+            // 0 implies stillbirth, other values (including blank) do not.
+        } else {
+            return null;
+        }
     }
 
     @Override
     public Boolean getDeathFromString(String value) {
-        return "9".equals(value.trim()) || "Death".equalsIgnoreCase(value.trim()); // 9 indicates beneficiary death; other values do not
+        if (value != null) {
+            return "9".equals(value.trim()) || "Death".equalsIgnoreCase(value.trim()); // 9 indicates beneficiary death; other values do not
+        } else {
+            return null;
+        }
     }
 
     @Override

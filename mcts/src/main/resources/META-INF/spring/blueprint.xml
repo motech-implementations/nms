@@ -32,11 +32,20 @@
     <osgi:reference id="mctsBeneficiaryImportService"
                     interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService"/>
 
-    <osgi:reference id="flwImportRejectionDataService"
-                    interface="org.motechproject.nms.rejectionhandler.repository.FlwImportRejectionDataService"/>
+    <osgi:reference id="actionFinderService"
+                    interface="org.motechproject.nms.kilkari.service.ActionFinderService"/>
+
+    <osgi:reference id="frontLineWorkerService"
+                    interface="org.motechproject.nms.flw.service.FrontLineWorkerService"/>
 
     <osgi:reference id="flwRejectionService"
                     interface="org.motechproject.nms.rejectionhandler.service.FlwRejectionService"/>
+
+    <osgi:reference id="childRejectionService"
+                    interface="org.motechproject.nms.rejectionhandler.service.ChildRejectionService"/>
+
+    <osgi:reference id="motherRejectionService"
+                    interface="org.motechproject.nms.rejectionhandler.service.MotherRejectionService"/>
 
     <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
 

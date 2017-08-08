@@ -29,9 +29,6 @@ public class RchImportFacilitator {
     @Field
     private LocalDate importDate;
 
-    public RchImportFacilitator() {
-    }
-
     public RchImportFacilitator(String fileName, LocalDate startDate, LocalDate endDate, Long stateId, RchUserType userType, LocalDate importDate) {
         this.fileName = fileName;
         this.startDate = startDate;

@@ -288,6 +288,7 @@
                             org.motechproject.osgi.web,
                             org.motechproject.nms.region.service,
                             org.motechproject.nms.kilkari.service,
+                            org.motechproject.nms.kilkari.contract,
                             org.motechproject.nms.csv.service,
                             org.motechproject.nms.tracking.repository,
                             org.motechproject.nms.mcts.contract,

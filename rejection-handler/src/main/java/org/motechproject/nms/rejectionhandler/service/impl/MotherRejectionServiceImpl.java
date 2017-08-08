@@ -6,8 +6,6 @@ import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-
 import static org.motechproject.nms.tracking.utils.TrackChangeUtils.LOGGER;
 
 /**
@@ -30,16 +28,12 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
 
         if (motherImportRejection1 == null && !motherImportRejection.getAccepted()) {
             motherImportRejection.setAction("CREATED");
-            motherImportRejection.setCreationDate(new Date());
-            motherImportRejection.setModificationDate(new Date());
             motherRejectionDataService.create(motherImportRejection);
         } else if (motherImportRejection1 == null && motherImportRejection.getAccepted()) {
             LOGGER.debug(String.format("There is no mother rejection data for mctsId %s and rchId %s", motherImportRejection.getIdNo(), motherImportRejection.getRegistrationNo()));
         } else if (motherImportRejection1 != null && !motherImportRejection1.getAccepted()) {
-            motherImportRejection.setModificationDate(new Date());
             motherRejectionDataService.update(motherImportRejection);
         } else if (motherImportRejection1 != null && motherImportRejection1.getAccepted()) {
-            motherImportRejection.setModificationDate(new Date());
             motherImportRejection.setAction("UPDATED");
             motherRejectionDataService.update(motherImportRejection);
         }

@@ -3,7 +3,6 @@ package org.motechproject.nms.rejectionhandler.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
-import java.util.Date;
 
 /**
  * Created by vishnu on 12/7/17.
@@ -142,12 +141,6 @@ public class FlwImportRejection {
 
     @Field
     private String source;
-
-    @Field
-    private Date creationDate;
-
-    @Field
-    private Date modificationDate;
 
     @Field
     private String action;
@@ -493,14 +486,6 @@ public class FlwImportRejection {
         this.husbandName = husbandName;
     }
 
-    public Date getCreationDate() {
-        return creationDate;
-    }
-
-    public void setCreationDate(Date creationDate) {
-        this.creationDate = creationDate;
-    }
-
     public void setRejectionReason(String rejectionReason) {
         this.rejectionReason = rejectionReason;
     }
@@ -511,14 +496,6 @@ public class FlwImportRejection {
 
     public void setSource(String source) {
         this.source = source;
-    }
-
-    public Date getModificationDate() {
-        return modificationDate;
-    }
-
-    public void setModificationDate(Date modificationDate) {
-        this.modificationDate = modificationDate;
     }
 
     public String getAction() {

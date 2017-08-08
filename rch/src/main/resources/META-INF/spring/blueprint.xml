@@ -8,11 +8,17 @@
     <osgi:service ref="rchWebServiceFacade"
                   interface="org.motechproject.nms.rch.service.RchWebServiceFacade" />
 
+    <osgi:service ref="rchImportFacilitatorService"
+                  interface="org.motechproject.nms.rch.service.RchImportFacilitatorService" />
+
     <osgi:service ref="rchWsImportService"
                   interface="org.motechproject.nms.rch.service.RchWsImportService" />
 
     <osgi:reference id="rchImportAuditDataService"
                     interface="org.motechproject.nms.rch.repository.RchImportAuditDataService" />
+
+    <osgi:reference id="rchImportFacilitatorDataService"
+                    interface="org.motechproject.nms.rch.repository.RchImportFacilitatorDataService" />
 
     <osgi:reference id="rchImportFailRecordDataService"
                     interface="org.motechproject.nms.rch.repository.RchImportFailRecordDataService" />
@@ -29,14 +35,23 @@
     <osgi:reference id="frontLineWorkerImportService"
                     interface="org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService" />
 
+    <osgi:reference id="frontLineWorkerService"
+                    interface="org.motechproject.nms.flw.service.FrontLineWorkerService" />
+
     <osgi:reference id="mctsBeneficiaryImportService"
                     interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService"/>
 
-    <osgi:reference id="flwImportRejectionDataService"
-                    interface="org.motechproject.nms.rejectionhandler.repository.FlwImportRejectionDataService"/>
+    <osgi:reference id="actionFinderService"
+                    interface="org.motechproject.nms.kilkari.service.ActionFinderService"/>
 
     <osgi:reference id="flwRejectionService"
                     interface="org.motechproject.nms.rejectionhandler.service.FlwRejectionService"/>
+
+    <osgi:reference id="childRejectionService"
+                    interface="org.motechproject.nms.rejectionhandler.service.ChildRejectionService"/>
+
+    <osgi:reference id="motherRejectionService"
+                    interface="org.motechproject.nms.rejectionhandler.service.MotherRejectionService"/>
 
     <osgi:reference id="alertsService" interface="org.motechproject.alerts.contract.AlertService" />
 

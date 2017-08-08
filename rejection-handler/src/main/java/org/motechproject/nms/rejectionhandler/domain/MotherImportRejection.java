@@ -3,21 +3,12 @@ package org.motechproject.nms.rejectionhandler.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import java.util.Date;
 
 /**
  * Created by beehyv on 13/7/17.
  */
 @Entity(tableName = "nms_mother_rejects")
 public class MotherImportRejection {
-
-    @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
-    @Field
-    private Long childRejectId;
 
     @Field
     private Long stateId;
@@ -314,21 +305,7 @@ public class MotherImportRejection {
     private String source;
 
     @Field
-    private Date creationDate;
-
-    @Field
-    private Date modificationDate;
-
-    @Field
     private String action;
-
-    public Long getChildRejectId() {
-        return childRejectId;
-    }
-
-    public void setChildRejectId(Long childRejectId) {
-        this.childRejectId = childRejectId;
-    }
 
     public Long getStateId() {
         return stateId;
@@ -1112,22 +1089,6 @@ public class MotherImportRejection {
 
     public void setSource(String source) {
         this.source = source;
-    }
-
-    public Date getCreationDate() {
-        return creationDate;
-    }
-
-    public void setCreationDate(Date creationDate) {
-        this.creationDate = creationDate;
-    }
-
-    public Date getModificationDate() {
-        return modificationDate;
-    }
-
-    public void setModificationDate(Date modificationDate) {
-        this.modificationDate = modificationDate;
     }
 
     public String getAction() {

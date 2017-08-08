@@ -17,7 +17,6 @@ import org.motechproject.nms.api.web.contract.BadRequest;
 import org.motechproject.nms.api.web.contract.FlwUserResponse;
 import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.api.web.contract.kilkari.KilkariUserResponse;
-import org.motechproject.nms.api.web.domain.AnonymousCallAudit;
 import org.motechproject.nms.api.web.repository.AnonymousCallAuditDataService;
 import org.motechproject.nms.api.web.repository.InactiveJobCallAuditDataService;
 import org.motechproject.nms.flw.domain.*;

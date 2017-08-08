@@ -35,12 +35,6 @@ public final class Constants {
     public static final String END_DATE_PARAM = "end_date";
     public static final String STATE_PARAM = "state";
 
-    /**
-     * Scheduler
-     */
-    public static final String DEFAULT_RCH_MOTHER_IMPORT_CRON_EXPRESSION = "0 0 20 * * ? *";
-    public static final String DEFAULT_RCH_CHILD_IMPORT_CRON_EXPRESSION = "0 5 20 * * ? *";
-    public static final String DEFAULT_RCH_ASHA_IMPORT_CRON_EXPRESSION = "0 10 20 * * ? *";
 
     private Constants() {
     }
