@@ -119,6 +119,8 @@
                             org.springframework.web.multipart.commons,
                             org.springframework.transaction,
                             org.motechproject.nms.kilkari.repository,
+                            org.motechproject.nms.kilkari.domain,
+                            org.motechproject.nms.kilkari.utils,
                             *
                         </Import-Package>
                     </instructions>

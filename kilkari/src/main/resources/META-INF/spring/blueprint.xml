@@ -127,6 +127,12 @@
     <osgi:reference id="subscriberMsisdnTrackerDataService"
                     interface="org.motechproject.nms.kilkari.repository.SubscriberMsisdnTrackerDataService" />
 
+    <osgi:reference id="motherRejectionService"
+                    interface="org.motechproject.nms.rejectionhandler.service.MotherRejectionService"/>
+
+    <osgi:reference id="childRejectionService"
+                    interface="org.motechproject.nms.rejectionhandler.service.ChildRejectionService"/>
+
     <!-- CSV Audit Service -->
     <osgi:reference id="csvAuditService" interface="org.motechproject.nms.csv.service.CsvAuditService" />
 

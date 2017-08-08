@@ -1,6 +1,5 @@
 package org.motechproject.nms.kilkari.utils;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.motechproject.nms.kilkari.contract.AnmAshaRecord;
 import org.motechproject.nms.kilkari.contract.ChildRecord;
 import org.motechproject.nms.kilkari.contract.MotherRecord;
@@ -352,23 +351,121 @@ public final class RejectedObjectConverter {
     }
 
     public static MotherRecord convertMapToMother(Map<String, Object> record) {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.convertValue(record, MotherRecord.class);
+        MotherRecord motherRecord = new MotherRecord();
+        motherRecord.setStateId((Long) record.get(KilkariConstants.STATE_ID));
+        motherRecord.setDistrictId((Long) record.get(KilkariConstants.DISTRICT_ID));
+        motherRecord.setDistrictName(record.get(KilkariConstants.DISTRICT_NAME).toString());
+        motherRecord.setTalukaId(record.get(KilkariConstants.TALUKA_ID).toString());
+        motherRecord.setTalukaName(record.get(KilkariConstants.TALUKA_NAME).toString());
+        motherRecord.setHealthBlockId((Long) record.get(KilkariConstants.HEALTH_BLOCK_ID));
+        motherRecord.setHealthBlockName(record.get(KilkariConstants.HEALTH_BLOCK_NAME).toString());
+        motherRecord.setPhcid((Long) record.get(KilkariConstants.PHC_ID));
+        motherRecord.setPhcName(record.get(KilkariConstants.PHC_NAME).toString());
+        motherRecord.setSubCentreid((Long) record.get(KilkariConstants.SUB_CENTRE_ID));
+        motherRecord.setSubCentreName(record.get(KilkariConstants.SUB_CENTRE_NAME).toString());
+        motherRecord.setVillageId((Long) record.get(KilkariConstants.CENSUS_VILLAGE_ID));
+        motherRecord.setVillageName(record.get(KilkariConstants.VILLAGE_NAME).toString());
+        motherRecord.setLastUpdateDate(record.get(KilkariConstants.LAST_UPDATE_DATE).toString());
+
+        motherRecord.setIdNo(record.get(KilkariConstants.BENEFICIARY_ID).toString());
+        motherRecord.setName(record.get(KilkariConstants.BENEFICIARY_NAME).toString());
+        motherRecord.setWhomPhoneNo(record.get(KilkariConstants.MSISDN).toString());
+        motherRecord.setLmpDate(record.get(KilkariConstants.LMP).toString());
+        motherRecord.setBirthdate(record.get(KilkariConstants.MOTHER_DOB).toString());
+        motherRecord.setAbortion(record.get(KilkariConstants.ABORTION).toString());
+        motherRecord.setOutcomeNos((Boolean) record.get(KilkariConstants.STILLBIRTH) ? 1 : 0);
+        motherRecord.setEntryType((Boolean) record.get(KilkariConstants.DEATH) ? 1 : 0);
+        return motherRecord;
     }
 
     public static RchMotherRecord convertMapToRchMother(Map<String, Object> record) {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.convertValue(record, RchMotherRecord.class);
+
+        RchMotherRecord rchMotherRecord = new RchMotherRecord();
+        rchMotherRecord.setStateId((Long) record.get(KilkariConstants.STATE_ID));
+        rchMotherRecord.setDistrictId((Long) record.get(KilkariConstants.DISTRICT_ID));
+        rchMotherRecord.setDistrictName(record.get(KilkariConstants.DISTRICT_NAME).toString());
+        rchMotherRecord.setTalukaId(record.get(KilkariConstants.TALUKA_ID).toString());
+        rchMotherRecord.setTalukaName(record.get(KilkariConstants.TALUKA_NAME).toString());
+        rchMotherRecord.setHealthBlockId((Long) record.get(KilkariConstants.HEALTH_BLOCK_ID));
+        rchMotherRecord.setHealthBlockName(record.get(KilkariConstants.HEALTH_BLOCK_NAME).toString());
+        rchMotherRecord.setPhcId((Long) record.get(KilkariConstants.PHC_ID));
+        rchMotherRecord.setPhcName(record.get(KilkariConstants.PHC_NAME).toString());
+        rchMotherRecord.setSubCentreId((Long) record.get(KilkariConstants.SUB_CENTRE_ID));
+        rchMotherRecord.setSubCentreName(record.get(KilkariConstants.SUB_CENTRE_NAME).toString());
+        rchMotherRecord.setVillageId((Long) record.get(KilkariConstants.CENSUS_VILLAGE_ID));
+        rchMotherRecord.setVillageName(record.get(KilkariConstants.VILLAGE_NAME).toString());
+
+        rchMotherRecord.setMctsIdNo(record.get(KilkariConstants.MCTS_ID).toString());
+        rchMotherRecord.setRegistrationNo(record.get(KilkariConstants.RCH_ID).toString());
+        rchMotherRecord.setName(record.get(KilkariConstants.BENEFICIARY_NAME).toString());
+        rchMotherRecord.setMobileNo(record.get(KilkariConstants.MOBILE_NO).toString());
+        rchMotherRecord.setLmpDate(record.get(KilkariConstants.LMP).toString());
+        rchMotherRecord.setBirthDate(record.get(KilkariConstants.MOTHER_DOB).toString());
+        rchMotherRecord.setAbortionType(record.get(KilkariConstants.ABORTION_TYPE) == null ? null : record.get(KilkariConstants.ABORTION_TYPE).toString());
+        rchMotherRecord.setDeliveryOutcomes(record.get(KilkariConstants.DELIVERY_OUTCOMES) == null ? null : record.get(KilkariConstants.DELIVERY_OUTCOMES).toString());
+        rchMotherRecord.setEntryType((Boolean) record.get(KilkariConstants.DEATH) ? 1 : 0);
+        rchMotherRecord.setExecDate(record.get(KilkariConstants.EXECUTION_DATE).toString());
+        rchMotherRecord.setCaseNo((Long) record.get(KilkariConstants.CASE_NO));
+        return rchMotherRecord;
     }
 
     public static ChildRecord convertMapToChild(Map<String, Object> record) {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.convertValue(record, ChildRecord.class);
+        ChildRecord childRecord = new ChildRecord();
+        childRecord.setStateID((Long) record.get(KilkariConstants.STATE_ID));
+        childRecord.setDistrictId((Long) record.get(KilkariConstants.DISTRICT_ID));
+        childRecord.setDistrictName(record.get(KilkariConstants.DISTRICT_NAME).toString());
+        childRecord.setTalukaId(record.get(KilkariConstants.TALUKA_ID).toString());
+        childRecord.setTalukaName(record.get(KilkariConstants.TALUKA_NAME).toString());
+        childRecord.setHealthBlockId((Long) record.get(KilkariConstants.HEALTH_BLOCK_ID));
+        childRecord.setHealthBlockName(record.get(KilkariConstants.HEALTH_BLOCK_NAME).toString());
+        childRecord.setPhcId((Long) record.get(KilkariConstants.PHC_ID));
+        childRecord.setPhcName(record.get(KilkariConstants.PHC_NAME).toString());
+        childRecord.setSubCentreId((Long) record.get(KilkariConstants.SUB_CENTRE_ID));
+        childRecord.setSubCentreName(record.get(KilkariConstants.SUB_CENTRE_NAME).toString());
+        childRecord.setVillageId((Long) record.get(KilkariConstants.CENSUS_VILLAGE_ID));
+        childRecord.setVillageName(record.get(KilkariConstants.VILLAGE_NAME).toString());
+        childRecord.setLastUpdateDate(record.get(KilkariConstants.LAST_UPDATE_DATE).toString());
+
+        childRecord.setName(record.get(KilkariConstants.BENEFICIARY_NAME).toString());
+
+        childRecord.setWhomPhoneNo(record.get(KilkariConstants.MSISDN).toString());
+        childRecord.setBirthdate(record.get(KilkariConstants.DOB).toString());
+
+        childRecord.setIdNo(record.get(KilkariConstants.BENEFICIARY_ID).toString());
+        childRecord.setMotherId(record.get(KilkariConstants.MOTHER_ID).toString());
+        childRecord.setEntryType((Boolean) record.get(KilkariConstants.DEATH) ? 1 : 0);
+        return childRecord;
     }
 
     public static RchChildRecord convertMapToRchChild(Map<String, Object> record) {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.convertValue(record, RchChildRecord.class);
+        RchChildRecord rchChildRecord = new RchChildRecord();
+        rchChildRecord.setStateId((Long) record.get(KilkariConstants.STATE_ID));
+        rchChildRecord.setDistrictId((Long) record.get(KilkariConstants.DISTRICT_ID));
+        rchChildRecord.setDistrictName(record.get(KilkariConstants.DISTRICT_NAME).toString());
+        rchChildRecord.setTalukaId(record.get(KilkariConstants.TALUKA_ID).toString());
+        rchChildRecord.setTalukaId(record.get(KilkariConstants.TALUKA_NAME).toString());
+        rchChildRecord.setHealthBlockId((Long) record.get(KilkariConstants.HEALTH_BLOCK_ID));
+        rchChildRecord.setHealthBlockName(record.get(KilkariConstants.HEALTH_BLOCK_NAME).toString());
+        rchChildRecord.setPhcId((Long) record.get(KilkariConstants.PHC_ID));
+        rchChildRecord.setPhcName(record.get(KilkariConstants.PHC_NAME).toString());
+        rchChildRecord.setSubCentreId((Long) record.get(KilkariConstants.SUB_CENTRE_ID));
+        rchChildRecord.setSubCentreName(record.get(KilkariConstants.SUB_CENTRE_NAME).toString());
+        rchChildRecord.setVillageId((Long) record.get(KilkariConstants.CENSUS_VILLAGE_ID));
+        rchChildRecord.setVillageName(record.get(KilkariConstants.VILLAGE_NAME).toString());
+
+        rchChildRecord.setName(record.get(KilkariConstants.BENEFICIARY_NAME).toString());
+
+        rchChildRecord.setMobileNo(record.get(KilkariConstants.MOBILE_NO).toString());
+        rchChildRecord.setBirthdate(record.get(KilkariConstants.DOB).toString());
+
+        rchChildRecord.setMctsId(record.get(KilkariConstants.MCTS_ID).toString());
+        rchChildRecord.setMctsMotherIdNo(record.get(KilkariConstants.MCTS_MOTHER_ID).toString());
+        rchChildRecord.setRegistrationNo(record.get(KilkariConstants.RCH_ID).toString());
+        rchChildRecord.setMotherRegistrationNo(record.get(KilkariConstants.RCH_MOTHER_ID).toString());
+        rchChildRecord.setEntryType((Boolean) record.get(KilkariConstants.DEATH) ? 1 : 0);
+        rchChildRecord.setExecDate(record.get(KilkariConstants.EXECUTION_DATE).toString());
+
+        return rchChildRecord;
     }
 
 }

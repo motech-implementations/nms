@@ -41,6 +41,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>kilkari</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.motechproject</groupId>
             <artifactId>motech-platform-commons-api</artifactId>
             <version>${motech.version}</version>
@@ -96,6 +102,13 @@
                             org.apache.commons.fileupload,
                             org.springframework.web.multipart.commons,
                             org.motechproject.event.listener,
+                            org.motechproject.nms.kilkari.utils,
+                            org.motechproject.nms.kilkari.domain,
+                            org.motechproject.nms.flw.utils,
+                            org.motechproject.nms.flw.domain,
+                            org.motechproject.nms.flw.exception,
+                            org.motechproject.nms.flw.repository,
+                            org.motechproject.nms.flw.service,
                             *
                         </Import-Package>
                     </instructions>

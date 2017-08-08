@@ -12,7 +12,7 @@ public interface FlwImportRejectionDataService extends MotechDataService<FlwImpo
 
     @Lookup
     FlwImportRejection findByFlwIdAndStateId(@LookupField(name = "flwId") Long flwId,
-                                   @LookupField(name = "stateId") Long stateId);
+                                             @LookupField(name = "stateId") Long stateId);
 
 
 }

@@ -44,8 +44,8 @@ import org.motechproject.nms.rch.exception.RchFileManipulationException;
 import org.motechproject.nms.rch.exception.RchInvalidResponseStructureException;
 import org.motechproject.nms.rch.exception.RchWebServiceException;
 import org.motechproject.nms.rch.repository.RchImportAuditDataService;
-import org.motechproject.nms.rch.repository.RchImportFacilitatorDataService;
 import org.motechproject.nms.rch.repository.RchImportFailRecordDataService;
+import org.motechproject.nms.rch.service.RchImportFacilitatorService;
 import org.motechproject.nms.rch.service.RchWebServiceFacade;
 import org.motechproject.nms.rch.soap.DS_DataResponseDS_DataResult;
 import org.motechproject.nms.rch.soap.Irchwebservices;
@@ -105,8 +105,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String LOCAL_RESPONSE_DIR = "rch.local_response_dir";
     private static final String REMOTE_RESPONSE_DIR = "rch.remote_response_dir";
     private static final String READ_MOTHER_RESPONSE_FILE_EVENT = "nms.rch.read_mother_response_file";
-
-
     private static final String READ_CHILD_RESPONSE_FILE_EVENT = "nms.rch.read_child_response_file";
     private static final String READ_ASHA_RESPONSE_FILE_EVENT = "nms.rch.read_asha_response_file";
 
@@ -116,6 +114,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String RCH_WEB_SERVICE = "RCH Web Service";
     private static final double THOUSAND = 1000d;
     private static final String FILENAME = "fileName";
+    private static final String MOTHER_CRON = "rch.mother.sync.cron";
+    private static final String CHILD_CRON = "rch.child.sync.cron";
+    private static final String ASHA_CRON = "rch.asha.sync.cron";
 
     @Autowired
     @Qualifier("rchSettings")
@@ -134,6 +135,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private RchImportAuditDataService rchImportAuditDataService;
 
     @Autowired
+    private RchImportFacilitatorService rchImportFacilitatorService;
+
+    @Autowired
     private StateDataService stateDataService;
 
     @Autowired
@@ -141,9 +145,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     @Autowired
     private RchImportFailRecordDataService rchImportFailRecordDataService;
-
-    @Autowired
-    private RchImportFacilitatorDataService rchImportFacilitatorDataService;
 
     @Autowired
     private AlertService alertService;
@@ -192,20 +193,22 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 LOGGER.info("RCH mother response file successfully copied to remote server");
 
                 RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.MOTHER, LocalDate.now());
-                rchImportFacilitatorDataService.create(rchImportFacilitator);
+                rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
                 Map<String, Object> eventParams = new HashMap<>();
                 eventParams.put(Constants.START_DATE_PARAM, from);
                 eventParams.put(Constants.END_DATE_PARAM, to);
                 eventParams.put(Constants.STATE_ID_PARAM, stateId);
                 eventParams.put(FILENAME, responseFile.getName());
                 MotechEvent event = new MotechEvent(READ_MOTHER_RESPONSE_FILE_EVENT, eventParams);
-                String cronExpression = Constants.DEFAULT_RCH_MOTHER_IMPORT_CRON_EXPRESSION;
+                String cronExpression = settingsFacade.getProperty(MOTHER_CRON);
                 CronSchedulableJob job = new CronSchedulableJob(event, cronExpression);
                 schedulerService.safeScheduleJob(job);
                 status = true;
 
             } catch (ExecutionException e) {
                 LOGGER.error("error copying file to remote server.");
+            } catch (RchFileManipulationException e) {
+                LOGGER.error("invalid file name");
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -218,7 +221,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LOGGER.debug(event.toString());
         LOGGER.info("Copying RCH mother response file from remote server to local directory.");
         try {
-            List<RchImportFacilitator> rchImportFacilitatorsMother = rchImportFacilitatorDataService.getByImportDateAndUsertype(LocalDate.now(), RchUserType.MOTHER);
+            List<RchImportFacilitator> rchImportFacilitatorsMother = rchImportFacilitatorService.findByImportDateAndRchUserType(LocalDate.now(), RchUserType.MOTHER);
+            LOGGER.info("Files imported today for mothers= " + rchImportFacilitatorsMother.size());
             for (RchImportFacilitator rchImportFacilitatorMother : rchImportFacilitatorsMother
                     ) {
                 File localResponseFile = scpResponseToLocal(rchImportFacilitatorMother.getFileName());
@@ -272,6 +276,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                                 .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
                         rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
                         rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.MOTHER, stateId));
+                    } catch (NullPointerException e) {
+                        LOGGER.error("No files saved : ", e);
                     }
                 }
             }
@@ -303,19 +309,21 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 LOGGER.info("RCH children response file successfully copied to remote server");
 
                 RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.CHILD, LocalDate.now());
-                rchImportFacilitatorDataService.create(rchImportFacilitator);
+                rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
                 Map<String, Object> eventParams = new HashMap<>();
                 eventParams.put(Constants.STATE_ID_PARAM, stateId);
                 eventParams.put(Constants.START_DATE_PARAM, from);
                 eventParams.put(Constants.END_DATE_PARAM, to);
                 eventParams.put(FILENAME, responseFile.getName());
                 MotechEvent event = new MotechEvent(READ_CHILD_RESPONSE_FILE_EVENT, eventParams);
-                String cronExpression = Constants.DEFAULT_RCH_CHILD_IMPORT_CRON_EXPRESSION;
+                String cronExpression = settingsFacade.getProperty(CHILD_CRON);
                 CronSchedulableJob job = new CronSchedulableJob(event, cronExpression);
                 schedulerService.safeScheduleJob(job);
                 status = true;
             } catch (ExecutionException e) {
                 LOGGER.error("error copying file to remote server.");
+            } catch (RchFileManipulationException e) {
+                LOGGER.error("invalid file error");
             }
 
         } else {
@@ -331,10 +339,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
         LOGGER.info("Copying RCH child response file from remote server to local directory.");
         try {
-            List<RchImportFacilitator> rchImportFacilitatorsChild = rchImportFacilitatorDataService.getByImportDateAndUsertype(LocalDate.now(), RchUserType.CHILD);
+            List<RchImportFacilitator> rchImportFacilitatorsChild = rchImportFacilitatorService.findByImportDateAndRchUserType(LocalDate.now(), RchUserType.CHILD);
+            LOGGER.info("Files imported today for children= " + rchImportFacilitatorsChild.size());
             for (RchImportFacilitator rchImportFacilitatorChild : rchImportFacilitatorsChild
                     ) {
-
                 File localResponseFile = scpResponseToLocal(rchImportFacilitatorChild.getFileName());
                 DS_DataResponseDS_DataResult result = readResponses(localResponseFile);
                 Long stateId = rchImportFacilitatorChild.getStateId();
@@ -381,6 +389,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     alertService.create(RCH_WEB_SERVICE, "RCH Web Service Child Import", e.getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
                     rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
                     rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
+                } catch (NullPointerException e) {
+                    LOGGER.error("No files saved : ", e);
                 }
             }
         } catch (ExecutionException e) {
@@ -411,20 +421,22 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 LOGGER.info("RCH asha response file successfully copied to remote server");
 
                 RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.ASHA, LocalDate.now());
-                rchImportFacilitatorDataService.create(rchImportFacilitator);
+                rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
                 Map<String, Object> eventParams = new HashMap<>();
                 eventParams.put(Constants.STATE_ID_PARAM, stateId);
                 eventParams.put(FILENAME, responseFile.getName());
                 eventParams.put(Constants.START_DATE_PARAM, from);
                 eventParams.put(Constants.END_DATE_PARAM, to);
                 MotechEvent event = new MotechEvent(READ_ASHA_RESPONSE_FILE_EVENT, eventParams);
-                String cronExpression = Constants.DEFAULT_RCH_ASHA_IMPORT_CRON_EXPRESSION;
+                String cronExpression = settingsFacade.getProperty(ASHA_CRON);
                 CronSchedulableJob job = new CronSchedulableJob(event, cronExpression);
                 schedulerService.safeScheduleJob(job);
                 status = true;
             } catch (ExecutionException e) {
                 LOGGER.error("error copying file to remote server.");
-            }
+            } catch (RchFileManipulationException e) {
+                LOGGER.error("invalid file error");
+        }
         } else {
             LOGGER.error("Error writing response to file.");
         }
@@ -439,7 +451,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LOGGER.info("Copying RCH Asha response file from remote server to local directory.");
 
         try {
-            List<RchImportFacilitator> rchImportFacilitatorsAsha = rchImportFacilitatorDataService.getByImportDateAndUsertype(LocalDate.now(), RchUserType.ASHA);
+            List<RchImportFacilitator> rchImportFacilitatorsAsha = rchImportFacilitatorService.findByImportDateAndRchUserType(LocalDate.now(), RchUserType.ASHA);
+            LOGGER.info("Files imported today for ashas= " + rchImportFacilitatorsAsha.size());
             for (RchImportFacilitator rchImportFacilitatorAsha : rchImportFacilitatorsAsha
                     ) {
                 File localResponseFile = scpResponseToLocal(rchImportFacilitatorAsha.getFileName());
@@ -488,6 +501,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     alertService.create(RCH_WEB_SERVICE, "RCH Web Service FLW Import", e.getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
                     rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, error));
                     rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
+                } catch (NullPointerException e) {
+                    LOGGER.error("No files saved : ", e);
                 }
             }
         } catch (ExecutionException e) {

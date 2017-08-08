@@ -8,8 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-
 /**
  * Created by vishnu on 15/7/17.
  */
@@ -32,17 +30,13 @@ public class FlwRejectionServiceImpl implements FlwRejectionService {
         FlwImportRejection flwImportRejection1 = findByFlwIdAndStateId(flwImportRejection.getFlwId(), flwImportRejection.getStateId());
 
         if (flwImportRejection1 == null && !flwImportRejection.getAccepted()) {
-            flwImportRejection.setCreationDate(new Date());
-            flwImportRejection.setModificationDate(new Date());
             flwImportRejection.setAction("CREATED");
             flwImportRejectionDataService.create(flwImportRejection);
         } else if (flwImportRejection1 == null && flwImportRejection.getAccepted()) {
             LOGGER.debug(String.format("There is no rejection data for flwId %s and stateId %s", flwImportRejection.getFlwId().toString(), flwImportRejection.getStateId().toString()));
         } else if (flwImportRejection1 != null && !flwImportRejection1.getAccepted()) {
-            flwImportRejection.setModificationDate(new Date());
             flwImportRejectionDataService.update(flwImportRejection);
         } else if (flwImportRejection1 != null && flwImportRejection1.getAccepted()) {
-            flwImportRejection.setModificationDate(new Date());
             flwImportRejection.setAction("UPDATED");
             flwImportRejectionDataService.update(flwImportRejection);
         }

@@ -98,7 +98,8 @@
                             org.motechproject.nms.kilkari.domain;version=${project.version},
                             org.motechproject.nms.kilkari.exception;version=${project.version},
                             org.motechproject.nms.kilkari.dto;version=${project.version},
-                            org.motechproject.nms.kilkari.utils;version=${project.version}
+                            org.motechproject.nms.kilkari.utils;version=${project.version},
+                            org.motechproject.nms.kilkari.contract;version=${project.version}
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,
@@ -113,6 +114,8 @@
                             org.springframework.web.multipart.commons,
                             org.springframework.cache.support,
                             org.springframework.cache.concurrent,
+                            org.motechproject.nms.rejectionhandler.service,
+                            org.motechproject.nms.rejectionhandler.domain,
                             net.sf.cglib.proxy,
                             net.sf.cglib.core,
                             *
