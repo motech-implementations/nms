@@ -5,12 +5,12 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.30</version>
+        <version>1.0.31</version>
         <relativePath>../</relativePath>
     </parent>
 
     <artifactId>flw</artifactId>
-    <version>1.0.30</version>
+    <version>1.0.31</version>
     <packaging>bundle</packaging>
     <name>FLW module</name>
 
@@ -59,6 +59,11 @@
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>kilkari</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
     </dependencies>
@@ -110,6 +115,8 @@
                             org.apache.commons.fileupload,
                             org.springframework.web.multipart.commons,
                             org.motechproject.event.listener,
+                            org.motechproject.nms.kilkari.domain,
+                            org.motechproject.nms.kilkari.utils,
                             *
                         </Import-Package>
                     </instructions>

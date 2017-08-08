@@ -28,6 +28,7 @@ import org.motechproject.nms.testing.it.ma.MobileAcademyServiceBundleIT;
 import org.motechproject.nms.testing.it.mcts.MctsImportBundleIT;
 import org.motechproject.nms.testing.it.mcts.MctsWebServiceFacadeBundleIT;
 import org.motechproject.nms.testing.it.props.PropertyServiceBundleIT;
+import org.motechproject.nms.testing.it.rch.RchWebServiceFacadeBundleIT;
 import org.motechproject.nms.testing.it.region.CircleServiceBundleIT;
 import org.motechproject.nms.testing.it.region.LanguageLocationCodesImportServiceBundleIT;
 import org.motechproject.nms.testing.it.region.LanguageServiceBundleIT;
@@ -113,6 +114,7 @@ import org.motechproject.nms.testing.it.tracking.TrackOneToManyChangesBundleIT;
      * RCH
      */
     RchBeneficiaryImportServiceBundleIT.class,
+    RchWebServiceFacadeBundleIT.class,
 
     /**
      * Testing

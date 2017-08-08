@@ -1,4 +1,4 @@
-package org.motechproject.nms.mcts.contract;
+package org.motechproject.nms.kilkari.contract;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -95,10 +95,6 @@ public class ChildRecord {
         this.stateID = stateID;
     }
 
-    public Long getDistrictId() {
-        return districtId;
-    }
-
     @XmlElement(name = "District_ID")
     public void setDistrictId(Long districtId) {
         this.districtId = districtId;
@@ -122,37 +118,6 @@ public class ChildRecord {
         this.talukaId = talukaId;
     }
 
-    public String getTalukaName() {
-        return talukaName;
-    }
-
-    @XmlElement(name = "Taluka_Name")
-    public void setTalukaName(String talukaName) {
-        this.talukaName = talukaName;
-    }
-
-    public Long getHealthBlockId() {
-        return healthBlockId;
-    }
-
-    @XmlElement(name = "HealthBlock_ID")
-    public void setHealthBlockId(Long healthBlockId) {
-        this.healthBlockId = healthBlockId;
-    }
-
-    public String getHealthBlockName() {
-        return healthBlockName;
-    }
-
-    @XmlElement(name = "HealthBlock_Name")
-    public void setHealthBlockName(String healthBlockName) {
-        this.healthBlockName = healthBlockName;
-    }
-
-    public Long getPhcId() {
-        return phcId;
-    }
-
     @XmlElement(name = "PHC_ID")
     public void setPhcId(Long phcId) {
         this.phcId = phcId;
@@ -171,6 +136,40 @@ public class ChildRecord {
         return subCentreId;
     }
 
+    public Long getHealthBlockId() {
+        return healthBlockId;
+    }
+
+    @XmlElement(name = "HealthBlock_ID")
+    public void setHealthBlockId(Long healthBlockId) {
+        this.healthBlockId = healthBlockId;
+    }
+
+    public String getHealthBlockName() {
+        return healthBlockName;
+    }
+
+    public Long getDistrictId() {
+        return districtId;
+    }
+
+    public String getTalukaName() {
+        return talukaName;
+    }
+
+    public Long getVillageId() {
+        return villageId;
+    }
+
+    @XmlElement(name = "HealthBlock_Name")
+    public void setHealthBlockName(String healthBlockName) {
+        this.healthBlockName = healthBlockName;
+    }
+
+    public Long getPhcId() {
+        return phcId;
+    }
+
     @XmlElement(name = "SubCentre_ID")
     public void setSubCentreId(Long subCentreId) {
         this.subCentreId = subCentreId;
@@ -185,9 +184,11 @@ public class ChildRecord {
         this.subCentreName = subCentreName;
     }
 
-    public Long getVillageId() {
-        return villageId;
+    @XmlElement(name = "Village_Name")
+    public void setVillageName(String villageName) {
+        this.villageName = villageName;
     }
+
 
     @XmlElement(name = "Village_ID")
     public void setVillageId(Long villageId) {
@@ -198,27 +199,13 @@ public class ChildRecord {
         return villageName;
     }
 
-    @XmlElement(name = "Village_Name")
-    public void setVillageName(String villageName) {
-        this.villageName = villageName;
+    @XmlElement(name = "Taluka_Name")
+    public void setTalukaName(String talukaName) {
+        this.talukaName = talukaName;
     }
 
     public Integer getYr() {
         return yr;
-    }
-
-    @XmlElement(name = "Yr")
-    public void setYr(Integer yr) {
-        this.yr = yr;
-    }
-
-    public String getCityMaholla() {
-        return cityMaholla;
-    }
-
-    @XmlElement(name = "City_Maholla")
-    public void setCityMaholla(String cityMaholla) {
-        this.cityMaholla = cityMaholla;
     }
 
     public String getGpVillage() {
@@ -246,6 +233,20 @@ public class ChildRecord {
     @XmlElement(name = "ID_No")
     public void setIdNo(String idNo) {
         this.idNo = idNo;
+    }
+
+    @XmlElement(name = "Yr")
+    public void setYr(Integer yr) {
+        this.yr = yr;
+    }
+
+    public String getCityMaholla() {
+        return cityMaholla;
+    }
+
+    @XmlElement(name = "City_Maholla")
+    public void setCityMaholla(String cityMaholla) {
+        this.cityMaholla = cityMaholla;
     }
 
     public String getName() {
@@ -315,22 +316,32 @@ public class ChildRecord {
         return bloodGroup;
     }
 
+    @XmlElement(name = "ANM_Phone")
+    public void setAnmPhone(String anmPhone) {
+        this.anmPhone = anmPhone;
+    }
+
+    public String getAshaName() {
+        return ashaName;
+    }
+
     @XmlElement(name = "Blood_Group")
     public void setBloodGroup(String bloodGroup) {
         this.bloodGroup = bloodGroup;
     }
 
-    public String getCaste() {
-        return caste;
+    @XmlElement(name = "ASHA_Name")
+    public void setAshaName(String ashaName) {
+        this.ashaName = ashaName;
     }
 
-    @XmlElement(name = "Caste")
-    public void setCaste(String caste) {
-        this.caste = caste;
+    public String getAshaPhone() {
+        return ashaPhone;
     }
 
-    public String getSubCentreName1() {
-        return subCentreName1;
+    @XmlElement(name = "ASHA_Phone")
+    public void setAshaPhone(String ashaPhone) {
+        this.ashaPhone = ashaPhone;
     }
 
     @XmlElement(name = "SubCentre_Name1")
@@ -347,31 +358,21 @@ public class ChildRecord {
         this.anmName = anmName;
     }
 
+    public String getCaste() {
+        return caste;
+    }
+
+    @XmlElement(name = "Caste")
+    public void setCaste(String caste) {
+        this.caste = caste;
+    }
+
+    public String getSubCentreName1() {
+        return subCentreName1;
+    }
+
     public String getAnmPhone() {
         return anmPhone;
-    }
-
-    @XmlElement(name = "ANM_Phone")
-    public void setAnmPhone(String anmPhone) {
-        this.anmPhone = anmPhone;
-    }
-
-    public String getAshaName() {
-        return ashaName;
-    }
-
-    @XmlElement(name = "ASHA_Name")
-    public void setAshaName(String ashaName) {
-        this.ashaName = ashaName;
-    }
-
-    public String getAshaPhone() {
-        return ashaPhone;
-    }
-
-    @XmlElement(name = "ASHA_Phone")
-    public void setAshaPhone(String ashaPhone) {
-        this.ashaPhone = ashaPhone;
     }
 
     public String getBcgDt() {
@@ -621,29 +622,6 @@ public class ChildRecord {
         return vitADose6Dt;
     }
 
-    @XmlElement(name = "VitA_Dose6_Dt")
-    public void setVitADose6Dt(String vitADose6Dt) {
-        this.vitADose6Dt = vitADose6Dt;
-    }
-
-    public String getVitADose7Dt() {
-        return vitADose7Dt;
-    }
-
-    @XmlElement(name = "VitA_Dose7_Dt")
-    public void setVitADose7Dt(String vitADose7Dt) {
-        this.vitADose7Dt = vitADose7Dt;
-    }
-
-    public String getVitADose8Dt() {
-        return vitADose8Dt;
-    }
-
-    @XmlElement(name = "VitA_Dose8_Dt")
-    public void setVitADose8Dt(String vitADose8Dt) {
-        this.vitADose8Dt = vitADose8Dt;
-    }
-
     public String getLastUpdateDate() {
         return lastUpdateDate;
     }
@@ -662,6 +640,15 @@ public class ChildRecord {
         this.remarks = remarks;
     }
 
+    @XmlElement(name = "VitA_Dose6_Dt")
+    public void setVitADose6Dt(String vitADose6Dt) {
+        this.vitADose6Dt = vitADose6Dt;
+    }
+
+    public String getVitADose7Dt() {
+        return vitADose7Dt;
+    }
+
     public Integer getAnmID() {
         return anmID;
     }
@@ -678,6 +665,20 @@ public class ChildRecord {
     @XmlElement(name = "ASHA_ID")
     public void setAshaID(Integer ashaID) {
         this.ashaID = ashaID;
+    }
+
+    @XmlElement(name = "VitA_Dose7_Dt")
+    public void setVitADose7Dt(String vitADose7Dt) {
+        this.vitADose7Dt = vitADose7Dt;
+    }
+
+    public String getVitADose8Dt() {
+        return vitADose8Dt;
+    }
+
+    @XmlElement(name = "VitA_Dose8_Dt")
+    public void setVitADose8Dt(String vitADose8Dt) {
+        this.vitADose8Dt = vitADose8Dt;
     }
 
     public Integer getCreatedBy() {

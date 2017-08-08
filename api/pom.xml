@@ -5,12 +5,12 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.30</version>
+        <version>1.0.31</version>
         <relativePath>../</relativePath>
     </parent>
 
     <artifactId>api</artifactId>
-    <version>1.0.30</version>
+    <version>1.0.31</version>
     <packaging>bundle</packaging>
     <name>API module</name>
 
@@ -119,6 +119,8 @@
                             org.springframework.web.multipart.commons,
                             org.springframework.transaction,
                             org.motechproject.nms.kilkari.repository,
+                            org.motechproject.nms.kilkari.domain,
+                            org.motechproject.nms.kilkari.utils,
                             *
                         </Import-Package>
                     </instructions>
