@@ -22,20 +22,22 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
         return motherRejectionDataService.findRejectedMother(idNo, registrationNo);
     }
 
-    @Override
+    @Override //NO CHECKSTYLE CyclomaticComplexity
     public void createOrUpdateMother(MotherImportRejection motherImportRejection) {
-        MotherImportRejection motherImportRejection1 = motherRejectionDataService.findRejectedMother(motherImportRejection.getIdNo(), motherImportRejection.getRegistrationNo());
+        if (motherImportRejection.getIdNo() != null || motherImportRejection.getRegistrationNo() != null) {
+            MotherImportRejection motherImportRejection1 = motherRejectionDataService.findRejectedMother(motherImportRejection.getIdNo(), motherImportRejection.getRegistrationNo());
 
-        if (motherImportRejection1 == null && !motherImportRejection.getAccepted()) {
-            motherImportRejection.setAction("CREATED");
-            motherRejectionDataService.create(motherImportRejection);
-        } else if (motherImportRejection1 == null && motherImportRejection.getAccepted()) {
-            LOGGER.debug(String.format("There is no mother rejection data for mctsId %s and rchId %s", motherImportRejection.getIdNo(), motherImportRejection.getRegistrationNo()));
-        } else if (motherImportRejection1 != null && !motherImportRejection1.getAccepted()) {
-            motherRejectionDataService.update(motherImportRejection);
-        } else if (motherImportRejection1 != null && motherImportRejection1.getAccepted()) {
-            motherImportRejection.setAction("UPDATED");
-            motherRejectionDataService.update(motherImportRejection);
+            if (motherImportRejection1 == null && !motherImportRejection.getAccepted()) {
+                motherRejectionDataService.create(motherImportRejection);
+            } else if (motherImportRejection1 == null && motherImportRejection.getAccepted()) {
+                LOGGER.debug(String.format("There is no mother rejection data for mctsId %s and rchId %s", motherImportRejection.getIdNo(), motherImportRejection.getRegistrationNo()));
+            } else if (motherImportRejection1 != null && !motherImportRejection1.getAccepted()) {
+                motherImportRejection.setId(motherImportRejection1.getId());
+                motherRejectionDataService.update(motherImportRejection);
+            } else if (motherImportRejection1 != null && motherImportRejection1.getAccepted()) {
+                motherImportRejection.setId(motherImportRejection1.getId());
+                motherRejectionDataService.update(motherImportRejection);
+            }
         }
     }
 }
