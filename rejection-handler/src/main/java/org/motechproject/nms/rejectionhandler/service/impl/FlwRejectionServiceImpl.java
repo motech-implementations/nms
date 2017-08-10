@@ -24,21 +24,22 @@ public class FlwRejectionServiceImpl implements FlwRejectionService {
         return flwImportRejectionDataService.findByFlwIdAndStateId(flwId, stateId);
     }
 
-    @Override
+    @Override //NO CHECKSTYLE CyclomaticComplexity
     public void createUpdate(FlwImportRejection flwImportRejection) {
+        if (flwImportRejection.getFlwId() != null && flwImportRejection.getStateId() != null) {
+            FlwImportRejection flwImportRejection1 = findByFlwIdAndStateId(flwImportRejection.getFlwId(), flwImportRejection.getStateId());
 
-        FlwImportRejection flwImportRejection1 = findByFlwIdAndStateId(flwImportRejection.getFlwId(), flwImportRejection.getStateId());
-
-        if (flwImportRejection1 == null && !flwImportRejection.getAccepted()) {
-            flwImportRejection.setAction("CREATED");
-            flwImportRejectionDataService.create(flwImportRejection);
-        } else if (flwImportRejection1 == null && flwImportRejection.getAccepted()) {
-            LOGGER.debug(String.format("There is no rejection data for flwId %s and stateId %s", flwImportRejection.getFlwId().toString(), flwImportRejection.getStateId().toString()));
-        } else if (flwImportRejection1 != null && !flwImportRejection1.getAccepted()) {
-            flwImportRejectionDataService.update(flwImportRejection);
-        } else if (flwImportRejection1 != null && flwImportRejection1.getAccepted()) {
-            flwImportRejection.setAction("UPDATED");
-            flwImportRejectionDataService.update(flwImportRejection);
+            if (flwImportRejection1 == null && !flwImportRejection.getAccepted()) {
+                flwImportRejectionDataService.create(flwImportRejection);
+            } else if (flwImportRejection1 == null && flwImportRejection.getAccepted()) {
+                LOGGER.debug(String.format("There is no rejection data for flwId %s and stateId %s", flwImportRejection.getFlwId().toString(), flwImportRejection.getStateId().toString()));
+            } else if (flwImportRejection1 != null && !flwImportRejection1.getAccepted()) {
+                flwImportRejection.setId(flwImportRejection1.getId());
+                flwImportRejectionDataService.update(flwImportRejection);
+            } else if (flwImportRejection1 != null && flwImportRejection1.getAccepted()) {
+                flwImportRejection.setId(flwImportRejection1.getId());
+                flwImportRejectionDataService.update(flwImportRejection);
+            }
         }
     }
 }

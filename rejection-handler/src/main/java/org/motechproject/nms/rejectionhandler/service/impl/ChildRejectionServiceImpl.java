@@ -22,20 +22,22 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
         return childRejectionDataService.findRejectedChild(idNo, registrationNo);
     }
 
-    @Override
+    @Override //NO CHECKSTYLE CyclomaticComplexity
     public void createOrUpdateChild(ChildImportRejection childImportRejection) {
-        ChildImportRejection childImportRejection1 = childRejectionDataService.findRejectedChild(childImportRejection.getIdNo(), childImportRejection.getRegistrationNo());
+        if (childImportRejection.getIdNo() != null || childImportRejection.getRegistrationNo() != null) {
+            ChildImportRejection childImportRejection1 = childRejectionDataService.findRejectedChild(childImportRejection.getIdNo(), childImportRejection.getRegistrationNo());
 
-        if (childImportRejection1 == null && !childImportRejection.getAccepted()) {
-            childImportRejection.setAction("CREATED");
-            childRejectionDataService.create(childImportRejection);
-        } else if (childImportRejection1 == null && childImportRejection.getAccepted()) {
-            LOGGER.debug(String.format("There is no mother rejection data for mctsId %s and rchId %s", childImportRejection.getIdNo(), childImportRejection.getRegistrationNo()));
-        } else if (childImportRejection1 != null && !childImportRejection1.getAccepted()) {
-            childRejectionDataService.update(childImportRejection);
-        } else if (childImportRejection1 != null && childImportRejection1.getAccepted()) {
-            childImportRejection.setAction("UPDATED");
-            childRejectionDataService.update(childImportRejection);
+            if (childImportRejection1 == null && !childImportRejection.getAccepted()) {
+                childRejectionDataService.create(childImportRejection);
+            } else if (childImportRejection1 == null && childImportRejection.getAccepted()) {
+                LOGGER.debug(String.format("There is no mother rejection data for mctsId %s and rchId %s", childImportRejection.getIdNo(), childImportRejection.getRegistrationNo()));
+            } else if (childImportRejection1 != null && !childImportRejection1.getAccepted()) {
+                childImportRejection.setId(childImportRejection1.getId());
+                childRejectionDataService.update(childImportRejection);
+            } else if (childImportRejection1 != null && childImportRejection1.getAccepted()) {
+                childImportRejection.setId(childImportRejection1.getId());
+                childRejectionDataService.update(childImportRejection);
+            }
         }
     }
 }
