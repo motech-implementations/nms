@@ -23,6 +23,10 @@ public final class MctsImportTestHelper {
         return readMctsFile("mcts-children-data-fail.xml");
     }
 
+    public static String getMotherResponseForMotherRejection() throws IOException {
+        return readMctsFile("mcts-mothers-data-rejection.xml");
+    }
+
     public static String getAnmAshaResponseData() throws IOException {
         return readMctsFile("mcts-anm-asha-data.xml");
     }

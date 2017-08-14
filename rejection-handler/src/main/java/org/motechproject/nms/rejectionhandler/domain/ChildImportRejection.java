@@ -2,14 +2,9 @@ package org.motechproject.nms.rejectionhandler.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-import org.motechproject.mds.domain.MdsEntity;
 
-
-/**
- * Created by beehyvsc on 12/7/17.
- */
 @Entity(tableName = "nms_child_rejects")
-public class ChildImportRejection extends MdsEntity {
+public class ChildImportRejection {
 
     @Field
     private Long stateId;
@@ -40,7 +35,6 @@ public class ChildImportRejection extends MdsEntity {
 
     @Field
     private String healthBlockName;
-
 
     @Field
     private String subcentreName;
@@ -101,9 +95,6 @@ public class ChildImportRejection extends MdsEntity {
 
     @Field
     private String phoneNumberWhom;
-
-    @Field
-    private String whomPhoneNumber;
 
     @Field
     private String birthDate;
@@ -186,7 +177,6 @@ public class ChildImportRejection extends MdsEntity {
     @Field
     private String cLDRegDATE;
 
-
     @Field
     private Integer ashaID;
 
@@ -261,7 +251,6 @@ public class ChildImportRejection extends MdsEntity {
 
     @Field
     private String mCTSMotherIDNo;
-
 
     @Field
     private String action;
@@ -504,14 +493,6 @@ public class ChildImportRejection extends MdsEntity {
 
     public void setPhoneNumberWhom(String phoneNumberWhom) {
         this.phoneNumberWhom = phoneNumberWhom;
-    }
-
-    public String getWhomPhoneNumber() {
-        return whomPhoneNumber;
-    }
-
-    public void setWhomPhoneNumber(String whomPhoneNumber) {
-        this.whomPhoneNumber = whomPhoneNumber;
     }
 
     public String getBirthDate() {

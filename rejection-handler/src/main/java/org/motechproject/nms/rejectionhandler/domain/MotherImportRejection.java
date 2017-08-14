@@ -2,14 +2,9 @@ package org.motechproject.nms.rejectionhandler.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
-import org.motechproject.mds.domain.MdsEntity;
 
-
-/**
- * Created by beehyv on 13/7/17.
- */
 @Entity(tableName = "nms_mother_rejects")
-public class MotherImportRejection extends MdsEntity {
+public class MotherImportRejection {
 
     @Field
     private Long stateId;
@@ -70,9 +65,6 @@ public class MotherImportRejection extends MdsEntity {
 
     @Field
     private String phoneNumberWhom;
-
-    @Field
-    private String whomPhoneNumber;
 
     @Field
     private String birthDate;
@@ -466,14 +458,6 @@ public class MotherImportRejection extends MdsEntity {
 
     public void setPhoneNumberWhom(String phoneNumberWhom) {
         this.phoneNumberWhom = phoneNumberWhom;
-    }
-
-    public String getWhomPhoneNumber() {
-        return whomPhoneNumber;
-    }
-
-    public void setWhomPhoneNumber(String whomPhoneNumber) {
-        this.whomPhoneNumber = whomPhoneNumber;
     }
 
     public String getBirthDate() {
