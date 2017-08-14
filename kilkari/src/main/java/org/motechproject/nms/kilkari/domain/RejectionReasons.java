@@ -14,5 +14,6 @@ public enum RejectionReasons {
     INVALID_CASE_NO,
     SUBSCRIPTION_REJECTED,
     MOTHER_ID_ERROR,
-    INVALID_DOB
+    INVALID_DOB,
+    GF_STATUS_INACTIVE
 }

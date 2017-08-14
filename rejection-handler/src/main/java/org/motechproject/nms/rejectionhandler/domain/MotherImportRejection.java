@@ -3,10 +3,6 @@ package org.motechproject.nms.rejectionhandler.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
-
-/**
- * Created by beehyv on 13/7/17.
- */
 @Entity(tableName = "nms_mother_rejects")
 public class MotherImportRejection {
 
@@ -69,9 +65,6 @@ public class MotherImportRejection {
 
     @Field
     private String phoneNumberWhom;
-
-    @Field
-    private String whomPhoneNumber;
 
     @Field
     private String birthDate;
@@ -465,14 +458,6 @@ public class MotherImportRejection {
 
     public void setPhoneNumberWhom(String phoneNumberWhom) {
         this.phoneNumberWhom = phoneNumberWhom;
-    }
-
-    public String getWhomPhoneNumber() {
-        return whomPhoneNumber;
-    }
-
-    public void setWhomPhoneNumber(String whomPhoneNumber) {
-        this.whomPhoneNumber = whomPhoneNumber;
     }
 
     public String getBirthDate() {

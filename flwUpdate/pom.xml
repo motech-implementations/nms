@@ -36,6 +36,12 @@
 
         <dependency>
             <groupId>org.motechproject.nms</groupId>
+            <artifactId>rejection-handler</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
             <artifactId>mobile-academy</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -109,6 +115,7 @@
                             org.motechproject.nms.flw.exception,
                             org.motechproject.nms.flw.repository,
                             org.motechproject.nms.flw.service,
+                            org.motechproject.nms.rejectionhandler.service,
                             *
                         </Import-Package>
                     </instructions>

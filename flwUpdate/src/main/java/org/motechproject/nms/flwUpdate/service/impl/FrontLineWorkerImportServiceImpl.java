@@ -11,19 +11,23 @@ import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.csv.utils.GetLocalDate;
 
 import org.motechproject.nms.flw.domain.FrontLineWorker;
-import org.motechproject.nms.flw.domain.ContactNumberAudit;
-import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.domain.FlwError;
 import org.motechproject.nms.flw.domain.FlwErrorReason;
+import org.motechproject.nms.flw.domain.ContactNumberAudit;
+import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.repository.ContactNumberAuditDataService;
 import org.motechproject.nms.flw.repository.FlwErrorDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.kilkari.contract.AnmAshaRecord;
+import org.motechproject.nms.kilkari.contract.RchAnmAshaRecord;
+import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.flw.utils.FlwMapper;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.utils.RejectedObjectConverter;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.props.service.LogHelper;
 import org.motechproject.nms.region.domain.District;
@@ -31,6 +35,7 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.LocationService;
+import org.motechproject.nms.rejectionhandler.service.FlwRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +69,9 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     private FlwErrorDataService flwErrorDataService;
     private MobileAcademyService mobileAcademyService;
     private ContactNumberAuditDataService contactNumberAuditDataService;
+
+    @Autowired
+    private FlwRejectionService flwRejectionService;
 
     /*
         Expected file format:
@@ -218,15 +226,30 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         long districtId = (long) flw.get(FlwConstants.DISTRICT_ID);
         String flwId = importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT) ? flw.get(FlwConstants.ID).toString() : flw.get(FlwConstants.GF_ID).toString();
         long contactNumber = importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT) ? (long) flw.get(FlwConstants.CONTACT_NO) : (long) flw.get(FlwConstants.MOBILE_NO);
+        String action = "";
 
         State state = locationService.getState(stateId);
         if (state == null) {
             flwErrorDataService.create(new FlwError(flwId, stateId, districtId, FlwErrorReason.INVALID_LOCATION_STATE));
+            if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+                action = this.flwActionFinder(convertMapToAsha(flw));
+                flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), false, RejectionReasons.INVALID_LOCATION.toString(), action));
+            } else {
+                action = this.rchFlwActionFinder(convertMapToRchAsha(flw));
+                flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), false, RejectionReasons.INVALID_LOCATION.toString(), action));
+            }
             return false;
         }
         District district = locationService.getDistrict(stateId, districtId);
         if (district == null) {
             flwErrorDataService.create(new FlwError(flwId, stateId, districtId, FlwErrorReason.INVALID_LOCATION_DISTRICT));
+            if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+                action = this.flwActionFinder(convertMapToAsha(flw));
+                flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), false, RejectionReasons.INVALID_LOCATION.toString(), action));
+            } else {
+                action = this.rchFlwActionFinder(convertMapToRchAsha(flw));
+                flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), false, RejectionReasons.INVALID_LOCATION.toString(), action));
+            }
             return false;
         }
 
@@ -237,6 +260,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             location = locationService.getLocations(flw, false);
 
             if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+                action = this.flwActionFinder(convertMapToAsha(flw));
                 if (existingFlwByFlwId != null && existingFlwByNumber != null) {
 
                     if (existingFlwByFlwId.getMctsFlwId().equalsIgnoreCase(existingFlwByNumber.getMctsFlwId()) &&
@@ -244,11 +268,13 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                         // we are trying to update the same existing flw. set fields and update
                         LOGGER.debug("Updating existing user with same phone number");
                         frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOrigin.MCTS_IMPORT));
+                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), true, null, action));
                         return true;
                     } else {
                         // we are trying to update 2 different users and/or phone number used by someone else
                         LOGGER.debug("Existing flw but phone number(update) already in use");
                         flwErrorDataService.create(new FlwError(flwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
+                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
                         return false;
                     }
                 } else if (existingFlwByFlwId != null && existingFlwByNumber == null) {
@@ -259,6 +285,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                     long existingContactNumber = existingFlwByFlwId.getContactNumber();
                     FrontLineWorker flwInstance = FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOrigin.MCTS_IMPORT);
                     updateFlwMaMsisdn(flwInstance, existingContactNumber, contactNumber);
+                    flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), true, null, action));
                     return true;
                 } else if (existingFlwByFlwId == null && existingFlwByNumber != null) {
 
@@ -267,11 +294,13 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                         // merging those records
                         LOGGER.debug("Merging mcts data with previously anonymous user");
                         frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByNumber, flw, location, SubscriptionOrigin.MCTS_IMPORT));
+                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), true, null, action));
                         return true;
                     } else {
                         // phone number used by someone else.
                         LOGGER.debug("New flw but phone number(update) already in use");
                         flwErrorDataService.create(new FlwError(flwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
+                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
                         return false;
                     }
 
@@ -284,10 +313,12 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                         return true;
                     } else {
                         LOGGER.error("GF Status is INACTIVE. So cannot create record.");
+                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), false, RejectionReasons.GF_STATUS_INACTIVE.toString(), action));
                         return false;
                     }
                 }
             } else {
+                action = this.rchFlwActionFinder(convertMapToRchAsha(flw));
                 if (existingFlwByFlwId != null && existingFlwByNumber != null) {
 
                     if (existingFlwByFlwId.getMctsFlwId().equalsIgnoreCase(existingFlwByNumber.getMctsFlwId()) &&
@@ -295,11 +326,13 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                         // we are trying to update the same existing flw. set fields and update
                         LOGGER.debug("Updating existing user with same phone number");
                         frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOrigin.RCH_IMPORT));
+                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), true, null, action));
                         return true;
                     } else {
                         // we are trying to update 2 different users and/or phone number used by someone else
                         LOGGER.debug("Existing flw but phone number(update) already in use");
                         flwErrorDataService.create(new FlwError(flwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
+                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
                         return false;
                     }
                 } else if (existingFlwByFlwId != null && existingFlwByNumber == null) {
@@ -310,6 +343,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                     long existingContactNumber = existingFlwByFlwId.getContactNumber();
                     FrontLineWorker flwInstance = FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOrigin.RCH_IMPORT);
                     updateFlwMaMsisdn(flwInstance, existingContactNumber, contactNumber);
+                    flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), true, null, action));
                     return true;
                 } else if (existingFlwByFlwId == null && existingFlwByNumber != null) {
 
@@ -318,11 +352,13 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                         // merging those records
                         LOGGER.debug("Merging rch data with previously anonymous user");
                         frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByNumber, flw, location, SubscriptionOrigin.RCH_IMPORT));
+                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), true, null, action));
                         return true;
                     } else {
                         // phone number used by someone else.
                         LOGGER.debug("New flw but phone number(update) already in use");
                         flwErrorDataService.create(new FlwError(flwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
+                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
                         return false;
                     }
 
@@ -332,9 +368,11 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                     FrontLineWorker frontLineWorker = FlwMapper.createRchFlw(flw, location);
                     if (frontLineWorker != null) {
                         frontLineWorkerService.add(frontLineWorker);
+                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), true, null, action));
                         return true;
                     } else {
                         LOGGER.error("GF Status is INACTIVE. So cannot create record.");
+                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), false, RejectionReasons.GF_STATUS_INACTIVE.toString(), action));
                         return false;
                     }
                 }
@@ -342,6 +380,13 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
 
         } catch (InvalidLocationException ile) {
             LOGGER.debug(ile.toString());
+            if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+                action = this.flwActionFinder(convertMapToAsha(flw));
+                flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), false, RejectionReasons.INVALID_LOCATION.toString(), action));
+            } else {
+                action = this.rchFlwActionFinder(convertMapToRchAsha(flw));
+                flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), false, RejectionReasons.INVALID_LOCATION.toString(), action));
+            }
             return false;
         }
     }
@@ -455,7 +500,65 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         return mapping;
     }
 
-    private String createErrorMessage(String message, int rowNumber) {
+    private static RchAnmAshaRecord convertMapToRchAsha(Map<String, Object> record) { //NO CHECKSTYLE CyclomaticComplexity
+        RchAnmAshaRecord rchAnmAshaRecord = new RchAnmAshaRecord();
+        rchAnmAshaRecord.setStateId(record.get(FlwConstants.STATE_ID) == null ? null : (Long) record.get(FlwConstants.STATE_ID));
+        rchAnmAshaRecord.setDistrictId(record.get(FlwConstants.DISTRICT_ID) == null ? null : (Long) record.get(FlwConstants.DISTRICT_ID));
+        rchAnmAshaRecord.setDistrictName(record.get(FlwConstants.DISTRICT_NAME) == null ? null : (String) record.get(FlwConstants.DISTRICT_NAME));
+
+        rchAnmAshaRecord.setTalukaId(record.get(FlwConstants.TALUKA_ID) == null ? null : (String) record.get(FlwConstants.TALUKA_ID));
+        rchAnmAshaRecord.setTalukaName(record.get(FlwConstants.TALUKA_NAME) == null ? null : (String) record.get(FlwConstants.TALUKA_NAME));
+
+        rchAnmAshaRecord.setHealthBlockId(record.get(FlwConstants.HEALTH_BLOCK_ID) == null ? null : (Long) record.get(FlwConstants.HEALTH_BLOCK_ID));
+        rchAnmAshaRecord.setHealthBlockName(record.get(FlwConstants.HEALTH_BLOCK_NAME) == null ? null : (String) record.get(FlwConstants.HEALTH_BLOCK_NAME));
+
+        rchAnmAshaRecord.setPhcId(record.get(FlwConstants.PHC_ID) == null ? null : (Long) record.get(FlwConstants.PHC_ID));
+        rchAnmAshaRecord.setPhcName(record.get(FlwConstants.PHC_NAME) == null ? null : (String) record.get(FlwConstants.PHC_NAME));
+
+        rchAnmAshaRecord.setSubCentreId(record.get(FlwConstants.SUB_CENTRE_ID) == null ? null : (Long) record.get(FlwConstants.SUB_CENTRE_ID));
+        rchAnmAshaRecord.setSubCentreName(record.get(FlwConstants.SUB_CENTRE_NAME) == null ? null : (String) record.get(FlwConstants.SUB_CENTRE_NAME));
+
+        rchAnmAshaRecord.setVillageId(record.get(FlwConstants.CENSUS_VILLAGE_ID) == null ? null : (Long) record.get(FlwConstants.CENSUS_VILLAGE_ID));
+        rchAnmAshaRecord.setVillageName(record.get(FlwConstants.VILLAGE_NAME) == null ? null : (String) record.get(FlwConstants.VILLAGE_NAME));
+        rchAnmAshaRecord.setGfId(record.get(FlwConstants.GF_ID) == null ? null : (Long) record.get(FlwConstants.GF_ID));
+        rchAnmAshaRecord.setMobileNo(record.get(FlwConstants.MOBILE_NO) == null ? null : (String) record.get(FlwConstants.MOBILE_NO));
+        rchAnmAshaRecord.setGfName(record.get(FlwConstants.GF_NAME) == null ? null : (String) record.get(FlwConstants.GF_NAME));
+        rchAnmAshaRecord.setGfType(record.get(FlwConstants.GF_TYPE) == null ? null : (String) record.get(FlwConstants.GF_TYPE));
+        rchAnmAshaRecord.setExecDate(record.get(FlwConstants.EXEC_DATE) == null ? null : (String) record.get(FlwConstants.EXEC_DATE));
+        rchAnmAshaRecord.setGfStatus(record.get(FlwConstants.GF_STATUS) == null ? null : (String) record.get(FlwConstants.GF_STATUS));
+        return rchAnmAshaRecord;
+    }
+
+    private static AnmAshaRecord convertMapToAsha(Map<String, Object> record) { //NO CHECKSTYLE CyclomaticComplexity
+        AnmAshaRecord anmAshaRecord = new AnmAshaRecord();
+        anmAshaRecord.setStateId(record.get(FlwConstants.STATE_ID) == null ? null : (Long) record.get(FlwConstants.STATE_ID));
+        anmAshaRecord.setDistrictId(record.get(FlwConstants.DISTRICT_ID) == null ? null : (Long) record.get(FlwConstants.DISTRICT_ID));
+        anmAshaRecord.setDistrictName(record.get(FlwConstants.DISTRICT_NAME) == null ? null : (String) record.get(FlwConstants.DISTRICT_NAME));
+
+        anmAshaRecord.setTalukaId(record.get(FlwConstants.TALUKA_ID) == null ? null : (String) record.get(FlwConstants.TALUKA_ID));
+        anmAshaRecord.setTalukaName(record.get(FlwConstants.TALUKA_NAME) == null ? null : (String) record.get(FlwConstants.TALUKA_NAME));
+
+        anmAshaRecord.setHealthBlockId(record.get(FlwConstants.HEALTH_BLOCK_ID) == null ? null : (Long) record.get(FlwConstants.HEALTH_BLOCK_ID));
+        anmAshaRecord.setHealthBlockName(record.get(FlwConstants.HEALTH_BLOCK_NAME) == null ? null : (String) record.get(FlwConstants.HEALTH_BLOCK_NAME));
+
+        anmAshaRecord.setPhcId(record.get(FlwConstants.PHC_ID) == null ? null : (Long) record.get(FlwConstants.PHC_ID));
+        anmAshaRecord.setPhcName(record.get(FlwConstants.PHC_NAME) == null ? null : (String) record.get(FlwConstants.PHC_NAME));
+
+        anmAshaRecord.setSubCentreId(record.get(FlwConstants.SUB_CENTRE_ID) == null ? null : (Long) record.get(FlwConstants.SUB_CENTRE_ID));
+        anmAshaRecord.setSubCentreName(record.get(FlwConstants.SUB_CENTRE_NAME) == null ? null : (String) record.get(FlwConstants.SUB_CENTRE_NAME));
+
+        anmAshaRecord.setVillageId(record.get(FlwConstants.CENSUS_VILLAGE_ID) == null ? null : (Long) record.get(FlwConstants.CENSUS_VILLAGE_ID));
+        anmAshaRecord.setVillageName(record.get(FlwConstants.VILLAGE_NAME) == null ? null : (String) record.get(FlwConstants.VILLAGE_NAME));
+        anmAshaRecord.setId(record.get(FlwConstants.ID) == null ? null : (Long) record.get(FlwConstants.ID));
+        anmAshaRecord.setContactNo(record.get(FlwConstants.CONTACT_NO) == null ? null : (String) record.get(FlwConstants.CONTACT_NO));
+        anmAshaRecord.setName(record.get(FlwConstants.NAME) == null ? null : (String) record.get(FlwConstants.NAME));
+        anmAshaRecord.setType(record.get(FlwConstants.TYPE) == null ? null : (String) record.get(FlwConstants.TYPE));
+        anmAshaRecord.setUpdatedOn(record.get(FlwConstants.UPDATED_ON) == null ? null : (String) record.get(FlwConstants.UPDATED_ON));
+        anmAshaRecord.setGfStatus(record.get(FlwConstants.GF_STATUS) == null ? null : (String) record.get(FlwConstants.GF_STATUS));
+        return anmAshaRecord;
+    }
+
+        private String createErrorMessage(String message, int rowNumber) {
         return String.format("CSV instance error [row: %d]: %s", rowNumber, message);
     }
 
@@ -500,4 +603,19 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         this.contactNumberAuditDataService = contactNumberAuditDataService;
     }
 
+    private String flwActionFinder(AnmAshaRecord record) {
+        if (frontLineWorkerService.getByMctsFlwIdAndState(record.getId().toString(), stateDataService.findByCode(record.getStateId())) == null) {
+            return "CREATE";
+        } else {
+            return "UPDATE";
+        }
+    }
+
+    private String rchFlwActionFinder(RchAnmAshaRecord record) {
+        if (frontLineWorkerService.getByMctsFlwIdAndState(record.getGfId().toString(), stateDataService.findByCode(record.getStateId())) == null) {
+            return "CREATE";
+        } else {
+            return "UPDATE";
+        }
+    }
 }
