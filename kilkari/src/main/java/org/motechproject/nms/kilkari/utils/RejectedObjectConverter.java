@@ -149,7 +149,7 @@ public final class RejectedObjectConverter {
         childImportRejection.setMotherName(record.getMotherName());
         childImportRejection.setMotherId(record.getMotherId());
         childImportRejection.setPhoneNumberWhom(record.getPhoneNoOfWhom());
-        childImportRejection.setWhomPhoneNumber(record.getWhomPhoneNo());
+        childImportRejection.setMobileNo(record.getWhomPhoneNo());
         childImportRejection.setBirthDate(record.getBirthdate());
         childImportRejection.setPlaceOfDelivery(record.getPlaceOfDelivery());
         childImportRejection.setBloodGroup(record.getBloodGroup());
@@ -269,7 +269,7 @@ public final class RejectedObjectConverter {
         motherImportRejection.setName(record.getName());
         motherImportRejection.setHusbandName(record.getHusbandName());
         motherImportRejection.setPhoneNumberWhom(record.getPhoneNoOfWhom());
-        motherImportRejection.setWhomPhoneNumber(record.getWhomPhoneNo());
+        motherImportRejection.setMobileNo(record.getWhomPhoneNo());
         motherImportRejection.setBirthDate(record.getBirthdate());
         motherImportRejection.setjSYBeneficiary(record.getJsyBeneficiary());
         motherImportRejection.setCaste(record.getCaste());
