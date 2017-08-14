@@ -3,10 +3,6 @@ package org.motechproject.nms.rejectionhandler.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
-
-/**
- * Created by vishnu on 12/7/17.
- */
 @Entity(tableName = "nms_flw_rejects")
 public class FlwImportRejection {
 

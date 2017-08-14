@@ -47,4 +47,7 @@
     <osgi:reference id="flwErrorDataService"
                     interface="org.motechproject.nms.flw.repository.FlwErrorDataService" />
 
+    <osgi:reference id="flwRejectionService"
+                    interface="org.motechproject.nms.rejectionhandler.service.FlwRejectionService" />
+
 </beans>
