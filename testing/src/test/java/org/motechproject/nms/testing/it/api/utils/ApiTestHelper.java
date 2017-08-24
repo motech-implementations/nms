@@ -1,5 +1,6 @@
 package org.motechproject.nms.testing.it.api.utils;
 
+import org.motechproject.nms.flw.domain.FlwJobStatus;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 
@@ -12,6 +13,7 @@ public final class ApiTestHelper {
         FrontLineWorker flw = new FrontLineWorker(name, phoneNumber);
         flw.setMctsFlwId(mctsFlwId);
         flw.setStatus(status);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         return flw;
     }
 }

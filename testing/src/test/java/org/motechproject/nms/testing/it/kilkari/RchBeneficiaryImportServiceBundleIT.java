@@ -1318,8 +1318,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         List<Subscriber> subscriber = subscriberDataService.findByNumber(9439986187L);
-        assertTrue(subscriber.isEmpty());
-        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.MISSING_MOTHER_ID, "7000000000");
+        assertFalse(subscriber.isEmpty());
         transactionManager.commit(status);
     }
 

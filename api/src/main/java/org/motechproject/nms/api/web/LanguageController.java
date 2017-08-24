@@ -4,6 +4,7 @@ import org.motechproject.nms.api.web.contract.UserLanguageRequest;
 import org.motechproject.nms.api.web.exception.NotAuthorizedException;
 import org.motechproject.nms.api.web.exception.NotDeployedException;
 import org.motechproject.nms.api.web.exception.NotFoundException;
+import org.motechproject.nms.flw.domain.FlwJobStatus;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.props.domain.Service;
@@ -76,6 +77,7 @@ public class LanguageController extends BaseController {
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
         if (flw == null) {
             flw = new FrontLineWorker(callingNumber);
+            flw.setJobStatus(FlwJobStatus.ACTIVE);
         }
 
         Language language = languageService.getForCode(languageLocationCode);

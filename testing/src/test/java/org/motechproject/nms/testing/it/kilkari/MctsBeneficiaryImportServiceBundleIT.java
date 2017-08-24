@@ -357,8 +357,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         List<Subscriber> subscriber = subscriberDataService.findByNumber(9439986187L);
-        assertTrue(subscriber.isEmpty());
-        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.MISSING_MOTHER_ID);
+        assertEquals(1, subscriber.size());
         transactionManager.commit(status);
     }
 
@@ -1144,6 +1143,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void testRecordRejectedWhenMctsIdIsEmptyString() throws Exception {
         DateTime dob = DateTime.now().minusDays(100);
         String dobString = getDateString(dob);
@@ -1666,7 +1666,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
                 sh.pregnancyPack(), SubscriptionOrigin.MCTS_IMPORT);
         transactionManager.commit(status);
 
-        // import the same child without motherId - It should fail
+        // import the same child without motherId - It shouldnt fail
         DateTime dob = DateTime.now().minusDays(100);
         String dobString = getDateString(dob);
         Reader reader = createChildDataReader("21\t3\t\t\t\t\t9876543210\tBaby1 of Shanti Ekka\t\t7000000000\t"
@@ -1681,7 +1681,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertEquals(0, subscribers.size());
         List<SubscriberMsisdnTracker> msisdnTrackers = subscriberMsisdnTrackerDataService.retrieveAll();
         assertEquals(0, msisdnTrackers.size());
-        assertSubscriptionError(7000000000L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.MISSING_MOTHER_ID);
         transactionManager.commit(status);
 
         // import the same child with motherId

@@ -10,10 +10,7 @@ import org.junit.runner.RunWith;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.mds.ex.JdoListenerInvocationException;
-import org.motechproject.nms.flw.domain.FlwStatusUpdateAudit;
-import org.motechproject.nms.flw.domain.FrontLineWorker;
-import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
-import org.motechproject.nms.flw.domain.UpdateStatusType;
+import org.motechproject.nms.flw.domain.*;
 import org.motechproject.nms.flw.repository.FlwStatusUpdateAuditDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.repository.WhitelistEntryDataService;
@@ -209,6 +206,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     @Test
     public void testFrontLineWorkerService() throws Exception {
         FrontLineWorker flw = new FrontLineWorker("Test Worker", 1111111111L);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         FrontLineWorker otherFlw = frontLineWorkerDataService.findByContactNumber(1111111111L);
@@ -239,6 +237,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         Language language = languageService.getForCode("50");
 
         FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(2111111111L);
 
@@ -265,6 +264,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     @Test
     public void testDeleteNonInvalidFrontLineWorker() {
         FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(2111111111L);
 
@@ -277,6 +277,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     @Test
     public void testDeleteRecentInvalidFrontLineWorker() {
         FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         flw = frontLineWorkerService.getByContactNumber(2111111111L);
@@ -293,6 +294,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     @Test
     public void testDeleteOldInvalidFrontLineWorker() {
         FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         flw = frontLineWorkerService.getByContactNumber(2111111111L);
@@ -320,6 +322,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
                 eventParams);
 
         FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(2111111111L);
         flw.setStatus(FrontLineWorkerStatus.INVALID);
@@ -339,6 +342,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         // add new invalidated flw
         flw = new FrontLineWorker("Test Worker", 2111111111L);
         flw.setFlwId("FlwId");
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(2111111111L);
         flw.setStatus(FrontLineWorkerStatus.INVALID);
@@ -361,6 +365,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     public void verifyFT514() {
         FrontLineWorker flw = new FrontLineWorker("Test Worker", 2111111111L);
         flw.setStatus(FrontLineWorkerStatus.ANONYMOUS);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         flw = frontLineWorkerService.getByContactNumber(2111111111L);
@@ -386,6 +391,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         flw.setState(sampleState);
         flw.setDistrict(district);
         flw.setLanguage(language);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         flw = frontLineWorkerService.getByContactNumber(2111111111L);
@@ -415,6 +421,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         flw.setDistrict(district);
         flw.setLanguage(language);
         flw.setMctsFlwId("mcts_id");
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         transactionManager.commit(status);
 
@@ -435,6 +442,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         flw1.setDistrict(district1);
         flw1.setLanguage(language1);
         flw1.setMctsFlwId("mcts_id1");
+        flw1.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw1);
         transactionManager.commit(status);
 

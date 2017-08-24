@@ -9,9 +9,10 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
-import org.motechproject.nms.flw.domain.FlwStatusUpdateAudit;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
+import org.motechproject.nms.flw.domain.FlwJobStatus;
+import org.motechproject.nms.flw.domain.FlwStatusUpdateAudit;
 import org.motechproject.nms.flw.domain.UpdateStatusType;
 import org.motechproject.nms.flw.repository.FlwStatusUpdateAuditDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
@@ -213,7 +214,7 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
 
     @Override
     public FrontLineWorker getByContactNumber(Long contactNumber) {
-        return frontLineWorkerDataService.findByContactNumber(contactNumber);
+        return frontLineWorkerDataService.findByContactNumberAndJobStatus(contactNumber, FlwJobStatus.ACTIVE);
     }
 
     @Override

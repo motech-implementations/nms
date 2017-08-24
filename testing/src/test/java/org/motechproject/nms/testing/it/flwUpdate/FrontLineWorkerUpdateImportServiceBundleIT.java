@@ -18,6 +18,7 @@ import org.motechproject.mtraining.repository.BookmarkDataService;
 import org.motechproject.nms.csv.domain.CsvAuditRecord;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.repository.CsvAuditRecordDataService;
+import org.motechproject.nms.flw.domain.FlwJobStatus;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
@@ -239,10 +240,12 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
     public void testImportWhenMSISDNOnly() throws Exception {
         FrontLineWorker flw = new FrontLineWorker(1000000000L);
         flw.setLanguage(rh.kannadaLanguage());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         flw = new FrontLineWorker(2000000000L);
         flw.setLanguage(rh.kannadaLanguage());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         Reader reader = createLanguageReaderWithHeaders("72185,210302604211400029,1000000000,hi,1");
@@ -260,10 +263,12 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         FrontLineWorker flw = new FrontLineWorker(1000000000L);
         flw.setLanguage(rh.kannadaLanguage());
         flw.setFlwId("72185");
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         flw = new FrontLineWorker(2000000000L);
         flw.setLanguage(rh.kannadaLanguage());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         frontLineWorkerUpdateImportService.importLanguageData(read("csv/flw_language_update.csv"));
@@ -387,9 +392,11 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
     @Test
     public void testMsisdnImportWhenMSISDNOnly() throws Exception {
         FrontLineWorker flw = new FrontLineWorker(1000000000L);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         flw = new FrontLineWorker(2000000000L);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         createMaRecords(1000000000L);
@@ -413,9 +420,11 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
     public void testMsisdnImportFromSampleDataFile() throws Exception {
         FrontLineWorker flw = new FrontLineWorker(1000000000L);
         flw.setFlwId("72185");
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         flw = new FrontLineWorker(2000000000L);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         frontLineWorkerUpdateImportService.importMSISDNData(read("csv/flw_msisdn_update.csv"));
@@ -597,6 +606,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         flw.setLanguage(rh.kannadaLanguage());
         flw.setState(rh.delhiState());
         flw.setDistrict(rh.newDelhiDistrict());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         assertEquals(
@@ -653,6 +663,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         flw.setLanguage(rh.kannadaLanguage());
         flw.setState(rh.delhiState());
         flw.setDistrict(rh.newDelhiDistrict());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         assertEquals(
@@ -684,6 +695,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         flw.setState(rh.delhiState());
         flw.setDistrict(rh.newDelhiDistrict());
         flw.setLanguage(rh.hindiLanguage());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         // update FLW district to "southDelhiDistrict"

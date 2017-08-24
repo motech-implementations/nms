@@ -217,8 +217,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, addFlwRequest);
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
         flw = frontLineWorkerService.getByContactNumber(9876543210L);
-        assertNotNull(flw);
-        assertEquals(FlwJobStatus.INACTIVE, flw.getJobStatus());
+        assertNull(flw);
     }
 
     // Create valid new flw
@@ -454,6 +453,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         flw.setState(state);
         flw.setDistrict(district);
         flw.setLanguage(language);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerDataService.create(flw);
         transactionManager.commit(status);
     }

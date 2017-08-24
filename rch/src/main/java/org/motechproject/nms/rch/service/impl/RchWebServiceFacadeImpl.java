@@ -591,7 +591,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         for (RchMotherRecord record : rejectedRchMothers) {
             action = actionFinderService.rchMotherActionFinder(record);
             LOGGER.error("Existing Mother Record with same MSISDN in the data set");
-            motherRejectionService.createOrUpdateMother(motherRejectionRch(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+            motherRejectionService.createOrUpdateMother(motherRejectionRch(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
         }
         List<RchMotherRecord> acceptedRchMothers = rchMotherRecordsSet.get(1);
         int saved = 0;
@@ -633,7 +633,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         for (RchChildRecord record : rejectedRchChildren) {
             action = actionFinderService.rchChildActionFinder(record);
             LOGGER.error("Existing Child Record with same MSISDN in the data set");
-            childRejectionService.createOrUpdateChild(childRejectionRch(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+            childRejectionService.createOrUpdateChild(childRejectionRch(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
         }
         List<RchChildRecord> acceptedRchChildren = rchChildRecordsSet.get(1);
 
@@ -680,7 +680,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         for (RchAnmAshaRecord record : rejectedRchAshas) {
             action = this.rchFlwActionFinder(record);
             LOGGER.error("Existing Asha Record with same MSISDN in the data set");
-            flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+            flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
         }
         List<RchAnmAshaRecord> acceptedRchAshas = rchAshaRecordsSet.get(1);
 
