@@ -18,6 +18,10 @@ public interface RchImportFacilitatorDataService extends MotechDataService<RchIm
     List<RchImportFacilitator> getByImportDateAndUsertype(@LookupField(name = "importDate") LocalDate importDate,
                                                           @LookupField(name = "userType") RchUserType userType);
 
+    @Lookup
+    RchImportFacilitator getByStateIdAndImportDateAndUserType(@LookupField(name = "stateId") Long stateId,
+                                                              @LookupField(name = "importDate") LocalDate importDate,
+                                                              @LookupField(name = "userType") RchUserType userType);
 }
 
 

@@ -10,6 +10,7 @@ import org.motechproject.mtraining.domain.ActivityState;
 import org.motechproject.mtraining.domain.Bookmark;
 import org.motechproject.mtraining.repository.ActivityDataService;
 import org.motechproject.mtraining.repository.BookmarkDataService;
+import org.motechproject.nms.flw.domain.FlwJobStatus;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
@@ -191,6 +192,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     public void testGetBookmark() {
 
         FrontLineWorker flw = new FrontLineWorker(1234567890L);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         String flwId = frontLineWorkerService.getByContactNumber(1234567890L).getId().toString();
         bookmarkDataService.create(new Bookmark(flwId, "1", "1", "1", new HashMap<String, Object>()));
@@ -216,6 +218,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Test
     public void testSetNewBookmark() {
         FrontLineWorker flw = new FrontLineWorker(1234567890L);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(1234567890L);
         List<Bookmark> existing = bookmarkDataService.findBookmarksForUser(flw.getId().toString());
@@ -228,6 +231,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Test
     public void testStartedActivity() {
         FrontLineWorker flw = new FrontLineWorker(1234567890L);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(1234567890L);
         List<Bookmark> existing = bookmarkDataService.findBookmarksForUser(flw.getId().toString());
@@ -242,6 +246,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     public void testSetExistingBookmark() {
 
         FrontLineWorker flw = new FrontLineWorker(1234567890L);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(1234567890L);
         MaBookmark bookmark = new MaBookmark(flw.getId(), VALID_CALL_ID, null, null);
@@ -267,6 +272,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
         long callingNumber = 9876543210L;
         FrontLineWorker flw = new FrontLineWorker(callingNumber);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(callingNumber);
         MaBookmark bookmark = new MaBookmark(flw.getId(), VALID_CALL_ID, null, null);
@@ -288,6 +294,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
         long callingNumber = 9876543210L;
         FrontLineWorker flw = new FrontLineWorker(callingNumber);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(callingNumber);
         int completionCountBefore = activityDataService.findRecordsForUser(String.valueOf(callingNumber)).size();
@@ -313,6 +320,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
         long callingNumber = 9987654321L;
         FrontLineWorker flw = new FrontLineWorker(callingNumber);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(callingNumber);
         MaBookmark bookmark = new MaBookmark(flw.getId(), VALID_CALL_ID, null, null);
@@ -340,6 +348,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
         long callingNumber = 9987654321L;
         FrontLineWorker flw = new FrontLineWorker(callingNumber);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(callingNumber);
         MaBookmark bookmark = new MaBookmark(flw.getId(), VALID_CALL_ID, null, null);
@@ -367,6 +376,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
         long callingNumber = 9987654321L;
         FrontLineWorker flw = new FrontLineWorker(callingNumber);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(callingNumber);
         MaBookmark bookmark = new MaBookmark(flw.getId(), VALID_CALL_ID, null, null);
@@ -412,6 +422,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
         long callingNumber = 9876543210L;
         FrontLineWorker flw = new FrontLineWorker(callingNumber);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerDataService.create(flw);
         flw = frontLineWorkerService.getByContactNumber(callingNumber);
 
@@ -439,6 +450,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
         long callingNumber = 9876543211L;
         FrontLineWorker flw = new FrontLineWorker(callingNumber);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerDataService.create(flw);
         flw = frontLineWorkerService.getByContactNumber(callingNumber);
         MaBookmark bookmark = new MaBookmark(flw.getId(), VALID_CALL_ID, null, null);
@@ -462,6 +474,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
         long callingNumber = 9876543211L;
         FrontLineWorker flw = new FrontLineWorker(callingNumber);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         Long flwId = frontLineWorkerService.getByContactNumber(callingNumber).getId();
 
@@ -501,6 +514,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         flw.setLanguage(language);
         flw.setState(sampleState);
         flw.setDistrict(sampleState.getDistricts().iterator().next());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(callingNumber);
         assertNotNull(flw);
@@ -528,6 +542,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         }
 
         flw = new FrontLineWorker("Test Worker", callingNumber);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(callingNumber);
         assertNotNull(flw);
@@ -559,6 +574,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         flw = new FrontLineWorker("Test Worker", callingNumber);
         flw.setState(sampleState);
         flw.setDistrict(sampleState.getDistricts().iterator().next());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(callingNumber);
         assertNotNull(flw);
@@ -583,6 +599,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     public void testMultipleCompletions() {
         long callingNumber = 9876543210L;
         FrontLineWorker flw = new FrontLineWorker(callingNumber);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         flw = frontLineWorkerService.getByContactNumber(callingNumber);
         MaBookmark bookmark = new MaBookmark(flw.getId(), VALID_CALL_ID, null, null);

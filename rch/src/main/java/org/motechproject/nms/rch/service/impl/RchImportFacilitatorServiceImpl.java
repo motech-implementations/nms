@@ -6,6 +6,8 @@ import org.motechproject.nms.rch.domain.RchUserType;
 import org.motechproject.nms.rch.exception.RchFileManipulationException;
 import org.motechproject.nms.rch.repository.RchImportFacilitatorDataService;
 import org.motechproject.nms.rch.service.RchImportFacilitatorService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,8 @@ public class RchImportFacilitatorServiceImpl implements RchImportFacilitatorServ
 
     private RchImportFacilitatorDataService rchImportFacilitatorDataService;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(RchImportFacilitatorServiceImpl.class);
+
 
     @Autowired
     public RchImportFacilitatorServiceImpl(RchImportFacilitatorDataService rchImportFacilitatorDataService) {
@@ -25,10 +29,17 @@ public class RchImportFacilitatorServiceImpl implements RchImportFacilitatorServ
 
     @Override
     public void createImportFileAudit(RchImportFacilitator rchImportFacilitator) throws RchFileManipulationException  {
+        Long state = rchImportFacilitator.getStateId();
+        LocalDate importDate = rchImportFacilitator.getImportDate();
+        RchUserType rchUserType = rchImportFacilitator.getUserType();
+        RchImportFacilitator rchImportFacilitator1 = rchImportFacilitatorDataService.getByStateIdAndImportDateAndUserType(state, importDate, rchUserType);
         if (rchImportFacilitator.getFileName() == null) {
             throw new RchFileManipulationException("Invalid file name");
+        } else if (rchImportFacilitator1 != null) {
+            LOGGER.error("A record already present for the same state and today's date.");
+        } else {
+            rchImportFacilitatorDataService.create(rchImportFacilitator);
         }
-        rchImportFacilitatorDataService.create(rchImportFacilitator);
     }
 
     @Override

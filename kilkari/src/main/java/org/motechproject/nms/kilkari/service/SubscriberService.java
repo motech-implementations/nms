@@ -11,6 +11,7 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service interface for managing Kilkari subscribers
@@ -60,7 +61,7 @@ public interface SubscriberService {
      * @param lmp the reference date for the mother (last menstrual period)
      * @return New or updated subscription, null if the creation/update fails
      */
-    Subscription updateMotherSubscriber(Long msisdn, MctsMother mother, DateTime lmp);
+    Subscription updateMotherSubscriber(Long msisdn, MctsMother mother, DateTime lmp, Map<String, Object> record, String action);
 
     /**
      * Update the RCH mother subscriber with the msisdn and mother object
@@ -71,7 +72,7 @@ public interface SubscriberService {
      * @param deactivate boolean to check if subscription needs to be deactivated due to abortion, stillbirth or death
      * @return New or updated subscription, null if the creation/update fails
      */
-    Subscription updateRchMotherSubscriber(Long msisdn, MctsMother mother, DateTime lmp, Long caseNo, Boolean deactivate);
+    Subscription updateRchMotherSubscriber(Long msisdn, MctsMother mother, DateTime lmp, Long caseNo, Boolean deactivate, Map<String, Object> record, String action);
 
     /**
      * Update the child subscriber with the msisdn and child object
@@ -80,7 +81,7 @@ public interface SubscriberService {
      * @param dob the reference date for the child (date of birth)
      * @return New or updated subscription, null if creation/update fails
      */
-    Subscription updateChildSubscriber(Long msisdn, MctsChild child, DateTime dob);
+    Subscription updateChildSubscriber(Long msisdn, MctsChild child, DateTime dob, Map<String, Object> record, String action);
 
     /**
      * Lifecycle listener that verifies a subscriber can only be deleted if all of their subscriptions have
@@ -112,5 +113,5 @@ public interface SubscriberService {
      * @param dob reference date for the child
      * @return new or updated subscription, null if create/update fails
      */
-    Subscription updateRchChildSubscriber(Long msisdn, MctsChild child, DateTime dob);
+    Subscription updateRchChildSubscriber(Long msisdn, MctsChild child, DateTime dob, Map<String, Object> record, String action);
 }
