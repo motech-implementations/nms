@@ -295,7 +295,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
-        FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(1234567890L);
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1234567890L);
         assertFLW(flw, "#0", 1234567890L, "FLW 0", "District 11", "L1");
         assertEquals(FrontLineWorkerStatus.INACTIVE, flw.getStatus());
     }
@@ -305,7 +305,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t12\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
-        FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(1234567890L);
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1234567890L);
         assertFLW(flw, "#0", 1234567890L, "FLW 0", "District 12", null);
     }
 
@@ -323,7 +323,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     public void testImportFromSampleDataFile() throws Exception {
         frontLineWorkerImportService.importData(read("csv/anm-asha.txt"), SubscriptionOrigin.MCTS_IMPORT);
 
-        FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(9999999996L);
+        FrontLineWorker flw1 = frontLineWorkerService.getByContactNumber(9999999996L);
         assertFLW(flw1, "72185", 9999999996L, "Bishnu Priya Behera", "Koraput", null);
 
         // verify location data was created on the fly
@@ -351,7 +351,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyFT535() throws Exception {
         importCsvFileForFLW("flw.txt");
-        FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(1234567899L);
+        FrontLineWorker flw1 = frontLineWorkerService.getByContactNumber(1234567899L);
         assertFLW(flw1, "1", 1234567899L, "Aisha Bibi", "District 11", "L1");
         assertEquals("State{name='State 1', code=1}", flw1.getState().toString());
         assertEquals(FrontLineWorkerStatus.INACTIVE, flw1.getStatus());
@@ -374,7 +374,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerService.add(flw);
         Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
-        FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(1234567890L);
+        FrontLineWorker flw1 = frontLineWorkerService.getByContactNumber(1234567890L);
         assertFLW(flw1, "#0", 1234567890L, "FLW 0", "District 11", "L1");
         assertEquals("State{name='State 1', code=1}", flw1.getState().toString());
         assertEquals(FrontLineWorkerStatus.ACTIVE, flw1.getStatus());
@@ -601,7 +601,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
         Long oldMsisdn = 1234567890L;
 
-        FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(oldMsisdn);
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(oldMsisdn);
         assertFLW(flw, "#0", oldMsisdn, "FLW 0", "District 11", "L1");
 
         Long flwId = flw.getId();
@@ -623,7 +623,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
         Long newMsisdn = 9876543210L;
 
-        flw = frontLineWorkerDataService.findByContactNumber(newMsisdn);
+        flw = frontLineWorkerService.getByContactNumber(newMsisdn);
         assertFLW(flw, "#0", newMsisdn, "FLW 0", "District 11", "L1");
 
         assertNull(maService.getBookmark(oldMsisdn, VALID_CALL_ID));

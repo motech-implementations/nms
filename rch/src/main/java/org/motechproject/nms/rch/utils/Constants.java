@@ -11,6 +11,9 @@ public final class Constants {
     public static final String RCH_DTID = "rch.credentials.dtid";
     public static final String RCH_LOCATIONS = "rch.state_ids";
     public static final String RCH_SYNC_CRON = "rch.sync.cron";
+    public static final String RCH_MOTHER_READ_CRON = "rch.mother.sync.cron";
+    public static final String RCH_CHILD_READ_CRON = "rch.child.sync.cron";
+    public static final String RCH_ASHA_READ_CRON = "rch.asha.sync.cron";
     public static final String RCH_ENDPOINT = "rch.endpointUrl";
     public static final String DAYS_TO_PULL = "rch.days_to_pull";
     public static final String HPD_STATES = "rch.hpd.states";
@@ -27,6 +30,9 @@ public final class Constants {
     public static final String RCH_CHILD_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".child.import";
     public static final String RCH_MOTHER_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".mother.import";
     public static final String RCH_ASHA_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".asha.import";
+    public static final String RCH_MOTHER_READ_SUBJECT = BASE_RCH_SUBJECT + ".mother.read";
+    public static final String RCH_CHILD_READ_SUBJECT = BASE_RCH_SUBJECT + ".child.read";
+    public static final String RCH_ASHA_READ_SUBJECT = BASE_RCH_SUBJECT + ".asha.read";
     public static final String STATE_ID_PARAM = "stateId";
     public static final String ENDPOINT_PARAM = "endpoint";
     public static final String STATE_NAME_PARAM = "stateName";

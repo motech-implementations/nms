@@ -438,7 +438,7 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         }
         bookmark.setScoresByChapter(scores);
         maService.setBookmark(bookmark);
-        Long flwId = frontLineWorkerDataService.findByContactNumber(callingNumber).getId();
+        Long flwId = frontLineWorkerService.getByContactNumber(callingNumber).getId();
         CourseCompletionRecord ccr = courseCompletionRecordDataService.findByFlwId(flwId).get(0);
         assertNotNull(ccr);
         assertEquals(ccr.getFlwId(), flwId);

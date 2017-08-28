@@ -19,6 +19,8 @@ public interface FrontLineWorkerService {
 
     FrontLineWorker getByContactNumber(Long contactNumber);
 
+    FrontLineWorker getInctiveByContactNumber(Long contactNumber);
+
     FrontLineWorker getByFlwId(String flwId);
 
     FrontLineWorker getByMctsFlwIdAndState(String mctsFlwId, State state);

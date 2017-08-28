@@ -214,7 +214,22 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
 
     @Override
     public FrontLineWorker getByContactNumber(Long contactNumber) {
-        return frontLineWorkerDataService.findByContactNumberAndJobStatus(contactNumber, FlwJobStatus.ACTIVE);
+        List<FrontLineWorker> flws = frontLineWorkerDataService.findByContactNumberAndJobStatus(contactNumber, FlwJobStatus.ACTIVE);
+        if (flws.size() != 0) {
+            return flws.get(0);
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public FrontLineWorker getInctiveByContactNumber(Long contactNumber) {
+        List<FrontLineWorker> flws = frontLineWorkerDataService.findByContactNumberAndJobStatus(contactNumber, FlwJobStatus.INACTIVE);
+        if (flws.size() != 0) {
+            return flws.get(flws.size()-1);
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -231,8 +246,8 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     @Transactional
     public void update(FrontLineWorker record) {
 
-        if (record.getStatus() == FrontLineWorkerStatus.INVALID) {
-            // if the caller sets the status to INVALID, that takes precedence over any other status change
+        if (record.getJobStatus() == FlwJobStatus.INACTIVE) {
+            // if the caller sets the job status to INVALID, that takes precedence over any other status change
             frontLineWorkerDataService.update(record);
             FlwStatusUpdateAudit flwStatusUpdateAudit = new FlwStatusUpdateAudit(DateUtil.now(), record.getFlwId(), record.getMctsFlwId(), null, UpdateStatusType.ACTIVE_TO_INVALID);
             flwStatusUpdateAuditDataService.create(flwStatusUpdateAudit);
@@ -240,7 +255,11 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
             return;
         }
 
-        FrontLineWorker retrievedFlw = frontLineWorkerDataService.findByContactNumber(record.getContactNumber());
+        FrontLineWorker retrievedFlw = getByContactNumber(record.getContactNumber());
+        if (retrievedFlw == null) {
+            frontLineWorkerDataService.update(record);
+            return;
+        }
         FrontLineWorkerStatus oldStatus = retrievedFlw.getStatus();
 
         if (oldStatus == FrontLineWorkerStatus.ANONYMOUS) {
