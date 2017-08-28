@@ -15,7 +15,6 @@ import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.domain.ServiceUsageCap;
 import org.motechproject.nms.flw.domain.FlwJobStatus;
-import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.service.ServiceUsageCapService;
 import org.motechproject.nms.flw.service.ServiceUsageService;
@@ -77,9 +76,6 @@ public class UserController extends BaseController {
 
     @Autowired
     private InactiveJobCallAuditDataService inactiveJobCallAuditDataService;
-
-    @Autowired
-    private FrontLineWorkerDataService frontLineWorkerDataService;
 
 
     /**
@@ -266,7 +262,7 @@ public class UserController extends BaseController {
         ServiceUsage serviceUsage = new ServiceUsage(null, service, 0, 0, false);
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
         if (flw == null) {
-            flw = frontLineWorkerDataService.findByContactNumberAndJobStatus(callingNumber, FlwJobStatus.INACTIVE);
+            flw = frontLineWorkerService.getInctiveByContactNumber(callingNumber);
         }
 
         State state = getStateForFrontLineWorker(flw, circle);
@@ -329,12 +325,9 @@ public class UserController extends BaseController {
     private void restrictInactiveJobUserCheck(FrontLineWorker flw) {
 
         if (flw != null && flw.getJobStatus() == FlwJobStatus.INACTIVE) {
-
             inactiveJobCallAuditDataService.create(new InactiveJobCallAudit(DateUtil.now(), flw.getFlwId(), flw.getMctsFlwId(), flw.getContactNumber()));
             throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
         } else if (flw == null) {
-
-            inactiveJobCallAuditDataService.create(new InactiveJobCallAudit(DateUtil.now(), null, null, null));
             throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
         }
     }

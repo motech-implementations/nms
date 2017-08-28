@@ -225,7 +225,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
     public void testCreateNewFlwTalukaVillage() throws IOException, InterruptedException {
 
         createFlwHelper("Chinkoo Devi", 9876543210L, "123");
-        FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(9876543210L);
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(9876543210L);
         assertNotNull(flw.getState());
         assertNotNull(flw.getDistrict());
         assertNull(flw.getTaluka());    // null since we don't create it by default in helper
@@ -238,7 +238,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
 
         // refetch and check that taluka and village are set
-        flw = frontLineWorkerDataService.findByContactNumber(9876543210L);
+        flw = frontLineWorkerService.getByContactNumber(9876543210L);
         assertNotNull(flw.getState());
         assertNotNull(flw.getDistrict());
         assertNotNull(flw.getTaluka());
@@ -255,7 +255,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         AddFlwRequest updateRequest = getAddRequestASHA();
         HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, updateRequest);
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
-        FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(9876543210L);
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(9876543210L);
         assertNotEquals(flw.getName(), "Kookoo Devi");
         assertEquals(flw.getName(), updateRequest.getName());
     }
@@ -310,7 +310,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, updateRequest);
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
 
-        FrontLineWorker flwByNumber = frontLineWorkerDataService.findByContactNumber(9876543210L);
+        FrontLineWorker flwByNumber = frontLineWorkerService.getByContactNumber(9876543210L);
         assertEquals("Anonymous user was not merged", updateRequest.getMctsFlwId(), flwByNumber.getMctsFlwId());
     }
 
@@ -378,7 +378,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, updateRequest);
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
 
-        FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(9876543210L);
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(9876543210L);
         assertNull("Taluka update rejected", flw.getTaluka());
     }
 

@@ -170,6 +170,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         FrontLineWorker flw = new FrontLineWorker(1000000000L);
         flw.setFlwId("72185");
         flw.setLanguage(rh.kannadaLanguage());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         flw = new FrontLineWorker(2000000000L);
@@ -177,15 +178,16 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         flw.setLanguage(rh.kannadaLanguage());
         flw.setState(rh.delhiState());
         flw.setDistrict(rh.newDelhiDistrict());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         Reader reader = createLanguageReaderWithHeaders("72185,210302604211400029,,hi,1");
         frontLineWorkerUpdateImportService.importLanguageData(reader);
 
-        flw = frontLineWorkerDataService.findByContactNumber(1000000000L);
+        flw = frontLineWorkerService.getByContactNumber(1000000000L);
         assertEquals(rh.hindiLanguage(), flw.getLanguage());
 
-        flw = frontLineWorkerDataService.findByContactNumber(2000000000L);
+        flw = frontLineWorkerService.getByContactNumber(2000000000L);
         assertEquals(rh.kannadaLanguage(), flw.getLanguage());
     }
 
@@ -195,19 +197,21 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         FrontLineWorker flw = new FrontLineWorker(1000000000L);
         flw.setFlwId("72185");
         flw.setLanguage(rh.kannadaLanguage());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         flw = new FrontLineWorker(2000000000L);
         flw.setLanguage(rh.kannadaLanguage());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         Reader reader = createLanguageReaderWithHeaders("72185,,2000000000,hi,1");
         frontLineWorkerUpdateImportService.importLanguageData(reader);
 
-        flw = frontLineWorkerDataService.findByContactNumber(1000000000L);
+        flw = frontLineWorkerService.getByContactNumber(1000000000L);
         assertEquals(rh.hindiLanguage(), flw.getLanguage());
 
-        flw = frontLineWorkerDataService.findByContactNumber(2000000000L);
+        flw = frontLineWorkerService.getByContactNumber(2000000000L);
         assertEquals(rh.kannadaLanguage(), flw.getLanguage());
     }
 
@@ -219,19 +223,21 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         flw.setLanguage(rh.kannadaLanguage());
         flw.setState(rh.delhiState());
         flw.setDistrict(rh.newDelhiDistrict());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         flw = new FrontLineWorker(2000000000L);
         flw.setLanguage(rh.kannadaLanguage());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         Reader reader = createLanguageReaderWithHeaders("72185,210302604211400029,2000000000,hi,1");
         frontLineWorkerUpdateImportService.importLanguageData(reader);
 
-        flw = frontLineWorkerDataService.findByContactNumber(1000000000L);
+        flw = frontLineWorkerService.getByContactNumber(1000000000L);
         assertEquals(rh.hindiLanguage(), flw.getLanguage());
 
-        flw = frontLineWorkerDataService.findByContactNumber(2000000000L);
+        flw = frontLineWorkerService.getByContactNumber(2000000000L);
         assertEquals(rh.kannadaLanguage(), flw.getLanguage());
     }
 
@@ -251,10 +257,10 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         Reader reader = createLanguageReaderWithHeaders("72185,210302604211400029,1000000000,hi,1");
         frontLineWorkerUpdateImportService.importLanguageData(reader);
 
-        flw = frontLineWorkerDataService.findByContactNumber(1000000000L);
+        flw = frontLineWorkerService.getByContactNumber(1000000000L);
         assertEquals(rh.hindiLanguage(), flw.getLanguage());
 
-        flw = frontLineWorkerDataService.findByContactNumber(2000000000L);
+        flw = frontLineWorkerService.getByContactNumber(2000000000L);
         assertEquals(rh.kannadaLanguage(), flw.getLanguage());
     }
 
@@ -273,10 +279,10 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
 
         frontLineWorkerUpdateImportService.importLanguageData(read("csv/flw_language_update.csv"));
 
-        flw = frontLineWorkerDataService.findByContactNumber(1000000000L);
+        flw = frontLineWorkerService.getByContactNumber(1000000000L);
         assertEquals(rh.hindiLanguage(), flw.getLanguage());
 
-        flw = frontLineWorkerDataService.findByContactNumber(2000000000L);
+        flw = frontLineWorkerService.getByContactNumber(2000000000L);
         assertEquals(rh.hindiLanguage(), flw.getLanguage());
     }
 
@@ -322,19 +328,19 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         flw.setMctsFlwId("210302604211400029");
         flw.setState(rh.delhiState());
         flw.setDistrict(rh.newDelhiDistrict());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         Reader reader = createMSISDNReaderWithHeaders("72185,210302604211400029,,9439986187,1");
         frontLineWorkerUpdateImportService.importMSISDNData(reader);
 
-        flw = frontLineWorkerDataService.findByContactNumber(9439986187L);
-        assertNotNull(flw);
-        assertEquals("72185", flw.getFlwId());
-
-        flw = frontLineWorkerDataService.findByContactNumber(1000000000L);
+        flw = frontLineWorkerService.getByContactNumber(9439986187L);
         assertNull(flw);
 
-        flw = frontLineWorkerDataService.findByContactNumber(2000000000L);
+        flw = frontLineWorkerService.getByContactNumber(1000000000L);
+        assertNull(flw);
+
+        flw = frontLineWorkerService.getByContactNumber(2000000000L);
         assertNotNull(flw);
     }
 
@@ -343,22 +349,24 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
     public void testMsisdnImportWhenNMSIdTakesPrecedenceOverMSIDN() throws Exception {
         FrontLineWorker flw = new FrontLineWorker(1000000000L);
         flw.setFlwId("72185");
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         flw = new FrontLineWorker(2000000000L);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         Reader reader = createMSISDNReaderWithHeaders("72185,,2000000000,9439986187,1");
         frontLineWorkerUpdateImportService.importMSISDNData(reader);
 
-        flw = frontLineWorkerDataService.findByContactNumber(9439986187L);
+        flw = frontLineWorkerService.getByContactNumber(9439986187L);
         assertNotNull(flw);
         assertEquals("72185", flw.getFlwId());
 
-        flw = frontLineWorkerDataService.findByContactNumber(1000000000L);
+        flw = frontLineWorkerService.getByContactNumber(1000000000L);
         assertNull(flw);
 
-        flw = frontLineWorkerDataService.findByContactNumber(2000000000L);
+        flw = frontLineWorkerService.getByContactNumber(2000000000L);
         assertNotNull(flw);
     }
 
@@ -369,22 +377,24 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         flw.setMctsFlwId("210302604211400029");
         flw.setState(rh.delhiState());
         flw.setDistrict(rh.newDelhiDistrict());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         flw = new FrontLineWorker(2000000000L);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         Reader reader = createMSISDNReaderWithHeaders("72185,210302604211400029,2000000000,9439986187,1");
         frontLineWorkerUpdateImportService.importMSISDNData(reader);
 
-        flw = frontLineWorkerDataService.findByContactNumber(9439986187L);
+        flw = frontLineWorkerService.getByContactNumber(9439986187L);
         assertNotNull(flw);
         assertEquals("210302604211400029", flw.getMctsFlwId());
 
-        flw = frontLineWorkerDataService.findByContactNumber(1000000000L);
+        flw = frontLineWorkerService.getByContactNumber(1000000000L);
         assertNull(flw);
 
-        flw = frontLineWorkerDataService.findByContactNumber(2000000000L);
+        flw = frontLineWorkerService.getByContactNumber(2000000000L);
         assertNotNull(flw);
     }
 
@@ -404,13 +414,13 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         Reader reader = createMSISDNReaderWithHeaders("72185,210302604211400029,1000000000,9439986187,1");
         frontLineWorkerUpdateImportService.importMSISDNData(reader);
 
-        flw = frontLineWorkerDataService.findByContactNumber(9439986187L);
+        flw = frontLineWorkerService.getByContactNumber(9439986187L);
         assertNotNull(flw);
 
-        flw = frontLineWorkerDataService.findByContactNumber(1000000000L);
+        flw = frontLineWorkerService.getByContactNumber(1000000000L);
         assertNull(flw);
 
-        flw = frontLineWorkerDataService.findByContactNumber(2000000000L);
+        flw = frontLineWorkerService.getByContactNumber(2000000000L);
         assertNotNull(flw);
 
         assertMaRecords(1000000000L, 9439986187L);
@@ -429,16 +439,16 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
 
         frontLineWorkerUpdateImportService.importMSISDNData(read("csv/flw_msisdn_update.csv"));
 
-        flw = frontLineWorkerDataService.findByContactNumber(9439986187L);
+        flw = frontLineWorkerService.getByContactNumber(9439986187L);
         assertNotNull(flw);
 
-        flw = frontLineWorkerDataService.findByContactNumber(9439986188L);
+        flw = frontLineWorkerService.getByContactNumber(9439986188L);
         assertNotNull(flw);
 
-        flw = frontLineWorkerDataService.findByContactNumber(1000000000L);
+        flw = frontLineWorkerService.getByContactNumber(1000000000L);
         assertNull(flw);
 
-        flw = frontLineWorkerDataService.findByContactNumber(2000000000L);
+        flw = frontLineWorkerService.getByContactNumber(2000000000L);
         assertNull(flw);
     }
 
@@ -447,15 +457,16 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
     public void testMsisdnImportWhenNewMsisdnTooLong() throws Exception {
         FrontLineWorker flw = new FrontLineWorker(1000000000L);
         flw.setFlwId("72185");
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         Reader reader = createMSISDNReaderWithHeaders("72185,210302604211400029,1000000000,09439986187,1");
         frontLineWorkerUpdateImportService.importMSISDNData(reader);
 
-        flw = frontLineWorkerDataService.findByContactNumber(9439986187L);
+        flw = frontLineWorkerService.getByContactNumber(9439986187L);
         assertNotNull(flw);
 
-        flw = frontLineWorkerDataService.findByContactNumber(1000000000L);
+        flw = frontLineWorkerService.getByContactNumber(1000000000L);
         assertNull(flw);
     }
 
@@ -579,6 +590,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         flw.setLanguage(rh.kannadaLanguage());
         flw.setState(rh.delhiState());
         flw.setDistrict(rh.newDelhiDistrict());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         assertEquals(

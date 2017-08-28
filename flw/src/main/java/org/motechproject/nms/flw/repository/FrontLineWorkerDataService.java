@@ -13,12 +13,6 @@ public interface FrontLineWorkerDataService extends MotechDataService<FrontLineW
     FrontLineWorker findByFlwId(@LookupField(name = "flwId") String flwId);
 
     @Lookup
-    FrontLineWorker findByContactNumber(@LookupField(name = "contactNumber") Long contactNumber);
-
-    @Lookup
-    List<FrontLineWorker> findListByContactNumber(@LookupField(name = "contactNumber") Long contactNumber);
-
-    @Lookup
-    FrontLineWorker findByContactNumberAndJobStatus(@LookupField(name = "contactNumber") Long contactNumber,
+    List<FrontLineWorker> findByContactNumberAndJobStatus(@LookupField(name = "contactNumber") Long contactNumber,
                                                     @LookupField(name = "jobStatus") FlwJobStatus jobStatus);
 }
