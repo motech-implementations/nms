@@ -169,7 +169,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         eventRelay.sendEventMessage(new MotechEvent(importSubject, eventParams));
     }
 
-    @MotechListener(subjects = { Constants.MCTS_MOTHER_IMPORT_SUBJECT })
+    @MotechListener(subjects = {Constants.MCTS_MOTHER_IMPORT_SUBJECT})
     @Transactional
     public void importMothersData(MotechEvent motechEvent) {
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
@@ -237,7 +237,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         for (MotherRecord record : rejectedMotherRecords) {
             action = actionFinderService.motherActionFinder(record);
             LOGGER.error("Existing Mother Record with same MSISDN in the data set");
-            motherRejectionService.createOrUpdateMother(motherRejectionMcts(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+            motherRejectionService.createOrUpdateMother(motherRejectionMcts(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
         }
         List<MotherRecord> acceptedMotherRecords = motherRecordsSet.get(1);
 
@@ -272,7 +272,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         return new MctsImportAudit(startReferenceDate, endReferenceDate, MctsUserType.MOTHER, stateCode, stateName, saved, rejected, null);
     }
 
-    @MotechListener(subjects = { Constants.MCTS_CHILD_IMPORT_SUBJECT })
+    @MotechListener(subjects = {Constants.MCTS_CHILD_IMPORT_SUBJECT})
     @Transactional
     public void importChildrenData(MotechEvent motechEvent) {
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
@@ -337,7 +337,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         for (ChildRecord record : rejectedChildRecords) {
             action = actionFinderService.childActionFinder(record);
             LOGGER.error("Existing Child Record with same MSISDN in the data set");
-            childRejectionService.createOrUpdateChild(childRejectionMcts(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+            childRejectionService.createOrUpdateChild(childRejectionMcts(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
         }
         List<ChildRecord> acceptedChildRecords = childRecordsSet.get(1);
 
@@ -376,7 +376,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         return new MctsImportAudit(startReferenceDate, endReferenceDate, MctsUserType.CHILD, stateCode, stateName, saved, rejected, null);
     }
 
-    @MotechListener(subjects = { Constants.MCTS_ASHA_IMPORT_SUBJECT })
+    @MotechListener(subjects = {Constants.MCTS_ASHA_IMPORT_SUBJECT})
     @Transactional
     public void importAnmAshaData(MotechEvent motechEvent) {
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
@@ -443,7 +443,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         for (AnmAshaRecord record : rejectedAshaRecords) {
             action = this.flwActionFinder(record);
             LOGGER.error("Existing Asha Record with same MSISDN in the data set");
-            flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+            flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
         }
         List<AnmAshaRecord> acceptedAshaRecords = ashaRecordsSet.get(1);
 
@@ -538,6 +538,70 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         map.put(KilkariConstants.DEATH,
                 mctsBeneficiaryValueProcessor.getDeathFromString(String.valueOf(childRecord.getEntryType())));
 
+        map.put(KilkariConstants.GP_VILLAGE, childRecord.getGpVillage());
+        map.put(KilkariConstants.ADDRESS, childRecord.getAddress());
+        map.put("Yr", childRecord.getYr());
+        map.put("City_Maholla", childRecord.getCityMaholla());
+        map.put("Mother_Name", childRecord.getMotherName());
+        map.put(KilkariConstants.PH_OF_WHOM, childRecord.getPhoneNoOfWhom());
+        map.put("Place_of_Delivery", childRecord.getPlaceOfDelivery());
+        map.put(KilkariConstants.ANM_PHONE, childRecord.getAnmPhone());
+        map.put("Blood_Group", childRecord.getBloodGroup());
+        map.put(KilkariConstants.ASHA_NAME, childRecord.getAshaName());
+        map.put(KilkariConstants.ASHA_PHONE, childRecord.getAshaPhone());
+
+        map = addToMap(map, childRecord);
+
+        return map;
+    }
+
+    private Map<String, Object> addToMap(Map<String, Object> map, ChildRecord childRecord) {
+        map.put(KilkariConstants.SUB_CENTRE_NAME1, childRecord.getSubCentreName1());
+        map.put(KilkariConstants.ANM_NAME, childRecord.getAnmName());
+        map.put(KilkariConstants.CASTE, childRecord.getCaste());
+        map.put("BCG_Dt", childRecord.getBcgDt());
+        map.put("OPV0_Dt", childRecord.getOpv0Dt());
+        map.put("HepatitisB1_Dt", childRecord.getHepatitisB1Dt());
+        map.put("DPT1_Dt", childRecord.getDpt1Dt());
+        map.put("OPV1_Dt", childRecord.getOpv1Dt());
+        map.put("HepatitisB2_Dt", childRecord.getHepatitisB2Dt());
+        map.put("DPT2_Dt", childRecord.getdPT2Dt());
+        map.put("OPV2_Dt", childRecord.getOpv2Dt());
+        map.put("HepatitisB3_Dt", childRecord.getHepatitisB3Dt());
+        map.put("DPT3_Dt", childRecord.getDpt3Dt());
+        map.put("OPV3_Dt", childRecord.getOpv3Dt());
+        map.put("HepatitisB4_Dt", childRecord.getHepatitisB4Dt());
+        map.put("Measles_Dt", childRecord.getMeaslesDt());
+        map.put("VitA_Dose1_Dt", childRecord.getVitADose1Dt());
+        map.put("MR_Dt", childRecord.getMrDt());
+        map.put("DPTBooster_Dt", childRecord.getDptBoosterDt());
+        map.put("OPVBooster_Dt", childRecord.getOpvBoosterDt());
+        map.put("VitA_Dose2_Dt", childRecord.getVitADose2Dt());
+        map.put("VitA_Dose3_Dt", childRecord.getVitADose3Dt());
+        map.put("JE_Dt", childRecord.getJeDt());
+        map.put("VitA_Dose9_Dt", childRecord.getVitADose9Dt());
+        map.put("DT5_Dt", childRecord.getDt5Dt());
+        map.put("TT10_Dt", childRecord.getTt10Dt());
+        map.put("TT16_Dt", childRecord.getTt16Dt());
+        map.put("CLD_REG_DATE", childRecord.getCldRegDate());
+        map.put("Sex", childRecord.getSex());
+        map.put("VitA_Dose5_Dt", childRecord.getVitADose5Dt());
+        map.put(KilkariConstants.REMARKS, childRecord.getRemarks());
+        map.put("VitA_Dose6_Dt", childRecord.getVitADose6Dt());
+        map.put(KilkariConstants.ANM_ID, childRecord.getAnmID());
+        map.put(KilkariConstants.ASHA_ID, childRecord.getAshaID());
+        map.put("VitA_Dose7_Dt", childRecord.getVitADose7Dt());
+        map.put("VitA_Dose8_Dt", childRecord.getVitADose8Dt());
+        map.put(KilkariConstants.CREATED_BY, childRecord.getCreatedBy());
+        map.put(KilkariConstants.UPDATED_BY, childRecord.getUpdatedBy());
+        map.put("Measles2_Dt", childRecord.getMeasles2Dt());
+        map.put("Weight_of_Child", childRecord.getWeightofChild());
+        map.put("Child_Aadhaar_No", childRecord.getChildAadhaarNo());
+        map.put("Child_EID", childRecord.getChildEID());
+        map.put("Child_EIDTime", childRecord.getChildEIDTime());
+        map.put("Father_Name", childRecord.getFatherName());
+        map.put("Birth_Certificate_Number", childRecord.getBirthCertificateNumber());
+
         return map;
     }
 
@@ -566,6 +630,81 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         map.put(KilkariConstants.ABORTION, mctsBeneficiaryValueProcessor.getAbortionDataFromString(motherRecord.getAbortion()));
         map.put(KilkariConstants.STILLBIRTH, mctsBeneficiaryValueProcessor.getStillBirthFromString(String.valueOf(motherRecord.getOutcomeNos())));
         map.put(KilkariConstants.DEATH, mctsBeneficiaryValueProcessor.getDeathFromString(String.valueOf(motherRecord.getEntryType())));
+
+        map.put("Yr", motherRecord.getYr());
+        map.put(KilkariConstants.GP_VILLAGE, motherRecord.getGpVillage());
+        map.put(KilkariConstants.ADDRESS, motherRecord.getAddress());
+        map.put("Husband_Name", motherRecord.getHusbandName());
+        map.put(KilkariConstants.PH_OF_WHOM, motherRecord.getPhoneNoOfWhom());
+        map.put("JSY_Beneficiary", motherRecord.getJsyBeneficiary());
+        map.put(KilkariConstants.CASTE, motherRecord.getCaste());
+        map.put(KilkariConstants.SUB_CENTRE_NAME1, motherRecord.getSubCentreName1());
+        map.put(KilkariConstants.ANM_NAME, motherRecord.getAnmName());
+        map.put(KilkariConstants.ANM_PHONE, motherRecord.getAnmPhone());
+        map.put(KilkariConstants.ASHA_NAME, motherRecord.getAshaName());
+        map.put(KilkariConstants.ASHA_PHONE, motherRecord.getAshaPhone());
+        map.put("Delivery_Lnk_Facility", motherRecord.getDeliveryLnkFacility());
+        map.put("Facility_Name", motherRecord.getFacilityName());
+        map.put("ANC1_Date", motherRecord.getAnc1Date());
+        map.put("ANC2_Date", motherRecord.getAnc2Date());
+        map.put("ANC3_Date", motherRecord.getAnc3Date());
+        map.put("ANC4_Date", motherRecord.getAnc4Date());
+        map.put("TT1_Date", motherRecord.getTt1Date());
+        map.put("TT2_Date", motherRecord.getTt2Date());
+        map.put("TTBooster_Date", motherRecord.getTtBoosterDate());
+
+        map = addToMap(map, motherRecord);
+
+        return map;
+    }
+
+    private Map<String, Object> addToMap(Map<String, Object> map, MotherRecord motherRecord) {
+        map.put("IFA100_Given_Date", motherRecord.getIfA100GivenDate());
+        map.put("Anemia", motherRecord.getAnemia());
+        map.put("ANC_Complication", motherRecord.getAncComplication());
+        map.put("RTI_STI", motherRecord.getRtiSTI());
+        map.put("Dly_Date", motherRecord.getDlyDate());
+        map.put("Dly_Place_Home_Type", motherRecord.getDlyPlaceHomeType());
+        map.put("Dly_Place_Public", motherRecord.getDlyPlacePublic());
+        map.put("Dly_Place_Private", motherRecord.getDlyPlacePrivate());
+        map.put("Dly_Type", motherRecord.getDlyType());
+        map.put("Dly_Complication", motherRecord.getDlyComplication());
+        map.put("Discharge_Date", motherRecord.getDischargeDate());
+        map.put("JSY_Paid_Date", motherRecord.getJsyPaidDate());
+        map.put("PNC_Home_Visit", motherRecord.getPncHomeVisit());
+        map.put("PNC_Complication", motherRecord.getPncComplication());
+        map.put("PPC_Method", motherRecord.getPpcMethod());
+        map.put("PNC_Checkup", motherRecord.getPncCheckup());
+        map.put("Child1_Name", motherRecord.getChild1Name());
+        map.put("Child1_Sex", motherRecord.getChild1Sex());
+        map.put("Child1_Wt", motherRecord.getChild1Wt());
+        map.put("Child1_Brestfeeding", motherRecord.getChild1Brestfeeding());
+        map.put("Child2_Name", motherRecord.getChild2Name());
+        map.put("Child2_Sex", motherRecord.getChild2Sex());
+        map.put("Child2_Wt", motherRecord.getChild2Wt());
+        map.put("Child2_Brestfeeding", motherRecord.getChild2Brestfeeding());
+        map.put("Child3_Name", motherRecord.getChild3Sex());
+        map.put("Child3_Sex", motherRecord.getChild3Sex());
+        map.put("Child3_Wt", motherRecord.getChild3Wt());
+        map.put("Child3_Brestfeeding", motherRecord.getChild3Brestfeeding());
+        map.put("Child4_Name", motherRecord.getChild4Name());
+        map.put("Child4_Sex", motherRecord.getChild4Sex());
+        map.put("Child4_Wt", motherRecord.getChild4Sex());
+        map.put("Child4_Brestfeeding", motherRecord.getChild4Brestfeeding());
+        map.put("Age", motherRecord.getAge());
+        map.put("MTHR_REG_DATE", motherRecord.getMthrRegDate());
+        map.put(KilkariConstants.REMARKS, motherRecord.getRemarks());
+        map.put(KilkariConstants.ANM_ID, motherRecord.getAnmID());
+        map.put(KilkariConstants.ASHA_ID, motherRecord.getAshaID());
+        map.put("Call_Ans", motherRecord.getCallAns());
+        map.put("NoCall_Reason", motherRecord.getNoCallReason());
+        map.put("NoPhone_Reason", motherRecord.getNoPhoneReason());
+        map.put(KilkariConstants.CREATED_BY, motherRecord.getCreatedBy());
+        map.put(KilkariConstants.UPDATED_BY, motherRecord.getUpdatedBy());
+        map.put("Aadhar_No", motherRecord.getAadharNo());
+        map.put("BPL_APL", motherRecord.getBplAPL());
+        map.put("EID", motherRecord.geteId());
+        map.put("EIDTime", motherRecord.geteIdTime());
 
         return map;
     }

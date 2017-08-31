@@ -370,8 +370,84 @@ public final class RejectedObjectConverter {
         motherRecord.setLmpDate(record.get(KilkariConstants.LMP) == null ? null : record.get(KilkariConstants.LMP).toString());
         motherRecord.setBirthdate(record.get(KilkariConstants.MOTHER_DOB) == null ? null : record.get(KilkariConstants.MOTHER_DOB).toString());
         motherRecord.setAbortion(record.get(KilkariConstants.ABORTION) == null ? null : record.get(KilkariConstants.ABORTION).toString());
-        motherRecord.setOutcomeNos((Boolean) record.get(KilkariConstants.STILLBIRTH) ? 1 : 0);
-        motherRecord.setEntryType((Boolean) record.get(KilkariConstants.DEATH) ? 1 : 0);
+        motherRecord.setOutcomeNos(record.get(KilkariConstants.STILLBIRTH) == null ? null : ((Boolean) record.get(KilkariConstants.STILLBIRTH) ? 1 : 0));
+        motherRecord.setEntryType(record.get(KilkariConstants.DEATH) == null ? null : ((Boolean) record.get(KilkariConstants.DEATH) ? 1 : 0));
+
+        motherRecord.setYr(record.get("Yr") == null || record.get("Yr").toString().trim().isEmpty() ? null : Integer.parseInt(record.get("Yr").toString()));
+        motherRecord.setGpVillage(record.get("GP_Village") == null ? null : (String) record.get("GP_Village"));
+        motherRecord.setAddress(record.get("Address") == null ? null : (String) record.get("Address"));
+        motherRecord.setHusbandName(record.get("Husband_Name") == null ? null : (String) record.get("Husband_Name"));
+        motherRecord.setPhoneNoOfWhom(record.get(KilkariConstants.PH_OF_WHOM) == null ? null : (String) record.get(KilkariConstants.PH_OF_WHOM));
+        motherRecord.setJsyBeneficiary(record.get("JSY_Beneficiary") == null ? null : (String) record.get("JSY_Beneficiary"));
+        motherRecord.setCaste(record.get(KilkariConstants.CASTE) == null ? null : (String) record.get(KilkariConstants.CASTE));
+        motherRecord.setSubCentreName1(record.get(KilkariConstants.SUB_CENTRE_NAME1) == null ? null : (String) record.get(KilkariConstants.SUB_CENTRE_NAME1));
+        motherRecord.setAnmName(record.get(KilkariConstants.ANM_NAME) == null ? null : (String) record.get(KilkariConstants.ANM_NAME));
+        motherRecord.setAnmPhone(record.get("ANM_Phone") == null ? null : (String) record.get("ANM_Phone"));
+        motherRecord.setAshaName(record.get(KilkariConstants.ASHA_NAME) == null ? null : (String) record.get(KilkariConstants.ASHA_NAME));
+        motherRecord.setAshaPhone(record.get(KilkariConstants.ASHA_PHONE) == null ? null : (String) record.get(KilkariConstants.ASHA_PHONE));
+        motherRecord.setDeliveryLnkFacility(record.get("Delivery_Lnk_Facility") == null ? null : (String) record.get("Delivery_Lnk_Facility"));
+        motherRecord.setFacilityName(record.get("Facility_Name") == null ? null : (String) record.get("Facility_Name"));
+        motherRecord.setAnc1Date(record.get("ANC1_Date") == null ? null : (String) record.get("ANC1_Date"));
+        motherRecord.setAnc2Date(record.get("ANC2_Date") == null ? null : (String) record.get("ANC2_Date"));
+        motherRecord.setAnc3Date(record.get("ANC3_Date") == null ? null : (String) record.get("ANC3_Date"));
+        motherRecord.setAnc4Date(record.get("ANC4_Date") == null ? null : (String) record.get("ANC4_Date"));
+        motherRecord.setTt1Date(record.get("TT1_Date") == null ? null : (String) record.get("TT1_Date"));
+        motherRecord.setTt2Date(record.get("TT2_Date") == null ? null : (String) record.get("TT2_Date"));
+        motherRecord.setTtBoosterDate(record.get("TTBooster_Date") == null ? null : (String) record.get("TTBooster_Date"));
+        motherRecord.setIfA100GivenDate(record.get("IFA100_Given_Date") == null ? null : (String) record.get("IFA100_Given_Date"));
+
+        motherRecord = convertToMother(motherRecord, record);
+
+        return motherRecord;
+    }
+
+    private static MotherRecord convertToMother(MotherRecord motherRecord, Map<String, Object> record) { // NO CHECKSTYLE Cyclomatic Complexity
+        motherRecord.setAnemia(record.get("Anemia") == null ? null : (String) record.get("Anemia"));
+        motherRecord.setAncComplication(record.get("ANC_Complication") == null ? null : (String) record.get("ANC_Complication"));
+        motherRecord.setRtiSTI(record.get("RTI_STI") == null ? null : (String) record.get("RTI_STI"));
+        motherRecord.setDlyDate(record.get("Dly_Date") == null ? null : (String) record.get("Dly_Date"));
+        motherRecord.setDlyPlaceHomeType(record.get("Dly_Place_Home_Type") == null ? null : (String) record.get("Dly_Place_Home_Type"));
+        motherRecord.setDlyPlacePublic(record.get("Dly_Place_Public") == null ? null : (String) record.get("Dly_Place_Public"));
+        motherRecord.setDlyPlacePrivate(record.get("Dly_Place_Private") == null ? null : (String) record.get("Dly_Place_Private"));
+        motherRecord.setDlyType(record.get("Dly_Type") == null ? null : (String) record.get("Dly_Type"));
+        motherRecord.setDlyComplication(record.get("Dly_Complication") == null ? null : (String) record.get("Dly_Complication"));
+        motherRecord.setDischargeDate(record.get("Discharge_Date") == null ? null : (String) record.get("Discharge_Date"));
+        motherRecord.setJsyPaidDate(record.get("JSY_Paid_Date") == null ? null : (String) record.get("JSY_Paid_Date"));
+        motherRecord.setPncHomeVisit(record.get("PNC_Home_Visit") == null ? null : (String) record.get("PNC_Home_Visit"));
+        motherRecord.setPncComplication(record.get("PNC_Complication") == null ? null : (String) record.get("PNC_Complication"));
+        motherRecord.setPpcMethod(record.get("PPC_Method") == null ? null : (String) record.get("PPC_Method"));
+        motherRecord.setPncCheckup(record.get("PNC_Checkup") == null ? null : (String) record.get("PNC_Checkup"));
+        motherRecord.setChild1Name(record.get("Child1_Name") == null ? null : (String) record.get("Child1_Name"));
+        motherRecord.setChild1Sex(record.get("Child1_Sex") == null ? null : (String) record.get("Child1_Sex"));
+        motherRecord.setChild1Wt(record.get(KilkariConstants.CHILD1_WT) == null || record.get(KilkariConstants.CHILD1_WT).toString().trim().isEmpty() ? null : Double.parseDouble(record.get(KilkariConstants.CHILD1_WT).toString()));
+        motherRecord.setChild1Brestfeeding(record.get("Child1_Brestfeeding") == null ? null : (String) record.get("Child1_Brestfeeding"));
+        motherRecord.setChild2Name(record.get("Child2_Name") == null ? null : (String) record.get("Child2_Name"));
+        motherRecord.setChild2Sex(record.get("Child2_Sex") == null ? null : (String) record.get("Child2_Sex"));
+        motherRecord.setChild2Wt(record.get(KilkariConstants.CHILD2_WT) == null || record.get(KilkariConstants.CHILD2_WT).toString().trim().isEmpty() ? null : Double.parseDouble(record.get(KilkariConstants.CHILD2_WT).toString()));
+        motherRecord.setChild2Brestfeeding(record.get("Child2_Brestfeeding") == null ? null : (String) record.get("Child2_Brestfeeding"));
+        motherRecord.setChild3Name(record.get("Child3_Name") == null ? null : (String) record.get("Child3_Name"));
+        motherRecord.setChild3Sex(record.get("Child3_Sex") == null ? null : (String) record.get("Child3_Sex"));
+        motherRecord.setChild3Wt(record.get(KilkariConstants.CHILD3_WT) == null || record.get(KilkariConstants.CHILD3_WT).toString().trim().isEmpty() ? null : Double.parseDouble(record.get(KilkariConstants.CHILD3_WT).toString()));
+        motherRecord.setChild3Brestfeeding(record.get("Child3_Brestfeeding") == null ? null : (String) record.get("Child3_Brestfeeding"));
+        motherRecord.setChild4Name(record.get("Child4_Name") == null ? null : (String) record.get("Child4_Name"));
+        motherRecord.setChild4Sex(record.get("Child4_Sex") == null ? null : (String) record.get("Child4_Sex"));
+        motherRecord.setChild4Wt(record.get(KilkariConstants.CHILD4_WT) == null || record.get(KilkariConstants.CHILD4_WT).toString().trim().isEmpty() ? null : Double.parseDouble(record.get(KilkariConstants.CHILD4_WT).toString()));
+        motherRecord.setChild4Brestfeeding(record.get("Child4_Brestfeeding") == null ? null : (String) record.get("Child4_Brestfeeding"));
+        motherRecord.setAge(record.get("Age") == null ? null : Integer.parseInt(record.get("Age").toString()));
+        motherRecord.setMthrRegDate(record.get("MTHR_REG_DATE") == null ? null : (String) record.get("MTHR_REG_DATE"));
+        motherRecord.setRemarks(record.get(KilkariConstants.REMARKS) == null ? null : (String) record.get(KilkariConstants.REMARKS));
+        motherRecord.setAnmID(record.get(KilkariConstants.ANM_ID) == null ? null : Integer.parseInt(record.get(KilkariConstants.ANM_ID).toString()));
+        motherRecord.setAshaID(record.get(KilkariConstants.ASHA_ID) == null ? null : Integer.parseInt(record.get(KilkariConstants.ASHA_ID).toString()));
+        motherRecord.setCallAns(record.get("Call_Ans") == null ? null : (Boolean) record.get("Call_Ans"));
+        motherRecord.setNoCallReason(record.get("NoCall_Reason") == null || record.get("NoCall_Reason").toString().trim().isEmpty() ? null : Integer.parseInt(record.get("NoCall_Reason").toString()));
+        motherRecord.setNoPhoneReason(record.get("NoPhone_Reason") == null || record.get("NoPhone_Reason").toString().trim().isEmpty() ? null : Integer.parseInt(record.get("NoPhone_Reason").toString()));
+        motherRecord.setCreatedBy(record.get(KilkariConstants.CREATED_BY) == null || record.get(KilkariConstants.CREATED_BY).toString().trim().isEmpty() ? null : Integer.parseInt(record.get(KilkariConstants.CREATED_BY).toString()));
+        motherRecord.setUpdatedBy(record.get(KilkariConstants.UPDATED_BY) == null || record.get(KilkariConstants.UPDATED_BY).toString().trim().isEmpty() ? null : Integer.parseInt(record.get(KilkariConstants.UPDATED_BY).toString()));
+        motherRecord.setAadharNo(record.get("Aadhar_No") == null || record.get("Aadhar_No").toString().trim().isEmpty() ? null : Integer.parseInt(record.get("Aadhar_No").toString()));
+        motherRecord.setBplAPL(record.get("BPL_APL") == null || record.get("BPL_APL").toString().trim().isEmpty() ? null : Integer.parseInt(record.get("BPL_APL").toString()));
+        motherRecord.seteId(record.get("EID") == null || record.get("EID").toString().trim().isEmpty() ? null : Integer.parseInt(record.get("EID").toString()));
+        motherRecord.seteIdTime(record.get("EIDTime") == null ? null : (String) record.get("EIDTime"));
+
         return motherRecord;
     }
 
@@ -400,7 +476,7 @@ public final class RejectedObjectConverter {
         rchMotherRecord.setBirthDate(record.get(KilkariConstants.MOTHER_DOB) == null ? null : record.get(KilkariConstants.MOTHER_DOB).toString());
         rchMotherRecord.setAbortionType(record.get(KilkariConstants.ABORTION_TYPE) == null ? null : record.get(KilkariConstants.ABORTION_TYPE).toString());
         rchMotherRecord.setDeliveryOutcomes(record.get(KilkariConstants.DELIVERY_OUTCOMES) == null ? null : record.get(KilkariConstants.DELIVERY_OUTCOMES).toString());
-        rchMotherRecord.setEntryType((Boolean) record.get(KilkariConstants.DEATH) ? 1 : 0);
+        rchMotherRecord.setEntryType(record.get(KilkariConstants.DEATH) == null || record.get(KilkariConstants.DEATH).toString().trim().isEmpty() ? null : ((Boolean) record.get(KilkariConstants.DEATH) ? 1 : 0));
         rchMotherRecord.setExecDate(record.get(KilkariConstants.EXECUTION_DATE) == null ? null : record.get(KilkariConstants.EXECUTION_DATE).toString());
         rchMotherRecord.setCaseNo(record.get(KilkariConstants.CASE_NO) == null ? null : (Long) record.get(KilkariConstants.CASE_NO));
         return rchMotherRecord;
@@ -430,7 +506,72 @@ public final class RejectedObjectConverter {
 
         childRecord.setIdNo(record.get(KilkariConstants.BENEFICIARY_ID) == null ? null : record.get(KilkariConstants.BENEFICIARY_ID).toString());
         childRecord.setMotherId(record.get(KilkariConstants.MOTHER_ID) == null ? null : record.get(KilkariConstants.MOTHER_ID).toString());
-        childRecord.setEntryType((Boolean) record.get(KilkariConstants.DEATH) ? 1 : 0);
+        childRecord.setEntryType(record.get(KilkariConstants.DEATH) == null || record.get(KilkariConstants.DEATH).toString().trim().isEmpty() ? null : ((Boolean) record.get(KilkariConstants.DEATH) ? 1 : 0));
+
+        childRecord.setGpVillage(record.get(KilkariConstants.GP_VILLAGE) == null ? null : (String) record.get(KilkariConstants.GP_VILLAGE));
+        childRecord.setAddress(record.get(KilkariConstants.ADDRESS) == null ? null : (String) record.get(KilkariConstants.ADDRESS));
+        childRecord.setYr(record.get("Yr") == null || record.get("Yr").toString().trim().isEmpty() ? null : Integer.parseInt(record.get("Yr").toString()));
+        childRecord.setCityMaholla(record.get("City_Maholla") == null ? null : (String) record.get("City_Maholla"));
+        childRecord.setMotherName(record.get("Mother_Name") == null ? null : (String) record.get("Mother_Name"));
+        childRecord.setPhoneNoOfWhom(record.get(KilkariConstants.PH_OF_WHOM) == null ? null : (String) record.get(KilkariConstants.PH_OF_WHOM));
+        childRecord.setPlaceOfDelivery(record.get("Place_of_Delivery") == null ? null : (String) record.get("Place_of_Delivery"));
+        childRecord.setAnmPhone(record.get(KilkariConstants.ANM_PHONE) == null ? null : (String) record.get(KilkariConstants.ANM_PHONE));
+        childRecord.setBloodGroup(record.get("Blood_Group") == null ? null : (String) record.get("Blood_Group"));
+        childRecord.setAshaName(record.get(KilkariConstants.ASHA_NAME) == null ? null : (String) record.get(KilkariConstants.ASHA_NAME));
+        childRecord.setAshaPhone(record.get(KilkariConstants.ASHA_PHONE) == null ? null : (String) record.get(KilkariConstants.ASHA_PHONE));
+        childRecord.setSubCentreName1(record.get(KilkariConstants.SUB_CENTRE_NAME1) == null ? null : (String) record.get(KilkariConstants.SUB_CENTRE_NAME1));
+        childRecord.setAnmName(record.get(KilkariConstants.ANM_NAME) == null ? null : (String) record.get(KilkariConstants.ANM_NAME));
+        childRecord.setCaste(record.get(KilkariConstants.CASTE) == null ? null : (String) record.get(KilkariConstants.CASTE));
+        childRecord.setBcgDt(record.get("BCG_Dt") == null ? null : (String) record.get("BCG_Dt"));
+        childRecord.setOpv0Dt(record.get("OPV0_Dt") == null ? null : (String) record.get("OPV0_Dt"));
+        childRecord.setHepatitisB1Dt(record.get("HepatitisB1_Dt") == null ? null : (String) record.get("HepatitisB1_Dt"));
+        childRecord.setDpt1Dt(record.get("DPT1_Dt") == null ? null : (String) record.get("DPT1_Dt"));
+        childRecord.setOpv1Dt(record.get("OPV1_Dt") == null ? null : (String) record.get("OPV1_Dt"));
+
+        childRecord = convertToChild(childRecord, record);
+
+        return childRecord;
+    }
+
+    private static ChildRecord convertToChild(ChildRecord childRecord, Map<String, Object> record) { // NO CHECKSTYLE Cyclomatic Complexity
+        childRecord.setHepatitisB2Dt(record.get("HepatitisB2_Dt") == null ? null : (String) record.get("HepatitisB2_Dt"));
+        childRecord.setdPT2Dt(record.get("DPT2_Dt") == null ? null : (String) record.get("DPT2_Dt"));
+        childRecord.setOpv2Dt(record.get("OPV2_Dt") == null ? null : (String) record.get("OPV2_Dt"));
+        childRecord.setHepatitisB3Dt(record.get("HepatitisB3_Dt") == null ? null : (String) record.get("HepatitisB3_Dt"));
+        childRecord.setDpt3Dt(record.get("DPT3_Dt") == null ? null : (String) record.get("DPT3_Dt"));
+        childRecord.setOpv3Dt(record.get("OPV3_Dt") == null ? null : (String) record.get("OPV3_Dt"));
+        childRecord.setHepatitisB4Dt(record.get("HepatitisB4_Dt") == null ? null : (String) record.get("HepatitisB4_Dt"));
+        childRecord.setMeaslesDt(record.get("Measles_Dt") == null ? null : (String) record.get("Measles_Dt"));
+        childRecord.setVitADose1Dt(record.get("VitA_Dose1_Dt") == null ? null : (String) record.get("VitA_Dose1_Dt"));
+        childRecord.setMrDt(record.get("MR_Dt") == null ? null : (String) record.get("MR_Dt"));
+        childRecord.setDptBoosterDt(record.get("DPTBooster_Dt") == null ? null : (String) record.get("DPTBooster_Dt"));
+        childRecord.setOpvBoosterDt(record.get("OPVBooster_Dt") == null ? null : (String) record.get("OPVBooster_Dt"));
+        childRecord.setVitADose2Dt(record.get("VitA_Dose2_Dt") == null ? null : (String) record.get("VitA_Dose2_Dt"));
+        childRecord.setVitADose3Dt(record.get("VitA_Dose3_Dt") == null ? null : (String) record.get("VitA_Dose3_Dt"));
+        childRecord.setJeDt(record.get("JE_Dt") == null ? null : (String) record.get("JE_Dt"));
+        childRecord.setVitADose9Dt(record.get("VitA_Dose9_Dt") == null ? null : (String) record.get("VitA_Dose9_Dt"));
+        childRecord.setDt5Dt(record.get("DT5_Dt") == null ? null : (String) record.get("DT5_Dt"));
+        childRecord.setTt10Dt(record.get("TT10_Dt") == null ? null : (String) record.get("TT10_Dt"));
+        childRecord.setTt16Dt(record.get("TT16_Dt") == null ? null : (String) record.get("TT16_Dt"));
+        childRecord.setCldRegDate(record.get("CLD_REG_DATE") == null ? null : (String) record.get("CLD_REG_DATE"));
+        childRecord.setSex(record.get("Sex") == null ? null : (String) record.get("Sex"));
+        childRecord.setVitADose5Dt(record.get("VitA_Dose5_Dt") == null ? null : (String) record.get("VitA_Dose5_Dt"));
+        childRecord.setRemarks(record.get(KilkariConstants.REMARKS) == null ? null : (String) record.get(KilkariConstants.REMARKS));
+        childRecord.setVitADose6Dt(record.get("VitA_Dose6_Dt") == null ? null : (String) record.get("VitA_Dose6_Dt"));
+        childRecord.setAnmID(record.get(KilkariConstants.ANM_ID) == null || record.get(KilkariConstants.ANM_ID).toString().trim().isEmpty() ? null : Integer.parseInt(record.get(KilkariConstants.ANM_ID).toString()));
+        childRecord.setAshaID(record.get(KilkariConstants.ASHA_ID) == null || record.get(KilkariConstants.ASHA_ID).toString().trim().isEmpty() ? null : Integer.parseInt(record.get(KilkariConstants.ASHA_ID).toString()));
+        childRecord.setVitADose7Dt(record.get("VitA_Dose7_Dt") == null ? null : (String) record.get("VitA_Dose7_Dt"));
+        childRecord.setVitADose8Dt(record.get("VitA_Dose8_Dt") == null ? null : (String) record.get("VitA_Dose8_Dt"));
+        childRecord.setCreatedBy(record.get(KilkariConstants.CREATED_BY) == null || record.get(KilkariConstants.CREATED_BY).toString().trim().isEmpty() ? null : Integer.parseInt(record.get(KilkariConstants.CREATED_BY).toString()));
+        childRecord.setUpdatedBy(record.get(KilkariConstants.UPDATED_BY) == null || record.get(KilkariConstants.UPDATED_BY).toString().trim().isEmpty() ? null : Integer.parseInt(record.get(KilkariConstants.UPDATED_BY).toString()));
+        childRecord.setMeasles2Dt(record.get("Measles2_Dt") == null ? null : (String) record.get("Measles2_Dt"));
+        childRecord.setWeightofChild(record.get("Weight_of_Child") == null || record.get("Weight_of_Child").toString().trim().isEmpty() ? null : Double.parseDouble(record.get("Weight_of_Child").toString()));
+        childRecord.setChildAadhaarNo(record.get("Child_Aadhaar_No") == null || record.get("Child_Aadhaar_No").toString().trim().isEmpty() ? null : Integer.parseInt(record.get("Child_Aadhaar_No").toString()));
+        childRecord.setChildEID(record.get("Child_EID") == null || record.get("Child_EID").toString().trim().isEmpty() ? null : Integer.parseInt(record.get("Child_EID").toString()));
+        childRecord.setChildEIDTime(record.get("Child_EIDTime") == null ? null : (String) record.get("Child_EIDTime"));
+        childRecord.setFatherName(record.get("Father_Name") == null ? null : (String) record.get("Father_Name"));
+        childRecord.setBirthCertificateNumber(record.get("Birth_Certificate_Number") == null ? null : (String) record.get("Birth_Certificate_Number"));
+
         return childRecord;
     }
 
@@ -459,7 +600,7 @@ public final class RejectedObjectConverter {
         rchChildRecord.setMctsMotherIdNo(record.get(KilkariConstants.MCTS_MOTHER_ID) == null ? null : record.get(KilkariConstants.MCTS_MOTHER_ID).toString());
         rchChildRecord.setRegistrationNo(record.get(KilkariConstants.RCH_ID) == null ? null : record.get(KilkariConstants.RCH_ID).toString());
         rchChildRecord.setMotherRegistrationNo(record.get(KilkariConstants.RCH_MOTHER_ID) == null ? null : record.get(KilkariConstants.RCH_MOTHER_ID).toString());
-        rchChildRecord.setEntryType((Boolean) record.get(KilkariConstants.DEATH) ? 1 : 0);
+        rchChildRecord.setEntryType(record.get(KilkariConstants.DEATH) == null || record.get(KilkariConstants.DEATH).toString().trim().isEmpty() ? null : ((Boolean) record.get(KilkariConstants.DEATH) ? 1 : 0));
         rchChildRecord.setExecDate(record.get(KilkariConstants.EXECUTION_DATE) == null ? null : record.get(KilkariConstants.EXECUTION_DATE).toString());
 
         return rchChildRecord;

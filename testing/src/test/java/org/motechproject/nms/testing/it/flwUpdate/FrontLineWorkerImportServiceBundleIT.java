@@ -14,6 +14,7 @@ import org.motechproject.nms.csv.domain.CsvAuditRecord;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.repository.CsvAuditRecordDataService;
 import org.motechproject.nms.flw.domain.ContactNumberAudit;
+import org.motechproject.nms.flw.domain.FlwJobStatus;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.ContactNumberAuditDataService;
@@ -249,12 +250,14 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         flw.setMctsFlwId("#0");
         flw.setState(state);
         flw.setDistrict(district);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         flw = new FrontLineWorker("Will Update Conflict MSISDN", 1111111111L);
         flw.setMctsFlwId("#1");
         flw.setState(state);
         flw.setDistrict(district);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         transactionManager.commit(status);
 
@@ -269,6 +272,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     public void testImportByMSISDNConflictWithMCTSId() throws Exception {
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1234567890L);
         flw.setMctsFlwId("#0");
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive");
@@ -291,7 +295,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
-        FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(1234567890L);
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1234567890L);
         assertFLW(flw, "#0", 1234567890L, "FLW 0", "District 11", "L1");
         assertEquals(FrontLineWorkerStatus.INACTIVE, flw.getStatus());
     }
@@ -301,7 +305,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t12\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
-        FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(1234567890L);
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1234567890L);
         assertFLW(flw, "#0", 1234567890L, "FLW 0", "District 12", null);
     }
 
@@ -319,7 +323,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     public void testImportFromSampleDataFile() throws Exception {
         frontLineWorkerImportService.importData(read("csv/anm-asha.txt"), SubscriptionOrigin.MCTS_IMPORT);
 
-        FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(9999999996L);
+        FrontLineWorker flw1 = frontLineWorkerService.getByContactNumber(9999999996L);
         assertFLW(flw1, "72185", 9999999996L, "Bishnu Priya Behera", "Koraput", null);
 
         // verify location data was created on the fly
@@ -347,7 +351,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyFT535() throws Exception {
         importCsvFileForFLW("flw.txt");
-        FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(1234567899L);
+        FrontLineWorker flw1 = frontLineWorkerService.getByContactNumber(1234567899L);
         assertFLW(flw1, "1", 1234567899L, "Aisha Bibi", "District 11", "L1");
         assertEquals("State{name='State 1', code=1}", flw1.getState().toString());
         assertEquals(FrontLineWorkerStatus.INACTIVE, flw1.getStatus());
@@ -366,10 +370,11 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     public void verifyFT536() throws Exception {
         FrontLineWorker flw = new FrontLineWorker("Frank Lloyd Wright", 1234567890L);
         flw.setMctsFlwId("#0");
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
-        FrontLineWorker flw1 = frontLineWorkerDataService.findByContactNumber(1234567890L);
+        FrontLineWorker flw1 = frontLineWorkerService.getByContactNumber(1234567890L);
         assertFLW(flw1, "#0", 1234567890L, "FLW 0", "District 11", "L1");
         assertEquals("State{name='State 1', code=1}", flw1.getState().toString());
         assertEquals(FrontLineWorkerStatus.ACTIVE, flw1.getStatus());
@@ -523,6 +528,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         flw.setState(state);
         flw.setDistrict(district1);
         flw.setLanguage(language1);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         importCsvFileForFLW("flw_location_update_msisdn.txt");
@@ -564,6 +570,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         flw.setState(state);
         flw.setDistrict(district1);
         flw.setLanguage(language1);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         importCsvFileForFLW("flw_update_state_by_msisdn.txt");
@@ -594,7 +601,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
         Long oldMsisdn = 1234567890L;
 
-        FrontLineWorker flw = frontLineWorkerDataService.findByContactNumber(oldMsisdn);
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(oldMsisdn);
         assertFLW(flw, "#0", oldMsisdn, "FLW 0", "District 11", "L1");
 
         Long flwId = flw.getId();
@@ -616,7 +623,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
         Long newMsisdn = 9876543210L;
 
-        flw = frontLineWorkerDataService.findByContactNumber(newMsisdn);
+        flw = frontLineWorkerService.getByContactNumber(newMsisdn);
         assertFLW(flw, "#0", newMsisdn, "FLW 0", "District 11", "L1");
 
         assertNull(maService.getBookmark(oldMsisdn, VALID_CALL_ID));

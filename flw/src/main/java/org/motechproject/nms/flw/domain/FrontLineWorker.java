@@ -23,7 +23,6 @@ import org.motechproject.nms.tracking.annotation.TrackFields;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Persistent;
-import javax.jdo.annotations.Unique;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
@@ -42,8 +41,7 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
     @Field
     private String mctsFlwId;
 
-    @Field()
-    @Unique
+    @Field
     @Min(value = 1000000000L, message = "contactNumber must be 10 digits")
     @Max(value = 9999999999L, message = "contactNumber must be 10 digits")
     @Column(length = 10)

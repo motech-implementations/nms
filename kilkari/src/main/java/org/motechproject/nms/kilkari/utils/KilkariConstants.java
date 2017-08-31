@@ -36,6 +36,24 @@ public final class KilkariConstants {
     public static final String IMPORTED = "Imported {}";
     public static final String REJECTED = "Rejected {}";
     public static final String LAST_UPDATE_DATE = "Last_Update_Date";
+    public static final String GP_VILLAGE = "GP_Village";
+    public static final String ADDRESS = "Address";
+    public static final String PH_OF_WHOM = "PhoneNo_Of_Whom";
+    public static final String CASTE = "Caste";
+    public static final String SUB_CENTRE_NAME1 = "SubCentre_Name1";
+    public static final String ANM_NAME = "ANM_Name";
+    public static final String ANM_PHONE = "ANM_Phone";
+    public static final String ASHA_NAME = "ASHA_Name";
+    public static final String ASHA_PHONE = "ASHA_Phone";
+    public static final String REMARKS = "Remarks";
+    public static final String ANM_ID = "ANM_ID";
+    public static final String ASHA_ID = "ASHA_ID";
+    public static final String CREATED_BY = "Created_By";
+    public static final String UPDATED_BY = "Updated_By";
+    public static final String CHILD1_WT = "Child1_Wt";
+    public static final String CHILD2_WT = "Child2_Wt";
+    public static final String CHILD3_WT = "Child3_Wt";
+    public static final String CHILD4_WT = "Child4_Wt";
 
     public static final String MCTS_ID = "MCTS_ID_No";
     public static final String RCH_ID = "Registration_no";

@@ -24,6 +24,11 @@ public final class FlwConstants {
     public static final String UPDATED_ON = "Updated_On";
     public static final String ASHA_TYPE = "ASHA";
     public static final String GF_STATUS = "GF_Status";
+    public static final String AADHAR_NO = "Aadhar_No";
+    public static final String BANK_ID = "Bank_ID";
+    public static final String VERIFIER_ID = "VerifierID";
+    public static final String NOCALLREASON = "NoCall_Reason";
+    public static final String NOPHONEREASON = "NoPhone_Reason";
 
     //RCH import constants
     public static final String GF_ID = "GF_ID";
