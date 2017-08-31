@@ -1,6 +1,8 @@
 package org.motechproject.nms.flw.utils;
 
 import org.joda.time.LocalDate;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.nms.flw.domain.FlwJobStatus;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
@@ -105,10 +107,19 @@ public final class FlwMapper {
         }
 
         LocalDate date;
+        String datePattern = "\\d{4}-\\d{2}-\\d{2}";
+        DateTimeFormatter dtf1 = DateTimeFormat.forPattern("yyyy-MM-dd");
+        DateTimeFormatter dtf2 = DateTimeFormat.forPattern("dd-MM-yyyy");
         if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
-            date = (LocalDate) record.get(FlwConstants.UPDATED_ON);
+            date = record.get(FlwConstants.UPDATED_ON) == null || record.get(FlwConstants.UPDATED_ON).toString().trim().isEmpty() ? null :
+                    (record.get(FlwConstants.UPDATED_ON).toString().matches(datePattern) ?
+                            LocalDate.parse(record.get(FlwConstants.UPDATED_ON).toString(), dtf1) :
+                            LocalDate.parse(record.get(FlwConstants.UPDATED_ON).toString(), dtf2));
         } else {
-            date = (LocalDate) record.get(FlwConstants.EXEC_DATE);
+            date = record.get(FlwConstants.EXEC_DATE) == null || record.get(FlwConstants.EXEC_DATE).toString().trim().isEmpty() ? null :
+                    (record.get(FlwConstants.EXEC_DATE).toString().matches(datePattern) ?
+                            LocalDate.parse(record.get(FlwConstants.EXEC_DATE).toString(), dtf1) :
+                            LocalDate.parse(record.get(FlwConstants.EXEC_DATE).toString(), dtf2));
         }
         if (date != null) {
             flw.setUpdatedDateNic(date);

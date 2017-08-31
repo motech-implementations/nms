@@ -258,6 +258,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
         flw.setLanguage(rh.hindiLanguage());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
@@ -286,6 +287,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
         flw.setLanguage(rh.hindiLanguage());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
@@ -372,6 +374,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111l);
         flw.setState(whitelistState);
         flw.setDistrict(district);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
     }
 
@@ -408,6 +411,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111l);
         flw.setLanguage(language);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
     }
 
@@ -608,6 +612,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
         flw.setLanguage(language);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
     }
 
@@ -648,6 +653,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
         flw.setState(state);
         flw.setDistrict(district);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
     }
 
@@ -1715,6 +1721,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         whitelistWorker.setState(whitelistState);
         whitelistWorker.setDistrict(rh.newDelhiDistrict());
         whitelistWorker.setLanguage(rh.hindiLanguage());
+        whitelistWorker.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(whitelistWorker);
 
         // assert user's status
@@ -2280,6 +2287,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         notWhitelistWorker.setState(whitelistState);
         notWhitelistWorker.setDistrict(rh.newDelhiDistrict());
         notWhitelistWorker.setLanguage(rh.hindiLanguage());
+        notWhitelistWorker.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(notWhitelistWorker);
 
         // Update user's status
@@ -2324,6 +2332,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         notWhitelistWorker.setState(whitelistState);
         notWhitelistWorker.setDistrict(rh.newDelhiDistrict());
         notWhitelistWorker.setLanguage(rh.hindiLanguage());
+        notWhitelistWorker.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(notWhitelistWorker);
 
         // assert user's status
@@ -2545,6 +2554,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
         flw.setLanguage(rh.hindiLanguage());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         // Set maxallowedUsageInPulses to 3800
@@ -2772,6 +2782,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
         flw.setLanguage(rh.hindiLanguage());
         flw.setStatus(FrontLineWorkerStatus.INACTIVE);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         HttpGet httpGet = createHttpGet(
@@ -2811,6 +2822,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
         flw.setLanguage(rh.hindiLanguage());
         flw.setStatus(FrontLineWorkerStatus.ACTIVE);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         HttpGet httpGet = createHttpGet(
@@ -3165,6 +3177,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createFlwWithStatusActive(){
     	// create anonymous FLW record
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         // update FLW status to ACTIVE
@@ -3188,6 +3201,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         flw.setLanguage(rh.tamilLanguage());
         flw.setDistrict(rh.bangaloreDistrict());
         flw.setState(rh.karnatakaState());
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
 
         Circle circle = rh.karnatakaCircle();
@@ -3674,6 +3688,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         flw.setState(rh.karnatakaState());
         flw.setStatus(FrontLineWorkerStatus.ACTIVE);
         flw.setMctsFlwId("123");
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerDataService.create(flw);
 
         // service deployed in Karnataka State
@@ -3719,6 +3734,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         flw.setState(rh.karnatakaState());
         flw.setStatus(FrontLineWorkerStatus.INACTIVE);
         flw.setMctsFlwId("123");
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerDataService.create(flw);
 
         // service deployed in Karnataka State
@@ -3801,6 +3817,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         flw.setDistrict(rh.bangaloreDistrict());
         flw.setState(rh.karnatakaState());
         flw.setStatus(FrontLineWorkerStatus.ACTIVE);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerDataService.create(flw);
 
         // service not deployed in Karnataka State
@@ -3836,6 +3853,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         flw.setDistrict(rh.bangaloreDistrict());
         flw.setState(rh.karnatakaState());
         flw.setStatus(FrontLineWorkerStatus.INACTIVE);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerDataService.create(flw);
 
         // service not deployed in Karnataka State

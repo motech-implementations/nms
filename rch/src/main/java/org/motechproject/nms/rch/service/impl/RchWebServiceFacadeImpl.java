@@ -15,7 +15,6 @@ import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
-import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.util.Order;
@@ -60,14 +59,13 @@ import org.motechproject.nms.kilkari.service.ActionFinderService;
 import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
 import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
 import org.motechproject.nms.rejectionhandler.service.FlwRejectionService;
-import org.motechproject.scheduler.contract.CronSchedulableJob;
-import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.xml.sax.helpers.AttributesImpl;
 
 import javax.xml.bind.JAXBException;
@@ -104,19 +102,12 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String DATE_FORMAT = "dd-MM-yyyy";
     private static final String LOCAL_RESPONSE_DIR = "rch.local_response_dir";
     private static final String REMOTE_RESPONSE_DIR = "rch.remote_response_dir";
-    private static final String READ_MOTHER_RESPONSE_FILE_EVENT = "nms.rch.read_mother_response_file";
-    private static final String READ_CHILD_RESPONSE_FILE_EVENT = "nms.rch.read_child_response_file";
-    private static final String READ_ASHA_RESPONSE_FILE_EVENT = "nms.rch.read_asha_response_file";
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("dd-MM-yyyy");
     private static final String SCP_TIMEOUT_SETTING = "rch.scp_timeout";
     private static final Long SCP_TIME_OUT = 60000L;
     private static final String RCH_WEB_SERVICE = "RCH Web Service";
     private static final double THOUSAND = 1000d;
-    private static final String FILENAME = "fileName";
-    private static final String MOTHER_CRON = "rch.mother.sync.cron";
-    private static final String CHILD_CRON = "rch.child.sync.cron";
-    private static final String ASHA_CRON = "rch.asha.sync.cron";
 
     @Autowired
     @Qualifier("rchSettings")
@@ -125,9 +116,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     @Autowired
     @Qualifier("rchServiceLocator")
     private RchwebservicesLocator rchServiceLocator;
-
-    @Autowired
-    private MotechSchedulerService schedulerService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RchWebServiceFacadeImpl.class);
 
@@ -194,15 +182,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
                 RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.MOTHER, LocalDate.now());
                 rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
-                Map<String, Object> eventParams = new HashMap<>();
-                eventParams.put(Constants.START_DATE_PARAM, from);
-                eventParams.put(Constants.END_DATE_PARAM, to);
-                eventParams.put(Constants.STATE_ID_PARAM, stateId);
-                eventParams.put(FILENAME, responseFile.getName());
-                MotechEvent event = new MotechEvent(READ_MOTHER_RESPONSE_FILE_EVENT, eventParams);
-                String cronExpression = settingsFacade.getProperty(MOTHER_CRON);
-                CronSchedulableJob job = new CronSchedulableJob(event, cronExpression);
-                schedulerService.safeScheduleJob(job);
                 status = true;
 
             } catch (ExecutionException e) {
@@ -216,9 +195,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return status;
     }
 
-    @MotechListener(subjects = READ_MOTHER_RESPONSE_FILE_EVENT) //NO CHECKSTYLE Cyclomatic Complexity
-    public void readMotherResponseFromFile(MotechEvent event) throws RchFileManipulationException {
-        LOGGER.debug(event.toString());
+    @MotechListener(subjects = Constants.RCH_MOTHER_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
+    @Transactional
+    public void readMotherResponseFromFile() throws RchFileManipulationException {
         LOGGER.info("Copying RCH mother response file from remote server to local directory.");
         try {
             List<RchImportFacilitator> rchImportFacilitatorsMother = rchImportFacilitatorService.findByImportDateAndRchUserType(LocalDate.now(), RchUserType.MOTHER);
@@ -310,15 +289,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
                 RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.CHILD, LocalDate.now());
                 rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
-                Map<String, Object> eventParams = new HashMap<>();
-                eventParams.put(Constants.STATE_ID_PARAM, stateId);
-                eventParams.put(Constants.START_DATE_PARAM, from);
-                eventParams.put(Constants.END_DATE_PARAM, to);
-                eventParams.put(FILENAME, responseFile.getName());
-                MotechEvent event = new MotechEvent(READ_CHILD_RESPONSE_FILE_EVENT, eventParams);
-                String cronExpression = settingsFacade.getProperty(CHILD_CRON);
-                CronSchedulableJob job = new CronSchedulableJob(event, cronExpression);
-                schedulerService.safeScheduleJob(job);
                 status = true;
             } catch (ExecutionException e) {
                 LOGGER.error("error copying file to remote server.");
@@ -333,10 +303,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return status;
     }
 
-    @MotechListener(subjects = READ_CHILD_RESPONSE_FILE_EVENT)
-    public void readChildResponseFromFile(MotechEvent event) throws RchFileManipulationException {
-        LOGGER.debug(event.toString());
-
+    @MotechListener(subjects = Constants.RCH_CHILD_READ_SUBJECT)
+    @Transactional
+    public void readChildResponseFromFile() throws RchFileManipulationException {
         LOGGER.info("Copying RCH child response file from remote server to local directory.");
         try {
             List<RchImportFacilitator> rchImportFacilitatorsChild = rchImportFacilitatorService.findByImportDateAndRchUserType(LocalDate.now(), RchUserType.CHILD);
@@ -422,15 +391,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
                 RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.ASHA, LocalDate.now());
                 rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
-                Map<String, Object> eventParams = new HashMap<>();
-                eventParams.put(Constants.STATE_ID_PARAM, stateId);
-                eventParams.put(FILENAME, responseFile.getName());
-                eventParams.put(Constants.START_DATE_PARAM, from);
-                eventParams.put(Constants.END_DATE_PARAM, to);
-                MotechEvent event = new MotechEvent(READ_ASHA_RESPONSE_FILE_EVENT, eventParams);
-                String cronExpression = settingsFacade.getProperty(ASHA_CRON);
-                CronSchedulableJob job = new CronSchedulableJob(event, cronExpression);
-                schedulerService.safeScheduleJob(job);
                 status = true;
             } catch (ExecutionException e) {
                 LOGGER.error("error copying file to remote server.");
@@ -444,9 +404,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return status;
     }
 
-    @MotechListener(subjects = READ_ASHA_RESPONSE_FILE_EVENT)
-    public void readAshaResponseFromFile(MotechEvent event) throws RchFileManipulationException {
-        LOGGER.debug(event.toString());
+    @MotechListener(subjects = Constants.RCH_ASHA_READ_SUBJECT)
+    @Transactional
+    public void readAshaResponseFromFile() throws RchFileManipulationException {
         LOGGER.info("RCH Asha file import entry point");
         LOGGER.info("Copying RCH Asha response file from remote server to local directory.");
 
@@ -591,7 +551,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         for (RchMotherRecord record : rejectedRchMothers) {
             action = actionFinderService.rchMotherActionFinder(record);
             LOGGER.error("Existing Mother Record with same MSISDN in the data set");
-            motherRejectionService.createOrUpdateMother(motherRejectionRch(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+            motherRejectionService.createOrUpdateMother(motherRejectionRch(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
         }
         List<RchMotherRecord> acceptedRchMothers = rchMotherRecordsSet.get(1);
         int saved = 0;
@@ -633,7 +593,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         for (RchChildRecord record : rejectedRchChildren) {
             action = actionFinderService.rchChildActionFinder(record);
             LOGGER.error("Existing Child Record with same MSISDN in the data set");
-            childRejectionService.createOrUpdateChild(childRejectionRch(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+            childRejectionService.createOrUpdateChild(childRejectionRch(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
         }
         List<RchChildRecord> acceptedRchChildren = rchChildRecordsSet.get(1);
 
@@ -680,7 +640,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         for (RchAnmAshaRecord record : rejectedRchAshas) {
             action = this.rchFlwActionFinder(record);
             LOGGER.error("Existing Asha Record with same MSISDN in the data set");
-            flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+            flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
         }
         List<RchAnmAshaRecord> acceptedRchAshas = rchAshaRecordsSet.get(1);
 

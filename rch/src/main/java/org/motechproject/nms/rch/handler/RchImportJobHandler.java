@@ -60,6 +60,58 @@ public class RchImportJobHandler {
         LOGGER.info("Created RCH Import Event");
         CronSchedulableJob rchImportJob = new CronSchedulableJob(new MotechEvent(Constants.RCH_IMPORT_EVENT), cronExpression);
         motechSchedulerService.safeScheduleJob(rchImportJob);
+
+        initMotherReadJob();
+        initChildReadJob();
+        initAshaReadJob();
+    }
+
+    public void initMotherReadJob() {
+        String cronExpression = settingsFacade.getProperty(Constants.RCH_MOTHER_READ_CRON);
+        if (StringUtils.isBlank(cronExpression)) {
+            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            return;
+        }
+
+        if (!CronExpression.isValidExpression(cronExpression)) {
+            throw new RchImportConfigurationException("Cron expression for mother read is invalid: " + cronExpression);
+        }
+
+        LOGGER.info("Created RCH Mother Read Event");
+        CronSchedulableJob rchMotherRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT), cronExpression);
+        motechSchedulerService.safeScheduleJob(rchMotherRead);
+    }
+
+    public void initChildReadJob() {
+        String cronExpression = settingsFacade.getProperty(Constants.RCH_CHILD_READ_CRON);
+        if (StringUtils.isBlank(cronExpression)) {
+            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            return;
+        }
+
+        if (!CronExpression.isValidExpression(cronExpression)) {
+            throw new RchImportConfigurationException("Cron expression for child read is invalid: " + cronExpression);
+        }
+
+        LOGGER.info("Created RCH Child Read Event");
+        CronSchedulableJob rchMotherRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_CHILD_READ_SUBJECT), cronExpression);
+        motechSchedulerService.safeScheduleJob(rchMotherRead);
+    }
+
+    public void initAshaReadJob() {
+        String cronExpression = settingsFacade.getProperty(Constants.RCH_ASHA_READ_CRON);
+        if (StringUtils.isBlank(cronExpression)) {
+            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            return;
+        }
+
+        if (!CronExpression.isValidExpression(cronExpression)) {
+            throw new RchImportConfigurationException("Cron expression for asha read is invalid: " + cronExpression);
+        }
+
+        LOGGER.info("Created RCH Asha Read Event");
+        CronSchedulableJob rchMotherRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_ASHA_READ_SUBJECT), cronExpression);
+        motechSchedulerService.safeScheduleJob(rchMotherRead);
     }
 
     @MotechListener(subjects = Constants.RCH_IMPORT_EVENT)

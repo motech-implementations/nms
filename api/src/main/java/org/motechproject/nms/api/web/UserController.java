@@ -261,6 +261,9 @@ public class UserController extends BaseController {
         Service service = getServiceFromName(serviceName);
         ServiceUsage serviceUsage = new ServiceUsage(null, service, 0, 0, false);
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
+        if (flw == null) {
+            flw = frontLineWorkerService.getInctiveByContactNumber(callingNumber);
+        }
 
         State state = getStateForFrontLineWorker(flw, circle);
 
@@ -321,9 +324,10 @@ public class UserController extends BaseController {
 
     private void restrictInactiveJobUserCheck(FrontLineWorker flw) {
 
-        if (flw == null || flw.getJobStatus() == FlwJobStatus.INACTIVE) {
-
+        if (flw != null && flw.getJobStatus() == FlwJobStatus.INACTIVE) {
             inactiveJobCallAuditDataService.create(new InactiveJobCallAudit(DateUtil.now(), flw.getFlwId(), flw.getMctsFlwId(), flw.getContactNumber()));
+            throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
+        } else if (flw == null) {
             throw new NotAuthorizedException(String.format(NOT_AUTHORIZED, CALLING_NUMBER));
         }
     }

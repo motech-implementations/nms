@@ -150,7 +150,11 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
         String callingNumber = (String) event.getParameters().get(ADDRESS);
         int startIndex = callingNumber.indexOf(':') + 2;
         callingNumber = callingNumber.substring(startIndex);
-        Long flwId = frontLineWorkerService.getByContactNumber(Long.parseLong(callingNumber)).getId();
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(Long.parseLong(callingNumber));
+        Long flwId = null;
+        if (flw != null) {
+             flwId= flw.getId();
+        }
         List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByFlwId(flwId);
 
         if (ccrs == null || ccrs.isEmpty()) {
