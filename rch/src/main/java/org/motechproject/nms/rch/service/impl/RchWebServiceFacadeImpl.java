@@ -65,6 +65,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.xml.sax.helpers.AttributesImpl;
 
 import javax.xml.bind.JAXBException;
@@ -195,6 +196,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
     @MotechListener(subjects = Constants.RCH_MOTHER_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
+    @Transactional
     public void readMotherResponseFromFile() throws RchFileManipulationException {
         LOGGER.info("Copying RCH mother response file from remote server to local directory.");
         try {
@@ -302,6 +304,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
     @MotechListener(subjects = Constants.RCH_CHILD_READ_SUBJECT)
+    @Transactional
     public void readChildResponseFromFile() throws RchFileManipulationException {
         LOGGER.info("Copying RCH child response file from remote server to local directory.");
         try {
@@ -402,6 +405,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
     @MotechListener(subjects = Constants.RCH_ASHA_READ_SUBJECT)
+    @Transactional
     public void readAshaResponseFromFile() throws RchFileManipulationException {
         LOGGER.info("RCH Asha file import entry point");
         LOGGER.info("Copying RCH Asha response file from remote server to local directory.");
