@@ -12,6 +12,7 @@ import org.motechproject.event.listener.EventRelay;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.util.Order;
+import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
@@ -433,7 +434,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         }
     }
 
-    private MctsImportAudit saveImportedAnmAshaData(AnmAshaDataSet anmAshaDataSet, State state, LocalDate startReferenceDate, LocalDate endReferenceDate) {
+    private MctsImportAudit saveImportedAnmAshaData(AnmAshaDataSet anmAshaDataSet, State state, LocalDate startReferenceDate, LocalDate endReferenceDate) { //NOPMD NcssMethodCount // NO CHECKSTYLE Cyclomatic Complexity
         String stateName = state.getName();
         Long stateCode = state.getCode();
         LOGGER.info("Starting ASHA import for state {}", stateName);
@@ -451,40 +452,55 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         int rejected = 0;
 
         for (AnmAshaRecord record : acceptedAshaRecords) {
-            action = this.flwActionFinder(record);
-            String designation = record.getType();
-            designation = (designation != null) ? designation.trim() : designation;
-            if (!(FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation))) {
-                flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.FLW_TYPE_NOT_ASHA.toString(), action));
-                rejected++;
-            } else {
-                try {
-                    // get user property map
-                    Map<String, Object> recordMap = record.toFlwRecordMap();    // temp var used for debugging
-                    frontLineWorkerImportService.importMctsFrontLineWorker(recordMap, state);
-                    flwRejectionService.createUpdate(flwRejectionMcts(record, true, null, action));
-                    saved++;
-                } catch (InvalidLocationException e) {
-                    LOGGER.warn("Invalid location for FLW: ", e);
-                    flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.INVALID_LOCATION.toString(), action));
-                    rejected++;
-                } catch (FlwImportException e) {
-                    LOGGER.error("Existing FLW with same MSISDN but different MCTS ID", e);
+            try {
+                action = this.flwActionFinder(record);
+                String designation = record.getType();
+                designation = (designation != null) ? designation.trim() : designation;
+                Long msisdn = Long.parseLong(record.getContactNo());
+                String mctsFlwId = record.getId().toString();
+                FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
+                FrontLineWorker flw1 = frontLineWorkerService.getByMctsFlwIdAndState(mctsFlwId, state);
+                if (flw != null && flw1 != null && !flw.getMctsFlwId().equals(flw1.getMctsFlwId())) {
+                    LOGGER.error("Existing FLW with same MSISDN but different MCTS ID");
                     flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
                     rejected++;
-                } catch (FlwExistingRecordException e) {
-                    LOGGER.error("Cannot import FLW with ID: {}, and MSISDN (Contact_No): {}", record.getId(), record.getContactNo(), e);
-                    flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.RECORD_ALREADY_EXISTS.toString(), action));
-                    rejected++;
-                } catch (Exception e) {
-                    LOGGER.error("Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Contact_No): {}",
-                            record.getId(), record.getContactNo(), e);
-                    flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.FLW_IMPORT_ERROR.toString(), action));
-                    rejected++;
+                } else {
+                    if (!(FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation))) {
+                        flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.FLW_TYPE_NOT_ASHA.toString(), action));
+                        rejected++;
+                    } else {
+                        try {
+                            // get user property map
+                            Map<String, Object> recordMap = record.toFlwRecordMap();    // temp var used for debugging
+                            frontLineWorkerImportService.importMctsFrontLineWorker(recordMap, state);
+                            flwRejectionService.createUpdate(flwRejectionMcts(record, true, null, action));
+                            saved++;
+                        } catch (InvalidLocationException e) {
+                            LOGGER.warn("Invalid location for FLW: ", e);
+                            flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.INVALID_LOCATION.toString(), action));
+                            rejected++;
+                        } catch (FlwImportException e) {
+                            LOGGER.error("Existing FLW with same MSISDN but different MCTS ID", e);
+                            flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+                            rejected++;
+                        } catch (FlwExistingRecordException e) {
+                            LOGGER.error("Cannot import FLW with ID: {}, and MSISDN (Contact_No): {}", record.getId(), record.getContactNo(), e);
+                            flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.RECORD_ALREADY_EXISTS.toString(), action));
+                            rejected++;
+                        } catch (Exception e) {
+                            LOGGER.error("Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Contact_No): {}",
+                                    record.getId(), record.getContactNo(), e);
+                            flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.FLW_IMPORT_ERROR.toString(), action));
+                            rejected++;
+                        }
+                    }
+                    if ((saved + rejected) % THOUSAND == 0) {
+                        LOGGER.debug("{} state, Progress: {} Ashas imported, {} Ashas rejected", stateName, saved, rejected);
+                    }
                 }
-            }
-            if ((saved + rejected) % THOUSAND == 0) {
-                LOGGER.debug("{} state, Progress: {} Ashas imported, {} Ashas rejected", stateName, saved, rejected);
+            } catch (NumberFormatException e) {
+                LOGGER.error("Mobile number either not present or is not in number format");
+                flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.NUMBER_FORMAT_ERROR.toString(), action));
             }
         }
         LOGGER.info("{} state, Total: {} Ashas imported, {} Ashas rejected", stateName, saved, rejected);
