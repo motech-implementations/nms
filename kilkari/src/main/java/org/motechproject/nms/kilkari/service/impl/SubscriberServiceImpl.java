@@ -238,6 +238,11 @@ public class SubscriberServiceImpl implements SubscriberService {
                 return createSubscriber(msisdn, motherUpdate, lmp, pack, language, circle);
             } else { // subscriber (number) is already in use
                 for (Subscriber subscriber : subscriberByMsisdns) {
+                    if (subscriptionService.getActiveChildSubscriptionBySubscriber(subscriber)) {
+                        subscriptionErrorDataService.create(new SubscriptionError(msisdn, motherUpdate.getBeneficiaryId(), SubscriptionRejectionReason.SUBCRIBER_WITH_ONE_ACTIVE_SUBCRIPTION_PRESENT, pack.getType(), "Subscriber already has an active Subscription", SubscriptionOrigin.MCTS_IMPORT));
+                        motherRejectionService.createOrUpdateMother(motherRejectionMcts(convertMapToMother(record), false, RejectionReasons.SUBCRIBER_WITH_ONE_ACTIVE_SUBCRIPTION_PRESENT.toString(), action));
+                        return null;
+                    }
                     MctsMother mother = subscriber.getMother();
                     if (mother != null && mother.getLastMenstrualPeriod() != null) {
                         subscriptionErrorDataService.create(new SubscriptionError(msisdn, motherUpdate.getBeneficiaryId(), SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED, pack.getType(), "Subscriber exists with this Msisdn", SubscriptionOrigin.MCTS_IMPORT));
@@ -399,6 +404,11 @@ public class SubscriberServiceImpl implements SubscriberService {
                 }
             } else { // subscriber number is already in use
                 for (Subscriber subscriber : subscriberByMsisdns) {
+                    if (subscriptionService.getActiveMotherSubscriptionBySubscriber(subscriber)) {
+                        subscriptionErrorDataService.create(new SubscriptionError(msisdn, childUpdate.getBeneficiaryId(), SubscriptionRejectionReason.SUBCRIBER_WITH_ONE_ACTIVE_SUBCRIPTION_PRESENT, pack.getType(), "Subscriber already has an active Subscription", SubscriptionOrigin.MCTS_IMPORT));
+                        childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(record), false, RejectionReasons.SUBCRIBER_WITH_ONE_ACTIVE_SUBCRIPTION_PRESENT.toString(), action));
+                        return null;
+                    }
                     if (subscriber.getChild() != null) {
                         subscriptionErrorDataService.create(new SubscriptionError(msisdn, childUpdate.getBeneficiaryId(), SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED, pack.getType(), "Subscriber exists with this Msisdn", SubscriptionOrigin.MCTS_IMPORT));
                         childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(record), false, RejectionReasons.MSISDN_ALREADY_SUBSCRIBED.toString(), action));

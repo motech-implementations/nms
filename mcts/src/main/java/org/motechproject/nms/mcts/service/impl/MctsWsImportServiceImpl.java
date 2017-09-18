@@ -13,6 +13,7 @@ import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.util.Order;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
@@ -235,15 +236,16 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         List<List<MotherRecord>> motherRecordsSet = cleanMotherRecords(mothersDataSet.getRecords());
         List<MotherRecord> rejectedMotherRecords = motherRecordsSet.get(0);
         String action = "";
+        int saved = 0;
+        int rejected = 0;
         for (MotherRecord record : rejectedMotherRecords) {
             action = actionFinderService.motherActionFinder(record);
             LOGGER.error("Existing Mother Record with same MSISDN in the data set");
             motherRejectionService.createOrUpdateMother(motherRejectionMcts(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
+            rejected++;
         }
         List<MotherRecord> acceptedMotherRecords = motherRecordsSet.get(1);
 
-        int saved = 0;
-        int rejected = 0;
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
         for (MotherRecord record : acceptedMotherRecords) {
             action = actionFinderService.motherActionFinder(record);
@@ -335,15 +337,16 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         List<List<ChildRecord>> childRecordsSet = cleanChildRecords(childrenDataSet.getRecords());
         List<ChildRecord> rejectedChildRecords = childRecordsSet.get(0);
         String action = "";
+        int saved = 0;
+        int rejected = 0;
         for (ChildRecord record : rejectedChildRecords) {
             action = actionFinderService.childActionFinder(record);
             LOGGER.error("Existing Child Record with same MSISDN in the data set");
             childRejectionService.createOrUpdateChild(childRejectionMcts(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
+            rejected++;
         }
         List<ChildRecord> acceptedChildRecords = childRecordsSet.get(1);
 
-        int saved = 0;
-        int rejected = 0;
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
 
         for (ChildRecord record : acceptedChildRecords) {
@@ -441,15 +444,16 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         List<List<AnmAshaRecord>> ashaRecordsSet = cleanFlwRecords(anmAshaDataSet.getRecords());
         List<AnmAshaRecord> rejectedAshaRecords = ashaRecordsSet.get(0);
         String action = "";
+        int saved = 0;
+        int rejected = 0;
         for (AnmAshaRecord record : rejectedAshaRecords) {
             action = this.flwActionFinder(record);
             LOGGER.error("Existing Asha Record with same MSISDN in the data set");
             flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
+            rejected++;
         }
         List<AnmAshaRecord> acceptedAshaRecords = ashaRecordsSet.get(1);
 
-        int saved = 0;
-        int rejected = 0;
 
         for (AnmAshaRecord record : acceptedAshaRecords) {
             try {
@@ -459,8 +463,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                 Long msisdn = Long.parseLong(record.getContactNo());
                 String mctsFlwId = record.getId().toString();
                 FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
-                FrontLineWorker flw1 = frontLineWorkerService.getByMctsFlwIdAndState(mctsFlwId, state);
-                if (flw != null && flw1 != null && !flw.getMctsFlwId().equals(flw1.getMctsFlwId())) {
+                if (flw != null && ((!mctsFlwId.equals(flw.getMctsFlwId()) || state != flw.getState())) && flw.getStatus() != FrontLineWorkerStatus.ANONYMOUS) {
                     LOGGER.error("Existing FLW with same MSISDN but different MCTS ID");
                     flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
                     rejected++;

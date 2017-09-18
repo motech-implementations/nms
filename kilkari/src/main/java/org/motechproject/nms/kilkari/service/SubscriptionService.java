@@ -51,6 +51,7 @@ public interface SubscriptionService {
      * @param mode How the subscription originated -- via IVR or MCTS import
      * @return The created subscription, or null if no subscription was created
      */
+
     Subscription createSubscription(Subscriber subscriber, long callingNumber, Language language, Circle circle,
                                     SubscriptionPack subscriptionPack, SubscriptionOrigin mode);
 
@@ -209,5 +210,11 @@ public interface SubscriptionService {
      * @return subscription with given type and IVR origin
      */
     Subscription getIVRSubscription(Set<Subscription> subscriptions, SubscriptionPackType packType);
+
+    Boolean getActiveMotherSubscriptionBySubscriber(Subscriber subscriber);
+
+    Boolean activeSubscriptionByMsisdn(Long msisdn);
+
+    Boolean getActiveChildSubscriptionBySubscriber(Subscriber subscriber);
 
 }
