@@ -20,6 +20,7 @@ import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.util.Order;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
@@ -549,14 +550,15 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         List<List<RchMotherRecord>> rchMotherRecordsSet = cleanRchMotherRecords(mothersDataSet.getRecords());
         List<RchMotherRecord> rejectedRchMothers = rchMotherRecordsSet.get(0);
         String action = "";
+        int saved = 0;
+        int rejected = 0;
         for (RchMotherRecord record : rejectedRchMothers) {
             action = actionFinderService.rchMotherActionFinder(record);
             LOGGER.error("Existing Mother Record with same MSISDN in the data set");
             motherRejectionService.createOrUpdateMother(motherRejectionRch(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
+            rejected++;
         }
         List<RchMotherRecord> acceptedRchMothers = rchMotherRecordsSet.get(1);
-        int saved = 0;
-        int rejected = 0;
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
         for (RchMotherRecord record : acceptedRchMothers) {
             action = actionFinderService.rchMotherActionFinder(record);
@@ -591,15 +593,16 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         List<List<RchChildRecord>> rchChildRecordsSet = cleanRchChildRecords(childrenDataSet.getRecords());
         List<RchChildRecord> rejectedRchChildren = rchChildRecordsSet.get(0);
         String action = "";
+        int saved = 0;
+        int rejected = 0;
         for (RchChildRecord record : rejectedRchChildren) {
             action = actionFinderService.rchChildActionFinder(record);
             LOGGER.error("Existing Child Record with same MSISDN in the data set");
             childRejectionService.createOrUpdateChild(childRejectionRch(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
+            rejected++;
         }
         List<RchChildRecord> acceptedRchChildren = rchChildRecordsSet.get(1);
 
-        int saved = 0;
-        int rejected = 0;
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
 
         for (RchChildRecord record : acceptedRchChildren) {
@@ -657,8 +660,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 Long msisdn = Long.parseLong(record.getMobileNo());
                 String flwId = record.getGfId().toString();
                 FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
-                FrontLineWorker flw1 = frontLineWorkerService.getByMctsFlwIdAndState(flwId, state);
-                if (flw != null && flw1 != null && !flw.getMctsFlwId().equals(flw1.getMctsFlwId())) {
+                if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || state != flw.getState()))  && flw.getStatus() != FrontLineWorkerStatus.ANONYMOUS) {
                     LOGGER.error("Existing FLW with same MSISDN but different MCTS ID");
                     flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
                     rejected++;

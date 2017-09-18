@@ -32,6 +32,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.jdo.Query;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -106,7 +108,7 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
         schedulerService.safeScheduleRepeatingJob(job);
     }
 
-    @MotechListener(subjects = { FLW_PURGE_EVENT_SUBJECT })
+    @MotechListener(subjects = {FLW_PURGE_EVENT_SUBJECT})
     @Transactional
     public void purgeOldInvalidFLWs(MotechEvent event) {
         int weeksToKeepInvalidFLWs = Integer.parseInt(settingsFacade.getProperty(WEEKS_TO_KEEP_INVALID_FLWS));
@@ -215,8 +217,20 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     @Override
     public FrontLineWorker getByContactNumber(Long contactNumber) {
         List<FrontLineWorker> flws = frontLineWorkerDataService.findByContactNumberAndJobStatus(contactNumber, FlwJobStatus.ACTIVE);
+        Collections.sort(flws, new Comparator<FrontLineWorker>() {
+            @Override
+            public int compare(FrontLineWorker t1, FrontLineWorker t2) {
+                if (t1.getCreationDate().isBefore(t2.getCreationDate())) {
+                    return 1;
+                } else if (t1.getCreationDate().isAfter(t2.getCreationDate())) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            }
+        });
         if (flws.size() != 0) {
-            return flws.get(0);
+            return flws.get(flws.size() - 1);
         } else {
             return null;
         }
@@ -226,7 +240,7 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     public FrontLineWorker getInctiveByContactNumber(Long contactNumber) {
         List<FrontLineWorker> flws = frontLineWorkerDataService.findByContactNumberAndJobStatus(contactNumber, FlwJobStatus.INACTIVE);
         if (flws.size() != 0) {
-            return flws.get(flws.size()-1);
+            return flws.get(flws.size() - 1);
         } else {
             return null;
         }
@@ -240,6 +254,7 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
     /**
      * Update FrontLineWorker. If specific fields are added to the record (name, contactNumber, languageLocation,
      * district, designation), the FrontLineWorker's status will also be updated.
+     *
      * @param record The FrontLineWorker to update
      */
     @Override

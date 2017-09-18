@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.service.impl;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.DateTime;
 import org.joda.time.Weeks;
@@ -240,6 +241,49 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         // call overload with null circle
         return createSubscription(subscriber, callingNumber, language, null, subscriptionPack, mode);
+    }
+
+    @Override
+    public Boolean getActiveMotherSubscriptionBySubscriber(Subscriber subscriber) {
+        List<Subscription> subscriptions = subscriptionDataService.findByStatusAndSubscriber(SubscriptionStatus.ACTIVE, subscriber);
+        int size = subscriptions.size();
+        if (size != 0) {
+            if (size == 1) {
+                if (subscriptions.get(0).getSubscriptionPack().getType() == SubscriptionPackType.PREGNANCY) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public Boolean activeSubscriptionByMsisdn(Long msisdn) {
+        return true;
+    }
+
+    @Override
+    public Boolean getActiveChildSubscriptionBySubscriber(Subscriber subscriber) {
+        List<Subscription> subscriptions = subscriptionDataService.findByStatusAndSubscriber(SubscriptionStatus.ACTIVE, subscriber);
+        int size = subscriptions.size();
+        if (size != 0) {
+            if (size == 1) {
+                if (subscriptions.get(0).getSubscriptionPack().getType() == SubscriptionPackType.CHILD) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity

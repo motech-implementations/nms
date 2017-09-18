@@ -8,8 +8,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.commons.date.util.DateUtil;
 import org.motechproject.event.MotechEvent;
+import org.motechproject.nms.flw.domain.FlwJobStatus;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
@@ -22,26 +25,14 @@ import org.motechproject.nms.mcts.repository.MctsImportAuditDataService;
 import org.motechproject.nms.mcts.repository.MctsImportFailRecordDataService;
 import org.motechproject.nms.mcts.service.MctsWsImportService;
 import org.motechproject.nms.mcts.utils.Constants;
-import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.HealthBlock;
-import org.motechproject.nms.region.domain.HealthFacility;
-import org.motechproject.nms.region.domain.HealthFacilityType;
-import org.motechproject.nms.region.domain.HealthSubFacility;
-import org.motechproject.nms.region.domain.State;
-import org.motechproject.nms.region.domain.Taluka;
+import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.rejectionhandler.domain.FlwImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
 import org.motechproject.nms.rejectionhandler.repository.FlwImportRejectionDataService;
 import org.motechproject.nms.rejectionhandler.repository.MotherRejectionDataService;
-import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServlet;
-import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletForASHAValidation;
-import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletForFail;
-import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletForNoUpdateDate;
-import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletForOneUpdateDate;
-import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletRemoteException;
-import org.motechproject.nms.testing.it.mcts.util.MockWsHttpServletForMotherRejection;
+import org.motechproject.nms.testing.it.mcts.util.*;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -114,16 +105,21 @@ public class MctsImportBundleIT extends BasePaxIT {
     @Inject
     private MotherRejectionDataService motherRejectionDataService;
 
+    @Inject
+    private FrontLineWorkerService frontLineWorkerService;
+
     @Before
     public void setUp() throws ServletException, NamespaceException {
         testingService.clearDatabase();
         State state = stateDataService.create(new State("My State", 21L));
 
+        Language language = new Language("1", "Hindi");
         District district = new District();
         district.setCode(4L);
         district.setState(state);
         district.setName("District_Name 4");
         district.setRegionalName("Regional Name 4");
+        district.setLanguage(language);
 
         Taluka taluka = new Taluka();
         taluka.setRegionalName("Taluka Regional");
@@ -183,6 +179,7 @@ public class MctsImportBundleIT extends BasePaxIT {
         httpService.registerServlet("/mctsWsNoUpdateDate", new MockWsHttpServletForNoUpdateDate(), null, null);
         httpService.registerServlet("/mctsWsOneUpdateDate", new MockWsHttpServletForOneUpdateDate(), null, null);
         httpService.registerServlet("/mctsMotherRejection", new MockWsHttpServletForMotherRejection(), null, null);
+        httpService.registerServlet("/mctsWsDuplicateASHACheck", new MockWsHttpServletForDuplicateASHACheck(), null, null);
     }
 
     @After
@@ -195,6 +192,7 @@ public class MctsImportBundleIT extends BasePaxIT {
         httpService.unregister("/mctsWsNoUpdateDate");
         httpService.unregister("/mctsWsOneUpdateDate");
         httpService.unregister("/mctsMotherRejection");
+        httpService.unregister("/mctsWsDuplicateASHACheck");
     }
 
     @Test
@@ -316,6 +314,72 @@ public class MctsImportBundleIT extends BasePaxIT {
 
     }
 
+    @Test
+    public void shouldNotAllowDuplicateASHA() throws MalformedURLException {
+        URL endpoint = new URL(String.format("http://localhost:%d/mctsWsDuplicateASHACheck", TestContext.getJettyPort()));
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        List<Long> stateIds = singletonList(21L);
+
+        // this CL workaround is for an issue with PAX IT logging messing things up
+        // shouldn't affect production
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
+
+        // setup motech event
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        MotechEvent event = new MotechEvent("foobar", params);
+        FrontLineWorker flw = new FrontLineWorker(2223332235L);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
+        flw.setMctsFlwId("200");
+        flwDataService.create(flw);
+        mctsWsImportService.importAnmAshaData(event);
+        Thread.currentThread().setContextClassLoader(cl);
+
+//        Should reject non ASHA FLWs
+        List<FrontLineWorker> flws = flwDataService.retrieveAll();
+        assertEquals(1, flws.size());
+        List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
+        assertEquals(1, flwImportRejections.size());
+        assertEquals(RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), flwImportRejections.get(0).getRejectionReason());
+    }
+
+    @Test
+    public void shouldReturnNonAnonymousASHA() throws MalformedURLException {
+        URL endpoint = new URL(String.format("http://localhost:%d/mctsWsDuplicateASHACheck", TestContext.getJettyPort()));
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        List<Long> stateIds = singletonList(21L);
+
+        // this CL workaround is for an issue with PAX IT logging messing things up
+        // shouldn't affect production
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
+
+        // setup motech event
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        MotechEvent event = new MotechEvent("foobar", params);
+        FrontLineWorker flw = new FrontLineWorker(2223332235L);
+        flw.setJobStatus(FlwJobStatus.ACTIVE);
+        flw.setStatus(FrontLineWorkerStatus.ANONYMOUS);
+        flwDataService.create(flw);
+        mctsWsImportService.importAnmAshaData(event);
+        Thread.currentThread().setContextClassLoader(cl);
+
+//        Should reject non ASHA FLWs
+        List<FrontLineWorker> flws = flwDataService.retrieveAll();
+        assertEquals(1, flws.size());
+        flw = frontLineWorkerService.getByContactNumber(2223332235L);
+        assertEquals(FrontLineWorkerStatus.ACTIVE, flw.getStatus());
+    }
 
     @Test
     public void shouldPerformImportWithUpdatesAndDeleteInFailedTable() throws MalformedURLException {

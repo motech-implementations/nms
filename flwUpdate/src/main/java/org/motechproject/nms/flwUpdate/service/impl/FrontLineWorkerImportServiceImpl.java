@@ -138,7 +138,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     }
 
     // CHECKSTYLE:ON
-    @Override
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void importMctsFrontLineWorker(Map<String, Object> record, State state) throws InvalidLocationException, FlwExistingRecordException {
         FrontLineWorker flw = flwFromRecord(record, state);
@@ -152,8 +152,13 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                 frontLineWorkerService.add(frontLineWorker);
             }
         } else {
-            DateTimeFormatter dtf = DateTimeFormat.forPattern("dd-MM-yyyy");
-            LocalDate mctsUpdatedDateNic = LocalDate.parse(record.get(FlwConstants.UPDATED_ON).toString(), dtf);
+            String datePattern = "\\d{4}-\\d{2}-\\d{2}";
+            DateTimeFormatter dtf1 = DateTimeFormat.forPattern("dd-MM-yyyy");
+            DateTimeFormatter dtf2 = DateTimeFormat.forPattern("yyyy-MM-dd");
+            LocalDate mctsUpdatedDateNic = record.get(FlwConstants.UPDATED_ON) == null || record.get(FlwConstants.UPDATED_ON).toString().trim().isEmpty() ? null :
+                    (record.get(FlwConstants.UPDATED_ON).toString().matches(datePattern) ?
+                            LocalDate.parse(record.get(FlwConstants.UPDATED_ON).toString(), dtf2) :
+                            LocalDate.parse(record.get(FlwConstants.UPDATED_ON).toString(), dtf1));
             //It updated_date_nic from mcts is not null,then it's not a new record. Compare it with the record from database and update
             if (mctsUpdatedDateNic != null && (flw.getUpdatedDateNic() == null || mctsUpdatedDateNic.isAfter(flw.getUpdatedDateNic()) || mctsUpdatedDateNic.isEqual(flw.getUpdatedDateNic()))) {
                 Long oldMsisdn = flw.getContactNumber();
@@ -174,7 +179,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         }
     }
 
-    @Override
+    @Override //NO CHECKSTYLE CyclomaticComplexity
     @Transactional
     public void importRchFrontLineWorker(Map<String, Object> record, State state) throws InvalidLocationException, FlwExistingRecordException {
         String flwId = (String) record.get(FlwConstants.GF_ID);
@@ -188,8 +193,10 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             FrontLineWorker flw2 = frontLineWorkerService.getByContactNumber(msisdn);
             if (flw2 == null || flw2.getJobStatus().equals(FlwJobStatus.INACTIVE)) {
                 // update msisdn of existing asha worker
-                FrontLineWorker flwInstance = updateFlw(flw, record, location, SubscriptionOrigin.RCH_IMPORT);
-                frontLineWorkerService.update(flwInstance);
+                FrontLineWorker newFlw = createRchFlw(record, location);
+                if (newFlw != null) {
+                    frontLineWorkerService.add(newFlw);
+                }
             } else {
                 //we got here because an FLW exists with active job status and the same msisdn
                 //check if both these records are the same or not
@@ -215,6 +222,9 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                     flwErrorDataService.create(new FlwError(flwId, (long) record.get(FlwConstants.STATE_ID), (long) record.get(FlwConstants.DISTRICT_ID), FlwErrorReason.PHONE_NUMBER_IN_USE));
                     throw new FlwExistingRecordException("Msisdn already in use.");
                 }
+            } else if (frontLineWorker != null && frontLineWorker.getStatus().equals(FrontLineWorkerStatus.ANONYMOUS)) {
+                FrontLineWorker flwInstance = updateFlw(frontLineWorker, record, location, SubscriptionOrigin.RCH_IMPORT);
+                frontLineWorkerService.update(flwInstance);
             } else {
                 // create new FLW record with provided flwId and msisdn
                 FrontLineWorker newFlw = createRchFlw(record, location);
