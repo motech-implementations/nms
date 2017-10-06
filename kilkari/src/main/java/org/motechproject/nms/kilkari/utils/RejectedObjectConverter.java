@@ -347,6 +347,8 @@ public final class RejectedObjectConverter {
         return motherImportRejection;
     }
 
+
+
     public static MotherRecord convertMapToMother(Map<String, Object> record) { //NO CHECKSTYLE CyclomaticComplexity
         MotherRecord motherRecord = new MotherRecord();
         motherRecord.setStateId(record.get(KilkariConstants.STATE_ID) == null ? null : (Long) record.get(KilkariConstants.STATE_ID));

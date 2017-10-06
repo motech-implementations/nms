@@ -423,11 +423,11 @@ public class MctsImportBundleIT extends BasePaxIT {
             List<MctsImportAudit> mctsImportAudits = mctsImportAuditDataService.retrieveAll();
             assertEquals(3, mctsImportAudits.size());
             assertEquals(1, mctsImportAudits.get(0).getAccepted());
-            assertEquals(1, mctsImportAudits.get(0).getRejected());
+            assertEquals(3, mctsImportAudits.get(0).getRejected());
             assertEquals(1, mctsImportAudits.get(1).getAccepted());
-            assertEquals(1, mctsImportAudits.get(1).getRejected());
+            assertEquals(3, mctsImportAudits.get(1).getRejected());
             assertEquals(1, mctsImportAudits.get(2).getAccepted());
-            assertEquals(1, mctsImportAudits.get(2).getRejected());
+            assertEquals(3, mctsImportAudits.get(2).getRejected());
             assertEquals(lastDateToCheck, mctsImportAudits.get(0).getStartImportDate());
             assertEquals(yesterday, mctsImportAudits.get(0).getEndImportDate());
 

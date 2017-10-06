@@ -4,14 +4,13 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
 import org.motechproject.nms.api.web.contract.AddRchFlwRequest;
+import org.motechproject.nms.api.web.service.FlwCsvService;
 import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.api.web.contract.mobileAcademy.GetBookmarkResponse;
 import org.motechproject.nms.api.web.converter.MobileAcademyConverter;
-import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.MctsChildFixService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
@@ -38,8 +37,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Controller to expose methods for OPS personnel
@@ -72,10 +69,10 @@ public class OpsController extends BaseController {
     private MobileAcademyService mobileAcademyService;
 
     @Autowired
-    private FrontLineWorkerImportService frontLineWorkerImportService;
+    private MctsChildFixService mctsChildFixService;
 
     @Autowired
-    private MctsChildFixService mctsChildFixService;
+    private FlwCsvService flwCsvService;
 
     private final String contactNumber = "contactNumber";
 
@@ -147,128 +144,29 @@ public class OpsController extends BaseController {
             method = RequestMethod.POST,
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
-    @Transactional
     public void createUpdateFlw(@RequestBody AddFlwRequest addFlwRequest) {
         // TODO: add a field updatedDateNic for Add Flw Request.
         // Will Fix this with NMS-349
-        log("REQUEST: /ops/createUpdateFlw", String.format(
-                "callingNumber=%s, mctsId=%s, name=%s, state=%d, district=%d",
-                LogHelper.obscure(addFlwRequest.getContactNumber()),
-                addFlwRequest.getMctsFlwId(),
-                addFlwRequest.getName(),
-                addFlwRequest.getStateId(),
-                addFlwRequest.getDistrictId()));
 
-        StringBuilder failureReasons = new StringBuilder();
-        validateField10Digits(failureReasons, contactNumber, addFlwRequest.getContactNumber());
-        validateFieldPositiveLong(failureReasons, contactNumber, addFlwRequest.getContactNumber());
-        validateFieldPresent(failureReasons, "mctsFlwId", addFlwRequest.getMctsFlwId());
-        validateFieldPresent(failureReasons, "stateId", addFlwRequest.getStateId());
-        validateFieldPresent(failureReasons, "districtId", addFlwRequest.getDistrictId());
-        validateFieldString(failureReasons, "name", addFlwRequest.getName());
-        validateFieldGfStatus(failureReasons, "gfStatus", addFlwRequest.getGfStatus());
-        validatetypeASHA(failureReasons, "type", addFlwRequest.getMctsFlwId(), addFlwRequest.getContactNumber(), addFlwRequest.getType());
-
-        if (failureReasons.length() > 0) {
+        StringBuilder failureReasons = flwCsvService.csvUploadMcts(addFlwRequest);
+        if (failureReasons != null) {
             throw new IllegalArgumentException(failureReasons.toString());
+        } else {
+            flwCsvService.persistFlwMcts(addFlwRequest);
         }
-
-        Map<String, Object> flwProperties = new HashMap<>();
-        flwProperties.put(FlwConstants.NAME, addFlwRequest.getName());
-        flwProperties.put(FlwConstants.ID, addFlwRequest.getMctsFlwId());
-        flwProperties.put(FlwConstants.CONTACT_NO, addFlwRequest.getContactNumber());
-        flwProperties.put(FlwConstants.STATE_ID, addFlwRequest.getStateId());
-        flwProperties.put(FlwConstants.DISTRICT_ID, addFlwRequest.getDistrictId());
-        flwProperties.put(FlwConstants.GF_STATUS, addFlwRequest.getGfStatus());
-
-        if (addFlwRequest.getType() != null) {
-            flwProperties.put(FlwConstants.TYPE, addFlwRequest.getType());
-        }
-
-        if (addFlwRequest.getTalukaId() != null) {
-            flwProperties.put(FlwConstants.TALUKA_ID, addFlwRequest.getTalukaId());
-        }
-
-        if (addFlwRequest.getPhcId() != null) {
-            flwProperties.put(FlwConstants.PHC_ID, addFlwRequest.getPhcId());
-        }
-
-        if (addFlwRequest.getHealthblockId() != null) {
-            flwProperties.put(FlwConstants.HEALTH_BLOCK_ID, addFlwRequest.getHealthblockId());
-        }
-
-        if (addFlwRequest.getSubcentreId() != null) {
-            flwProperties.put(FlwConstants.SUB_CENTRE_ID, addFlwRequest.getSubcentreId());
-        }
-
-        if (addFlwRequest.getVillageId() != null) {
-            flwProperties.put(FlwConstants.CENSUS_VILLAGE_ID, addFlwRequest.getVillageId());
-        }
-
-        frontLineWorkerImportService.createUpdate(flwProperties, SubscriptionOrigin.MCTS_IMPORT);
     }
 
     @RequestMapping(value = "/createUpdateRchFlw",
             method = RequestMethod.POST,
             headers = { "Content-type=application/json" })
     @ResponseStatus(HttpStatus.OK)
-    @Transactional
     public void createUpdateRchFlw(@RequestBody AddRchFlwRequest addRchFlwRequest) {
-        log("REQUEST: /ops/createUpdateRchFlw", String.format(
-                "callingNumber=%s, rchId=%s, name=%s, state=%d, district=%d",
-                LogHelper.obscure(addRchFlwRequest.getMsisdn()),
-                addRchFlwRequest.getFlwId(),
-                addRchFlwRequest.getName(),
-                addRchFlwRequest.getStateId(),
-                addRchFlwRequest.getDistrictId()));
-
-        StringBuilder failureReasons = new StringBuilder();
-        validateField10Digits(failureReasons, contactNumber, addRchFlwRequest.getMsisdn());
-        validateFieldPositiveLong(failureReasons, contactNumber, addRchFlwRequest.getMsisdn());
-        validateFieldPresent(failureReasons, "rchFlwId", addRchFlwRequest.getFlwId());
-        validateFieldPresent(failureReasons, "stateId", addRchFlwRequest.getStateId());
-        validateFieldPresent(failureReasons, "districtId", addRchFlwRequest.getDistrictId());
-        validateFieldString(failureReasons, "name", addRchFlwRequest.getName());
-        validateFieldGfStatus(failureReasons, "gfStatus", addRchFlwRequest.getGfStatus());
-        validatetypeASHA(failureReasons, "gfType", addRchFlwRequest.getFlwId(), addRchFlwRequest.getMsisdn(), addRchFlwRequest.getGfType());
-
-        if (failureReasons.length() > 0) {
+        StringBuilder failureReasons = flwCsvService.csvUploadRch(addRchFlwRequest);
+        if (failureReasons != null) {
             throw new IllegalArgumentException(failureReasons.toString());
+        } else {
+            flwCsvService.persistFlwRch(addRchFlwRequest);
         }
-
-        Map<String, Object> flwProperties = new HashMap<>();
-        flwProperties.put(FlwConstants.NAME, addRchFlwRequest.getName());
-        flwProperties.put(FlwConstants.GF_ID, addRchFlwRequest.getFlwId());
-        flwProperties.put(FlwConstants.MOBILE_NO, addRchFlwRequest.getMsisdn());
-        flwProperties.put(FlwConstants.STATE_ID, addRchFlwRequest.getStateId());
-        flwProperties.put(FlwConstants.DISTRICT_ID, addRchFlwRequest.getDistrictId());
-        flwProperties.put(FlwConstants.GF_STATUS, addRchFlwRequest.getGfStatus());
-
-        if (addRchFlwRequest.getGfType() != null) {
-            flwProperties.put(FlwConstants.GF_TYPE, addRchFlwRequest.getGfType());
-        }
-
-        if (addRchFlwRequest.getTalukaId() != null) {
-            flwProperties.put(FlwConstants.TALUKA_ID, addRchFlwRequest.getTalukaId());
-        }
-
-        if (addRchFlwRequest.getPhcId() != null) {
-            flwProperties.put(FlwConstants.PHC_ID, addRchFlwRequest.getPhcId());
-        }
-
-        if (addRchFlwRequest.getHealthblockId() != null) {
-            flwProperties.put(FlwConstants.HEALTH_BLOCK_ID, addRchFlwRequest.getHealthblockId());
-        }
-
-        if (addRchFlwRequest.getSubcentreId() != null) {
-            flwProperties.put(FlwConstants.SUB_CENTRE_ID, addRchFlwRequest.getSubcentreId());
-        }
-
-        if (addRchFlwRequest.getVillageId() != null) {
-            flwProperties.put(FlwConstants.CENSUS_VILLAGE_ID, addRchFlwRequest.getVillageId());
-        }
-
-        frontLineWorkerImportService.createUpdate(flwProperties, SubscriptionOrigin.RCH_IMPORT);
     }
 
     @RequestMapping("/getbookmark")
@@ -327,5 +225,6 @@ public class OpsController extends BaseController {
         }
         LOGGER.debug("updateMotherInChild() END");
     }
+
 }
 

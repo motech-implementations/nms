@@ -5,12 +5,12 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.32</version>
+        <version>1.0.33</version>
         <relativePath>../</relativePath>
     </parent>
 
     <artifactId>kilkari</artifactId>
-    <version>1.0.32</version>
+    <version>1.0.33</version>
     <packaging>bundle</packaging>
     <name>Kilkari module</name>
 

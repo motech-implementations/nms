@@ -43,6 +43,9 @@ import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.repository.*;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.LanguageService;
+import org.motechproject.nms.rejectionhandler.domain.FlwImportRejection;
+import org.motechproject.nms.rejectionhandler.repository.FlwImportRejectionDataService;
+import org.motechproject.nms.rejectionhandler.service.FlwRejectionService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
@@ -147,6 +150,8 @@ public class OpsControllerBundleIT extends BasePaxIT {
     @Inject
     CourseCompletionRecordDataService courseCompletionRecordDataService;
 
+    @Inject
+    FlwImportRejectionDataService flwImportRejectionDataService;
 
     private RegionHelper rh;
     private SubscriptionHelper sh;
@@ -243,6 +248,19 @@ public class OpsControllerBundleIT extends BasePaxIT {
         assertNotNull(flw.getDistrict());
         assertNotNull(flw.getTaluka());
         assertNotNull(flw.getVillage());
+    }
+
+    @Test
+    public void testCheckPhoneNumber() throws IOException, InterruptedException {
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        AddFlwRequest addFlwRequest = getAddRequestASHAInvalid();
+        HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, addFlwRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+        transactionManager.commit(status);
+
+        List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
+        assertEquals(1, flwImportRejections.size());
     }
 
     // Flw test name update
@@ -367,6 +385,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         assertEquals(flwErrors.get(0).getReason(), FlwErrorReason.INVALID_LOCATION_DISTRICT);
     }
 
+
     @Test
     public void testUpdateNoTaluka() throws IOException, InterruptedException {
 
@@ -462,6 +481,19 @@ public class OpsControllerBundleIT extends BasePaxIT {
     private AddFlwRequest getAddRequestASHA() {
         AddFlwRequest request = new AddFlwRequest();
         request.setContactNumber(9876543210L);
+        request.setName("Chinkoo Devi");
+        request.setMctsFlwId("123");
+        request.setStateId(state.getCode());
+        request.setDistrictId(district.getCode());
+        request.setType("ASHA");
+        request.setGfStatus("Active");
+        return request;
+    }
+
+    // helper to create a invalid flw add/update request with designation ASHA
+    private AddFlwRequest getAddRequestASHAInvalid() {
+        AddFlwRequest request = new AddFlwRequest();
+        request.setContactNumber(987643210L);
         request.setName("Chinkoo Devi");
         request.setMctsFlwId("123");
         request.setStateId(state.getCode());
