@@ -25,6 +25,7 @@
     <osgi:reference id="7" interface="org.motechproject.nms.rch.service.RchWebServiceFacade" />
     <osgi:reference id="8" interface="org.motechproject.nms.rejectionhandler.repository.FlwImportRejectionDataService" />
     <osgi:reference id="9" interface="org.motechproject.nms.rejectionhandler.service.FlwRejectionService" />
+    <osgi:reference id="10" interface="org.motechproject.nms.api.web.service.FlwCsvService"/>
 
 
     <osgi:reference id="transactionManager" interface="org.springframework.transaction.PlatformTransactionManager"/>

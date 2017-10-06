@@ -1,6 +1,5 @@
 package org.motechproject.nms.kilkari.service.impl;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.DateTime;
 import org.joda.time.Weeks;
@@ -59,6 +58,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.ArrayList;
 
 /**
  * Implementation of the {@link SubscriptionService} interface.
@@ -243,47 +243,56 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return createSubscription(subscriber, callingNumber, language, null, subscriptionPack, mode);
     }
 
-    @Override
-    public Boolean getActiveMotherSubscriptionBySubscriber(Subscriber subscriber) {
-        List<Subscription> subscriptions = subscriptionDataService.findByStatusAndSubscriber(SubscriptionStatus.ACTIVE, subscriber);
-        int size = subscriptions.size();
-        if (size != 0) {
-            if (size == 1) {
-                if (subscriptions.get(0).getSubscriptionPack().getType() == SubscriptionPackType.PREGNANCY) {
-                    return true;
-                } else {
-                    return false;
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
+    public Boolean activeSubscriptionByMsisdn(Long msisdn, SubscriptionPackType packType, String motherBeneficiaryId, String childBeneficiaryId) {
+        List<Subscriber> subscribers = subscriberDataService.findByNumber(msisdn);
+        int subscriptionsSize = 0;
+        if (packType == SubscriptionPackType.PREGNANCY) {
+            if (subscribers.size() != 0) {
+                for (Subscriber subscriber : subscribers
+                        ) {
+                    List<Subscription> subscriptions = getActiveSubscriptionBySubscriber(subscriber);
+                    subscriptionsSize = subscriptions.size();
+                    if (subscriptionsSize != 0) {
+                        if (subscriptionsSize == 1) {
+                            if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.CHILD)) {
+                                return true;
+                            } else {
+                                return (subscriber.getMother() != null && !subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId));
+                            }
+                        } else {
+                            return (subscriber.getMother() != null && !subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId));
+                        }
+                    }
                 }
             } else {
-                return true;
+                return false;
             }
         } else {
-            return false;
-        }
-    }
-
-    @Override
-    public Boolean activeSubscriptionByMsisdn(Long msisdn) {
-        return true;
-    }
-
-    @Override
-    public Boolean getActiveChildSubscriptionBySubscriber(Subscriber subscriber) {
-        List<Subscription> subscriptions = subscriptionDataService.findByStatusAndSubscriber(SubscriptionStatus.ACTIVE, subscriber);
-        int size = subscriptions.size();
-        if (size != 0) {
-            if (size == 1) {
-                if (subscriptions.get(0).getSubscriptionPack().getType() == SubscriptionPackType.CHILD) {
-                    return true;
-                } else {
-                    return false;
+            if (subscribers.size() != 0) {
+                for (Subscriber subscriber : subscribers
+                        ) {
+                    List<Subscription> subscriptions = getActiveSubscriptionBySubscriber(subscriber);
+                    subscriptionsSize = subscriptions.size();
+                    if (subscriptionsSize != 0) {
+                        if (subscriptionsSize == 1) {
+                            if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.PREGNANCY) && subscriber.getMother() != null && !subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId)) {
+                                return true;
+                            } else if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.PREGNANCY) && subscriber.getMother() != null && subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId)) {
+                                return false;
+                            } else {
+                                return (subscriber.getChild() != null && !subscriber.getChild().getBeneficiaryId().equals(childBeneficiaryId));
+                            }
+                        } else {
+                            return ((subscriber.getChild() != null && !subscriber.getChild().getBeneficiaryId().equals(childBeneficiaryId)) || (subscriber.getMother() != null && !subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId)));
+                        }
+                    }
                 }
             } else {
-                return true;
+                return false;
             }
-        } else {
-            return false;
         }
+        return false;
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
@@ -480,6 +489,21 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
         }
         return null;
+    }
+
+    @Override
+    public List<Subscription> getActiveSubscriptionBySubscriber(Subscriber subscriber) {
+        List<Subscription> subscriptions = new ArrayList<>();
+        Subscription subscription1 = getActiveSubscription(subscriber, SubscriptionPackType.CHILD);
+        Subscription subscription2 = getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY);
+        if (subscription1 != null) {
+            subscriptions.add(subscription1);
+        }
+        if (subscription2 != null) {
+            subscriptions.add(subscription2);
+        }
+
+        return subscriptions;
     }
 
     @Override

@@ -8,6 +8,14 @@ import org.motechproject.nms.api.web.contract.AddRchFlwRequest;
  */
 public interface FlwCsvService {
 
+    StringBuilder csvUploadMcts(AddFlwRequest addFlwRequest);
+
+    void persistFlwMcts(AddFlwRequest addFlwRequest);
+
+    StringBuilder csvUploadRch(AddRchFlwRequest addRchFlwRequest);
+
+    void persistFlwRch(AddRchFlwRequest addRchFlwRequest);
+
     void csvRejectionsMcts(String fieldName, AddFlwRequest addFlwRequest);
 
     void csvRejectionsRch(String fieldName, AddRchFlwRequest addRchFlwRequest);
