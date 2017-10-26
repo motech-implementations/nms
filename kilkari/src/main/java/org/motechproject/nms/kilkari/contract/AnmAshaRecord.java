@@ -55,6 +55,48 @@ public class AnmAshaRecord {
     private String gfAddress;
     private String husbandName;
     private String gfStatus;
+    private Integer mddsStateId;
+
+    public Integer getMddsVillageId() {
+        return mddsVillageId;
+    }
+
+    @XmlElement(name = "MDDS_Village_ID")
+    public void setMddsVillageId(Integer mddsVillageId) {
+        this.mddsVillageId = mddsVillageId;
+    }
+
+    public Integer getMddsTalukaId() {
+        return mddsTalukaId;
+
+    }
+
+    @XmlElement(name = "MDDS_Taluka_ID")
+    public void setMddsTalukaId(Integer mddsTalukaId) {
+        this.mddsTalukaId = mddsTalukaId;
+    }
+
+    public Integer getMddsDistrictId() {
+        return mddsDistrictId;
+    }
+
+    @XmlElement(name = "MDDS_District_ID")
+    public void setMddsDistrictId(Integer mddsDistrictId) {
+        this.mddsDistrictId = mddsDistrictId;
+    }
+
+    public Integer getMddsStateId() {
+        return mddsStateId;
+    }
+
+    @XmlElement(name = "MDDS_StateID")
+    public void setMddsStateId(Integer mddsStateId) {
+        this.mddsStateId = mddsStateId;
+    }
+
+    private Integer mddsDistrictId;
+    private Integer mddsTalukaId;
+    private Integer mddsVillageId;
 
     public Long getId() {
         return id;

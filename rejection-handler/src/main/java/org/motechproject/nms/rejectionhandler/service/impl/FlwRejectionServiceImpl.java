@@ -26,6 +26,7 @@ public class FlwRejectionServiceImpl implements FlwRejectionService {
 
     @Override //NO CHECKSTYLE CyclomaticComplexity
     public void createUpdate(FlwImportRejection flwImportRejection) {
+        LOGGER.info("Creating rejection record: ");
         if (flwImportRejection.getFlwId() != null && flwImportRejection.getStateId() != null) {
             FlwImportRejection flwImportRejection1 = findByFlwIdAndStateId(flwImportRejection.getFlwId(), flwImportRejection.getStateId());
 
@@ -40,7 +41,10 @@ public class FlwRejectionServiceImpl implements FlwRejectionService {
                 flwImportRejection1 = setNewData(flwImportRejection, flwImportRejection1);
                 flwImportRejectionDataService.update(flwImportRejection1);
             }
+        } else if (flwImportRejection.getFlwId() != null && flwImportRejection.getStateId() == null) {
+            flwImportRejectionDataService.create(flwImportRejection);
         }
+        LOGGER.info("Created rejection record.");
     }
 
     private static FlwImportRejection setNewData(FlwImportRejection flwImportRejection, FlwImportRejection flwImportRejection1) {

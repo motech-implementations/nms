@@ -191,7 +191,7 @@ public class FlwCsvServiceImpl implements FlwCsvService {
     public void csvRejectionsMcts(String fieldName, AddFlwRequest addFlwRequest) {
         String action = this.flwActionFinder(addFlwRequest);
         if ("contactNumber".equals(fieldName)) {
-            flwRejectionService.createUpdate(flwRejectionMcts(addFlwRequest, false, RejectionReasons.MSISDN_EMPTY_OR_WRONG_FORMAT.toString(), action));
+            flwRejectionService.createUpdate(flwRejectionMcts(addFlwRequest, false, RejectionReasons.MOBILE_NUMBER_EMPTY_OR_WRONG_FORMAT.toString(), action));
         } else if (gfStatus.equals(fieldName)) {
             flwRejectionService.createUpdate(flwRejectionMcts(addFlwRequest, false, RejectionReasons.GF_STATUS_EMPTY_OR_WRONG_FORMAT.toString(), action));
         } else if ("type".equals(fieldName)) {
@@ -206,7 +206,7 @@ public class FlwCsvServiceImpl implements FlwCsvService {
     public void csvRejectionsRch(String fieldName, AddRchFlwRequest addRchFlwRequest) {
         String action = this.rchFlwActionFinder(addRchFlwRequest);
         if ("contactNumber".equals(fieldName)) {
-            flwRejectionService.createUpdate(flwRejectionRch(addRchFlwRequest, false, RejectionReasons.MSISDN_EMPTY_OR_WRONG_FORMAT.toString(), action));
+            flwRejectionService.createUpdate(flwRejectionRch(addRchFlwRequest, false, RejectionReasons.MOBILE_NUMBER_EMPTY_OR_WRONG_FORMAT.toString(), action));
         } else if (gfStatus.equals(fieldName)) {
             flwRejectionService.createUpdate(flwRejectionRch(addRchFlwRequest, false, RejectionReasons.GF_STATUS_EMPTY_OR_WRONG_FORMAT.toString(), action));
         } else if ("type".equals(fieldName)) {

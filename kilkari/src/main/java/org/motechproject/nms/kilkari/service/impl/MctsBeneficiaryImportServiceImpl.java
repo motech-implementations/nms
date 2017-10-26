@@ -272,9 +272,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         // validate msisdn
         if (!validateMsisdn(msisdn, SubscriptionPackType.PREGNANCY, beneficiaryId, importOrigin)) {
             if (flagForMcts) {
-                motherRejectionService.createOrUpdateMother(motherRejectionMcts(convertMapToMother(record), false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+                motherRejectionService.createOrUpdateMother(motherRejectionMcts(convertMapToMother(record), false, RejectionReasons.MOBILE_NUMBER_EMPTY_OR_WRONG_FORMAT.toString(), action));
             } else {
-                motherRejectionService.createOrUpdateMother(motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+                motherRejectionService.createOrUpdateMother(motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.MOBILE_NUMBER_EMPTY_OR_WRONG_FORMAT.toString(), action));
             }
             return false;
         }
@@ -312,9 +312,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             subscriptionErrorDataService.create(new SubscriptionError(msisdn, beneficiaryId,
                     SubscriptionRejectionReason.BENEFICIARY_ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY, "Updated Record exits", importOrigin));
             if (flagForMcts) {
-                motherRejectionService.createOrUpdateMother(motherRejectionMcts(convertMapToMother(record), false, RejectionReasons.RECORD_ALREADY_EXISTS.toString(), action));
+                motherRejectionService.createOrUpdateMother(motherRejectionMcts(convertMapToMother(record), false, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS.toString(), action));
             } else {
-                motherRejectionService.createOrUpdateMother(motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.RECORD_ALREADY_EXISTS.toString(), action));
+                motherRejectionService.createOrUpdateMother(motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS.toString(), action));
             }
             return false;
         }
@@ -328,9 +328,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                         subscriptionErrorDataService.create(new SubscriptionError(msisdn, beneficiaryId,
                                 SubscriptionRejectionReason.BENEFICIARY_ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY, message, importOrigin));
                         if (flagForMcts) {
-                            motherRejectionService.createOrUpdateMother(motherRejectionMcts(convertMapToMother(record), false, RejectionReasons.RECORD_ALREADY_EXISTS.toString(), action));
+                            motherRejectionService.createOrUpdateMother(motherRejectionMcts(convertMapToMother(record), false, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS.toString(), action));
                         } else {
-                            motherRejectionService.createOrUpdateMother(motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.RECORD_ALREADY_EXISTS.toString(), action));
+                            motherRejectionService.createOrUpdateMother(motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS.toString(), action));
                         }
                         return false;
                     }
@@ -448,9 +448,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         //validate mother
         if (!validateMother(mother, child, msisdn, importOrigin)) {
             if (flagForMcts) {
-                childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(record), false, RejectionReasons.MOTHER_ID_ERROR.toString(), action));
+                childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(record), false, RejectionReasons.ALREADY_LINKED_WITH_A_DIFFERENT_MOTHER_ID.toString(), action));
             } else {
-                childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.MOTHER_ID_ERROR.toString(), action));
+                childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.ALREADY_LINKED_WITH_A_DIFFERENT_MOTHER_ID.toString(), action));
             }
             return false;
         }
@@ -458,9 +458,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         // validate msisdn
         if (!validateMsisdn(msisdn, SubscriptionPackType.CHILD, childId, importOrigin)) {
             if (flagForMcts) {
-                childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(record), false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+                childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(record), false, RejectionReasons.MOBILE_NUMBER_EMPTY_OR_WRONG_FORMAT.toString(), action));
             } else {
-                childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+                childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.MOBILE_NUMBER_EMPTY_OR_WRONG_FORMAT.toString(), action));
             }
             return false;
         }
@@ -501,9 +501,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     SubscriptionRejectionReason.BENEFICIARY_ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD,
                     "Updated Record exists", importOrigin));
             if (flagForMcts) {
-                childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(record), false, RejectionReasons.RECORD_ALREADY_EXISTS.toString(), action));
+                childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(record), false, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS.toString(), action));
             } else {
-                childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.RECORD_ALREADY_EXISTS.toString(), action));
+                childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS.toString(), action));
             }
             return false;
         }
@@ -517,9 +517,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                         subscriptionErrorDataService.create(new SubscriptionError(msisdn, childId,
                                 SubscriptionRejectionReason.BENEFICIARY_ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD, message, importOrigin));
                         if (flagForMcts) {
-                            childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(record), false, RejectionReasons.RECORD_ALREADY_EXISTS.toString(), action));
+                            childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(record), false, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS.toString(), action));
                         } else {
-                            childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.RECORD_ALREADY_EXISTS.toString(), action));
+                            childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS.toString(), action));
                         }
                         return false;
                     }

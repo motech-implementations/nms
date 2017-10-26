@@ -31,6 +31,10 @@ public final class MctsImportTestHelper {
         return readMctsFile("mcts-asha-data-duplicate.xml");
     }
 
+    public static String getResponseForStateWiseTest() throws IOException {
+        return readMctsFile("mcts_single_record.xml");
+    }
+
     public static String getAnmAshaResponseData() throws IOException {
         return readMctsFile("mcts-anm-asha-data.xml");
     }

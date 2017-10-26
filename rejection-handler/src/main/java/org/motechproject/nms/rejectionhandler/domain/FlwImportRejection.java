@@ -141,6 +141,50 @@ public class FlwImportRejection {
     @Field
     private String action;
 
+    public Integer getMddsStateId() {
+        return mddsStateId;
+    }
+
+    public void setMddsStateId(Integer mddsStateId) {
+        this.mddsStateId = mddsStateId;
+    }
+
+    @Field
+    private Integer mddsStateId;
+
+    public Integer getMddsDistrictId() {
+        return mddsDistrictId;
+    }
+
+    public void setMddsDistrictId(Integer mddsDistrictId) {
+        this.mddsDistrictId = mddsDistrictId;
+    }
+
+    public Integer getMddsTalukaId() {
+        return mddsTalukaId;
+    }
+
+    public void setMddsTalukaId(Integer mddsTalukaId) {
+        this.mddsTalukaId = mddsTalukaId;
+    }
+
+    public Integer getMddsVillageId() {
+        return mddsVillageId;
+    }
+
+    public void setMddsVillageId(Integer mddsVillageId) {
+        this.mddsVillageId = mddsVillageId;
+    }
+
+    @Field
+    private Integer mddsDistrictId;
+
+    @Field
+    private Integer mddsTalukaId;
+
+    @Field
+    private Integer mddsVillageId;
+
 
     public Long getDistrictId() {
         return districtId;

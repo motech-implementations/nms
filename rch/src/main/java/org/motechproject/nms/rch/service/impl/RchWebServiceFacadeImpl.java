@@ -555,7 +555,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         for (RchMotherRecord record : rejectedRchMothers) {
             action = actionFinderService.rchMotherActionFinder(record);
             LOGGER.error("Existing Mother Record with same MSISDN in the data set");
-            motherRejectionService.createOrUpdateMother(motherRejectionRch(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
+            motherRejectionService.createOrUpdateMother(motherRejectionRch(record, false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action));
             rejected++;
         }
         List<RchMotherRecord> acceptedRchMothers = rchMotherRecordsSet.get(1);
@@ -598,7 +598,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         for (RchChildRecord record : rejectedRchChildren) {
             action = actionFinderService.rchChildActionFinder(record);
             LOGGER.error("Existing Child Record with same MSISDN in the data set");
-            childRejectionService.createOrUpdateChild(childRejectionRch(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
+            childRejectionService.createOrUpdateChild(childRejectionRch(record, false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action));
             rejected++;
         }
         List<RchChildRecord> acceptedRchChildren = rchChildRecordsSet.get(1);
@@ -644,7 +644,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         for (RchAnmAshaRecord record : rejectedRchAshas) {
             action = this.rchFlwActionFinder(record);
             LOGGER.error("Existing Asha Record with same MSISDN in the data set");
-            flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
+            flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action));
         }
         List<RchAnmAshaRecord> acceptedRchAshas = rchAshaRecordsSet.get(1);
 
@@ -662,7 +662,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
                 if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || state != flw.getState()))  && flw.getStatus() != FrontLineWorkerStatus.ANONYMOUS) {
                     LOGGER.error("Existing FLW with same MSISDN but different MCTS ID");
-                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
                     rejected++;
                 } else {
                     if (!(FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation))) {
@@ -681,11 +681,11 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                             rejected++;
                         } catch (FlwImportException e) {
                             LOGGER.error("Existing FLW with same MSISDN but different RCH ID", e);
-                            flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+                            flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
                             rejected++;
                         } catch (FlwExistingRecordException e) {
                             LOGGER.error("Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}", record.getGfId(), record.getMobileNo(), e);
-                            flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.RECORD_ALREADY_EXISTS.toString(), action));
+                            flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS.toString(), action));
                             rejected++;
                         } catch (Exception e) {
                             LOGGER.error("RCH Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}",
@@ -700,7 +700,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
             } catch (NumberFormatException e) {
                 LOGGER.error("Mobile number either not present or is not in number format");
-                flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.NUMBER_FORMAT_ERROR.toString(), action));
+                flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_EMPTY_OR_WRONG_FORMAT.toString(), action));
             }
         }
         LOGGER.info("RCH import: {} state, Total: {} Ashas imported, {} Ashas rejected", stateName, saved, rejected);

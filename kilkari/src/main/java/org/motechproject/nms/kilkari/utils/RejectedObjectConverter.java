@@ -45,7 +45,7 @@ public final class RejectedObjectConverter {
         return flwImportRejection;
     }
 
-    public static FlwImportRejection flwRejectionMcts(AnmAshaRecord record, Boolean accepted, String rejectionReason, String action) {
+    public static FlwImportRejection flwRejectionMcts(AnmAshaRecord record, Boolean accepted, String rejectionReason, String action) {//NOPMD NcssMethodCount
         FlwImportRejection flwImportRejection = new FlwImportRejection();
         flwImportRejection.setStateId(record.getStateId());
         flwImportRejection.setDistrictId(record.getDistrictId());
@@ -86,6 +86,10 @@ public final class RejectedObjectConverter {
         flwImportRejection.setVerifierRemarks(record.getVerifierRemarks());
         flwImportRejection.setGfAddress(record.getGfAddress());
         flwImportRejection.setHusbandName(record.getHusbandName());
+        flwImportRejection.setMddsStateId(record.getMddsStateId());
+        flwImportRejection.setMddsDistrictId(record.getMddsDistrictId());
+        flwImportRejection.setMddsTalukaId(record.getMddsTalukaId());
+        flwImportRejection.setMddsVillageId(record.getMddsVillageId());
         flwImportRejection.setSource("MCTS-Import");
         flwImportRejection.setAccepted(accepted);
         flwImportRejection.setRejectionReason(rejectionReason);
