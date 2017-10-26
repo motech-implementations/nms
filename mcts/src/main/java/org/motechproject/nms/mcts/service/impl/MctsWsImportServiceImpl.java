@@ -241,7 +241,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         for (MotherRecord record : rejectedMotherRecords) {
             action = actionFinderService.motherActionFinder(record);
             LOGGER.error("Existing Mother Record with same MSISDN in the data set");
-            motherRejectionService.createOrUpdateMother(motherRejectionMcts(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
+            motherRejectionService.createOrUpdateMother(motherRejectionMcts(record, false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action));
             rejected++;
         }
         List<MotherRecord> acceptedMotherRecords = motherRecordsSet.get(1);
@@ -342,7 +342,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         for (ChildRecord record : rejectedChildRecords) {
             action = actionFinderService.childActionFinder(record);
             LOGGER.error("Existing Child Record with same MSISDN in the data set");
-            childRejectionService.createOrUpdateChild(childRejectionMcts(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
+            childRejectionService.createOrUpdateChild(childRejectionMcts(record, false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action));
             rejected++;
         }
         List<ChildRecord> acceptedChildRecords = childRecordsSet.get(1);
@@ -447,9 +447,10 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         int saved = 0;
         int rejected = 0;
         for (AnmAshaRecord record : rejectedAshaRecords) {
+            record.setStateId(stateCode);
             action = this.flwActionFinder(record);
             LOGGER.error("Existing Asha Record with same MSISDN in the data set");
-            flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), action));
+            flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action));
             rejected++;
         }
         List<AnmAshaRecord> acceptedAshaRecords = ashaRecordsSet.get(1);
@@ -457,15 +458,16 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
         for (AnmAshaRecord record : acceptedAshaRecords) {
             try {
+                record.setStateId(stateCode);
                 action = this.flwActionFinder(record);
                 String designation = record.getType();
                 designation = (designation != null) ? designation.trim() : designation;
                 Long msisdn = Long.parseLong(record.getContactNo());
                 String mctsFlwId = record.getId().toString();
                 FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
-                if (flw != null && ((!mctsFlwId.equals(flw.getMctsFlwId()) || state != flw.getState())) && flw.getStatus() != FrontLineWorkerStatus.ANONYMOUS) {
+                if (flw != null && ((!mctsFlwId.equals(flw.getMctsFlwId()) || state.getId() != flw.getState().getId())) && flw.getStatus() != FrontLineWorkerStatus.ANONYMOUS) {
                     LOGGER.error("Existing FLW with same MSISDN but different MCTS ID");
-                    flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+                    flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
                     rejected++;
                 } else {
                     if (!(FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation))) {
@@ -484,11 +486,11 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                             rejected++;
                         } catch (FlwImportException e) {
                             LOGGER.error("Existing FLW with same MSISDN but different MCTS ID", e);
-                            flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), action));
+                            flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
                             rejected++;
                         } catch (FlwExistingRecordException e) {
                             LOGGER.error("Cannot import FLW with ID: {}, and MSISDN (Contact_No): {}", record.getId(), record.getContactNo(), e);
-                            flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.RECORD_ALREADY_EXISTS.toString(), action));
+                            flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS.toString(), action));
                             rejected++;
                         } catch (Exception e) {
                             LOGGER.error("Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Contact_No): {}",
@@ -503,7 +505,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                 }
             } catch (NumberFormatException e) {
                 LOGGER.error("Mobile number either not present or is not in number format");
-                flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.NUMBER_FORMAT_ERROR.toString(), action));
+                flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.MOBILE_NUMBER_EMPTY_OR_WRONG_FORMAT.toString(), action));
             }
         }
         LOGGER.info("{} state, Total: {} Ashas imported, {} Ashas rejected", stateName, saved, rejected);

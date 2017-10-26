@@ -741,7 +741,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         //rejected entry should be in nms_subscription_errors with reason 'ALREADY_SUBSCRIBED'.
-        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.MSISDN_WITH_ONE_ACTIVE_SUBCRIPTION_PRESENT);
+        assertSubscriptionError(9439986187L, SubscriptionPackType.CHILD, SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED);
     }
 
     /*
@@ -1933,7 +1933,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertNull(mctsChildDataService.findByBeneficiaryId("8876543210"));
         errors = subscriptionErrorDataService.retrieveAll();
         assertEquals(2, errors.size());
-        assertEquals(SubscriptionRejectionReason.MSISDN_WITH_ONE_ACTIVE_SUBCRIPTION_PRESENT, errors.get(1).getRejectionReason());
+        assertEquals(SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED, errors.get(1).getRejectionReason());
         assertEquals("Msisdn already has an active Subscription", errors.get(1).getRejectionMessage());
         transactionManager.commit(status);
     }

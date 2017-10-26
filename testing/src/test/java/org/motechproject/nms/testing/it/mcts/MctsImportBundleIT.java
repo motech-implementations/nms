@@ -111,7 +111,7 @@ public class MctsImportBundleIT extends BasePaxIT {
     @Before
     public void setUp() throws ServletException, NamespaceException {
         testingService.clearDatabase();
-        State state = stateDataService.create(new State("My State", 21L));
+        State state = stateDataService.create(new State("My State", 18L));
 
         Language language = new Language("1", "Hindi");
         District district = new District();
@@ -345,7 +345,7 @@ public class MctsImportBundleIT extends BasePaxIT {
         assertEquals(1, flws.size());
         List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
         assertEquals(1, flwImportRejections.size());
-        assertEquals(RejectionReasons.MSISDN_ALREADY_IN_USE.toString(), flwImportRejections.get(0).getRejectionReason());
+        assertEquals(RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), flwImportRejections.get(0).getRejectionReason());
     }
 
     @Test
@@ -388,11 +388,11 @@ public class MctsImportBundleIT extends BasePaxIT {
         LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
         LocalDate failDate = DateUtil.today().minusDays(2);
         LocalDate yesterday = DateUtil.today().minusDays(1);
-        MctsImportFailRecord mctsImportFailRecord1 = new MctsImportFailRecord(failDate, MctsUserType.ASHA, 21L);
+        MctsImportFailRecord mctsImportFailRecord1 = new MctsImportFailRecord(failDate, MctsUserType.ASHA, 18L);
 
-        MctsImportFailRecord mctsImportFailRecord2 = new MctsImportFailRecord(failDate, MctsUserType.MOTHER, 21L);
+        MctsImportFailRecord mctsImportFailRecord2 = new MctsImportFailRecord(failDate, MctsUserType.MOTHER, 18L);
 
-        MctsImportFailRecord mctsImportFailRecord3 = new MctsImportFailRecord(failDate, MctsUserType.CHILD, 21L);
+        MctsImportFailRecord mctsImportFailRecord3 = new MctsImportFailRecord(failDate, MctsUserType.CHILD, 18L);
 
         mctsImportFailRecordDataService.create(mctsImportFailRecord1);
         mctsImportFailRecordDataService.create(mctsImportFailRecord2);
@@ -409,7 +409,7 @@ public class MctsImportBundleIT extends BasePaxIT {
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.START_DATE_PARAM, lastDateToCheck);
             params.put(Constants.END_DATE_PARAM, yesterday);
-            params.put(Constants.STATE_ID_PARAM, 21L);
+            params.put(Constants.STATE_ID_PARAM, 18L);
             params.put(Constants.ENDPOINT_PARAM, endpoint);
             MotechEvent event = new MotechEvent("foobar", params);
 
@@ -427,12 +427,16 @@ public class MctsImportBundleIT extends BasePaxIT {
             assertEquals(1, mctsImportAudits.get(1).getAccepted());
             assertEquals(3, mctsImportAudits.get(1).getRejected());
             assertEquals(1, mctsImportAudits.get(2).getAccepted());
-            assertEquals(3, mctsImportAudits.get(2).getRejected());
+            assertEquals(4, mctsImportAudits.get(2).getRejected());
             assertEquals(lastDateToCheck, mctsImportAudits.get(0).getStartImportDate());
             assertEquals(yesterday, mctsImportAudits.get(0).getEndImportDate());
 
             List<FrontLineWorker> flws = flwDataService.retrieveAll();
             assertEquals(1, flws.size());
+
+            List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
+            assertEquals(2,flwImportRejections.size());
+            assertEquals(flwImportRejections.get(0).getRejectionReason(), RejectionReasons.FLW_TYPE_NOT_ASHA.toString());
 
             List<MctsImportFailRecord> mctsImportFailRecords = mctsImportFailRecordDataService.retrieveAll();
             assertEquals(0, mctsImportFailRecords.size());
@@ -500,7 +504,7 @@ public class MctsImportBundleIT extends BasePaxIT {
             assertEquals("Sample Name 3", flws.get(0).getName());
 
             List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
-            assertEquals(RejectionReasons.DUPLICATE_MSISDN_IN_DATASET.toString(), flwImportRejections.get(0).getRejectionReason());
+            assertEquals(RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), flwImportRejections.get(0).getRejectionReason());
             assertEquals(2, flwImportRejections.size());
 
             List<MctsChild> children = mctsChildDataService.retrieveAll();
