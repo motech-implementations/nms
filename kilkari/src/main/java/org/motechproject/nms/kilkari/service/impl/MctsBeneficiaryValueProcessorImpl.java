@@ -1,14 +1,13 @@
 package org.motechproject.nms.kilkari.service.impl;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.DateTimeParser;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
-import org.motechproject.nms.kilkari.exception.InvalidReferenceDateException;
-import org.motechproject.nms.kilkari.exception.InvalidRegistrationIdException;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
@@ -45,7 +44,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
         return getOrCreateMotherInstance(value);
     }
 
-    @Override
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
     public MctsMother getOrCreateRchMotherInstance(String rchId, String mctsId) {
 
         if (rchId == null || "".equals(rchId.trim())) {
@@ -53,9 +52,8 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
         }
         MctsMother motherByRchId = mctsMotherDataService.findByRchId(rchId);
         MctsMother motherByMctsId;
-
         if (motherByRchId == null) {
-            if (mctsId == null) {
+            if (mctsId == null || ("NULL").equalsIgnoreCase(mctsId)) {
                 motherByRchId = new MctsMother(rchId, null);
                 return motherByRchId;
             } else {
@@ -69,7 +67,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                 }
             }
         } else {
-            if (mctsId == null) {
+            if (mctsId == null || ("NULL").equalsIgnoreCase(mctsId)) {
                 return motherByRchId;
             } else {
                 motherByMctsId = mctsMotherDataService.findByBeneficiaryId(mctsId);
@@ -80,7 +78,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                     if (motherByRchId.getId().equals(motherByMctsId.getId())) {
                         return motherByRchId;
                     } else {
-                        throw new InvalidRegistrationIdException("Unrelated Mothers exists with this MctsId and RchId");
+                       return null;
                     }
                 }
             }
@@ -162,7 +160,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                     if (childByRchId.getId().equals(childByMctsId.getId())) {
                         return childByRchId;
                     } else {
-                        throw new InvalidRegistrationIdException("Unrelated children exist with the same MCTS id and RCH id");
+                                return null;
                     }
                 }
             }
@@ -181,16 +179,27 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
             DateTimeParser[] parsers = {
                     DateTimeFormat.forPattern("dd-MM-yyyy").getParser(),
                     DateTimeFormat.forPattern("dd/MM/yyyy").getParser(),
-                    DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ").getParser()};
+                    DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZZ").getParser(),
+                    DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZZ").getParser()};
             DateTimeFormatter formatter = new DateTimeFormatterBuilder().append(null, parsers).toFormatter();
 
             referenceDate = formatter.parseDateTime(value);
 
         } catch (IllegalArgumentException e) {
-            throw new InvalidReferenceDateException(String.format("Reference date %s is invalid", value), e);
+           return null;
         }
 
         return referenceDate;
+    }
+    @Override
+    public LocalDate getLocalDateByString(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        DateTime referenceDate = this.getDateByString(value);
+
+        return referenceDate == null ? null : referenceDate.toLocalDate();
     }
 
     @Override
@@ -204,11 +213,19 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
     @Override
     public Long getMsisdnByString(String value) {
+        String msisdn;
         if (value.length() < KilkariConstants.MSISDN_LENGTH) {
-            throw new NumberFormatException("Beneficiary MSISDN too short, must be at least 10 digits");
+            msisdn = value;
+        } else if (value.length() == (KilkariConstants.MSISDN_LENGTH + 2) && (("91").equals(value.substring(0, 2)))) {
+             msisdn = value.substring(value.length() - KilkariConstants.MSISDN_LENGTH);
+        } else if (value.length() == (KilkariConstants.MSISDN_LENGTH + 3) && (("+91").equals(value.substring(0, 3)))) {
+            msisdn = value.substring(value.length() - KilkariConstants.MSISDN_LENGTH);
+        } else {
+            msisdn = value;
         }
-        String msisdn = value.substring(value.length() - KilkariConstants.MSISDN_LENGTH);
-
+        if (msisdn.isEmpty()) {
+            return (long) 0;
+        }
         return Long.parseLong(msisdn);
     }
 

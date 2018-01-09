@@ -28,8 +28,10 @@ import org.motechproject.nms.mcts.utils.Constants;
 import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.FlwImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
+import org.motechproject.nms.rejectionhandler.repository.ChildRejectionDataService;
 import org.motechproject.nms.rejectionhandler.repository.FlwImportRejectionDataService;
 import org.motechproject.nms.rejectionhandler.repository.MotherRejectionDataService;
 import org.motechproject.nms.testing.it.mcts.util.*;
@@ -106,12 +108,15 @@ public class MctsImportBundleIT extends BasePaxIT {
     private MotherRejectionDataService motherRejectionDataService;
 
     @Inject
+    private ChildRejectionDataService childRejectionDataService;
+
+    @Inject
     private FrontLineWorkerService frontLineWorkerService;
 
     @Before
     public void setUp() throws ServletException, NamespaceException {
-        testingService.clearDatabase();
-        State state = stateDataService.create(new State("My State", 18L));
+       testingService.clearDatabase();
+        State state = stateDataService.create(new State("My State", 21L));
 
         Language language = new Language("1", "Hindi");
         District district = new District();
@@ -164,7 +169,7 @@ public class MctsImportBundleIT extends BasePaxIT {
 
         SubscriptionPack pregnancyPack = new SubscriptionPack("prg", SubscriptionPackType.PREGNANCY, 70, 10,
                 Collections.<SubscriptionPackMessage>emptyList());
-        SubscriptionPack childPack = new SubscriptionPack("child", SubscriptionPackType.CHILD, 5000, 6,
+        SubscriptionPack childPack = new SubscriptionPack("child", SubscriptionPackType.CHILD, 48, 6,
                 Collections.<SubscriptionPackMessage>emptyList());
 
 
@@ -180,12 +185,13 @@ public class MctsImportBundleIT extends BasePaxIT {
         httpService.registerServlet("/mctsWsOneUpdateDate", new MockWsHttpServletForOneUpdateDate(), null, null);
         httpService.registerServlet("/mctsMotherRejection", new MockWsHttpServletForMotherRejection(), null, null);
         httpService.registerServlet("/mctsWsDuplicateASHACheck", new MockWsHttpServletForDuplicateASHACheck(), null, null);
+        httpService.registerServlet("/mctsWsDuplicateMsisdnInDataset", new MockWsHttpServletForDuplicateMsisdnInDataset(), null, null);
     }
 
     @After
     public void tearDown() {
-        testingService.clearDatabase();
-        httpService.unregister("/mctsWs");
+//        testingService.clearDatabase();
+       httpService.unregister("/mctsWs");
         httpService.unregister("/mctsWsFailedStructure");
         httpService.unregister("/mctsWsASHAValidation");
         httpService.unregister("/mctsWsRemoteException");
@@ -193,6 +199,7 @@ public class MctsImportBundleIT extends BasePaxIT {
         httpService.unregister("/mctsWsOneUpdateDate");
         httpService.unregister("/mctsMotherRejection");
         httpService.unregister("/mctsWsDuplicateASHACheck");
+        httpService.unregister("/mctsWsDuplicateMsisdnInDataset");
     }
 
     @Test
@@ -636,6 +643,73 @@ public class MctsImportBundleIT extends BasePaxIT {
             settingsService.getSettingsFacade().setProperty("mcts.hpd.states", originalStateFilter);
         }
     }
+
+
+    @Test
+    public void duplicateMsisdnInDatasetTest() throws MalformedURLException {
+        URL endpoint = new URL(String.format("http://localhost:%d/mctsWsDuplicateMsisdnInDataset", TestContext.getJettyPort()));
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+
+        // this CL workaround is for an issue with PAX IT logging messing things up
+        // shouldn't affect production
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
+
+        // setup motech event
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        MotechEvent event = new MotechEvent("foobar", params);
+        mctsWsImportService.importMothersData(event);
+        Thread.currentThread().setContextClassLoader(cl);
+
+//        Should reject non ASHA FLWs
+
+        List<MotherImportRejection> motherImportRejections = motherRejectionDataService.retrieveAll();
+        assertEquals(1, motherImportRejections.size());
+
+        System.out.println("reason"+motherImportRejections.get(0).getRejectionReason()+motherImportRejections.get(0).getMobileNo());
+//       System.out.println("reason"+motherImportRejections.get(1).getRejectionReason()+motherImportRejections.get(1).getMobileNo());
+//       System.out.println("reason"+motherImportRejections.get(2).getRejectionReason()+motherImportRejections.get(2).getMobileNo());
+//        System.out.println("reason"+motherImportRejections.get(3).getRejectionReason()+motherImportRejections.get(3).getIdNo());
+        assertEquals(RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), motherImportRejections.get(0).getRejectionReason());
+    }
+
+    @Test
+    public void duplicateMsisdnInDatasetTestChild() throws MalformedURLException {
+        URL endpoint = new URL(String.format("http://localhost:%d/mctsWsDuplicateMsisdnInDataset", TestContext.getJettyPort()));
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+
+        // this CL workaround is for an issue with PAX IT logging messing things up
+        // shouldn't affect production
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
+
+        // setup motech event
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        MotechEvent event = new MotechEvent("foobar", params);
+        mctsWsImportService.importChildrenData(event);
+        Thread.currentThread().setContextClassLoader(cl);
+
+//        Should reject non ASHA FLWs
+
+        List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
+        assertEquals(2, childImportRejections.size());
+        System.out.println("reason"+childImportRejections.get(0).getMobileNo()+childImportRejections.get(0).getRejectionReason());
+        System.out.println("reason"+childImportRejections.get(1).getMobileNo()+childImportRejections.get(1).getRejectionReason());
+//        System.out.println("reason"+childImportRejections.get(2).getRejectionReason()+childImportRejections.get(2).getMobileNo());
+//        System.out.println("reason"+motherImportRejections.get(3).getRejectionReason()+motherImportRejections.get(3).getIdNo());
+        assertEquals(RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), childImportRejections.get(0).getRejectionReason());
+    }
+
 
 }
 

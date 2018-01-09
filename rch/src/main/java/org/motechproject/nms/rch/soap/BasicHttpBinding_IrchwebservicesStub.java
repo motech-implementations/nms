@@ -7,11 +7,16 @@
 
 package org.motechproject.nms.rch.soap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class BasicHttpBinding_IrchwebservicesStub extends org.apache.axis.client.Stub implements org.motechproject.nms.rch.soap.Irchwebservices {
     private java.util.Vector cachedSerClasses = new java.util.Vector();
     private java.util.Vector cachedSerQNames = new java.util.Vector();
     private java.util.Vector cachedSerFactories = new java.util.Vector();
     private java.util.Vector cachedDeserFactories = new java.util.Vector();
+    private static final Logger LOGGER = LoggerFactory.getLogger(BasicHttpBinding_IrchwebservicesStub.class);
+
 
     static org.apache.axis.description.OperationDesc [] _operations;
 
@@ -223,6 +228,7 @@ public class BasicHttpBinding_IrchwebservicesStub extends org.apache.axis.client
         if (super.cachedEndpoint == null) {
             throw new org.apache.axis.NoEndPointException();
         }
+        LOGGER.info("from date in call {}", fromdate);
         org.apache.axis.client.Call _call = createCall();
         _call.setOperation(_operations[0]);
         _call.setUseSOAPAction(true);
@@ -236,6 +242,7 @@ public class BasicHttpBinding_IrchwebservicesStub extends org.apache.axis.client
         setRequestHeaders(_call);
         setAttachments(_call);
  try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {projectID, ID, securecode, fromdate, toDate, STID, typeofdata, DTID});
+
 
         if (_resp instanceof java.rmi.RemoteException) {
             throw (java.rmi.RemoteException)_resp;

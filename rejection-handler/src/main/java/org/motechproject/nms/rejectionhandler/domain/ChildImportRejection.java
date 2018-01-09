@@ -70,7 +70,7 @@ public class ChildImportRejection {
     private String motherName;
 
     @Field
-    private String motherId;
+    private String rCHMotherIDNo;
 
     @Field
     private String ashaPhone;
@@ -424,11 +424,11 @@ public class ChildImportRejection {
     }
 
     public String getMotherId() {
-        return motherId;
+        return rCHMotherIDNo;
     }
 
     public void setMotherId(String motherId) {
-        this.motherId = motherId;
+        this.rCHMotherIDNo = motherId;
     }
 
     public String getAshaPhone() {

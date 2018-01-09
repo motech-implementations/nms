@@ -27,6 +27,9 @@ public class ActionFinderServiceImpl implements ActionFinderService {
 
     @Override
     public String motherActionFinder(MotherRecord record) {
+        if (record.getIdNo() == null || record.getIdNo().isEmpty() || "".equals(record.getIdNo())) {
+            return create;
+        }
         if (mctsMotherDataService.findByBeneficiaryId(record.getIdNo()) == null) {
             return create;
         } else {
@@ -36,6 +39,9 @@ public class ActionFinderServiceImpl implements ActionFinderService {
 
     @Override
     public String rchMotherActionFinder(RchMotherRecord record) {
+        if (record.getRegistrationNo() == null || record.getRegistrationNo().isEmpty() || "".equals(record.getRegistrationNo())) {
+           return create;
+        }
         if (mctsMotherDataService.findByRchId(record.getRegistrationNo()) == null) {
             return create;
         } else {
@@ -45,6 +51,9 @@ public class ActionFinderServiceImpl implements ActionFinderService {
 
     @Override
     public String childActionFinder(ChildRecord record) {
+        if (record.getIdNo() == null || record.getIdNo().isEmpty() || "".equals(record.getIdNo())) {
+            return create;
+        }
         if (mctsChildDataService.findByBeneficiaryId(record.getIdNo()) == null) {
             return create;
         } else {
@@ -54,6 +63,9 @@ public class ActionFinderServiceImpl implements ActionFinderService {
 
     @Override
     public String rchChildActionFinder(RchChildRecord record) {
+        if (record.getRegistrationNo() == null || record.getRegistrationNo().isEmpty() || "".equals(record.getRegistrationNo())) {
+            return create;
+        }
         if (mctsChildDataService.findByRchId(record.getRegistrationNo()) == null) {
             return create;
         } else {

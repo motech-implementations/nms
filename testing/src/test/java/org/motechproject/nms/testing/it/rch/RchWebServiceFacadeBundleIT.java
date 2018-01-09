@@ -1,20 +1,27 @@
 package org.motechproject.nms.testing.it.rch;
 
 import org.joda.time.LocalDate;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.motechproject.commons.date.util.DateUtil;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.nms.imi.service.SettingsService;
+import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.mcts.utils.Constants;
 import org.motechproject.nms.rch.service.RchWebServiceFacade;
+import org.motechproject.nms.rch.service.RchWsImportService;
 import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
+import org.motechproject.nms.rejectionhandler.repository.MotherRejectionDataService;
 import org.motechproject.nms.testing.it.rch.util.*;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.scheduler.contract.RunOnceSchedulableJob;
@@ -22,22 +29,23 @@ import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpServer;
+import org.motechproject.testing.utils.TestContext;
 import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import org.osgi.service.http.NamespaceException;
+import org.osgi.service.http.HttpService;
 
 import javax.inject.Inject;
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
+import java.util.*;
 
 import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(PaxExam.class)
@@ -46,7 +54,13 @@ import static org.junit.Assert.assertTrue;
 public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Inject
+    private HttpService httpService;
+
+    @Inject
     private RchWebServiceFacade rchWebServiceFacade;
+
+    @Inject
+    private RchWsImportService rchWsImportService;
 
     @Inject
     private MotechSchedulerService schedulerService;
@@ -66,9 +80,15 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     @Inject
     private SettingsService settingsService;
 
+    @Inject
+    private MotherRejectionDataService motherRejectionDataService;
+
+
+
+
     @Before
     public void setUp() throws ServletException, NamespaceException {
-        testingService.clearDatabase();
+       testingService.clearDatabase();
         State state = stateDataService.create(new State("My State", 21L));
 
         District district = new District();
@@ -126,10 +146,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         subscriptionPackDataService.create(pregnancyPack);
         subscriptionPackDataService.create(childPack);
+
     }
 
+
     @Test
-    @Ignore
     public void shouldSerializeMothersDataFromSoapResponse() throws IOException {
         String response = RchImportTestHelper.getRchMothersResponseData();
 
@@ -183,4 +204,53 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         assertTrue(status);
     }
+
+    @Test
+    public void duplicateMsisdnInDatasetTest() throws IOException {
+        String response = RchImportTestHelper.getRchMothersResponseData();
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("rchEndpoint", 200, response);
+
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+
+        // this CL workaround is for an issue with PAX IT logging messing things up
+        // shouldn't affect production
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+
+        // setup motech event
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        List<Long> a = new ArrayList<>();
+        a.add(21L);
+        MotechEvent event = new MotechEvent("foobar", params);
+        rchWsImportService.importFromRch(a, yesterday, endpoint);
+//        rchWsImportService.importRchMothersData(event);
+        Thread.currentThread().setContextClassLoader(rchWebServiceFacade.getClass().getClassLoader());
+
+        MotechEvent event1 = new MotechEvent(org.motechproject.nms.rch.utils.Constants.RCH_MOTHER_READ_SUBJECT, params);
+        try {
+            rchWebServiceFacade.readMotherResponseFromFile(event1);
+        } catch (Exception e) {
+                e.printStackTrace();
+        }
+
+        Thread.currentThread().setContextClassLoader(cl);
+
+//        Should reject non ASHA FLWs
+
+        List<MotherImportRejection> motherImportRejections = motherRejectionDataService.retrieveAll();
+        assertEquals(2, motherImportRejections.size());
+        System.out.println("reason"+motherImportRejections.get(0).getRejectionReason()+motherImportRejections.get(0).getMobileNo());
+        System.out.println("reason"+motherImportRejections.get(1).getRejectionReason()+motherImportRejections.get(1).getMobileNo());
+//        System.out.println("reason"+motherImportRejections.get(2).getRejectionReason()+motherImportRejections.get(2).getMobileNo());
+//        System.out.println("reason"+motherImportRejections.get(3).getRejectionReason()+motherImportRejections.get(3).getMobileNo());
+        assertEquals(RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), motherImportRejections.get(0).getRejectionReason());
+    }
+
 }

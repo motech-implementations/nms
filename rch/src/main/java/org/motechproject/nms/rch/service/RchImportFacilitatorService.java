@@ -13,4 +13,6 @@ public interface RchImportFacilitatorService {
     void createImportFileAudit(RchImportFacilitator rchImportFacilitator) throws RchFileManipulationException;
 
     List<RchImportFacilitator> findByImportDateAndRchUserType(LocalDate importDate, RchUserType rchUserType);
+
+    RchImportFacilitator findByImportDateStateIdAndRchUserType(Long stateId, LocalDate importDate, RchUserType rchUserType);
 }

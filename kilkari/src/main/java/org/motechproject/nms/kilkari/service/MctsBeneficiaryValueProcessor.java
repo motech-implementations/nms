@@ -1,8 +1,10 @@
 package org.motechproject.nms.kilkari.service;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
+
 
 public interface MctsBeneficiaryValueProcessor {
 
@@ -21,6 +23,8 @@ public interface MctsBeneficiaryValueProcessor {
     MctsChild getOrCreateChildInstance(String value);
 
     DateTime getDateByString(String value);
+
+    LocalDate getLocalDateByString(String value);
 
     Long getCaseNoByString(String value);
 

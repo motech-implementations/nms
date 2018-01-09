@@ -24,11 +24,17 @@ public final class ObjectListCleaner {
         List<MotherRecord> acceptedRecords = new ArrayList<>();
         List<List<MotherRecord>> full = new ArrayList<>();
         HashMap<String, Integer> motherPhoneMap = new HashMap<>();
+        HashMap<String, String> motherPhoneIdMap = new HashMap<>();
         for (MotherRecord record : motherRecords) {
             if (motherPhoneMap.containsKey(record.getWhomPhoneNo())) {
-                motherPhoneMap.put(record.getWhomPhoneNo(), motherPhoneMap.get(record.getWhomPhoneNo()) + 1);
+                boolean identicalIdPhone = motherPhoneIdMap.get(record.getWhomPhoneNo()).equals(record.getIdNo());
+                if (!identicalIdPhone) {
+                    motherPhoneMap.put(record.getWhomPhoneNo(), motherPhoneMap.get(record.getWhomPhoneNo()) + 1);
+                }
+
             } else {
                 motherPhoneMap.put(record.getWhomPhoneNo(), 1);
+                motherPhoneIdMap.put(record.getWhomPhoneNo(), record.getIdNo());
             }
         }
         for (MotherRecord record : motherRecords) {
@@ -49,11 +55,16 @@ public final class ObjectListCleaner {
         List<RchMotherRecord> acceptedRecords = new ArrayList<>();
         List<List<RchMotherRecord>> full = new ArrayList<>();
         HashMap<String, Integer> motherPhoneMap = new HashMap<>();
+        HashMap<String, String> motherPhoneIdMap = new HashMap<>();
         for (RchMotherRecord record : rchMotherRecords) {
             if (motherPhoneMap.containsKey(record.getMobileNo())) {
-                motherPhoneMap.put(record.getMobileNo(), motherPhoneMap.get(record.getMobileNo()) + 1);
+                boolean identicalIdPhone = motherPhoneIdMap.get(record.getMobileNo()).equals(record.getRegistrationNo());
+                if (!identicalIdPhone) {
+                    motherPhoneMap.put(record.getMobileNo(), motherPhoneMap.get(record.getMobileNo()) + 1);
+                }
             } else {
                 motherPhoneMap.put(record.getMobileNo(), 1);
+                motherPhoneIdMap.put(record.getMobileNo(), record.getRegistrationNo());
             }
         }
         for (RchMotherRecord record : rchMotherRecords) {
@@ -74,11 +85,16 @@ public final class ObjectListCleaner {
         List<ChildRecord> acceptedRecords = new ArrayList<>();
         List<List<ChildRecord>> full = new ArrayList<>();
         HashMap<String, Integer> motherPhoneMap = new HashMap<>();
+        HashMap<String, String> motherPhoneIdMap = new HashMap<>();
         for (ChildRecord record : childRecords) {
             if (motherPhoneMap.containsKey(record.getWhomPhoneNo())) {
-                motherPhoneMap.put(record.getWhomPhoneNo(), motherPhoneMap.get(record.getWhomPhoneNo()) + 1);
+                boolean identicalIdContact = motherPhoneIdMap.get(record.getWhomPhoneNo()).equals(record.getIdNo());
+                if (!identicalIdContact) {
+                    motherPhoneMap.put(record.getWhomPhoneNo(), motherPhoneMap.get(record.getWhomPhoneNo()) + 1);
+                }
             } else {
                 motherPhoneMap.put(record.getWhomPhoneNo(), 1);
+                motherPhoneIdMap.put(record.getWhomPhoneNo(), record.getIdNo());
             }
         }
         for (ChildRecord record : childRecords) {
@@ -99,11 +115,16 @@ public final class ObjectListCleaner {
         List<RchChildRecord> acceptedRecords = new ArrayList<>();
         List<List<RchChildRecord>> full = new ArrayList<>();
         HashMap<String, Integer> motherPhoneMap = new HashMap<>();
+        HashMap<String, String> motherPhoneIdMap = new HashMap<>();
         for (RchChildRecord record : rchChildRecords) {
             if (motherPhoneMap.containsKey(record.getMobileNo())) {
-                motherPhoneMap.put(record.getMobileNo(), motherPhoneMap.get(record.getMobileNo()) + 1);
+                boolean identicalIdContact = motherPhoneIdMap.get(record.getMobileNo()).equals(record.getRegistrationNo());
+                if (!identicalIdContact) {
+                    motherPhoneMap.put(record.getMobileNo(), motherPhoneMap.get(record.getMobileNo()) + 1);
+                }
             } else {
                 motherPhoneMap.put(record.getMobileNo(), 1);
+                motherPhoneIdMap.put(record.getMobileNo(), record.getRegistrationNo());
             }
         }
         for (RchChildRecord record : rchChildRecords) {
@@ -124,11 +145,16 @@ public final class ObjectListCleaner {
         List<AnmAshaRecord> acceptedRecords = new ArrayList<>();
         List<List<AnmAshaRecord>> full = new ArrayList<>();
         HashMap<String, Integer> motherPhoneMap = new HashMap<>();
+        HashMap<String, Long> motherPhoneIdMap = new HashMap<>();
         for (AnmAshaRecord record : anmAshaRecords) {
             if (motherPhoneMap.containsKey(record.getContactNo())) {
-                motherPhoneMap.put(record.getContactNo(), motherPhoneMap.get(record.getContactNo()) + 1);
+                boolean identicalIdPhone = motherPhoneIdMap.get(record.getContactNo()).equals(record.getId());
+                if (!identicalIdPhone) {
+                    motherPhoneMap.put(record.getContactNo(), motherPhoneMap.get(record.getContactNo()) + 1);
+                }
             } else {
                 motherPhoneMap.put(record.getContactNo(), 1);
+                motherPhoneIdMap.put(record.getContactNo(), record.getId());
             }
         }
         for (AnmAshaRecord record : anmAshaRecords) {
@@ -149,11 +175,17 @@ public final class ObjectListCleaner {
         List<RchAnmAshaRecord> acceptedRecords = new ArrayList<>();
         List<List<RchAnmAshaRecord>> full = new ArrayList<>();
         HashMap<String, Integer> motherPhoneMap = new HashMap<>();
+        HashMap<String, Long> motherPhoneIdMap = new HashMap<>();
         for (RchAnmAshaRecord record : rchAnmAshaRecords) {
             if (motherPhoneMap.containsKey(record.getMobileNo())) {
-                motherPhoneMap.put(record.getMobileNo(), motherPhoneMap.get(record.getMobileNo()) + 1);
+                boolean identicalIdPhone = motherPhoneIdMap.get(record.getMobileNo()).equals(record.getGfId());
+                if (!identicalIdPhone) {
+                    motherPhoneMap.put(record.getMobileNo(), motherPhoneMap.get(record.getMobileNo()) + 1);
+                }
             } else {
                 motherPhoneMap.put(record.getMobileNo(), 1);
+                motherPhoneIdMap.put(record.getMobileNo(), record.getGfId());
+
             }
         }
         for (RchAnmAshaRecord record : rchAnmAshaRecords) {

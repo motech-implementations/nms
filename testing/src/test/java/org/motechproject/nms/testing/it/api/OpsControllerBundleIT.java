@@ -490,6 +490,18 @@ public class OpsControllerBundleIT extends BasePaxIT {
         return request;
     }
 
+    private AddFlwRequest getAddRequestASHAtest() {
+        AddFlwRequest request = new AddFlwRequest();
+        request.setContactNumber(8473877695L);
+        request.setName("Dipika Pegu");
+        request.setMctsFlwId("57856");
+        request.setStateId(state.getCode());
+        request.setDistrictId(district.getCode());
+        request.setType("ASHA");
+        request.setGfStatus("Active");
+        return request;
+    }
+
     // helper to create a invalid flw add/update request with designation ASHA
     private AddFlwRequest getAddRequestASHAInvalid() {
         AddFlwRequest request = new AddFlwRequest();
@@ -745,5 +757,31 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
         flw = frontLineWorkerService.getByContactNumber(7896543210L);
         assertEquals(1, courseCompletionRecordDataService.findByFlwId(flw.getId()).size());
+    }
+
+    @Test
+    public void testFlwCsvImportRejection() throws IOException, InterruptedException {
+
+        createFlwHelper("Dipika Pegu", 8473877695L, "57856");
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(8473877695L);
+        assertNotNull(flw.getState());
+        assertNotNull(flw.getDistrict());
+        assertNull(flw.getTaluka());    // null since we don't create it by default in helper
+        assertNull(flw.getVillage());   // null since we don't create it by default in helper
+
+        AddFlwRequest addFlwRequest = getAddRequestASHAtest();
+        addFlwRequest.setTalukaId(taluka.getCode());
+        addFlwRequest.setVillageId(village.getVcode());
+        HttpPost httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, addFlwRequest);
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+
+        // refetch and check that taluka and village are set
+        flw = frontLineWorkerService.getByContactNumber(8473877695L);
+        assertNotNull(flw.getState());
+        assertNotNull(flw.getDistrict());
+        assertNotNull(flw.getTaluka());
+        assertNotNull(flw.getVillage());
+        List<FlwImportRejection> flwImportRejectionList = flwImportRejectionDataService.retrieveAll();
+        assertEquals(0, flwImportRejectionList.size());
     }
 }

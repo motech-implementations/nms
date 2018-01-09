@@ -6,9 +6,11 @@ import org.motechproject.nms.kilkari.contract.MotherRecord;
 import org.motechproject.nms.kilkari.contract.RchAnmAshaRecord;
 import org.motechproject.nms.kilkari.contract.RchChildRecord;
 import org.motechproject.nms.kilkari.contract.RchMotherRecord;
+import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.FlwImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
+
 
 import java.util.Map;
 
@@ -45,7 +47,7 @@ public final class RejectedObjectConverter {
         return flwImportRejection;
     }
 
-    public static FlwImportRejection flwRejectionMcts(AnmAshaRecord record, Boolean accepted, String rejectionReason, String action) {//NOPMD NcssMethodCount
+    public static FlwImportRejection flwRejectionMcts(AnmAshaRecord record, Boolean accepted, String rejectionReason, String action) { //NOPMD NcssMethodCount
         FlwImportRejection flwImportRejection = new FlwImportRejection();
         flwImportRejection.setStateId(record.getStateId());
         flwImportRejection.setDistrictId(record.getDistrictId());
@@ -66,7 +68,11 @@ public final class RejectedObjectConverter {
         flwImportRejection.setGfStatus(record.getGfStatus());
         flwImportRejection.setRegDate(record.getRegDate());
         flwImportRejection.setSex(record.getSex());
-        flwImportRejection.setSmsReply(record.getSmsReply());
+        if (record.getSmsReply() != null && record.getSmsReply().length() > 255) {
+            flwImportRejection.setSmsReply(record.getSmsReply().substring(0, 255));
+        } else {
+            flwImportRejection.setSmsReply(record.getSmsReply());
+        }
         flwImportRejection.setAadharNo(record.getAadharNo());
         flwImportRejection.setCreatedOn(record.getCreatedOn());
         flwImportRejection.setUpdatedOn(record.getUpdatedOn());
@@ -120,6 +126,7 @@ public final class RejectedObjectConverter {
         childImportRejection.setEntryType(record.getEntryType());
         childImportRejection.setIdNo(record.getMctsId());
         childImportRejection.setmCTSMotherIDNo(record.getMctsMotherIdNo());
+        childImportRejection.setMotherId(record.getMotherRegistrationNo());
         childImportRejection.setExecDate(record.getExecDate());
         childImportRejection.setSource("RCH-Import");
         childImportRejection.setAccepted(accepted);
@@ -151,7 +158,7 @@ public final class RejectedObjectConverter {
         childImportRejection.setIdNo(record.getIdNo());
         childImportRejection.setName(record.getName());
         childImportRejection.setMotherName(record.getMotherName());
-        childImportRejection.setMotherId(record.getMotherId());
+        childImportRejection.setmCTSMotherIDNo(record.getMotherId());
         childImportRejection.setPhoneNumberWhom(record.getPhoneNoOfWhom());
         childImportRejection.setMobileNo(record.getWhomPhoneNo());
         childImportRejection.setBirthDate(record.getBirthdate());
@@ -458,7 +465,6 @@ public final class RejectedObjectConverter {
     }
 
     public static RchMotherRecord convertMapToRchMother(Map<String, Object> record) { //NO CHECKSTYLE CyclomaticComplexity
-
         RchMotherRecord rchMotherRecord = new RchMotherRecord();
         rchMotherRecord.setStateId(record.get(KilkariConstants.STATE_ID) == null ? null : (Long) record.get(KilkariConstants.STATE_ID));
         rchMotherRecord.setDistrictId(record.get(KilkariConstants.DISTRICT_ID) == null ? null : (Long) record.get(KilkariConstants.DISTRICT_ID));
@@ -511,7 +517,7 @@ public final class RejectedObjectConverter {
         childRecord.setBirthdate(record.get(KilkariConstants.DOB) == null ? null : record.get(KilkariConstants.DOB).toString());
 
         childRecord.setIdNo(record.get(KilkariConstants.BENEFICIARY_ID) == null ? null : record.get(KilkariConstants.BENEFICIARY_ID).toString());
-        childRecord.setMotherId(record.get(KilkariConstants.MOTHER_ID) == null ? null : record.get(KilkariConstants.MOTHER_ID).toString());
+        childRecord.setMotherId(record.get(KilkariConstants.MOTHER_ID) == null ? null : ((MctsMother) record.get(KilkariConstants.MOTHER_ID)).getBeneficiaryId());
         childRecord.setEntryType(record.get(KilkariConstants.DEATH) == null || record.get(KilkariConstants.DEATH).toString().trim().isEmpty() ? null : ((Boolean) record.get(KilkariConstants.DEATH) ? 1 : 0));
 
         childRecord.setGpVillage(record.get(KilkariConstants.GP_VILLAGE) == null ? null : (String) record.get(KilkariConstants.GP_VILLAGE));
@@ -587,7 +593,7 @@ public final class RejectedObjectConverter {
         rchChildRecord.setDistrictId(record.get(KilkariConstants.DISTRICT_ID) == null ? null : (Long) record.get(KilkariConstants.DISTRICT_ID));
         rchChildRecord.setDistrictName(record.get(KilkariConstants.DISTRICT_NAME) == null ? null : record.get(KilkariConstants.DISTRICT_NAME).toString());
         rchChildRecord.setTalukaId(record.get(KilkariConstants.TALUKA_ID) == null ? null : record.get(KilkariConstants.TALUKA_ID).toString());
-        rchChildRecord.setTalukaId(record.get(KilkariConstants.TALUKA_NAME) == null ? null : record.get(KilkariConstants.TALUKA_NAME).toString());
+        rchChildRecord.setTalukaName(record.get(KilkariConstants.TALUKA_NAME) == null ? null : record.get(KilkariConstants.TALUKA_NAME).toString());
         rchChildRecord.setHealthBlockId(record.get(KilkariConstants.HEALTH_BLOCK_ID) == null ? null : (Long) record.get(KilkariConstants.HEALTH_BLOCK_ID));
         rchChildRecord.setHealthBlockName(record.get(KilkariConstants.HEALTH_BLOCK_NAME) == null ? null : record.get(KilkariConstants.HEALTH_BLOCK_NAME).toString());
         rchChildRecord.setPhcId(record.get(KilkariConstants.PHC_ID) == null ? null : (Long) record.get(KilkariConstants.PHC_ID));

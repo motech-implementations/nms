@@ -11,10 +11,56 @@ public class AddFlwRequest {
     private Long stateId;
     private Long districtId;
     private String talukaId;
+    private String talukaName;
     private Long phcId;
+    private String phcName;
     private Long subcentreId;
+    private String subcentreName;
     private Long villageId;
+    private String villageName;
     private Long healthblockId;
+    private String healthBlockName;
+
+    public String getTalukaName() {
+        return talukaName;
+    }
+
+    public void setTalukaName(String talukaName) {
+        this.talukaName = talukaName;
+    }
+
+    public String getPhcName() {
+        return phcName;
+    }
+
+    public void setPhcName(String phcName) {
+        this.phcName = phcName;
+    }
+
+    public String getSubcentreName() {
+        return subcentreName;
+    }
+
+    public void setSubcentreName(String subcentreName) {
+        this.subcentreName = subcentreName;
+    }
+
+    public String getVillageName() {
+        return villageName;
+    }
+
+    public void setVillageName(String villageName) {
+        this.villageName = villageName;
+    }
+
+    public String getHealthBlockName() {
+        return healthBlockName;
+    }
+
+    public void setHealthBlockName(String healthBlockName) {
+        this.healthBlockName = healthBlockName;
+    }
+
     private String type;
     private String gfStatus;
 

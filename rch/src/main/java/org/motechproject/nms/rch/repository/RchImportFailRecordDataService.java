@@ -20,4 +20,9 @@ public interface RchImportFailRecordDataService extends MotechDataService<RchImp
                                                                  @LookupField(name = "importDate", customOperator = Constants.Operators.GT_EQ)LocalDate importDate,
                                                                  @LookupField(name = "userType") RchUserType userType,
                                                                  QueryParams queryParams);
+
+    @Lookup
+    List<RchImportFailRecord> getByImportdateAndUsertype(@LookupField(name = "importDate", customOperator = Constants.Operators.GT_EQ)LocalDate importDate,
+                                                                 @LookupField(name = "userType") RchUserType userType,
+                                                                 QueryParams queryParams);
 }

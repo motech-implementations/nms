@@ -1,6 +1,8 @@
 package org.motechproject.nms.rch.service;
 
 import org.joda.time.LocalDate;
+import org.motechproject.event.MotechEvent;
+import org.motechproject.nms.rch.exception.RchFileManipulationException;
 
 import java.net.URL;
 
@@ -13,4 +15,6 @@ public interface RchWebServiceFacade {
     boolean getChildrenData(LocalDate from, LocalDate to, URL endpoint, Long stateId);
 
     boolean getAnmAshaData(LocalDate from, LocalDate to, URL endpoint, Long stateId);
+
+    void readMotherResponseFromFile(MotechEvent event) throws RchFileManipulationException;
 }
