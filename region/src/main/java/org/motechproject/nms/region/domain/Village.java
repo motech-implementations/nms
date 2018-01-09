@@ -64,8 +64,8 @@ public class Village extends MdsEntity {
     private long svid;
 
     @Field
-    @Column(allowsNull = "false")
     @NotNull
+    @Column(allowsNull = "false")
     @JsonBackReference
     private Taluka taluka;
 

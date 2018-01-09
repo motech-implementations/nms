@@ -187,8 +187,9 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         LOGGER.debug("Fetching all the failed imports in the last 7 days for stateId {} and UserType {}", stateId, userType);
         QueryParams queryParams = new QueryParams(new Order("importDate", Order.Direction.ASC));
         List<RchImportFailRecord> failedImports = rchImportFailRecordDataService.getByStateAndImportdateAndUsertype(stateId, referenceDate.minusDays(6), userType, queryParams);
+        LOGGER.info("failedImports {}", failedImports);
         LocalDate startDate = failedImports.isEmpty() ? referenceDate : failedImports.get(0).getImportDate();
-
+        LOGGER.info("fromDate {}", startDate);
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(Constants.START_DATE_PARAM, startDate);
         eventParams.put(Constants.END_DATE_PARAM, referenceDate);

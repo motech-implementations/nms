@@ -195,7 +195,8 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                 // update msisdn of existing asha worker
                 FrontLineWorker newFlw = createRchFlw(record, location);
                 if (newFlw != null) {
-                    frontLineWorkerService.add(newFlw);
+                    FrontLineWorker flwInstance = updateFlw(flw, record, location, SubscriptionOrigin.RCH_IMPORT);
+                    frontLineWorkerService.update(flwInstance);
                 }
             } else {
                 //we got here because an FLW exists with active job status and the same msisdn
@@ -206,7 +207,6 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                 } else {
                     LOGGER.debug("New flw but phone number(update) already in use");
                     flwErrorDataService.create(new FlwError(flwId, (long) record.get(FlwConstants.STATE_ID), (long) record.get(FlwConstants.DISTRICT_ID), FlwErrorReason.PHONE_NUMBER_IN_USE));
-                    throw new FlwExistingRecordException("Msisdn already in use.");
                 }
             }
         } else {
@@ -273,7 +273,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         FrontLineWorker existingFlwByFlwId = frontLineWorkerService.getByMctsFlwIdAndState(flwId, state);
         Map<String, Object> location = new HashMap<>();
         try {
-            location = locationService.getLocations(flw, false);
+            location = locationService.getLocations(flw, true);
 
             if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
                 action = this.flwActionFinder(convertMapToAsha(flw));
@@ -284,6 +284,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                         // we are trying to update the same existing flw. set fields and update
                         LOGGER.debug("Updating existing user with the same phone number");
                         frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOrigin.MCTS_IMPORT));
+                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), true, null, action));
                         return true;
                     } else if ((!existingFlwByFlwId.getMctsFlwId().equalsIgnoreCase(existingFlwByNumber.getMctsFlwId()) ||
                             !existingFlwByFlwId.getState().equals(existingFlwByNumber.getState())) &&
@@ -365,6 +366,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                             existingFlwByNumber.getJobStatus().equals(FlwJobStatus.INACTIVE)) {
                         LOGGER.debug("Updating existing user with same phone number");
                         frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOrigin.RCH_IMPORT));
+                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), true, null, action));
                         return true;
                     } else {
                         // we are trying to update 2 different users and/or phone number used by someone else

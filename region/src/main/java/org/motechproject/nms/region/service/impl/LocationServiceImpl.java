@@ -78,7 +78,7 @@ public class LocationServiceImpl implements LocationService {
 
     private boolean isValidID(final Map<String, Object> map, final String key) {
         Object obj = map.get(key);
-        if (obj == null) {
+        if (obj == null || obj.toString().isEmpty() || "NULL".equalsIgnoreCase(obj.toString())) {
             return false;
         }
 
@@ -99,11 +99,14 @@ public class LocationServiceImpl implements LocationService {
 
         Map<String, Object> locations = new HashMap<>();
 
+        LOGGER.info("map {}", isValidID(map, STATE_ID));
+
         // set state
         if (!isValidID(map, STATE_ID)) {
             return locations;
         }
         State state = stateDataService.findByCode((Long) map.get(STATE_ID));
+        LOGGER.info("state {}", state);
         if (state == null) { // we are here because stateId wasn't null but fetch returned no data
             throw new InvalidLocationException(String.format(INVALID, STATE_ID, map.get(STATE_ID)));
         }

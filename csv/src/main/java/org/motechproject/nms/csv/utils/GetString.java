@@ -9,6 +9,9 @@ public class GetString implements CellProcessor {
     @Override
     public Object execute(Object value, CsvContext context) {
         if (value instanceof String) {
+            if (("NULL").equalsIgnoreCase(String.valueOf(value))) {
+                return null;
+            }
             return value;
         }
 

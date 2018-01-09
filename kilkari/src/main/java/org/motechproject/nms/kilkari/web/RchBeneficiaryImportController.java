@@ -61,6 +61,7 @@ public class RchBeneficiaryImportController {
         try {
             try (InputStream in = csvFile.getInputStream()) {
                 count = mctsBeneficiaryImportService.importMotherData(new InputStreamReader(in), SubscriptionOrigin.RCH_IMPORT);
+                LOGGER.debug("count {}", count);
                 csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/rch/mother/import");
             }
         } catch (CsvImportException e) {

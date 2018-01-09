@@ -2,6 +2,7 @@ package org.motechproject.nms.mcts.service.impl;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.motechproject.alerts.contract.AlertService;
@@ -17,9 +18,13 @@ import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.kilkari.domain.RejectionReasons;
+import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.domain.MctsMother;
+import org.motechproject.nms.kilkari.domain.MctsChild;
+import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
@@ -32,7 +37,6 @@ import org.motechproject.nms.mcts.contract.MothersDataSet;
 import org.motechproject.nms.mcts.domain.MctsImportAudit;
 import org.motechproject.nms.mcts.domain.MctsImportFailRecord;
 import org.motechproject.nms.mcts.domain.MctsUserType;
-import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.mcts.exception.MctsInvalidResponseStructureException;
 import org.motechproject.nms.mcts.exception.MctsWebServiceException;
 import org.motechproject.nms.mcts.repository.MctsImportAuditDataService;
@@ -62,13 +66,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.ArrayList;
 
 import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanMotherRecords;
 import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanChildRecords;
 import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanFlwRecords;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.motherRejectionMcts;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionMcts;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToChild;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToMother;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.motherRejectionMcts;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.flwRejectionMcts;
+
+
 
 @Service("mctsWsImportService")
 public class MctsWsImportServiceImpl implements MctsWsImportService {
@@ -171,8 +180,8 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         eventRelay.sendEventMessage(new MotechEvent(importSubject, eventParams));
     }
 
-    @MotechListener(subjects = {Constants.MCTS_MOTHER_IMPORT_SUBJECT})
-    @Transactional
+    @MotechListener(subjects = {Constants.MCTS_MOTHER_IMPORT_SUBJECT })
+    @Transactional (noRollbackFor = Exception.class)
     public void importMothersData(MotechEvent motechEvent) {
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
         LocalDate startReferenceDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
@@ -231,19 +240,25 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         }
     }
 
-    private MctsImportAudit saveImportedMothersData(MothersDataSet mothersDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
+    public MctsImportAudit saveImportedMothersData(MothersDataSet mothersDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
         LOGGER.info("Starting mother import for state {}", stateName);
-        List<List<MotherRecord>> motherRecordsSet = cleanMotherRecords(mothersDataSet.getRecords());
+        List<MotherRecord> motherRecords = mothersDataSet.getRecords();
+        List<MotherRecord> validMotherRecords = new ArrayList<>();
+        validMotherRecords = getLMPValidRecords(motherRecords);
+        List<List<MotherRecord>> motherRecordsSet = cleanMotherRecords(validMotherRecords);
         List<MotherRecord> rejectedMotherRecords = motherRecordsSet.get(0);
         String action = "";
         int saved = 0;
-        int rejected = 0;
+        int rejected = motherRecords.size() - validMotherRecords.size();
         for (MotherRecord record : rejectedMotherRecords) {
             action = actionFinderService.motherActionFinder(record);
             LOGGER.error("Existing Mother Record with same MSISDN in the data set");
             motherRejectionService.createOrUpdateMother(motherRejectionMcts(record, false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action));
             rejected++;
+
         }
+
+
         List<MotherRecord> acceptedMotherRecords = motherRecordsSet.get(1);
 
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
@@ -259,24 +274,55 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                         (long) recordMap.get(KilkariConstants.DISTRICT_ID));
                 if (hpdValidation && mctsBeneficiaryImportService.importMotherRecord(recordMap, SubscriptionOrigin.MCTS_IMPORT)) {
                     saved++;
+                    LOGGER.info("saved mother {}", record.getIdNo());
                 } else {
                     rejected++;
+                    LOGGER.info("rejected mother {}", record.getIdNo());
                 }
             } catch (RuntimeException e) {
                 LOGGER.error("Mother import Error. Cannot import Mother with ID: {} for state ID: {}",
                         record.getIdNo(), stateCode, e);
                 rejected++;
+
             }
             if ((saved + rejected) % THOUSAND == 0) {
                 LOGGER.debug("{} state, Progress: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
             }
         }
         LOGGER.info("{} state, Total: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
+        LOGGER.info("rejected mothers count {}", rejected);
         return new MctsImportAudit(startReferenceDate, endReferenceDate, MctsUserType.MOTHER, stateCode, stateName, saved, rejected, null);
     }
 
-    @MotechListener(subjects = {Constants.MCTS_CHILD_IMPORT_SUBJECT})
-    @Transactional
+    private  List<MotherRecord> getLMPValidRecords(List<MotherRecord> motherRecords) {
+        List<MotherRecord> validMotherRecords = new ArrayList<>();
+        for (MotherRecord record : motherRecords) {
+            Map<String, Object> recordMap = toMap(record);
+            MctsMother mother;
+            Long msisdn;
+            String beneficiaryId;
+            String action = "";
+            action = actionFinderService.motherActionFinder(convertMapToMother(recordMap));
+            beneficiaryId = (String) recordMap.get(KilkariConstants.BENEFICIARY_ID);
+            mother = mctsBeneficiaryValueProcessor.getOrCreateMotherInstance(beneficiaryId);
+            msisdn = (Long) recordMap.get(KilkariConstants.MSISDN);
+            DateTime lmp = (DateTime) recordMap.get(KilkariConstants.LMP);
+            LOGGER.info("lmp = {}", lmp);
+            if(mother == null) {
+                motherRejectionService.createOrUpdateMother(motherRejectionMcts(convertMapToMother(recordMap), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), action));
+            } else {
+                boolean isValidLMP =  (mother.getId() == null || (mother.getId() != null && mother.getLastMenstrualPeriod() == null)) && !mctsBeneficiaryImportService.validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, SubscriptionOrigin.MCTS_IMPORT);
+                        if (isValidLMP) {
+                        motherRejectionService.createOrUpdateMother(motherRejectionMcts(convertMapToMother(recordMap), false, RejectionReasons.INVALID_LMP_DATE.toString(), action));
+                        } else {
+                             validMotherRecords.add(record);
+                        }
+                    }
+        }
+        return validMotherRecords;
+    }
+    @MotechListener(subjects = {Constants.MCTS_CHILD_IMPORT_SUBJECT })
+    @Transactional (noRollbackFor = Exception.class)
     public void importChildrenData(MotechEvent motechEvent) {
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
         LocalDate startReferenceDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
@@ -334,11 +380,14 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     private MctsImportAudit saveImportedChildrenData(ChildrenDataSet childrenDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
         LOGGER.info("Starting children import for state {}", stateName);
-        List<List<ChildRecord>> childRecordsSet = cleanChildRecords(childrenDataSet.getRecords());
+        List<ChildRecord> childRecords = childrenDataSet.getRecords();
+        List<ChildRecord> validChildRecords = new ArrayList<>();
+        validChildRecords = getDOBValidChildRecords(childRecords);
+        List<List<ChildRecord>> childRecordsSet = cleanChildRecords(validChildRecords);
         List<ChildRecord> rejectedChildRecords = childRecordsSet.get(0);
         String action = "";
         int saved = 0;
-        int rejected = 0;
+        int rejected = childRecords.size() - validChildRecords.size();
         for (ChildRecord record : rejectedChildRecords) {
             action = actionFinderService.childActionFinder(record);
             LOGGER.error("Existing Child Record with same MSISDN in the data set");
@@ -362,8 +411,10 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
                 if (hpdValidation && mctsBeneficiaryImportService.importChildRecord(toMap(record), SubscriptionOrigin.MCTS_IMPORT)) {
                     saved++;
+                    LOGGER.info("saved child {}", record.getIdNo());
                 } else {
                     rejected++;
+                    LOGGER.info("rejected child {}", record.getIdNo());
                 }
 
             } catch (RuntimeException e) {
@@ -380,8 +431,36 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         return new MctsImportAudit(startReferenceDate, endReferenceDate, MctsUserType.CHILD, stateCode, stateName, saved, rejected, null);
     }
 
-    @MotechListener(subjects = {Constants.MCTS_ASHA_IMPORT_SUBJECT})
-    @Transactional
+    private  List<ChildRecord> getDOBValidChildRecords(List<ChildRecord> childRecords) {
+        List<ChildRecord> validChildRecords = new ArrayList<>();
+        for (ChildRecord record : childRecords) {
+            Map<String, Object> recordMap = toMap(record);
+            MctsChild child;
+            Long msisdn;
+            String childId;
+            String action = "";
+            action = actionFinderService.childActionFinder(convertMapToChild(recordMap));
+            childId = (String) recordMap.get(KilkariConstants.BENEFICIARY_ID);
+            child = mctsBeneficiaryValueProcessor.getOrCreateChildInstance(childId);
+            msisdn = (Long) recordMap.get(KilkariConstants.MSISDN);
+            DateTime dob = (DateTime) recordMap.get(KilkariConstants.DOB);
+            LOGGER.info("Starting children import for size {}", !mctsBeneficiaryImportService.validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, SubscriptionOrigin.MCTS_IMPORT));
+            if (child == null) {
+                childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(recordMap), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), action));
+            } else {
+                boolean isValidDOB = child.getId() == null && !mctsBeneficiaryImportService.validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, SubscriptionOrigin.MCTS_IMPORT);
+                if (isValidDOB) {
+                    childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(recordMap), false, RejectionReasons.INVALID_DOB.toString(), action));
+                } else {
+                    validChildRecords.add(record);
+                }
+            }
+        }
+        return validChildRecords;
+    }
+
+    @MotechListener(subjects = {Constants.MCTS_ASHA_IMPORT_SUBJECT })
+    @Transactional (noRollbackFor = Exception.class)
     public void importAnmAshaData(MotechEvent motechEvent) {
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
         LocalDate startReferenceDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
@@ -485,8 +564,8 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                             flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.INVALID_LOCATION.toString(), action));
                             rejected++;
                         } catch (FlwImportException e) {
-                            LOGGER.error("Existing FLW with same MSISDN but different MCTS ID", e);
-                            flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
+                            LOGGER.error("Flw import Error", e);
+                            flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.FLW_IMPORT_ERROR.toString(), action));
                             rejected++;
                         } catch (FlwExistingRecordException e) {
                             LOGGER.error("Cannot import FLW with ID: {}, and MSISDN (Contact_No): {}", record.getId(), record.getContactNo(), e);
@@ -555,7 +634,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         map.put(KilkariConstants.BENEFICIARY_ID,
                 childRecord.getIdNo());
         map.put(KilkariConstants.MOTHER_ID,
-                mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(childRecord.getMotherId()));
+                mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(childRecord.getMotherId()) == null ? null : mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(childRecord.getMotherId()).getBeneficiaryId());
         map.put(KilkariConstants.DEATH,
                 mctsBeneficiaryValueProcessor.getDeathFromString(String.valueOf(childRecord.getEntryType())));
 

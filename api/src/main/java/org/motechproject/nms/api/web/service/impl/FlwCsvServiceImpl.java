@@ -55,7 +55,7 @@ public class FlwCsvServiceImpl implements FlwCsvService {
 
     @Override
     @Transactional
-    public StringBuilder csvUploadMcts(AddFlwRequest addFlwRequest){
+    public StringBuilder csvUploadMcts(AddFlwRequest addFlwRequest) {
         log("REQUEST: /ops/createUpdateFlw", String.format(
                 "callingNumber=%s, mctsId=%s, name=%s, state=%d, district=%d",
                 LogHelper.obscure(addFlwRequest.getContactNumber()),
@@ -70,6 +70,11 @@ public class FlwCsvServiceImpl implements FlwCsvService {
         validateFieldPresent(failureReasons, "mctsFlwId", addFlwRequest.getMctsFlwId());
         validateFieldPresent(failureReasons, "stateId", addFlwRequest.getStateId());
         validateFieldPresent(failureReasons, "districtId", addFlwRequest.getDistrictId());
+        validateNameFields(failureReasons, "talukaName", addFlwRequest.getTalukaName(), addFlwRequest.getTalukaId());
+        validateNameFields(failureReasons, "phcName", addFlwRequest.getPhcName(), addFlwRequest.getPhcId());
+        validateNameFields(failureReasons, "subcentreName", addFlwRequest.getSubcentreName(), addFlwRequest.getSubcentreId());
+        validateNameFields(failureReasons, "villageName", addFlwRequest.getVillageName(), addFlwRequest.getVillageId());
+        validateNameFields(failureReasons, "healthBlockName", addFlwRequest.getHealthBlockName(), addFlwRequest.getHealthblockId());
         validateFieldString(failureReasons, "name", addFlwRequest.getName());
         validateFieldGfStatus(failureReasons, gfStatus, addFlwRequest.getGfStatus());
         validatetypeASHA(failureReasons, "type", addFlwRequest.getMctsFlwId(), addFlwRequest.getContactNumber(), addFlwRequest.getType());
@@ -82,7 +87,7 @@ public class FlwCsvServiceImpl implements FlwCsvService {
         return null;
     }
 
-    @Override
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void persistFlwMcts(AddFlwRequest addFlwRequest) {
         Map<String, Object> flwProperties = new HashMap<>();
@@ -101,6 +106,14 @@ public class FlwCsvServiceImpl implements FlwCsvService {
             flwProperties.put(FlwConstants.TALUKA_ID, addFlwRequest.getTalukaId());
         }
 
+        if (addFlwRequest.getTalukaName() != null) {
+            flwProperties.put(FlwConstants.TALUKA_NAME, addFlwRequest.getTalukaName());
+        }
+
+        if (addFlwRequest.getPhcName() != null) {
+            flwProperties.put(FlwConstants.PHC_NAME, addFlwRequest.getPhcName());
+        }
+
         if (addFlwRequest.getPhcId() != null) {
             flwProperties.put(FlwConstants.PHC_ID, addFlwRequest.getPhcId());
         }
@@ -109,12 +122,24 @@ public class FlwCsvServiceImpl implements FlwCsvService {
             flwProperties.put(FlwConstants.HEALTH_BLOCK_ID, addFlwRequest.getHealthblockId());
         }
 
+        if (addFlwRequest.getHealthBlockName() != null) {
+            flwProperties.put(FlwConstants.HEALTH_BLOCK_NAME, addFlwRequest.getHealthBlockName());
+        }
+
         if (addFlwRequest.getSubcentreId() != null) {
             flwProperties.put(FlwConstants.SUB_CENTRE_ID, addFlwRequest.getSubcentreId());
         }
 
+        if (addFlwRequest.getSubcentreName() != null) {
+            flwProperties.put(FlwConstants.SUB_CENTRE_NAME, addFlwRequest.getSubcentreName());
+        }
+
         if (addFlwRequest.getVillageId() != null) {
             flwProperties.put(FlwConstants.CENSUS_VILLAGE_ID, addFlwRequest.getVillageId());
+        }
+
+        if (addFlwRequest.getVillageName() != null) {
+            flwProperties.put(FlwConstants.VILLAGE_NAME, addFlwRequest.getVillageName());
         }
 
         frontLineWorkerImportService.createUpdate(flwProperties, SubscriptionOrigin.MCTS_IMPORT);
@@ -137,6 +162,11 @@ public class FlwCsvServiceImpl implements FlwCsvService {
         validateFieldPresent(failureReasons, "rchFlwId", addRchFlwRequest.getFlwId());
         validateFieldPresent(failureReasons, "stateId", addRchFlwRequest.getStateId());
         validateFieldPresent(failureReasons, "districtId", addRchFlwRequest.getDistrictId());
+        validateNameFields(failureReasons, "talukaName", addRchFlwRequest.getTalukaName(), addRchFlwRequest.getTalukaId());
+        validateNameFields(failureReasons, "phcName", addRchFlwRequest.getPhcName(), addRchFlwRequest.getPhcId());
+        validateNameFields(failureReasons, "subcentreName", addRchFlwRequest.getSubcentreName(), addRchFlwRequest.getSubcentreId());
+        validateNameFields(failureReasons, "villageName", addRchFlwRequest.getVillageName(), addRchFlwRequest.getVillageId());
+        validateNameFields(failureReasons, "healthBlockName", addRchFlwRequest.getHealthBlockName(), addRchFlwRequest.getHealthblockId());
         validateFieldString(failureReasons, "name", addRchFlwRequest.getName());
         validateFieldGfStatus(failureReasons, gfStatus, addRchFlwRequest.getGfStatus());
         validatetypeASHA(failureReasons, "gfType", addRchFlwRequest.getFlwId(), addRchFlwRequest.getMsisdn(), addRchFlwRequest.getGfType());
@@ -149,7 +179,7 @@ public class FlwCsvServiceImpl implements FlwCsvService {
         return null;
     }
 
-    @Override
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void persistFlwRch(AddRchFlwRequest addRchFlwRequest) {
         Map<String, Object> flwProperties = new HashMap<>();
@@ -168,20 +198,40 @@ public class FlwCsvServiceImpl implements FlwCsvService {
             flwProperties.put(FlwConstants.TALUKA_ID, addRchFlwRequest.getTalukaId());
         }
 
+        if (addRchFlwRequest.getTalukaName() != null) {
+            flwProperties.put(FlwConstants.TALUKA_NAME, addRchFlwRequest.getTalukaName());
+        }
+
         if (addRchFlwRequest.getPhcId() != null) {
             flwProperties.put(FlwConstants.PHC_ID, addRchFlwRequest.getPhcId());
+        }
+
+        if (addRchFlwRequest.getPhcName() != null) {
+            flwProperties.put(FlwConstants.PHC_NAME, addRchFlwRequest.getPhcName());
         }
 
         if (addRchFlwRequest.getHealthblockId() != null) {
             flwProperties.put(FlwConstants.HEALTH_BLOCK_ID, addRchFlwRequest.getHealthblockId());
         }
 
+        if (addRchFlwRequest.getHealthBlockName() != null) {
+            flwProperties.put(FlwConstants.HEALTH_BLOCK_NAME, addRchFlwRequest.getHealthBlockName());
+        }
+
         if (addRchFlwRequest.getSubcentreId() != null) {
             flwProperties.put(FlwConstants.SUB_CENTRE_ID, addRchFlwRequest.getSubcentreId());
         }
 
+        if (addRchFlwRequest.getSubcentreName() != null) {
+            flwProperties.put(FlwConstants.SUB_CENTRE_NAME, addRchFlwRequest.getSubcentreName());
+        }
+
         if (addRchFlwRequest.getVillageId() != null) {
             flwProperties.put(FlwConstants.CENSUS_VILLAGE_ID, addRchFlwRequest.getVillageId());
+        }
+
+        if (addRchFlwRequest.getVillageName() != null) {
+            flwProperties.put(FlwConstants.VILLAGE_NAME, addRchFlwRequest.getVillageName());
         }
 
         frontLineWorkerImportService.createUpdate(flwProperties, SubscriptionOrigin.RCH_IMPORT);
@@ -300,6 +350,18 @@ public class FlwCsvServiceImpl implements FlwCsvService {
 
     private static boolean validateFieldPresent(StringBuilder errors, String fieldName, Object value) {
         if (value != null) {
+            return true;
+        }
+        errors.append(String.format(NOT_PRESENT, fieldName));
+        return false;
+    }
+
+    private static boolean validateNameFields(StringBuilder errors, String fieldName, Object value1, Object value2) {
+        if (value2 != null && !"NULL".equalsIgnoreCase(value2.toString()) && !value2.toString().isEmpty() && !"0".equals(value2.toString())) {
+            if (value1 != null && !"NULL".equalsIgnoreCase(value1.toString()) && !value1.toString().isEmpty()) {
+                return true;
+            }
+        } else {
             return true;
         }
         errors.append(String.format(NOT_PRESENT, fieldName));

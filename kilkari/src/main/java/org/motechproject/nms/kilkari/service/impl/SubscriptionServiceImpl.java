@@ -258,7 +258,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                             if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.CHILD)) {
                                 return true;
                             } else {
-                                return (subscriber.getMother() != null && !subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId));
+                                return (subscriber.getMother() != null && subscriber.getMother().getBeneficiaryId() != null && !subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId));
                             }
                         } else {
                             return (subscriber.getMother() != null && !subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId));
@@ -276,7 +276,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     subscriptionsSize = subscriptions.size();
                     if (subscriptionsSize != 0) {
                         if (subscriptionsSize == 1) {
-                            if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.PREGNANCY) && subscriber.getMother() != null && !subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId)) {
+                            if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.PREGNANCY) && subscriber.getMother() != null && !motherBeneficiaryId.equals(subscriber.getMother().getBeneficiaryId())) {
                                 return true;
                             } else if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.PREGNANCY) && subscriber.getMother() != null && subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId)) {
                                 return false;

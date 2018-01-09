@@ -9,5 +9,5 @@ public interface ChildRejectionService {
 
     ChildImportRejection findByChildId(String idNo, String registrationNo);
 
-    void createOrUpdateChild(ChildImportRejection childImportRejection);
+    boolean createOrUpdateChild(ChildImportRejection childImportRejection);
 }

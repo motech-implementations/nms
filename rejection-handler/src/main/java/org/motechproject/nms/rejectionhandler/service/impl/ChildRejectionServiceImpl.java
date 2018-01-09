@@ -20,22 +20,26 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
     }
 
     @Override //NO CHECKSTYLE CyclomaticComplexity
-    public void createOrUpdateChild(ChildImportRejection childImportRejection) {
+    public boolean createOrUpdateChild(ChildImportRejection childImportRejection) {
         if (childImportRejection.getIdNo() != null || childImportRejection.getRegistrationNo() != null) {
             ChildImportRejection childImportRejection1 = childRejectionDataService.findRejectedChild(childImportRejection.getIdNo(), childImportRejection.getRegistrationNo());
 
             if (childImportRejection1 == null && !childImportRejection.getAccepted()) {
                 childRejectionDataService.create(childImportRejection);
+                return true;
             } else if (childImportRejection1 == null && childImportRejection.getAccepted()) {
                 LOGGER.debug(String.format("There is no mother rejection data for mctsId %s and rchId %s", childImportRejection.getIdNo(), childImportRejection.getRegistrationNo()));
             } else if (childImportRejection1 != null && !childImportRejection1.getAccepted()) {
                 childImportRejection1 = setNewData1(childImportRejection, childImportRejection1);
                 childRejectionDataService.update(childImportRejection1);
+                return false;
             } else if (childImportRejection1 != null && childImportRejection1.getAccepted()) {
                 childImportRejection1 = setNewData1(childImportRejection, childImportRejection1);
                 childRejectionDataService.update(childImportRejection1);
+                return false;
             }
         }
+        return true;
     }
 
     private static ChildImportRejection setNewData1(ChildImportRejection childImportRejection, ChildImportRejection childImportRejection1) {

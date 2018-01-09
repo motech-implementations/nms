@@ -15,6 +15,8 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.exception.InvalidLocationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 
@@ -23,6 +25,8 @@ import java.util.Map;
 import java.util.Set;
 
 public final class MctsBeneficiaryUtils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryUtils.class);
 
     private MctsBeneficiaryUtils() {
     }
@@ -52,6 +56,7 @@ public final class MctsBeneficiaryUtils {
 
     public static void setLocationFields(Map<String, Object> locations, MctsBeneficiary beneficiary) throws InvalidLocationException {
 
+        LOGGER.info("locations {}", locations);
         if (locations.get(KilkariConstants.MAPPER_STATE) == null && locations.get(KilkariConstants.MAPPER_DISTRICT) == null) {
             throw new InvalidLocationException("Missing mandatory state and district fields");
         }
@@ -63,7 +68,6 @@ public final class MctsBeneficiaryUtils {
         if (locations.get(KilkariConstants.MAPPER_DISTRICT) == null) {
             throw new InvalidLocationException("Missing mandatory district field");
         }
-
         beneficiary.setState((State) locations.get(KilkariConstants.MAPPER_STATE));
         beneficiary.setDistrict((District) locations.get(KilkariConstants.MAPPER_DISTRICT));
         beneficiary.setTaluka((Taluka) locations.get(KilkariConstants.MAPPER_TALUKA));
