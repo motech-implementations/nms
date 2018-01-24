@@ -3,6 +3,7 @@ package org.motechproject.nms.api.web.service.impl;
 import org.apache.commons.lang3.StringUtils;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
 import org.motechproject.nms.api.web.contract.AddRchFlwRequest;
+import org.motechproject.nms.api.web.contract.UpdateFlwLocationRequest;
 import org.motechproject.nms.api.web.service.FlwCsvService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
@@ -235,6 +236,56 @@ public class FlwCsvServiceImpl implements FlwCsvService {
         }
 
         frontLineWorkerImportService.createUpdate(flwProperties, SubscriptionOrigin.RCH_IMPORT);
+    }
+
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
+    @Transactional
+    public void persistFlwLoc(UpdateFlwLocationRequest updateFlwLocationRequest) {
+        Map<String, Object> flwLocProperties = new HashMap<>();
+        flwLocProperties.put(FlwConstants.ID, updateFlwLocationRequest.getMctsFlwId());
+        flwLocProperties.put(FlwConstants.STATE_ID, updateFlwLocationRequest.getStateId());
+        flwLocProperties.put(FlwConstants.DISTRICT_ID, updateFlwLocationRequest.getDistrictId());
+
+        if (updateFlwLocationRequest.getTalukaId() != null) {
+            flwLocProperties.put(FlwConstants.TALUKA_ID, updateFlwLocationRequest.getTalukaId());
+        }
+        if (updateFlwLocationRequest.getTalukaName() != null) {
+            flwLocProperties.put(FlwConstants.TALUKA_NAME, updateFlwLocationRequest.getTalukaName());
+        }
+
+        if (updateFlwLocationRequest.getPhcId() != null) {
+            flwLocProperties.put(FlwConstants.PHC_ID, updateFlwLocationRequest.getPhcId());
+        }
+
+        if (updateFlwLocationRequest.getPhcName() != null) {
+            flwLocProperties.put(FlwConstants.PHC_NAME, updateFlwLocationRequest.getPhcName());
+        }
+
+        if (updateFlwLocationRequest.getHealthblockId() != null) {
+            flwLocProperties.put(FlwConstants.HEALTH_BLOCK_ID, updateFlwLocationRequest.getHealthblockId());
+        }
+
+        if (updateFlwLocationRequest.getHealthblockName() != null) {
+            flwLocProperties.put(FlwConstants.HEALTH_BLOCK_NAME, updateFlwLocationRequest.getHealthblockName());
+        }
+
+        if (updateFlwLocationRequest.getSubcentreId() != null) {
+            flwLocProperties.put(FlwConstants.SUB_CENTRE_ID, updateFlwLocationRequest.getSubcentreId());
+        }
+
+        if (updateFlwLocationRequest.getSubcentreName() != null) {
+            flwLocProperties.put(FlwConstants.SUB_CENTRE_NAME, updateFlwLocationRequest.getSubcentreName());
+        }
+
+        if (updateFlwLocationRequest.getVillageId() != null) {
+            flwLocProperties.put(FlwConstants.CENSUS_VILLAGE_ID, updateFlwLocationRequest.getVillageId());
+        }
+
+        if (updateFlwLocationRequest.getVillageName() != null) {
+            flwLocProperties.put(FlwConstants.VILLAGE_NAME, updateFlwLocationRequest.getVillageName());
+        }
+
+        frontLineWorkerImportService.updateLoc(flwLocProperties);
     }
 
     @Override
