@@ -129,6 +129,7 @@ public final class FlwMapper {
         return flw;
     }
 
+
     //CHECKSTYLE:ON
     public static FrontLineWorker setFrontLineWorkerLocation(FrontLineWorker flw, Map<String, Object> locations) throws InvalidLocationException {
         if (locations.get(FlwConstants.STATE_ID) == null && locations.get(FlwConstants.DISTRICT_ID) == null) {
@@ -152,4 +153,42 @@ public final class FlwMapper {
         flw.setVillage((Village) locations.get(FlwConstants.CENSUS_VILLAGE_ID + FlwConstants.NON_CENSUS_VILLAGE_ID));
         return flw;
     }
+
+    //CHECKSTYLE:ON
+    public static FrontLineWorker updateTaluka(FrontLineWorker flw, Taluka taluka) throws InvalidLocationException {
+
+        flw.setTaluka(taluka);
+        return flw;
+    }
+
+    //CHECKSTYLE:ON
+    public static FrontLineWorker updateBlock(FrontLineWorker flw, HealthBlock healthBlock) throws InvalidLocationException {
+
+        flw.setHealthBlock(healthBlock);
+        return flw;
+    }
+
+    //CHECKSTYLE:ON
+    public static FrontLineWorker updateFacility(FrontLineWorker flw, HealthFacility healthFacility) throws InvalidLocationException {
+
+        flw.setHealthFacility(healthFacility);
+        return flw;
+    }
+
+    //CHECKSTYLE:ON
+    public static FrontLineWorker updateSubFacility(FrontLineWorker flw, HealthSubFacility healthSubFacility) throws InvalidLocationException {
+
+        flw.setHealthSubFacility(healthSubFacility);
+        return flw;
+    }
+
+    //CHECKSTYLE:ON
+    public static FrontLineWorker updateVillage(FrontLineWorker flw, Village village) throws InvalidLocationException {
+
+        flw.setVillage(village);
+        return flw;
+    }
+
+
+
 }

@@ -209,6 +209,107 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
+    public Taluka updateTaluka(Map<String, Object> flw, Boolean createIfNotExists) {
+        State state = stateDataService.findByCode((Long) flw.get(STATE_ID));
+        District district = districtService.findByStateAndCode(state, (Long) flw.get(DISTRICT_ID));
+            // set and/or create taluka
+        if (!isValidID(flw, TALUKA_ID)) {
+            return null;
+        }
+        Taluka taluka = talukaService.findByDistrictAndCode(district, (String) flw.get(TALUKA_ID));
+        if (taluka == null && createIfNotExists) {
+            taluka = new Taluka();
+            taluka.setCode((String) flw.get(TALUKA_ID));
+            taluka.setName((String) flw.get(TALUKA_NAME));
+            taluka.setDistrict(district);
+            LOGGER.debug(String.format("taluka: %s", taluka.toString()));
+            district.getTalukas().add(taluka);
+            LOGGER.debug(String.format("Created %s in %s with id %d", taluka, district, taluka.getId()));
+        }
+        return taluka;
+    }
+
+    @Override
+    public HealthBlock updateBlock(Map<String, Object> flw, Taluka taluka, Boolean createIfNotExists) {
+
+        // set and/or create health block
+        if (!isValidID(flw, HEALTHBLOCK_ID)) {
+            return null;
+        }
+        HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka, (Long) flw.get(HEALTHBLOCK_ID));
+        if (healthBlock == null && createIfNotExists) {
+            healthBlock = new HealthBlock();
+            healthBlock.setTaluka(taluka);
+            healthBlock.setCode((Long) flw.get(HEALTHBLOCK_ID));
+            healthBlock.setName((String) flw.get(HEALTHBLOCK_NAME));
+            taluka.getHealthBlocks().add(healthBlock);
+            LOGGER.debug(String.format("Created %s in %s with id %d", healthBlock, taluka, healthBlock.getId()));
+        }
+        return healthBlock;
+    }
+
+    @Override
+    public HealthFacility updateFacility(Map<String, Object> flw, HealthBlock healthBlock, Boolean createIfNotExists) {
+
+        // set and/or create health facility
+        if (!isValidID(flw, PHC_ID)) {
+            return null;
+        }
+        HealthFacility healthFacility = healthFacilityService.findByHealthBlockAndCode(healthBlock, (Long) flw.get(PHC_ID));
+        if (healthFacility == null && createIfNotExists) {
+            healthFacility = new HealthFacility();
+            healthFacility.setHealthBlock(healthBlock);
+            healthFacility.setCode((Long) flw.get(PHC_ID));
+            healthFacility.setName((String) flw.get(PHC_NAME));
+            healthBlock.getHealthFacilities().add(healthFacility);
+            LOGGER.debug(String.format("Created %s in %s with id %d", healthFacility, healthBlock, healthFacility.getId()));
+        }
+        return healthFacility;
+    }
+
+    @Override
+    public HealthSubFacility updateSubFacility(Map<String, Object> flw, HealthFacility healthFacility, Boolean createIfNotExists) {
+
+        // set and/or create health sub-facility
+        if (!isValidID(flw, SUBCENTRE_ID)) {
+            return null;
+        }
+        HealthSubFacility healthSubFacility = healthSubFacilityService.findByHealthFacilityAndCode(healthFacility, (Long) flw.get(SUBCENTRE_ID));
+        if (healthSubFacility == null && createIfNotExists) {
+            healthSubFacility = new HealthSubFacility();
+            healthSubFacility.setHealthFacility(healthFacility);
+            healthSubFacility.setCode((Long) flw.get(SUBCENTRE_ID));
+            healthSubFacility.setName((String) flw.get(SUBCENTRE_NAME));
+            healthFacility.getHealthSubFacilities().add(healthSubFacility);
+            LOGGER.debug(String.format("Created %s in %s with id %d", healthSubFacility, healthFacility, healthSubFacility.getId()));
+        }
+        return healthSubFacility;
+    }
+
+    @Override
+    public Village updateVillage(Map<String, Object> flw, Taluka taluka, Boolean createIfNotExists) {
+
+        // set and/or create village
+        Long svid = flw.get(NON_CENSUS_VILLAGE) == null ? 0 : (Long) flw.get(NON_CENSUS_VILLAGE);
+        Long vcode = flw.get(VILLAGE_ID) == null ? 0 : (Long) flw.get(VILLAGE_ID);
+         if (vcode != 0 || svid != 0) {
+             Village village = villageService.findByTalukaAndVcodeAndSvid(taluka, vcode, svid);
+             if (village == null && createIfNotExists) {
+                 village = new Village();
+                 village.setSvid(svid);
+                 village.setVcode(vcode);
+                 village.setTaluka(taluka);
+                 village.setName((String) flw.get(VILLAGE_NAME));
+                 taluka.getVillages().add(village);
+                 LOGGER.debug(String.format("Created %s in %s with id %d", village, taluka, village.getId()));
+             }
+             return village;
+         }
+        return null;
+    }
+
+
+    @Override
     public State getState(Long stateId) {
 
         return stateDataService.findByCode(stateId);

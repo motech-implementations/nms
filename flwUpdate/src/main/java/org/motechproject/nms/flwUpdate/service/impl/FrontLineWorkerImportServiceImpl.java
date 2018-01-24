@@ -35,8 +35,13 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.utils.RejectedObjectConverter;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.props.service.LogHelper;
-import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.Taluka;
+import org.motechproject.nms.region.domain.HealthBlock;
+import org.motechproject.nms.region.domain.HealthFacility;
+import org.motechproject.nms.region.domain.HealthSubFacility;
+import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.LocationService;
@@ -441,7 +446,53 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         }
     }
 
-    private void updateFlwMaMsisdn(FrontLineWorker flwInstance, Long existingMsisdn, Long newMsisdn) {
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
+    public boolean updateLoc(Map<String, Object> flw) { //NOPMD NcssMethodCount
+        long stateId = (long) flw.get(FlwConstants.STATE_ID);
+        long districtId = (long) flw.get(FlwConstants.DISTRICT_ID);
+        String flwId = flw.get(FlwConstants.ID).toString();
+        State state = locationService.getState(stateId);
+        FrontLineWorker frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(flwId, state);
+        Taluka taluka;
+        HealthBlock healthBlock;
+        HealthFacility healthFacility;
+        HealthSubFacility healthSubFacility;
+        Village village;
+        if (frontLineWorker != null) {
+            try {
+                if (frontLineWorker.getTaluka() == null && districtId == frontLineWorker.getDistrict().getCode()) {
+                    taluka = locationService.updateTaluka(flw, true);
+                    frontLineWorkerService.update(FlwMapper.updateTaluka(frontLineWorker, taluka));
+                }
+                taluka = frontLineWorker.getTaluka();
+                if (frontLineWorker.getHealthBlock() == null && taluka != null && flw.get(FlwConstants.TALUKA_ID).toString().equals(taluka.getCode())) {
+                    healthBlock = locationService.updateBlock(flw, taluka, true);
+                    frontLineWorkerService.update(FlwMapper.updateBlock(frontLineWorker, healthBlock));
+                }
+                healthBlock = frontLineWorker.getHealthBlock();
+                if (frontLineWorker.getHealthFacility() == null && healthBlock != null && healthBlock.getCode().equals((Long) flw.get(FlwConstants.HEALTH_BLOCK_ID))) {
+                    healthFacility = locationService.updateFacility(flw, healthBlock, true);
+                    frontLineWorkerService.update(FlwMapper.updateFacility(frontLineWorker, healthFacility));
+                }
+                healthFacility = frontLineWorker.getHealthFacility();
+                if (frontLineWorker.getHealthSubFacility() == null && healthFacility != null && healthFacility.getCode().equals((Long) flw.get(FlwConstants.PHC_ID))) {
+                    healthSubFacility = locationService.updateSubFacility(flw, healthFacility, true);
+                    frontLineWorkerService.update(FlwMapper.updateSubFacility(frontLineWorker, healthSubFacility));
+                }
+                if (frontLineWorker.getVillage() == null && taluka != null && flw.get(FlwConstants.TALUKA_ID).toString().equals(taluka.getCode())) {
+                    village = locationService.updateVillage(flw, taluka, true);
+                    if (village != null) {
+                        frontLineWorkerService.update(FlwMapper.updateVillage(frontLineWorker, village));
+                    }
+                }
+            } catch (InvalidLocationException e) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+        private void updateFlwMaMsisdn(FrontLineWorker flwInstance, Long existingMsisdn, Long newMsisdn) {
         frontLineWorkerService.update(flwInstance);
         mobileAcademyService.updateMsisdn(flwInstance.getId(), existingMsisdn, newMsisdn);
     }
