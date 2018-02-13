@@ -14,26 +14,28 @@ import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.metrics.service.Timer;
-import org.motechproject.nms.kilkari.domain.BlockedMsisdnRecord;
-import org.motechproject.nms.kilkari.domain.CallRetry;
-import org.motechproject.nms.kilkari.domain.DeactivatedBeneficiary;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.domain.SubscriberMsisdnTracker;
+import org.motechproject.nms.kilkari.domain.BlockedMsisdnRecord;
+import org.motechproject.nms.kilkari.domain.DeactivationReason;
+import org.motechproject.nms.kilkari.domain.CallRetry;
+import org.motechproject.nms.kilkari.domain.DeactivatedBeneficiary;
+import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionError;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.repository.BlockedMsisdnRecordDataService;
-import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.DeactivatedBeneficiaryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
+import org.motechproject.nms.kilkari.repository.SubscriberMsisdnTrackerDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
+import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.CsrVerifierService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -79,6 +81,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private boolean allowMctsSubscriptions;
     private BlockedMsisdnRecordDataService blockedMsisdnRecordDataService;
     private DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService;
+    private SubscriberMsisdnTrackerDataService subscriberMsisdnTrackerDataService;
 
     @Autowired
     public SubscriptionServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade, // NO CHECKSTYLE More than 7 parameters
@@ -90,7 +93,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                    CallRetryDataService callRetryDataService,
                                    CsrVerifierService csrVerifierService,
                                    BlockedMsisdnRecordDataService blockedMsisdnRecordDataService,
-                                   DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService) {
+                                   DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService,
+                                   SubscriberMsisdnTrackerDataService subscriberMsisdnTrackerDataService) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.subscriptionDataService = subscriptionDataService;
@@ -102,6 +106,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.allowMctsSubscriptions = true;
         this.blockedMsisdnRecordDataService = blockedMsisdnRecordDataService;
         this.deactivatedBeneficiaryDataService = deactivatedBeneficiaryDataService;
+        this.subscriberMsisdnTrackerDataService = subscriberMsisdnTrackerDataService;
     }
 
 
@@ -303,21 +308,36 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         // Check if the callingNumber is in Weekly_Calls_Not_Answered_Msisdn_Records
         BlockedMsisdnRecord blockedMsisdnRecord = blockedMsisdnRecordDataService.findByNumber(callingNumber);
-        if (blockedMsisdnRecord != null) {
-            LOGGER.info("Can't create a Subscription as the number {} is deactivated due to Weekly Calls Not Answered", callingNumber);
-            String beneficiaryId = getBeneficiaryId(subscriber, mode, subscriptionPack);
-            subscriptionErrorDataService.create(new SubscriptionError(number, beneficiaryId,
-                    SubscriptionRejectionReason.WEEKLY_CALLS_NOT_ANSWERED, subscriptionPack.getType(), "", mode));
-            return null;
+        Boolean acceptNewSubscriptionForBlockedMsisdn = Boolean.valueOf(settingsFacade.getProperty(KilkariConstants.ACCEPT_NEW_SUBSCRIPTION_FOR_BLOCKED_MSISDN));
+        if (!acceptNewSubscriptionForBlockedMsisdn) {
+            if (blockedMsisdnRecord != null) {
+                LOGGER.info("Can't create a Subscription as the number {} is deactivated due to Weekly Calls Not Answered", callingNumber);
+                String beneficiaryId = getBeneficiaryId(subscriber, mode, subscriptionPack);
+                subscriptionErrorDataService.create(new SubscriptionError(number, beneficiaryId,
+                        SubscriptionRejectionReason.WEEKLY_CALLS_NOT_ANSWERED, subscriptionPack.getType(), "", mode));
+                return null;
+            }
         }
 
-        Subscription subscription;
         Subscriber sub;
+        Subscription subscription;
 
         if (subscriber == null) {
             sub = subscriberDataService.create(new Subscriber(number, language, circle));
         } else {
             sub = subscriber;
+        }
+
+        if (acceptNewSubscriptionForBlockedMsisdn && blockedMsisdnRecord != null) {
+            Long motherID = 0L;
+
+            if (sub.getMother() != null) {
+                motherID = sub.getMother().getId();
+            } else if (sub.getChild() != null && sub.getChild().getMother() != null) {
+                motherID = sub.getChild().getMother().getId();
+            }
+
+            deleteBlockedMsisdn(motherID, null, callingNumber);
         }
 
         Language subscriberLanguage = sub.getLanguage();
@@ -491,6 +511,38 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return null;
     }
 
+
+    @Override
+    public Subscription getActiveOrPendingSubscriptionBySubscriber(final Subscriber subscriber, final SubscriptionPackType subscriptionPackType) {
+
+        SqlQueryExecution<Subscription> queryExecution = new SqlQueryExecution<Subscription>() {
+
+            @Override
+            public String getSqlQuery() {
+                return "select *  from nms_subscriptions where subscriber_id_OID = ? and " +
+                        "subscriptionPack_id_OID = ? and status in ('ACTIVE', 'PENDING_ACTIVATION')";
+            }
+
+            @Override
+            public Subscription execute(Query query) {
+                query.setClass(Subscription.class);
+                Long id = subscriber.getId();
+                Integer pack = subscriptionPackType == SubscriptionPackType.CHILD ? 2 : 1;
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute(id, pack);
+                if (fqr.isEmpty()) {
+                    return null;
+                }
+                if (fqr.size() == 1) {
+                    return (Subscription) fqr.get(0);
+                }
+                throw new IllegalStateException(String.format("More than one row returned for beneficiary %s", id));
+            }
+        };
+
+        return subscriptionDataService.executeSQLQuery(queryExecution);
+
+    }
+
     @Override
     public List<Subscription> getActiveSubscriptionBySubscriber(Subscriber subscriber) {
         List<Subscription> subscriptions = new ArrayList<>();
@@ -615,6 +667,19 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             subscriptionDataService.delete(currentSubscription);
             return false;
         }
+    }
+
+    @Override
+    public void deleteBlockedMsisdn(Long motherId, Long oldCallingNumber, Long newCallingNumber) {
+        // Check if the callingNumber is in Blocked Msisdn_Records
+        BlockedMsisdnRecord blockedMsisdnRecord = blockedMsisdnRecordDataService.findByNumber(newCallingNumber);
+        if (blockedMsisdnRecord != null) {
+            LOGGER.info("Deleting msisdn {} from Blocked list.", newCallingNumber);
+            blockedMsisdnRecordDataService.delete(blockedMsisdnRecord);
+        }
+
+        subscriberMsisdnTrackerDataService.create(new SubscriberMsisdnTracker(motherId, oldCallingNumber, newCallingNumber));
+
     }
 
     /**

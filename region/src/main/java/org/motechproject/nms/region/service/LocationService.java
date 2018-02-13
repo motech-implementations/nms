@@ -33,6 +33,16 @@ public interface LocationService {
      */
     Map<String, Object> getLocations(Map<String, Object> locationMapping, boolean createIfNotExist) throws InvalidLocationException;
 
+    Taluka updateTaluka(Map<String, Object> locationMapping, Boolean createIfNotExists);
+
+    HealthBlock updateBlock(Map<String, Object> locationMapping, Taluka taluka, Boolean createIfNotExists);
+
+    HealthFacility updateFacility(Map<String, Object> locationMapping, HealthBlock healthBlock, Boolean createIfNotExists);
+
+    HealthSubFacility updateSubFacility(Map<String, Object> locationMapping, HealthFacility healthFacility, Boolean createIfNotExists);
+
+    Village updateVillage(Map<String, Object> locationMapping, Taluka taluka, Boolean createIfNotExists);
+
     State getState(Long stateId);
 
     District getDistrict(Long stateId, Long districtId);
