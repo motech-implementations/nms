@@ -21,4 +21,6 @@ public interface FrontLineWorkerImportService {
      * @param flwRecord key-value pair of properties for flw
      */
     boolean createUpdate(Map<String, Object> flwRecord, SubscriptionOrigin importOrigin);
+
+    boolean updateLoc(Map<String, Object> flwRecord);
 }

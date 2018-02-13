@@ -19,7 +19,7 @@ public class SubscriberMsisdnTracker {
     @Field
     @Min(value = 1000000000L, message = "callingNumber must be 10 digits")
     @Max(value = 9999999999L, message = "callingNumber must be 10 digits")
-    @Column(length = 10, allowsNull = "false")
+    @Column(length = 10, allowsNull = "true")
     private Long oldCallingNumber;
 
     @Field

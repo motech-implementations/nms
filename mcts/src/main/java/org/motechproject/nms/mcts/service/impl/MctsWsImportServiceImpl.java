@@ -307,7 +307,6 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             mother = mctsBeneficiaryValueProcessor.getOrCreateMotherInstance(beneficiaryId);
             msisdn = (Long) recordMap.get(KilkariConstants.MSISDN);
             DateTime lmp = (DateTime) recordMap.get(KilkariConstants.LMP);
-            LOGGER.info("lmp = {}", lmp);
             if(mother == null) {
                 motherRejectionService.createOrUpdateMother(motherRejectionMcts(convertMapToMother(recordMap), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), action));
             } else {

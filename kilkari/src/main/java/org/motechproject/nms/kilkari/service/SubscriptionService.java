@@ -103,6 +103,8 @@ public interface SubscriptionService {
      */
     void deactivateSubscription(Subscription subscription, DeactivationReason reason);
 
+    void deleteBlockedMsisdn(Long motherId, Long oldCallingNumber, Long newCallingNumber);
+
     /**
      * Get the subscription pack with the specified type
      * @param type The type of the subscription pack to retrieve
@@ -124,6 +126,8 @@ public interface SubscriptionService {
      * @return The subscription if an active one exists, null otherwise
      */
     Subscription getActiveSubscription(Subscriber subscriber, SubscriptionPackType type);
+
+    Subscription getActiveOrPendingSubscriptionBySubscriber(Subscriber subscriber, SubscriptionPackType subscriptionPackType);
 
     List<Subscription> getActiveSubscriptionBySubscriber(Subscriber subscriber);
 

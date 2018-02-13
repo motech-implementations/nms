@@ -4,6 +4,7 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.EventRelay;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
 import org.motechproject.nms.api.web.contract.AddRchFlwRequest;
+import org.motechproject.nms.api.web.contract.UpdateFlwLocationRequest;
 import org.motechproject.nms.api.web.service.FlwCsvService;
 import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.kilkari.utils.FlwConstants;
@@ -168,6 +169,14 @@ public class OpsController extends BaseController {
         } else {
             flwCsvService.persistFlwRch(addRchFlwRequest);
         }
+    }
+
+    @RequestMapping(value = "/updateFlwLocation",
+            method = RequestMethod.POST,
+            headers = { "Content-type=application/json" })
+    @ResponseStatus(HttpStatus.OK)
+    public void updateFlwLocation(@RequestBody UpdateFlwLocationRequest updateFlwLocationRequest) {
+        flwCsvService.persistFlwLoc(updateFlwLocationRequest);
     }
 
     @RequestMapping("/getbookmark")

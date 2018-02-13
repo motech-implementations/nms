@@ -1,29 +1,20 @@
 package org.motechproject.nms.testing.it.kilkari;
 
 
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.velocity.util.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.DateTimeParser;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.motechproject.nms.kilkari.domain.BlockedMsisdnRecord;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.SubscriberMsisdnTracker;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionError;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
-import org.motechproject.nms.kilkari.domain.MctsMother;
-import org.motechproject.nms.kilkari.domain.MctsChild;
+import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.repository.BlockedMsisdnRecordDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
@@ -55,11 +46,16 @@ import org.motechproject.nms.region.service.HealthSubFacilityService;
 import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.motechproject.nms.region.service.VillageService;
+import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
+import org.motechproject.nms.rejectionhandler.repository.ChildRejectionDataService;
+import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
+import org.motechproject.testing.osgi.http.SimpleHttpClient;
+import org.motechproject.testing.utils.TestContext;
 import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
@@ -69,9 +65,11 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -137,12 +135,17 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     BlockedMsisdnRecordDataService blockedMsisdnRecordDataService;
     @Inject
     MctsChildDataService mctsChildDataService;
+    @Inject
+    ChildRejectionDataService childRejectionDataService;
 
     @Inject
     PlatformTransactionManager transactionManager;
 
     SubscriptionHelper sh;
     RegionHelper rh;
+
+    private String deactivationRequest = String.format("http://localhost:%d/api/ops/deactivationRequest",
+            TestContext.getJettyPort());
 
     @Before
     public void setUp() {
@@ -1982,5 +1985,77 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
         assertEquals(expectedState, subscriber.getMother().getState());
         assertEquals(expectedDistrict, subscriber.getMother().getDistrict());
+    }
+
+    private void testDeactivationRequestByMsisdn(Long msisdn, String deactivationReason, int status) throws IOException, InterruptedException, URISyntaxException {
+        StringBuilder sb = new StringBuilder(deactivationRequest);
+        sb.append("?");
+        sb.append(String.format("msisdn=%s", msisdn.toString()));
+        sb.append("&");
+        sb.append(String.format("deactivationReason=%s", deactivationReason));
+        HttpDelete httpRequest = new HttpDelete(sb.toString());
+        assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, status, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+    }
+
+    @Test
+    public void verifyDeactivatedBecauseOfNoWeeklyCallsNumberIsImportedAccordingToProperty() throws Exception {
+        DateTime lmp = DateTime.now().minus(100);
+        String lmpString = getDateString(lmp);
+        Subscription subscription = null;
+
+        // create subscriber and subscription
+        Reader reader = createMotherDataReader("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
+                lmpString + "\t\t\t\t");
+        mctsBeneficiaryImportService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        //Mark subscription deactivate
+        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        testDeactivationRequestByMsisdn(9439986187L, "WEEKLY_CALLS_NOT_ANSWERED", HttpStatus.SC_OK);
+        transactionManager.commit(status);
+
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        BlockedMsisdnRecord blockedMsisdnRecord = blockedMsisdnRecordDataService.findByNumber(9439986187L);
+        assertNotNull(blockedMsisdnRecord);
+        transactionManager.commit(status);
+
+        //try to import another user with same number
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        lmpString = getDateString(lmp.minus(101));
+        reader = createMotherDataReader("21\t3\t\t\t\t\t1234512345\tShanti Ekka\t9439986187\t\t" + lmpString
+                + "\t\t\t\t");
+        mctsBeneficiaryImportService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        List<Subscriber> subscribers = subscriberDataService.findByNumber(9439986187L);
+
+        // when property is set to true in kilkari.properties
+        assertNull(blockedMsisdnRecordDataService.findByNumber(9439986187L));
+        for (Subscriber sub: subscribers
+             ) {
+            subscription =  subscriptionService.getActiveSubscription(sub, SubscriptionPackType.PREGNANCY);
+        }
+        assertEquals(2, subscribers.size());
+        if (subscription != null) {
+            assertEquals("1234512345", subscription.getSubscriber().getMother().getBeneficiaryId());
+        }
+
+        // when property is set to false in kilkari.properties
+//        assertNotNull(blockedMsisdnRecordDataService.findByNumber(9439986187L));
+//        assertEquals(false, subscriptionService.activeSubscriptionByMsisdn(9439986187L, SubscriptionPackType.PREGNANCY, "1234512345", null));
+        transactionManager.commit(status);
+    }
+
+
+    @Test
+    public void testMctsImportRejection() throws Exception {
+        DateTime dob = DateTime.now().plusDays(100);
+        String dobString = getDateString(dob);
+        Reader reader = createChildDataReader("21\t3\t\t\t\t\t8876543210\tBaby1 of Shanti Ekka\t1234567890\t6000000000\t"
+                + dobString + "\t\t");
+        mctsBeneficiaryImportService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
+
+
+        List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
+        assertEquals(1, childImportRejections.size());
+        assertEquals(RejectionReasons.INVALID_DOB.toString(), childImportRejections.get(0).getRejectionReason());
     }
 }
