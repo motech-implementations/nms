@@ -172,7 +172,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return count;
     }
 
-
+    @Transactional
     public int importChildData(Reader reader, SubscriptionOrigin importOrigin) throws IOException {
         childPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.CHILD);
         int count = 0;
@@ -446,8 +446,14 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             child = mctsBeneficiaryValueProcessor.getOrCreateChildInstance(childId);
             msisdn = (Long) record.get(KilkariConstants.MSISDN);
             if (record.get(KilkariConstants.MOTHER_ID) != null) {
-                MctsMother motherInstance = (MctsMother) record.get(KilkariConstants.MOTHER_ID);
-                mother = mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherInstance.getBeneficiaryId());
+                Object motherRecord = record.get(KilkariConstants.MOTHER_ID);
+
+                try {
+                    MctsMother motherInstance = (MctsMother) motherRecord;
+                    mother = mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherInstance.getBeneficiaryId());
+                } catch (Exception e) {
+                    mother = mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherRecord.toString());
+                }
             } else {
                 mother = null;
             }

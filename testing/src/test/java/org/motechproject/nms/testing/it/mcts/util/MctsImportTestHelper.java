@@ -35,6 +35,11 @@ public final class MctsImportTestHelper {
         return readMctsFile("mcts-mothers-data-duplicate-msisdn-test.xml");
     }
 
+    public static String getResponseForTestChildMotherCast() throws IOException {
+        return readMctsFile("mcts-child-mother-cast-test.xml");
+    }
+
+
     public static String getResponseForStateWiseTest() throws IOException {
         return readMctsFile("mcts_single_record.xml");
     }
