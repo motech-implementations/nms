@@ -19,6 +19,7 @@ public final class RejectedObjectConverter {
     private RejectedObjectConverter() {
     }
 
+
     public static FlwImportRejection flwRejectionRch(RchAnmAshaRecord record, Boolean accepted, String rejectionReason, String action) {
         FlwImportRejection flwImportRejection = new FlwImportRejection();
         flwImportRejection.setStateId(record.getStateId());
@@ -494,7 +495,7 @@ public final class RejectedObjectConverter {
         return rchMotherRecord;
     }
 
-    public static ChildRecord convertMapToChild(Map<String, Object> record) { //NO CHECKSTYLE CyclomaticComplexity
+    public static ChildRecord convertMapToChild(Map<String, Object> record) { //NO CHECKSTYLE CyclomaticComplexity //NOPMD NcssMethodCount
         ChildRecord childRecord = new ChildRecord();
         childRecord.setStateID(record.get(KilkariConstants.STATE_ID) == null ? null : (Long) record.get(KilkariConstants.STATE_ID));
         childRecord.setDistrictId(record.get(KilkariConstants.DISTRICT_ID) == null ? null : (Long) record.get(KilkariConstants.DISTRICT_ID));
@@ -517,7 +518,23 @@ public final class RejectedObjectConverter {
         childRecord.setBirthdate(record.get(KilkariConstants.DOB) == null ? null : record.get(KilkariConstants.DOB).toString());
 
         childRecord.setIdNo(record.get(KilkariConstants.BENEFICIARY_ID) == null ? null : record.get(KilkariConstants.BENEFICIARY_ID).toString());
-        childRecord.setMotherId(record.get(KilkariConstants.MOTHER_ID) == null ? null : ((MctsMother) record.get(KilkariConstants.MOTHER_ID)).getBeneficiaryId());
+
+        String motherId = null;
+
+        if (record.get(KilkariConstants.MOTHER_ID) != null) {
+            Object motherRecord = record.get(KilkariConstants.MOTHER_ID);
+
+            try {
+                MctsMother motherInstance = (MctsMother) record.get(KilkariConstants.MOTHER_ID);
+                motherId = motherInstance.getBeneficiaryId();
+            } catch (Exception e) {
+                motherId = motherRecord.toString();
+            }
+        }
+
+
+        childRecord.setMotherId(motherId);
+
         childRecord.setEntryType(record.get(KilkariConstants.DEATH) == null || record.get(KilkariConstants.DEATH).toString().trim().isEmpty() ? null : ((Boolean) record.get(KilkariConstants.DEATH) ? 1 : 0));
 
         childRecord.setGpVillage(record.get(KilkariConstants.GP_VILLAGE) == null ? null : (String) record.get(KilkariConstants.GP_VILLAGE));

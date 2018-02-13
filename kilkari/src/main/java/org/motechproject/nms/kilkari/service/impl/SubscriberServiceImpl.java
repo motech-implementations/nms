@@ -20,10 +20,8 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.domain.AuditStatus;
-import org.motechproject.nms.kilkari.domain.SubscriberMsisdnTracker;
 import org.motechproject.nms.kilkari.exception.MultipleSubscriberException;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
-import org.motechproject.nms.kilkari.repository.SubscriberMsisdnTrackerDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
@@ -75,7 +73,6 @@ public class SubscriberServiceImpl implements SubscriberService {
     private SubscriptionPackDataService subscriptionPackDataService;
     private DeactivationSubscriptionAuditRecordDataService deactivationSubscriptionAuditRecordDataService;
     private BlockedMsisdnRecordDataService blockedMsisdnRecordDataService;
-    private SubscriberMsisdnTrackerDataService subscriberMsisdnTrackerDataService;
     private MotherRejectionService motherRejectionService;
     private ChildRejectionService childRejectionService;
 
@@ -247,18 +244,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                         return null;
                     }
                     MctsMother mother = subscriber.getMother();
-                    Set<Subscription> subscriptionSet = subscriber.getSubscriptions();
-                    boolean deactivated = false;
-                    for (Subscription subscription : subscriptionSet) {
-                        if (subscription.getStatus() == SubscriptionStatus.DEACTIVATED) {
-                            deactivated = true;
-                        }
-                    }
-                    if ((mother != null && mother.getLastMenstrualPeriod() != null) || deactivated) {
-                        subscriptionErrorDataService.create(new SubscriptionError(msisdn, motherUpdate.getBeneficiaryId(), SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED, pack.getType(), "Subscriber exists with this Msisdn", SubscriptionOrigin.MCTS_IMPORT));
-                        motherRejectionService.createOrUpdateMother(motherRejectionMcts(convertMapToMother(record), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
-                        return null;
-                    } else if (mother == null) {  // Check if it's an existing anonymous mother
+                    if (mother == null) {  // Check if it's an existing anonymous mother
                         Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
                         Subscription motherSubscription = subscriptionService.getIVRSubscription(subscriptions, SubscriptionPackType.PREGNANCY);
                         if (motherSubscription != null) {
@@ -287,7 +273,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         } else { // subscriberByBeneficiary != null aka. MCTS mother exists in motech
             if (subscriberByMsisdns.isEmpty()) {   //no subscriber attached to the new number
                 // We got here because beneficiary's phone number changed
-                deleteBlockedMsisdn(motherUpdate.getId(), subscriberByMctsId.getCallingNumber(), msisdn);
+                subscriptionService.deleteBlockedMsisdn(motherUpdate.getId(), subscriberByMctsId.getCallingNumber(), msisdn);
                 subscriberByMctsId.setCallingNumber(msisdn);
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
                 motherUpdate.setLastMenstrualPeriod(lmp);
@@ -351,7 +337,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     motherRejectionService.createOrUpdateMother(motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.INVALID_CASE_NO.toString(), action));
                     return null;
                 }
-                deleteBlockedMsisdn(motherUpdate.getId(), subscriberByRchId.getCallingNumber(), msisdn);
+                subscriptionService.deleteBlockedMsisdn(motherUpdate.getId(), subscriberByRchId.getCallingNumber(), msisdn);
                 subscriberByRchId.setCallingNumber(msisdn);
                 subscriberByRchId.setModificationDate(DateTime.now());
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
@@ -402,7 +388,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                             childUpdate.setDateOfBirth(dob);
                             subscriberByMotherMctsId.setChild(childUpdate);
                             subscriberByMotherMctsId.setDateOfBirth(dob);
-                            deleteBlockedMsisdn(childUpdate.getMother().getId(), subscriberByMotherMctsId.getCallingNumber(), msisdn);
+                            subscriptionService.deleteBlockedMsisdn(childUpdate.getMother().getId(), subscriberByMotherMctsId.getCallingNumber(), msisdn);
                             subscriberByMotherMctsId.setCallingNumber(msisdn);
                             return subscriptionService.createSubscription(subscriberByMotherMctsId, msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
                         }
@@ -422,18 +408,8 @@ public class SubscriberServiceImpl implements SubscriberService {
                         childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(record), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
                         return null;
                     }
-                    Set<Subscription> subscriptionSet = subscriber.getSubscriptions();
-                    boolean deactivated = false;
-                    for (Subscription subscription : subscriptionSet) {
-                        if (subscription.getStatus() == SubscriptionStatus.DEACTIVATED) {
-                            deactivated = true;
-                        }
-                    }
-                    if (subscriber.getChild() != null && deactivated) {
-                        subscriptionErrorDataService.create(new SubscriptionError(msisdn, childUpdate.getBeneficiaryId(), SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED, pack.getType(), "Subscriber exists with this Msisdn", SubscriptionOrigin.MCTS_IMPORT));
-                        childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(record), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
-                        return null;
-                    } else if (subscriber.getMother() != null) {
+
+                    if (subscriber.getMother() != null) {
                         if (childUpdate.getMother() != null && childUpdate.getMother().equals(subscriber.getMother())) { // If existing mother is of child then update only if no other active child is present for same msisdn
                             subscriberByMctsId = subscriber;
                         } else {  // We got here because this record is of MCTS mother. Check if it has IVR child
@@ -472,7 +448,7 @@ public class SubscriberServiceImpl implements SubscriberService {
 
             if (subscriberByMsisdns.isEmpty() && childUpdate.getMother() != null) {   // no subscriber attached to the new number
                 // We got here because beneficiary's phone number changed
-                deleteBlockedMsisdn(childUpdate.getMother().getId(), subscriberByMctsId.getCallingNumber(), msisdn);
+                subscriptionService.deleteBlockedMsisdn(childUpdate.getMother().getId(), subscriberByMctsId.getCallingNumber(), msisdn);
                 subscriberByMctsId.setCallingNumber(msisdn);
                 if (subscriberByMctsId.getMother() == null) {
                     subscriberByMctsId.setMother(childUpdate.getMother());
@@ -514,7 +490,7 @@ public class SubscriberServiceImpl implements SubscriberService {
             if (subscribersByMsisdn.isEmpty()) { //no subscriber with provided msisdn
                 //subscriber's number has changed
                 //update msisdn in subscriber and delete msisdn from blocked list
-                deleteBlockedMsisdn(childUpdate.getId(), subscriberByRchId.getCallingNumber(), msisdn);
+                subscriptionService.deleteBlockedMsisdn(childUpdate.getId(), subscriberByRchId.getCallingNumber(), msisdn);
                 subscriberByRchId.setCallingNumber(msisdn);
                 subscriberByRchId.setModificationDate(DateTime.now());
                 if (subscriberByRchId.getMother() == null) {
@@ -528,7 +504,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 //subscriber found with provided msisdn
                 for (Subscriber subscriber : subscribersByMsisdn) {
                     if (subscriber.getId().equals(subscriberByRchId.getId())) {
-                        Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
+                        Subscription subscription = subscriptionService.getActiveOrPendingSubscriptionBySubscriber(subscriberByRchId, pack.getType());
                         if (subscriberByRchId.getMother() == null) {
                             subscriberByRchId.setMother(childUpdate.getMother());
                         }
@@ -646,16 +622,6 @@ public class SubscriberServiceImpl implements SubscriberService {
         return null;   //create a new record
     }
 
-    public void deleteBlockedMsisdn(Long motherId, Long oldCallingNumber, Long newCallingNumber) {
-        // Check if the callingNumber is in Blocked Msisdn_Records
-        BlockedMsisdnRecord blockedMsisdnRecord = blockedMsisdnRecordDataService.findByNumber(newCallingNumber);
-        if (blockedMsisdnRecord != null) {
-            LOGGER.info("Deleting msisdn {} from Blocked list.", newCallingNumber);
-            blockedMsisdnRecordDataService.delete(blockedMsisdnRecord);
-        }
-        subscriberMsisdnTrackerDataService.create(new SubscriberMsisdnTracker(motherId, oldCallingNumber, newCallingNumber));
-    }
-
     public void deleteAllowed(Subscriber subscriber) {
         for (Subscription subscription : subscriber.getSubscriptions()) {
             subscriptionService.deletePreconditionCheck(subscription);
@@ -737,10 +703,5 @@ public class SubscriberServiceImpl implements SubscriberService {
         };
 
         return subscriberDataService.executeSQLQuery(queryExecution);
-    }
-
-    @Autowired
-    public void setSubscriberMsisdnTrackerDataService(SubscriberMsisdnTrackerDataService subscriberMsisdnTrackerDataService) {
-        this.subscriberMsisdnTrackerDataService = subscriberMsisdnTrackerDataService;
     }
 }
