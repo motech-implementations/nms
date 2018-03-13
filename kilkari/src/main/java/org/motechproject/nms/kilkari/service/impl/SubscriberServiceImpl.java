@@ -505,7 +505,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                 for (Subscriber subscriber : subscribersByMsisdn) {
                     if (subscriber.getId().equals(subscriberByRchId.getId())) {
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
-                        //Subscription subscription = subscriptionService.getActiveOrPendingSubscriptionBySubscriber(subscriberByRchId, pack.getType());
                         if (subscriberByRchId.getMother() == null) {
                             subscriberByRchId.setMother(childUpdate.getMother());
                         }
