@@ -47,7 +47,9 @@ import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.motechproject.nms.region.service.VillageService;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
+import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
 import org.motechproject.nms.rejectionhandler.repository.ChildRejectionDataService;
+import org.motechproject.nms.rejectionhandler.repository.MotherRejectionDataService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
@@ -106,6 +108,10 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     @Inject
     SubscriberDataService subscriberDataService;
     @Inject
+    MotherRejectionDataService motherRejectionDataService;
+    @Inject
+    ChildRejectionDataService childRejectionDataService;
+    @Inject
     SubscriptionService subscriptionService;
     @Inject
     SubscriptionPackDataService subscriptionPackDataService;
@@ -135,8 +141,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     BlockedMsisdnRecordDataService blockedMsisdnRecordDataService;
     @Inject
     MctsChildDataService mctsChildDataService;
-    @Inject
-    ChildRejectionDataService childRejectionDataService;
 
     @Inject
     PlatformTransactionManager transactionManager;
@@ -570,7 +574,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         District expectedDistrict4 = districtService.findByStateAndCode(expectedState, 4L);
 
         Subscriber subscriber1 = subscriberDataService.findByNumber(9439998253L).get(0);
-        assertChild(subscriber1, "210404600521400116", getDateTime("2/04/2017"), "Baby1 of PANI HEMRAM", expectedState,
+        assertChild(subscriber1, "210404600521400116", getDateTime("2/12/2017"), "Baby1 of PANI HEMRAM", expectedState,
                 expectedDistrict4);
 
         // although our MCTS data file contains 10 children, we only create 8 subscribers due to -1 duplicate phone numbers and
@@ -946,7 +950,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     /*
-     * To verify DOB is changed successfully via CSV when subscription 
+     * To verify DOB is changed successfully via CSV when subscription
      * already exist for childPack having status as "Completed"
      */
     @Test
@@ -1157,8 +1161,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         assertNoSubscriber(9439986187L);
     }
     /*
-     * To verify pregnancyPack is marked deactivated with reason abortion via CSV. 
-     * checked with abortion value 'MTP<12 Weeks'
+     * To verify new pregnancyPack subscription is rejected with reason mother abortion via CSV.
      */
     @Test
     public void verifyFT313_1() throws Exception {
@@ -1171,18 +1174,16 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
-        assertNotNull(subscriber);
-        Subscription subscription = subscriber.getSubscriptions().iterator().next();
-        assertNotNull(subscription);
-        assertEquals(subscription.getStatus(), SubscriptionStatus.DEACTIVATED);
-        assertEquals(subscription.getDeactivationReason(), DeactivationReason.MISCARRIAGE_OR_ABORTION);
+        assertNoSubscriber(9439986187L);
+        MotherImportRejection mother = motherRejectionDataService.findRejectedMother("1234567890",null);
+        assertEquals(mother.getAccepted(), false);
+        assertEquals(mother.getRejectionReason(), RejectionReasons.ABORT_STILLBIRTH_DEATH.toString());
+        assertEquals(mother.getMobileNo(), "9439986187");
         transactionManager.commit(status);
     }
 
     /*
-     * To verify pregnancyPack is marked deactivated with reason abortion via CSV.
-     * checked with abortion value 'Spontaneous'
+     * To verify pregnancyPack is rejected with reason abortion via CSV.
      */
     @Test
     public void verifyFT313_2() throws Exception {
@@ -1195,17 +1196,16 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
-        assertNotNull(subscriber);
-        Subscription subscription = subscriber.getSubscriptions().iterator().next();
-        assertNotNull(subscription);
-        assertEquals(subscription.getStatus(), SubscriptionStatus.DEACTIVATED);
-        assertEquals(subscription.getDeactivationReason(), DeactivationReason.MISCARRIAGE_OR_ABORTION);
+        assertNoSubscriber(9439986187L);
+        MotherImportRejection mother = motherRejectionDataService.findRejectedMother("1234567890",null);
+        assertEquals(mother.getAccepted(), false);
+        assertEquals(mother.getRejectionReason(), RejectionReasons.ABORT_STILLBIRTH_DEATH.toString());
+        assertEquals(mother.getMobileNo(), "9439986187");
         transactionManager.commit(status);
     }
 
     /*
-     * To verify pregnancyPack is marked deactivated with reason abortion via CSV. 
+     * To verify pregnancyPack is rejected with reason abortion via CSV.
      * with abortion value 'MTP>12 Weeks'
      */
     @Test
@@ -1219,17 +1219,16 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
-        assertNotNull(subscriber);
-        Subscription subscription = subscriber.getSubscriptions().iterator().next();
-        assertNotNull(subscription);
-        assertEquals(subscription.getStatus(), SubscriptionStatus.DEACTIVATED);
-        assertEquals(subscription.getDeactivationReason(), DeactivationReason.MISCARRIAGE_OR_ABORTION);
+        assertNoSubscriber(9439986187L);
+        MotherImportRejection mother = motherRejectionDataService.findRejectedMother("1234567890",null);
+        assertEquals(mother.getAccepted(), false);
+        assertEquals(mother.getRejectionReason(), RejectionReasons.ABORT_STILLBIRTH_DEATH.toString());
+        assertEquals(mother.getMobileNo(), "9439986187");
         transactionManager.commit(status);
     }
 
     /*
-     * To verify pregnancyPack is marked deactivated with reason still birth via CSV. 
+     * To verify pregnancyPack is rejected with reason still birth via CSV.
      */
     @Test
     public void verifyFT315() throws Exception {
@@ -1243,13 +1242,11 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
-        assertNotNull(subscriber);
-        Subscription subscription = subscriber.getSubscriptions().iterator().next();
-        assertNotNull(subscription);
-        assertEquals(subscription.getStatus(), SubscriptionStatus.DEACTIVATED);
-        assertEquals(subscription.getDeactivationReason(), DeactivationReason.STILL_BIRTH);
-
+        assertNoSubscriber(9439986187L);
+        MotherImportRejection mother = motherRejectionDataService.findRejectedMother("1234567890",null);
+        assertEquals(mother.getAccepted(), false);
+        assertEquals(mother.getRejectionReason(), RejectionReasons.ABORT_STILLBIRTH_DEATH.toString());
+        assertEquals(mother.getMobileNo(), "9439986187");
         transactionManager.commit(status);
     }
 
@@ -1351,7 +1348,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     /*
-     * To verify pregnancyPack is marked deactivated with reason mother death via CSV. 
+     * To verify new pregnancyPack subscription is rejected with reason mother death via CSV.
      */
     @Test
     public void verifyFT314() throws Exception {
@@ -1364,17 +1361,16 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
-        assertNotNull(subscriber);
-        Subscription subscription = subscriber.getSubscriptions().iterator().next();
-        assertNotNull(subscription);
-        assertEquals(subscription.getStatus(), SubscriptionStatus.DEACTIVATED);
-        assertEquals(subscription.getDeactivationReason(), DeactivationReason.MATERNAL_DEATH);
+        assertNoSubscriber(9439986187L);
+        MotherImportRejection mother = motherRejectionDataService.findRejectedMother("1234567890",null);
+        assertEquals(mother.getAccepted(), false);
+        assertEquals(mother.getRejectionReason(), RejectionReasons.ABORT_STILLBIRTH_DEATH.toString());
+        assertEquals(mother.getMobileNo(), "9439986187");
         transactionManager.commit(status);
     }
 
     /*
-     * To verify child pack is marked deactivated with reason child death via CSV. 
+     * To verify new child pack record is rejected with reason child death via CSV.
      */
     @Test
     public void verifyFT316() throws Exception {
@@ -1387,12 +1383,12 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
-        assertNotNull(subscriber);
-        Subscription subscription = subscriber.getSubscriptions().iterator().next();
-        assertNotNull(subscription);
-        assertEquals(subscription.getStatus(), SubscriptionStatus.DEACTIVATED);
-        assertEquals(subscription.getDeactivationReason(), DeactivationReason.CHILD_DEATH);
+        assertNoSubscriber(9439986187L);
+        ChildImportRejection child = childRejectionDataService.findRejectedChild("1234567890", null);
+        assertEquals("9439986187", child.getMobileNo());
+        assertEquals(child.getAccepted(), false);
+        assertEquals(child.getRejectionReason(), RejectionReasons.CHILD_DEATH.toString());
+        assertEquals(child.getmCTSMotherIDNo(), "9876453210");
         transactionManager.commit(status);
     }
 

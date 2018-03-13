@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.kilkari.domain.BlockedMsisdnRecord;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
+import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.SubscriberMsisdnTracker;
 import org.motechproject.nms.kilkari.domain.Subscription;
@@ -51,6 +52,8 @@ import org.motechproject.nms.region.service.HealthSubFacilityService;
 import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.motechproject.nms.region.service.VillageService;
+import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
+import org.motechproject.nms.rejectionhandler.repository.MotherRejectionDataService;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -124,6 +127,8 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
     SubscriptionDataService subscriptionDataService;
     @Inject
     MctsMotherDataService mctsMotherDataService;
+    @Inject
+    MotherRejectionDataService motherRejectionDataService;
     @Inject
     SubscriberMsisdnTrackerDataService subscriberMsisdnTrackerDataService;
     @Inject
@@ -531,7 +536,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     /*
-     * To verify pregnancyPack is marked deactivated with reason abortion via CSV.
+     * To verify pregnancyPack is rejected with reason abortion via CSV.
      * checked with abortion value 'MTP<12 Weeks'
      */
     @Test
@@ -546,12 +551,14 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         assertNoSubscriber(9439986187L);
-        assertSubscriptionError(9439986187L, SubscriptionPackType.PREGNANCY, SubscriptionRejectionReason.ABORT_STILLBIRTH_DEATH, "240");
-        transactionManager.commit(status);
+        MotherImportRejection mother = motherRejectionDataService.findRejectedMother("1234567890","240");
+        Assert.assertEquals(mother.getAccepted(), false);
+        Assert.assertEquals(mother.getRejectionReason(), RejectionReasons.ABORT_STILLBIRTH_DEATH.toString());
+        Assert.assertEquals(mother.getMobileNo(), "9439986187");transactionManager.commit(status);
     }
 
     /*
-     * To verify pregnancyPack is marked deactivated with reason abortion via CSV.
+     * To verify pregnancyPack is rejected with reason abortion via CSV.
      * checked with abortion value 'Spontaneous'
      */
     @Test
@@ -566,12 +573,14 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         assertNoSubscriber(9439986187L);
-        assertSubscriptionError(9439986187L, SubscriptionPackType.PREGNANCY, SubscriptionRejectionReason.ABORT_STILLBIRTH_DEATH, "240");
-        transactionManager.commit(status);
+        MotherImportRejection mother = motherRejectionDataService.findRejectedMother("1234567890","240");
+        Assert.assertEquals(mother.getAccepted(), false);
+        Assert.assertEquals(mother.getRejectionReason(), RejectionReasons.ABORT_STILLBIRTH_DEATH.toString());
+        Assert.assertEquals(mother.getMobileNo(), "9439986187");transactionManager.commit(status);
     }
 
     /*
-     * To verify pregnancyPack is marked deactivated with reason abortion via CSV.
+     * To verify pregnancyPack is rejected with reason abortion via CSV.
      * with abortion value 'MTP>12 Weeks'
      */
     @Test
@@ -586,7 +595,10 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         assertNoSubscriber(9439986187L);
-        assertSubscriptionError(9439986187L, SubscriptionPackType.PREGNANCY, SubscriptionRejectionReason.ABORT_STILLBIRTH_DEATH, "240");
+        MotherImportRejection mother = motherRejectionDataService.findRejectedMother("1234567890","240");
+        Assert.assertEquals(mother.getAccepted(), false);
+        Assert.assertEquals(mother.getRejectionReason(), RejectionReasons.ABORT_STILLBIRTH_DEATH.toString());
+        Assert.assertEquals(mother.getMobileNo(), "9439986187");
         transactionManager.commit(status);
     }
 
@@ -630,7 +642,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     /*
-     * To verify pregnancyPack is marked deactivated with reason mother death via CSV.
+     * To verify pregnancyPack is rejected with reason mother death via CSV.
      */
     @Test
     public void verifyFT314() throws Exception {
@@ -644,7 +656,10 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         assertNoSubscriber(9439986187L);
-        assertSubscriptionError(9439986187L, SubscriptionPackType.PREGNANCY, SubscriptionRejectionReason.ABORT_STILLBIRTH_DEATH, "240");
+        MotherImportRejection mother = motherRejectionDataService.findRejectedMother("1234567890","240");
+        Assert.assertEquals(mother.getAccepted(), false);
+        Assert.assertEquals(mother.getRejectionReason(), RejectionReasons.ABORT_STILLBIRTH_DEATH.toString());
+        Assert.assertEquals(mother.getMobileNo(), "9439986187");
         transactionManager.commit(status);
     }
 
@@ -688,7 +703,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     /*
-     * To verify pregnancyPack is marked deactivated with reason still birth via CSV.
+     * To verify pregnancyPack is rejected with reason still birth via CSV.
      */
     @Test
     public void verifyFT315() throws Exception {
@@ -703,7 +718,10 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         assertNoSubscriber(9439986187L);
-        assertSubscriptionError(9439986187L, SubscriptionPackType.PREGNANCY, SubscriptionRejectionReason.ABORT_STILLBIRTH_DEATH, "240");
+        MotherImportRejection mother = motherRejectionDataService.findRejectedMother("1234567890","240");
+        Assert.assertEquals(mother.getAccepted(), false);
+        Assert.assertEquals(mother.getRejectionReason(), RejectionReasons.ABORT_STILLBIRTH_DEATH.toString());
+        Assert.assertEquals(mother.getMobileNo(), "9439986187");
         transactionManager.commit(status);
     }
 
@@ -1058,12 +1076,11 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
         assertNotNull(subscriber);
-        assertEquals(3L, subscriber.getCaseNo().longValue());
-        assertEquals(3L, subscriber.getMother().getMaxCaseNo().longValue());
+        assertEquals(4L, subscriber.getCaseNo().longValue());
+        assertEquals(4L, subscriber.getMother().getMaxCaseNo().longValue());
 
         List<SubscriptionError> se = subscriptionErrorDataService.findByContactNumber(9439986187L);
-        assertEquals(1, se.size());
-        assertSubscriptionError(9439986187L, SubscriptionPackType.PREGNANCY, SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED, "2234567890");
+        assertEquals(0, se.size());
         transactionManager.commit(status);
     }
 
@@ -1411,7 +1428,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         District expectedDistrict4 = districtService.findByStateAndCode(expectedState, 4L);
 
         Subscriber subscriber1 = subscriberDataService.findByNumber(9696969696L).get(0);
-        assertChild(subscriber1, "1122336523", getDateTime("24/03/2017"), "test", expectedState,
+        assertChild(subscriber1, "1122336523", getDateTime("24/02/2018"), "test", expectedState,
                 expectedDistrict4);
 
         // our RCH data file consists of just 1 record
