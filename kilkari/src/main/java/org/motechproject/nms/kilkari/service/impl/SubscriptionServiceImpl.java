@@ -511,38 +511,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return null;
     }
 
-
-//    @Override
-//    public Subscription getActiveOrPendingSubscriptionBySubscriber(final Subscriber subscriber, final SubscriptionPackType subscriptionPackType) {
-//
-//        SqlQueryExecution<Subscription> queryExecution = new SqlQueryExecution<Subscription>() {
-//
-//            @Override
-//            public String getSqlQuery() {
-//                return "select *  from nms_subscriptions where subscriber_id_OID = ? and " +
-//                        "subscriptionPack_id_OID = ? and status in ('ACTIVE', 'PENDING_ACTIVATION')";
-//            }
-//
-//            @Override
-//            public Subscription execute(Query query) {
-//                query.setClass(Subscription.class);
-//                Long id = subscriber.getId();
-//                Integer pack = subscriptionPackType == SubscriptionPackType.CHILD ? 2 : 1;
-//                ForwardQueryResult fqr = (ForwardQueryResult) query.execute(id, pack);
-//                if (fqr.isEmpty()) {
-//                    return null;
-//                }
-//                if (fqr.size() == 1) {
-//                    return (Subscription) fqr.get(0);
-//                }
-//                throw new IllegalStateException(String.format("More than one row returned for beneficiary %s", id));
-//            }
-//        };
-//
-//        return subscriptionDataService.executeSQLQuery(queryExecution);
-//
-//    }
-
     @Override
     public List<Subscription> getActiveSubscriptionBySubscriber(Subscriber subscriber) {
         List<Subscription> subscriptions = new ArrayList<>();
