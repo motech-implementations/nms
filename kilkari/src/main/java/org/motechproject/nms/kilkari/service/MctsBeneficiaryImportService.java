@@ -15,8 +15,6 @@ public interface MctsBeneficiaryImportService {
 
     int importMotherData(Reader reader, SubscriptionOrigin origin) throws IOException;
 
-    int importChildData(Reader reader, SubscriptionOrigin origin) throws IOException;
-
     boolean importMotherRecord(Map<String, Object> record, SubscriptionOrigin origin);
 
     boolean importChildRecord(Map<String, Object> record, SubscriptionOrigin origin);

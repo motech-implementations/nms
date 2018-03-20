@@ -7,6 +7,7 @@ import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.csv.service.CsvAuditService;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,7 @@ public class RchBeneficiaryImportController {
     private AlertService alertService;
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
     private CsvAuditService csvAuditService;
+    private MctsBeneficiaryImportReaderService mctsBeneficiaryImportReaderService;
 
     @Autowired
     public void setAlertService(AlertService alertService) {
@@ -43,6 +45,11 @@ public class RchBeneficiaryImportController {
     @Autowired
     public void setMctsBeneficiaryImportService(MctsBeneficiaryImportService mctsBeneficiaryImportService) {
         this.mctsBeneficiaryImportService = mctsBeneficiaryImportService;
+    }
+
+    @Autowired
+    public void setMctsBeneficiaryImportReaderService(MctsBeneficiaryImportReaderService mctsBeneficiaryImportReaderService) {
+        this.mctsBeneficiaryImportReaderService = mctsBeneficiaryImportReaderService;
     }
 
     @Autowired
@@ -82,7 +89,7 @@ public class RchBeneficiaryImportController {
         int count = 0;
         try {
             try (InputStream in = csvFile.getInputStream()) {
-                count = mctsBeneficiaryImportService.importChildData(new InputStreamReader(in), SubscriptionOrigin.RCH_IMPORT);
+                count = mctsBeneficiaryImportReaderService.importChildData(new InputStreamReader(in), SubscriptionOrigin.RCH_IMPORT);
                 csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/rch/child/import");
             }
         } catch (CsvImportException e) {
