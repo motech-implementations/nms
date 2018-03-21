@@ -54,13 +54,14 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import javax.jdo.Query;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Iterator;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
 
 /**
  * Implementation of the {@link SubscriptionService} interface.
@@ -110,6 +111,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
 
+    @PostConstruct
+    public Boolean acceptNewSubscriptionForBlockedMsisdn() {
+        return  "true".equalsIgnoreCase(settingsFacade.getProperty(KilkariConstants.ACCEPT_NEW_SUBSCRIPTION_FOR_BLOCKED_MSISDN));
+    }
 
     @Transactional
     public void purgeOldInvalidSubscriptions() {
@@ -308,8 +313,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         // Check if the callingNumber is in Weekly_Calls_Not_Answered_Msisdn_Records
         BlockedMsisdnRecord blockedMsisdnRecord = blockedMsisdnRecordDataService.findByNumber(callingNumber);
-        Boolean acceptNewSubscriptionForBlockedMsisdn = Boolean.valueOf(settingsFacade.getProperty(KilkariConstants.ACCEPT_NEW_SUBSCRIPTION_FOR_BLOCKED_MSISDN));
-        if (!acceptNewSubscriptionForBlockedMsisdn) {
+        if (!acceptNewSubscriptionForBlockedMsisdn()) {
             if (blockedMsisdnRecord != null) {
                 LOGGER.info("Can't create a Subscription as the number {} is deactivated due to Weekly Calls Not Answered", callingNumber);
                 String beneficiaryId = getBeneficiaryId(subscriber, mode, subscriptionPack);
@@ -318,7 +322,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 return null;
             }
         }
-
         Subscriber sub;
         Subscription subscription;
 
@@ -328,7 +331,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             sub = subscriber;
         }
 
-        if (acceptNewSubscriptionForBlockedMsisdn && blockedMsisdnRecord != null) {
+        if (acceptNewSubscriptionForBlockedMsisdn() && blockedMsisdnRecord != null) {
             Long motherID = 0L;
 
             if (sub.getMother() != null) {

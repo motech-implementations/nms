@@ -9,10 +9,8 @@ import org.junit.runner.RunWith;
 import org.motechproject.commons.date.util.DateUtil;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.nms.imi.service.SettingsService;
-import org.motechproject.nms.kilkari.domain.RejectionReasons;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
+import org.motechproject.nms.kilkari.domain.*;
+import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.mcts.utils.Constants;
 import org.motechproject.nms.rch.service.RchWebServiceFacade;
@@ -20,7 +18,9 @@ import org.motechproject.nms.rch.service.RchWsImportService;
 import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
+import org.motechproject.nms.rejectionhandler.repository.ChildRejectionDataService;
 import org.motechproject.nms.rejectionhandler.repository.MotherRejectionDataService;
 import org.motechproject.nms.testing.it.rch.util.*;
 import org.motechproject.nms.testing.service.TestingService;
@@ -82,6 +82,14 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Inject
     private MotherRejectionDataService motherRejectionDataService;
+
+    @Inject
+    private ChildRejectionDataService childRejectionDataService;
+
+    @Inject
+    private MctsMotherDataService mctsMotherDataService;
+
+
 
 
 
@@ -170,7 +178,6 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     }
 
     @Test
-    @Ignore
     public void shouldSerializeChildrenDataFromSoapResponse() throws IOException {
         String response = RchImportTestHelper.getRchChildrenResponseData();
 
@@ -188,7 +195,6 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     }
 
     @Test
-    @Ignore
     public void shouldSerializeAshaDataFromSoapResponse() throws IOException {
         String response = RchImportTestHelper.getAnmAshaResponseData();
 
@@ -206,8 +212,8 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void duplicateMsisdnInDatasetTest() throws IOException {
-        String response = RchImportTestHelper.getRchMothersResponseData();
+    public void checkForZeroMother() throws IOException {
+        String response = RchImportTestHelper.getRchChildrenResponseDataForZeroMother();
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
         String url = simpleServer.start("rchEndpoint", 200, response);
 
@@ -233,24 +239,21 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 //        rchWsImportService.importRchMothersData(event);
         Thread.currentThread().setContextClassLoader(rchWebServiceFacade.getClass().getClassLoader());
 
-        MotechEvent event1 = new MotechEvent(org.motechproject.nms.rch.utils.Constants.RCH_MOTHER_READ_SUBJECT, params);
+        MotechEvent event1 = new MotechEvent(org.motechproject.nms.rch.utils.Constants.RCH_CHILD_READ_SUBJECT, params);
         try {
-            rchWebServiceFacade.readMotherResponseFromFile(event1);
+            rchWebServiceFacade.readChildResponseFromFile(event1);
         } catch (Exception e) {
-                e.printStackTrace();
+            e.printStackTrace();
         }
 
         Thread.currentThread().setContextClassLoader(cl);
 
 //        Should reject non ASHA FLWs
 
-        List<MotherImportRejection> motherImportRejections = motherRejectionDataService.retrieveAll();
-        assertEquals(2, motherImportRejections.size());
-        System.out.println("reason"+motherImportRejections.get(0).getRejectionReason()+motherImportRejections.get(0).getMobileNo());
-        System.out.println("reason"+motherImportRejections.get(1).getRejectionReason()+motherImportRejections.get(1).getMobileNo());
-//        System.out.println("reason"+motherImportRejections.get(2).getRejectionReason()+motherImportRejections.get(2).getMobileNo());
-//        System.out.println("reason"+motherImportRejections.get(3).getRejectionReason()+motherImportRejections.get(3).getMobileNo());
-        assertEquals(RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), motherImportRejections.get(0).getRejectionReason());
+        List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
+        assertEquals(0, childImportRejections.size());
+        List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
+        assertEquals(2, mothers.size());
     }
 
 }
