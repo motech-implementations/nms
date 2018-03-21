@@ -9,7 +9,9 @@ import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetString;
+import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
+import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
@@ -19,6 +21,7 @@ import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
+import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +38,9 @@ import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionRch;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToRchChild;
+
 @Service("mctsBeneficiaryImportReaderService")
 public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryImportReaderService {
 
@@ -44,6 +50,9 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
     private SubscriptionPack childPack;
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
+
+    @Autowired
+    private ChildRejectionService childRejectionService;
 
 
     @Autowired
@@ -88,10 +97,23 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             Map<String, Object> record;
             Timer timer = new Timer("kid", "kids");
             while (null != (record = csvImporter.read())) {
+                count++;
                 LOGGER.debug("Started child import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
+
+                MctsChild child = mctsBeneficiaryValueProcessor.getOrCreateRchChildInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
+                if (child == null) {
+                    childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), KilkariConstants.CREATE));
+                    LOGGER.error("RchId is empty while importing child at msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
+                    rejectedWithException++;
+                    continue;
+                }
+
+                String action = (child.getId() == null) ? KilkariConstants.CREATE : KilkariConstants.UPDATE;
+                record.put(KilkariConstants.ACTION, action);
+                record.put(KilkariConstants.RCH_CHILD, child);
+
                 try {
                     mctsBeneficiaryImportService.importChildRecord(record, importOrigin);
-                    count++;
                     if (count % KilkariConstants.PROGRESS_INTERVAL == 0) {
                         LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
                     }

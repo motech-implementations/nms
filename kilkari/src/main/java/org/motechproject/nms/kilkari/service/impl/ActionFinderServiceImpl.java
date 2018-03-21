@@ -4,7 +4,6 @@ import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.contract.ChildRecord;
 import org.motechproject.nms.kilkari.contract.MotherRecord;
-import org.motechproject.nms.kilkari.contract.RchChildRecord;
 import org.motechproject.nms.kilkari.contract.RchMotherRecord;
 import org.motechproject.nms.kilkari.service.ActionFinderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,15 +60,15 @@ public class ActionFinderServiceImpl implements ActionFinderService {
         }
     }
 
-    @Override
-    public String rchChildActionFinder(RchChildRecord record) {
-        if (record.getRegistrationNo() == null || record.getRegistrationNo().isEmpty() || "".equals(record.getRegistrationNo())) {
-            return create;
-        }
-        if (mctsChildDataService.findByRchId(record.getRegistrationNo()) == null) {
-            return create;
-        } else {
-            return update;
-        }
-    }
+//    @Override
+//    public String rchChildActionFinder(RchChildRecord record) {
+//        if (record.getRegistrationNo() == null || record.getRegistrationNo().isEmpty() || "".equals(record.getRegistrationNo())) {
+//            return create;
+//        }
+//        if (mctsChildDataService.findByRchId(record.getRegistrationNo()) == null) {
+//            return create;
+//        } else {
+//            return update;
+//        }
+//    }
 }

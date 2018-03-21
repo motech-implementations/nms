@@ -638,7 +638,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         int saved = 0;
         int rejected = childRecords.size()-validChildRecords.size();
         for (Map<String, Object> record : rejectedRchChildren) {
-            action = actionFinderService.rchChildActionFinder(record);
+            action = (String) record.get(KilkariConstants.ACTION);
             LOGGER.error("Existing Child Record with same MSISDN in the data set");
             childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action));
             rejected++;
@@ -688,19 +688,25 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             MctsChild child;
             Long msisdn;
             String childId;
-            String action = "";
-            action = actionFinderService.rchChildActionFinder(convertMapToRchChild(recordMap));
+            String action = KilkariConstants.CREATE;
             childId = (String) recordMap.get(KilkariConstants.RCH_ID);
             String mctsId = (String) recordMap.get(KilkariConstants.MCTS_ID);
-            child = mctsBeneficiaryValueProcessor.getOrCreateRchChildInstance(childId, mctsId);
             msisdn = (Long) recordMap.get(KilkariConstants.MOBILE_NO);
             DateTime dob = (DateTime) recordMap.get(KilkariConstants.DOB);
+            // add child to the record
+            child = mctsBeneficiaryValueProcessor.getOrCreateRchChildInstance(childId, mctsId);
+//            action = actionFinderService.rchChildActionFinder(convertMapToRchChild(recordMap));
+            recordMap.put(KilkariConstants.RCH_CHILD, child);
+
+
             if (child == null) {
                 childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(recordMap), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), action));
             } else {
                 if (child.getId() == null && !mctsBeneficiaryImportService.validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, SubscriptionOrigin.MCTS_IMPORT)) {
                     childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(recordMap), false, RejectionReasons.INVALID_DOB.toString(), action));
                 } else {
+                    action = (child.getId() == null) ? KilkariConstants.CREATE : KilkariConstants.UPDATE;
+                    recordMap.put(KilkariConstants.ACTION, action);
                     validChildRecords.add(recordMap);
                 }
             }
