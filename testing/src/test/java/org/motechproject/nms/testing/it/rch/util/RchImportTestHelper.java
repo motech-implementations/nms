@@ -27,6 +27,10 @@ public final class RchImportTestHelper {
         return readRchFile("rch-children-data.xml");
     }
 
+    public static String getRchChildrenResponseDataForZeroMother() throws IOException {
+        return readRchFile("rch-children-data-zero-mother.xml");
+    }
+
     public static String getRchChildrenResponseDataFail() throws IOException {
         return readRchFile("rch-children-data-fail.xml");
     }

@@ -17,4 +17,7 @@ public interface RchWebServiceFacade {
     boolean getAnmAshaData(LocalDate from, LocalDate to, URL endpoint, Long stateId);
 
     void readMotherResponseFromFile(MotechEvent event) throws RchFileManipulationException;
+
+    void readChildResponseFromFile(MotechEvent event) throws RchFileManipulationException;
+
 }

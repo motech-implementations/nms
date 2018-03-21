@@ -398,6 +398,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 } catch (Exception e) {
                     mother = mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherRecord.toString());
                 }
+
             } else {
                 mother = null;
             }
@@ -410,9 +411,16 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             child = mctsBeneficiaryValueProcessor.getOrCreateRchChildInstance(childId, mctsId);
             msisdn = (Long) record.get(KilkariConstants.MOBILE_NO);
             lastUpdateDateNic = (LocalDate) record.get(KilkariConstants.EXECUTION_DATE);
-            if (record.get(KilkariConstants.RCH_MOTHER_ID) != null) {
-                String motherMctsId = record.get(KilkariConstants.MCTS_MOTHER_ID) == null || "".equals(record.get(KilkariConstants.MCTS_MOTHER_ID)) ? null : record.get(KilkariConstants.MCTS_MOTHER_ID).toString();
-                mother = mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance(record.get(KilkariConstants.RCH_MOTHER_ID).toString(), motherMctsId);
+            if (record.get(KilkariConstants.RCH_MOTHER_ID) != null || record.get(KilkariConstants.MCTS_MOTHER_ID) != null) {
+                String motherRchId = record.get(KilkariConstants.RCH_MOTHER_ID) == null || "".equals(record.get(KilkariConstants.RCH_MOTHER_ID)) || "0".equalsIgnoreCase(record.get(KilkariConstants.RCH_MOTHER_ID).toString()) ? null : record.get(KilkariConstants.RCH_MOTHER_ID).toString();
+                String motherMctsId = record.get(KilkariConstants.MCTS_MOTHER_ID) == null || "".equals(record.get(KilkariConstants.MCTS_MOTHER_ID)) || "0".equalsIgnoreCase(record.get(KilkariConstants.MCTS_MOTHER_ID).toString()) ? null : record.get(KilkariConstants.MCTS_MOTHER_ID).toString();
+                if (motherRchId == null && motherMctsId != null) {
+                    mother = mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherMctsId);
+                } else if (motherRchId != null){
+                    mother = mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance(motherRchId, motherMctsId);
+                } else {
+                    mother = null;
+                }
             } else {
                 mother = null;
             }
@@ -530,7 +538,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         if (isMcts) {
             childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(record), accepted, rejectionReason.toString(), action));
         } else {
-            childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), accepted, rejectionReason.toString(), action));
+            String rejectReason  = rejectionReason == null ? null : rejectionReason.toString();
+            childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), accepted, rejectReason, action));
         }
         return accepted;
     }
@@ -631,6 +640,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 return false;
             }
         } else { // childPack
+            LOGGER.debug("bdate: {}", referenceDate);
             String referenceDateValidationError = childPack.isReferenceDateValidForPack(referenceDate);
             if (!referenceDateValidationError.isEmpty()) {
                 subscriptionErrorDataService.create(

@@ -180,7 +180,7 @@
                                     </excludes>
                                     <encoding>UTF-8</encoding>
                                     <summaryFile>target/failsafe-reports/failsafe-summary-it.xml</summaryFile>
-                                    <argLine>-Xmx2G -XX:MaxPermSize=2G -Xms2G -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005</argLine>
+                                    <argLine>-Xmx2G -XX:MaxPermSize=2G -Xms2G -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=9000</argLine>
                                     <systemPropertiesFile>${modules.root.dir}/maven.properties</systemPropertiesFile>
                                     <runOrder>random</runOrder>
                                 </configuration>
