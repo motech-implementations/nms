@@ -347,10 +347,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             lastUpdateDateNic = (LocalDate) record.get(KilkariConstants.LAST_UPDATE_DATE);
         } else {
             flagForMcts = false;
-            action = actionFinderService.rchChildActionFinder(convertMapToRchChild(record));
+            //action = actionFinderService.rchChildActionFinder(convertMapToRchChild(record));
+            action = (String) record.get(KilkariConstants.ACTION);
             childId = (String) record.get(KilkariConstants.RCH_ID);
-            String mctsId = (String) record.get(KilkariConstants.MCTS_ID);
-            child = mctsBeneficiaryValueProcessor.getOrCreateRchChildInstance(childId, mctsId);
+//            String mctsId = (String) record.get(KilkariConstants.MCTS_ID);
+            child = (MctsChild) record.get(KilkariConstants.RCH_CHILD);
             msisdn = (Long) record.get(KilkariConstants.MOBILE_NO);
             lastUpdateDateNic = (LocalDate) record.get(KilkariConstants.EXECUTION_DATE);
             if (record.get(KilkariConstants.RCH_MOTHER_ID) != null) {
