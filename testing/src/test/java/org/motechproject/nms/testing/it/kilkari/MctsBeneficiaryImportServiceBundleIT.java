@@ -1387,7 +1387,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         assertNoSubscriber(9439986187L);
-        ChildImportRejection child = childRejectionDataService.findRejectedChild("1234567890", null);
+        ChildImportRejection child = childRejectionDataService.findByIdno("1234567890");
         assertEquals("9439986187", child.getMobileNo());
         assertEquals(child.getAccepted(), false);
         assertEquals(child.getRejectionReason(), RejectionReasons.CHILD_DEATH.toString());

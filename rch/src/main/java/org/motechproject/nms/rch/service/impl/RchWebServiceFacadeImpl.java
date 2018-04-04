@@ -659,7 +659,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                         (long) recordMap.get(KilkariConstants.STATE_ID),
                         (long) recordMap.get(KilkariConstants.DISTRICT_ID));
 
-                if (hpdValidation && mctsBeneficiaryImportService.importChildRecord(recordMap, SubscriptionOrigin.RCH_IMPORT)) {
+                if (hpdValidation) {// && mctsBeneficiaryImportService.importChildRecord(recordMap, SubscriptionOrigin.RCH_IMPORT)) {
                     saved++;
                     LOGGER.info("saved child {}", rchId);
                 } else {

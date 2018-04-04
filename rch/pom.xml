@@ -7,13 +7,13 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.34</version>
+        <version>1.0.35</version>
         <relativePath>../</relativePath>
     </parent>
 
 
     <artifactId>rch</artifactId>
-    <version>1.0.34</version>
+    <version>1.0.35</version>
     <packaging>bundle</packaging>
     <name>Reproductive Child Health</name>
 
