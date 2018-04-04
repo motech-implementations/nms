@@ -1,10 +1,28 @@
 package org.motechproject.nms.rejectionhandler.service.impl;
 
+import org.datanucleus.store.rdbms.query.ForwardQueryResult;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.motechproject.mds.query.SqlQueryExecution;
+import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.repository.ChildRejectionDataService;
 import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import javax.jdo.Query;
+
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+
+import java.util.HashMap;
+import java.util.Set;
+import java.util.List;
+import java.util.Map;
 
 import static org.motechproject.nms.tracking.utils.TrackChangeUtils.LOGGER;
 
@@ -14,33 +32,298 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
     @Autowired
     private ChildRejectionDataService childRejectionDataService;
 
-    @Override
-    public ChildImportRejection findByChildId(String idNo, String registrationNo) {
-        return childRejectionDataService.findRejectedChild(idNo, registrationNo);
-    }
+//    @Override
+//    public ChildImportRejection findByChildId(String idNo, String registrationNo) {
+//        return childRejectionDataService.findRejectedChild(idNo, registrationNo);
+//    }
 
     @Override //NO CHECKSTYLE CyclomaticComplexity
     public boolean createOrUpdateChild(ChildImportRejection childImportRejection) {
         if (childImportRejection.getIdNo() != null || childImportRejection.getRegistrationNo() != null) {
-            ChildImportRejection childImportRejection1 = childRejectionDataService.findRejectedChild(childImportRejection.getIdNo(), childImportRejection.getRegistrationNo());
 
-            if (childImportRejection1 == null && !childImportRejection.getAccepted()) {
+            ChildImportRejection childRejectionRecord;
+            if ("RCH-Import".equals(childImportRejection.getSource())) {
+                childRejectionRecord = childRejectionDataService.findByRegistrationNo(childImportRejection.getRegistrationNo());
+            } else {
+                childRejectionRecord = childRejectionDataService.findByIdno(childImportRejection.getIdNo());
+            }
+
+            if (childRejectionRecord == null && !childImportRejection.getAccepted()) {
                 childRejectionDataService.create(childImportRejection);
                 return true;
-            } else if (childImportRejection1 == null && childImportRejection.getAccepted()) {
+            } else if (childRejectionRecord == null && childImportRejection.getAccepted()) {
                 LOGGER.debug(String.format("There is no mother rejection data for mctsId %s and rchId %s", childImportRejection.getIdNo(), childImportRejection.getRegistrationNo()));
-            } else if (childImportRejection1 != null && !childImportRejection1.getAccepted()) {
-                childImportRejection1 = setNewData1(childImportRejection, childImportRejection1);
-                childRejectionDataService.update(childImportRejection1);
-                return false;
-            } else if (childImportRejection1 != null && childImportRejection1.getAccepted()) {
-                childImportRejection1 = setNewData1(childImportRejection, childImportRejection1);
-                childRejectionDataService.update(childImportRejection1);
+            } else {
+                // If found one in database, update the record with new data
+                childRejectionRecord = setNewData1(childImportRejection, childRejectionRecord);
+                childRejectionDataService.update(childRejectionRecord);
                 return false;
             }
         }
         return true;
     }
+
+    @Override
+    public Map<String, Object> findChildRejectionByRchId(final Set<String> rchIds) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Map<String, Object>> queryExecution = new SqlQueryExecution<Map<String, Object>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "SELECT id, registrationNo, creationDate FROM nms_child_rejects WHERE registrationNo IN " + queryRchList(rchIds);
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
+            }
+
+            @Override
+            public Map<String, Object> execute(Query query) {
+
+                query.setClass(ChildImportRejection.class);
+
+//                Map params = new HashMap();
+//                List<String> rchIdList = new ArrayList<String>(rchIds);
+//                params.put("rchIdList", rchIdList);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                Map<String, Object> resultMap = new HashMap<>();
+                for (ChildImportRejection childReject : (List<ChildImportRejection>) fqr) {
+                    resultMap.put(childReject.getRegistrationNo(), childReject);
+//                    try {
+//                        Method method = childReject.getClass().getMethod("getCreationDate");
+//                        DateTime dateTime = (DateTime) method.invoke(childReject);
+//                        resultMap.put(childReject.getRegistrationNo(), dateTime);
+//                    } catch (IllegalAccessException|SecurityException|IllegalArgumentException|NoSuchMethodException|
+//                            InvocationTargetException e) {
+//                        LOGGER.error("Ignoring creation date and setting as now");
+//
+//                    }
+                }
+                return resultMap;
+            }
+        };
+
+        Map<String, Object> resultMap = childRejectionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("List of child rejects in {}", queryTimer.time());
+        return resultMap;
+    }
+
+    private String queryRchList(Set<String> rchList) {
+        StringBuilder stringBuilder = new StringBuilder();
+        int i = 0;
+        stringBuilder.append("(");
+        for (String rch: rchList) {
+            if (i != 0) {
+                stringBuilder.append(", ");
+            }
+            stringBuilder.append("'" + rch + "'");
+            i++;
+        }
+        stringBuilder.append(")");
+
+        String valueQuery = stringBuilder.toString();
+        return valueQuery;
+    }
+
+    public Long bulkInsert(final List<ChildImportRejection> createObjects) {
+
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "Insert into nms_child_rejects (subcentreId, subcentreName, villageId, villageName, name, mobileNo, stateId, districtId, districtName, talukaId," +
+                        " talukaName, healthBlockId, healthBlockName, phcId, phcName, birthDate, registrationNo, entryType, idNo, mCTSMotherIDNo, rCHMotherIDNo, execDate, source," +
+                        " accepted, rejectionReason, action, creator, modifiedBy, creationDate, modificationDate) " +
+                        "values  " +
+                        childToQuerySet(createObjects);
+
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
+            }
+
+            @Override
+            public Long execute(Query query) {
+
+                query.setClass(ChildImportRejection.class);
+
+//                Map params = new HashMap();
+//                params.put("rchIds", rchIds);
+                Long insertedNo = (Long) query.execute();
+//                List<ChildImportRejection> resultMap = new ArrayList<>();
+
+                return insertedNo;
+            }
+        };
+
+        Long insertedNo = childRejectionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("List of child rejects in {}", queryTimer.time());
+        return insertedNo;
+    }
+
+    private String childToQuerySet(List<ChildImportRejection> childList) {
+        StringBuilder stringBuilder = new StringBuilder();
+//        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//        Date date = new Date();
+
+        DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+        DateTime dateTimeNow = new DateTime();
+
+        int i = 0;
+        for (ChildImportRejection child: childList) {
+            if (i != 0) {
+                stringBuilder.append(", ");
+            }
+            stringBuilder.append("(");
+            stringBuilder.append(child.getSubcentreId() + ", ");
+            stringBuilder.append("'" + child.getSubcentreName() + "', ");
+            stringBuilder.append(child.getVillageId() + ", ");
+            stringBuilder.append("'" + child.getVillageName() + "', ");
+            stringBuilder.append("'" + child.getName() + "', ");
+            stringBuilder.append("'" + child.getMobileNo() + "', ");
+            stringBuilder.append(child.getStateId() + ", ");
+            stringBuilder.append(child.getDistrictId() + ", ");
+            stringBuilder.append("'" + child.getDistrictName() + "', ");
+            stringBuilder.append("'" + child.getTalukaId() + "', ");
+            stringBuilder.append("'" + child.getTalukaName() + "', ");
+            stringBuilder.append(child.getHealthBlockId() + ", ");
+            stringBuilder.append("'" + child.getHealthBlockName() + "', ");
+            stringBuilder.append(child.getPhcId() + ", ");
+            stringBuilder.append("'" + child.getPhcName() + "', ");
+            stringBuilder.append("'" + child.getBirthDate() + "', ");
+            stringBuilder.append("'" + child.getRegistrationNo() + "', ");
+            stringBuilder.append(child.getEntryType() + ", ");
+            stringBuilder.append("'" + child.getIdNo() + "', ");
+            stringBuilder.append("'" + child.getmCTSMotherIDNo() + "', ");
+            stringBuilder.append("'" + child.getMotherId() + "', ");
+            stringBuilder.append("'" + child.getExecDate() + "', ");
+            stringBuilder.append("'" + child.getSource() + "', ");
+            stringBuilder.append(child.getAccepted() + ", ");
+            stringBuilder.append("'" + child.getRejectionReason() + "', ");
+            stringBuilder.append("'" + child.getAction() + "', ");
+            stringBuilder.append("'motech', ");
+            stringBuilder.append("'motech', ");
+            stringBuilder.append("'" + dateTimeFormatter.print(dateTimeNow) + "', ");
+            stringBuilder.append("'" + dateTimeFormatter.print(dateTimeNow) + "'");
+            stringBuilder.append(")");
+            i++;
+        }
+
+        String valueQuery = stringBuilder.toString();
+        return valueQuery;
+    }
+
+    public Long bulkUpdate(final List<ChildImportRejection> updateObjects) {
+
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "Insert into nms_child_rejects (id, subcentreId, subcentreName, villageId, villageName, name, mobileNo, stateId, districtId, districtName, talukaId," +
+                        " talukaName, healthBlockId, healthBlockName, phcId, phcName, birthDate, registrationNo, entryType, idNo, mCTSMotherIDNo, rCHMotherIDNo, execDate, source," +
+                        " accepted, rejectionReason, action, modifiedBy, creationDate, modificationDate, creator) " +
+                        "values  " +
+                        childUpdateQuerySet(updateObjects) +
+                        " ON DUPLICATE KEY UPDATE " +
+                        "subcentreId = VALUES(subcentreId),  subcentreName = VALUES(subcentreName),  villageId = VALUES(villageId),  villageName = VALUES(villageName),  " +
+                        "name = VALUES(name),  mobileNo = VALUES(mobileNo),  stateId = VALUES(stateId),  districtId = VALUES(districtId),  districtName = VALUES(districtName),  talukaId = VALUES(talukaId),  talukaName = VALUES(talukaName),  " +
+                        "healthBlockId = VALUES(healthBlockId),  healthBlockName = VALUES(healthBlockName),  phcId = VALUES(phcId),  phcName = VALUES(phcName),  birthDate = VALUES(birthDate),  entryType = VALUES(entryType),  " +
+                        "idNo = VALUES(idNo),  mCTSMotherIDNo = VALUES(mCTSMotherIDNo),  rCHMotherIDNo = VALUES(rCHMotherIDNo),  execDate = VALUES(execDate),  source = VALUES(source),  " +
+                        "accepted = VALUES(accepted),  rejectionReason = VALUES(rejectionReason),  action = VALUES(action),  modifiedBy = VALUES(modifiedBy), creationDate = VALUES(creationDate), modificationDate = VALUES(modificationDate), creator = VALUES(creator)";
+
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
+            }
+
+            @Override
+            public Long execute(Query query) {
+
+                query.setClass(ChildImportRejection.class);
+
+//                Map params = new HashMap();
+//                params.put("rchIds", rchIds);
+                Long updatedNo = (Long) query.execute();
+//                List<ChildImportRejection> resultMap = new ArrayList<>();
+
+                return updatedNo;
+            }
+        };
+
+        Long updatedNo = childRejectionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("List of child rejects in {}", queryTimer.time());
+        return updatedNo;
+    }
+
+    private String childUpdateQuerySet(List<ChildImportRejection> childList) {
+        StringBuilder stringBuilder = new StringBuilder();
+//        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+        DateTime dateTimeNow = new DateTime();
+//        Date date = new Date();
+        int i = 0;
+        for (ChildImportRejection child: childList) {
+            String creationTime = "2017-12-10 03:04:12";
+            Long id = null;
+            if (i != 0) {
+                stringBuilder.append(", ");
+            }
+            try {
+                Method method = child.getClass().getMethod("getCreationDate");
+                DateTime dateTime = (DateTime) method.invoke(child);
+                creationTime = dateTimeFormatter.print(dateTime);
+
+                method = child.getClass().getMethod("getId");
+                id = (Long) method.invoke(child);
+            } catch (IllegalAccessException|SecurityException|IllegalArgumentException|NoSuchMethodException|
+            InvocationTargetException e) {
+                LOGGER.error("Ignoring creation date and setting as now");
+
+            }
+            stringBuilder.append("(");
+            stringBuilder.append(id + ", ");
+            stringBuilder.append(child.getSubcentreId() + ", ");
+            stringBuilder.append("'" + child.getSubcentreName() + "', ");
+            stringBuilder.append(child.getVillageId() + ", ");
+            stringBuilder.append("'" + child.getVillageName() + "', ");
+            stringBuilder.append("'" + child.getName() + "', ");
+            stringBuilder.append("'" + child.getMobileNo() + "', ");
+            stringBuilder.append(child.getStateId() + ", ");
+            stringBuilder.append(child.getDistrictId() + ", ");
+            stringBuilder.append("'" + child.getDistrictName() + "', ");
+            stringBuilder.append("'" + child.getTalukaId() + "', ");
+            stringBuilder.append("'" + child.getTalukaName() + "', ");
+            stringBuilder.append(child.getHealthBlockId() + ", ");
+            stringBuilder.append("'" + child.getHealthBlockName() + "', ");
+            stringBuilder.append(child.getPhcId() + ", ");
+            stringBuilder.append("'" + child.getPhcName() + "', ");
+            stringBuilder.append("'" + child.getBirthDate() + "', ");
+            stringBuilder.append("'" + child.getRegistrationNo() + "', ");
+            stringBuilder.append(child.getEntryType() + ", ");
+            stringBuilder.append("'" + child.getIdNo() + "', ");
+            stringBuilder.append("'" + child.getmCTSMotherIDNo() + "', ");
+            stringBuilder.append("'" + child.getMotherId() + "', ");
+            stringBuilder.append("'" + child.getExecDate() + "', ");
+            stringBuilder.append("'" + child.getSource() + "', ");
+            stringBuilder.append(child.getAccepted() + ", ");
+            stringBuilder.append("'" + child.getRejectionReason() + "', ");
+            stringBuilder.append("'" + child.getAction() + "', ");
+            stringBuilder.append("'motech', ");
+            stringBuilder.append("'" + creationTime + "', ");
+            stringBuilder.append("'" + dateTimeFormatter.print(dateTimeNow) + "', ");
+            stringBuilder.append("'motech'");
+            stringBuilder.append(")");
+            i++;
+        }
+
+        String valueQuery = stringBuilder.toString();
+        return valueQuery;
+    }
+
 
     private static ChildImportRejection setNewData1(ChildImportRejection childImportRejection, ChildImportRejection childImportRejection1) {
         childImportRejection1.setStateId(childImportRejection.getStateId());

@@ -113,5 +113,5 @@ public interface SubscriberService {
      * @param dob reference date for the child
      * @return new or updated subscription, null if create/update fails
      */
-    Subscription updateRchChildSubscriber(Long msisdn, MctsChild child, DateTime dob, Map<String, Object> record, String action);
+    List<Map<String, Object>> updateRchChildSubscriber(Long msisdn, MctsChild child, DateTime dob, Map<String, Object> record, String action, List<Map<String, Object>> rejectionRecords);
 }

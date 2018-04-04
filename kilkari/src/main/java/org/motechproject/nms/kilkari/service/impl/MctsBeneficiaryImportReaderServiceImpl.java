@@ -35,7 +35,9 @@ import javax.validation.ConstraintViolationException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionRch;
@@ -57,13 +59,12 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
 
     @Autowired
     public MctsBeneficiaryImportReaderServiceImpl(SubscriptionService subscriptionService,
-                                            MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor) {
+                                            MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor, MctsBeneficiaryImportService mctsBeneficiaryImportService) {
         this.subscriptionService = subscriptionService;
         this.mctsBeneficiaryValueProcessor = mctsBeneficiaryValueProcessor;
-
+        this.mctsBeneficiaryImportService = mctsBeneficiaryImportService;
     }
 
-    @Transactional
     public int importChildData(Reader reader, SubscriptionOrigin importOrigin) throws IOException {
         childPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.CHILD);
         int count = 0;
@@ -95,6 +96,12 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
 
         try {
             Map<String, Object> record;
+            List<Map<String, Object>> rejectedRecords = new ArrayList<>();
+            Map<String, Object> rejectedChilds = new HashMap<>();
+            Map<String, Object> rejectionStatus = new HashMap<>();
+            rejectedRecords.add(rejectedChilds);
+            rejectedRecords.add(rejectionStatus);
+
             Timer timer = new Timer("kid", "kids");
             while (null != (record = csvImporter.read())) {
                 count++;
@@ -113,7 +120,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
                 record.put(KilkariConstants.RCH_CHILD, child);
 
                 try {
-                    mctsBeneficiaryImportService.importChildRecord(record, importOrigin);
+                    rejectedRecords = mctsBeneficiaryImportService.importChildRecord(record, importOrigin, rejectedRecords);
                     if (count % KilkariConstants.PROGRESS_INTERVAL == 0) {
                         LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
                     }
@@ -121,6 +128,13 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
                     LOGGER.error("Error while importing child at msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id), e);
                     rejectedWithException++;
                 }
+            }
+
+            try {
+                mctsBeneficiaryImportService.createOrUpdateRejections(rejectedRecords.get(0) , rejectedRecords.get(1));
+            } catch (RuntimeException e) {
+                LOGGER.error("Error while bulk updating rejection records", e);
+
             }
 
             LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));

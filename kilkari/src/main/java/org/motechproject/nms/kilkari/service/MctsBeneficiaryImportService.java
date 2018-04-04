@@ -6,6 +6,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -17,8 +18,10 @@ public interface MctsBeneficiaryImportService {
 
     boolean importMotherRecord(Map<String, Object> record, SubscriptionOrigin origin);
 
-    boolean importChildRecord(Map<String, Object> record, SubscriptionOrigin origin);
+    List<Map<String, Object>> importChildRecord(Map<String, Object> record, SubscriptionOrigin origin, List<Map<String, Object>> rejectedRecords);
 
     boolean validateReferenceDate(DateTime referenceDate, SubscriptionPackType packType, Long msisdn, String beneficiaryId, SubscriptionOrigin importOrigin);
+
+    void createOrUpdateRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus);
 
     }

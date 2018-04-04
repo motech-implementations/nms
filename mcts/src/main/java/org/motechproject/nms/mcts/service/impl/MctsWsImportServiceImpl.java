@@ -408,7 +408,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                         (long) recordMap.get(KilkariConstants.STATE_ID),
                         (long) recordMap.get(KilkariConstants.DISTRICT_ID));
 
-                if (hpdValidation && mctsBeneficiaryImportService.importChildRecord(toMap(record), SubscriptionOrigin.MCTS_IMPORT)) {
+                if (hpdValidation) { // && mctsBeneficiaryImportService.importChildRecord(toMap(record), SubscriptionOrigin.MCTS_IMPORT)) {
                     saved++;
                     LOGGER.info("saved child {}", record.getIdNo());
                 } else {
