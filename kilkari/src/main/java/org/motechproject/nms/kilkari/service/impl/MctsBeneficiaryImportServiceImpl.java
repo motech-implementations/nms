@@ -523,11 +523,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     // Create rejection records for all the invalid mothers
     private boolean createUpdateMotherRejections(Boolean isMcts, Map<String, Object> record, String action, RejectionReasons rejectionReason, Boolean accepted) {
+        String rejectReason = rejectionReason == null ? null : rejectionReason.toString();
         if (isMcts) {
-            motherRejectionService.createOrUpdateMother(motherRejectionMcts(convertMapToMother(record), accepted, rejectionReason.toString(), action));
+            motherRejectionService.createOrUpdateMother(motherRejectionMcts(convertMapToMother(record), accepted, rejectReason, action));
 
         } else {
-            motherRejectionService.createOrUpdateMother(motherRejectionRch(convertMapToRchMother(record), accepted, rejectionReason.toString(), action));
+            motherRejectionService.createOrUpdateMother(motherRejectionRch(convertMapToRchMother(record), accepted, rejectReason, action));
 
         }
         return accepted;
@@ -535,10 +536,10 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     // Create rejection records for all the invalid childs
     private boolean createUpdateChildRejections(Boolean isMcts, Map<String, Object> record, String action, RejectionReasons rejectionReason, Boolean accepted) {
+        String rejectReason  = rejectionReason == null ? null : rejectionReason.toString();
         if (isMcts) {
-            childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(record), accepted, rejectionReason.toString(), action));
+            childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(record), accepted, rejectReason, action));
         } else {
-            String rejectReason  = rejectionReason == null ? null : rejectionReason.toString();
             childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), accepted, rejectReason, action));
         }
         return accepted;
