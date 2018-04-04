@@ -704,12 +704,12 @@ public class MctsImportBundleIT extends BasePaxIT {
 //        Should reject non ASHA FLWs
 
         List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
-        assertEquals(2, childImportRejections.size());
+        assertEquals(3, childImportRejections.size());
         System.out.println("reason"+childImportRejections.get(0).getMobileNo()+childImportRejections.get(0).getRejectionReason());
         System.out.println("reason"+childImportRejections.get(1).getMobileNo()+childImportRejections.get(1).getRejectionReason());
 //        System.out.println("reason"+childImportRejections.get(2).getRejectionReason()+childImportRejections.get(2).getMobileNo());
 //        System.out.println("reason"+motherImportRejections.get(3).getRejectionReason()+motherImportRejections.get(3).getIdNo());
-        assertEquals(RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), childImportRejections.get(0).getRejectionReason());
+        assertEquals(RejectionReasons.INVALID_DOB.toString(), childImportRejections.get(0).getRejectionReason());
     }
 
 
@@ -734,11 +734,10 @@ public class MctsImportBundleIT extends BasePaxIT {
         mctsWsImportService.importChildrenData(event);
         Thread.currentThread().setContextClassLoader(cl);
 
-//        Should reject non ASHA FLWs
-
         List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
-        assertEquals(1, childImportRejections.size());
+        assertEquals(2, childImportRejections.size());
         assertEquals(RejectionReasons.INVALID_DOB.toString(), childImportRejections.get(0).getRejectionReason());
+        assertEquals(RejectionReasons.CHILD_DEATH.toString(), childImportRejections.get(1).getRejectionReason());
     }
 
 
