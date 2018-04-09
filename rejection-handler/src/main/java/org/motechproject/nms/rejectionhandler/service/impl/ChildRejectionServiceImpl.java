@@ -138,7 +138,7 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
                         " talukaName, healthBlockId, healthBlockName, phcId, phcName, birthDate, registrationNo, entryType, idNo, mCTSMotherIDNo, rCHMotherIDNo, execDate, source," +
                         " accepted, rejectionReason, action, creator, modifiedBy, creationDate, modificationDate) " +
                         "values  " +
-                        childToQuerySet(createObjects);
+                        rchChildToQuerySet(createObjects);
 
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
@@ -163,7 +163,7 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
         return insertedNo;
     }
 
-    private String childToQuerySet(List<ChildImportRejection> childList) {
+    private String rchChildToQuerySet(List<ChildImportRejection> childList) {
         StringBuilder stringBuilder = new StringBuilder();
 //        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 //        Date date = new Date();
@@ -199,6 +199,112 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
             stringBuilder.append("'" + child.getmCTSMotherIDNo() + "', ");
             stringBuilder.append("'" + child.getMotherId() + "', ");
             stringBuilder.append("'" + child.getExecDate() + "', ");
+            stringBuilder.append("'" + child.getSource() + "', ");
+            stringBuilder.append(child.getAccepted() + ", ");
+            stringBuilder.append("'" + child.getRejectionReason() + "', ");
+            stringBuilder.append("'" + child.getAction() + "', ");
+            stringBuilder.append("'motech', ");
+            stringBuilder.append("'motech', ");
+            stringBuilder.append("'" + dateTimeFormatter.print(dateTimeNow) + "', ");
+            stringBuilder.append("'" + dateTimeFormatter.print(dateTimeNow) + "'");
+            stringBuilder.append(")");
+            i++;
+        }
+
+        String valueQuery = stringBuilder.toString();
+        return valueQuery;
+    }
+    private String mctsChildToQuerySet(List<ChildImportRejection> childList) {
+        StringBuilder stringBuilder = new StringBuilder();
+//        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//        Date date = new Date();
+
+        DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+        DateTime dateTimeNow = new DateTime();
+
+        int i = 0;
+        for (ChildImportRejection child: childList) {
+            if (i != 0) {
+                stringBuilder.append(", ");
+            }
+            stringBuilder.append("(");
+            stringBuilder.append(child.getStateId() + ", ");
+            stringBuilder.append(child.getDistrictId() + ", ");
+            stringBuilder.append("'" + child.getDistrictName() + "', ");
+            stringBuilder.append(child.getTalukaId() + ", ");
+            stringBuilder.append("'" + child.getTalukaName() + "', ");
+            stringBuilder.append(child.getHealthBlockId() + ", ");
+            stringBuilder.append("'" + child.getHealthBlockName() + "', ");
+            stringBuilder.append(child.getPhcId() + ", ");
+            stringBuilder.append("'" + child.getPhcName() + "', ");
+            stringBuilder.append(child.getSubcentreId() + ", ");
+            stringBuilder.append("'" + child.getSubcentreName() + "', ");
+            stringBuilder.append(child.getVillageId() + ", ");
+            stringBuilder.append("'" + child.getVillageName() + "', ");
+            stringBuilder.append("'" + child.getYr() + "', ");
+            stringBuilder.append("'" + child.getCityMaholla() + "', ");
+            stringBuilder.append("'" + child.getgPVillage() + "', ");
+            stringBuilder.append("'" + child.getAddress() + "', ");
+            stringBuilder.append("'" + child.getIdNo() + "', ");
+            stringBuilder.append("'" + child.getName() + "', ");
+            stringBuilder.append("'" + child.getMotherName() + "', ");
+            stringBuilder.append("'" + child.getMotherId() + "', ");
+            stringBuilder.append("'" + child.getPhoneNumberWhom() + "', ");
+            stringBuilder.append("'" + child.getMobileNo() + "', ");
+            stringBuilder.append("'" + child.getBirthDate() + "', ");
+            stringBuilder.append("'" + child.getPlaceOfDelivery() + "', ");
+            stringBuilder.append("'" + child.getBloodGroup() + "', ");
+            stringBuilder.append("'" + child.getCaste() + "', ");
+            stringBuilder.append("'" + child.getSubcenterName1() + "', ");
+            stringBuilder.append("'" + child.getaNMName() + "', ");
+            stringBuilder.append("'" + child.getaNMPhone() + "', ");
+            stringBuilder.append("'" + child.getAshaName() + "', ");
+            stringBuilder.append("'" + child.getAshaPhone() + "', ");
+            stringBuilder.append("'" + child.getbCGDt() + "', ");
+            stringBuilder.append("'" + child.getoPV0Dt() + "', ");
+            stringBuilder.append("'" + child.getHepatitisB1Dt() + "', ");
+            stringBuilder.append("'" + child.getdPT1Dt() + "', ");
+            stringBuilder.append("'" + child.getoPV1Dt() + "', ");
+            stringBuilder.append("'" + child.getHepatitisB2Dt() + "', ");
+            stringBuilder.append("'" + child.getdPT2Dt() + "', ");
+            stringBuilder.append("'" + child.getoPV2Dt() + "', ");
+            stringBuilder.append("'" + child.getHepatitisB3Dt() + "', ");
+            stringBuilder.append("'" + child.getdPT3Dt() + "', ");
+            stringBuilder.append("'" + child.getoPV3Dt() + "', ");
+            stringBuilder.append("'" + child.getHepatitisB4Dt() + "', ");
+            stringBuilder.append("'" + child.getMeaslesDt() + "', ");
+            stringBuilder.append("'" + child.getVitADose1Dt() + "', ");
+            stringBuilder.append("'" + child.getmRDt() + "', ");
+            stringBuilder.append("'" + child.getdPTBoosterDt() + "', ");
+            stringBuilder.append("'" + child.getoPVBoosterDt() + "', ");
+            stringBuilder.append("'" + child.getVitADose2Dt() + "', ");
+            stringBuilder.append("'" + child.getVitADose3Dt() + "', ");
+            stringBuilder.append("'" + child.getjEDt() + "', ");
+            stringBuilder.append("'" + child.getVitADose9Dt() + "', ");
+            stringBuilder.append("'" + child.getdT5Dt() + "', ");
+            stringBuilder.append("'" + child.gettT10Dt() + "', ");
+            stringBuilder.append("'" + child.gettT16Dt() + "', ");
+            stringBuilder.append("'" + child.getcLDRegDATE() + "', ");
+            stringBuilder.append("'" + child.getSex() + "', ");
+            stringBuilder.append("'" + child.getVitADose5Dt() + "', ");
+            stringBuilder.append("'" + child.getVitADose6Dt() + "', ");
+            stringBuilder.append("'" + child.getVitADose7Dt() + "', ");
+            stringBuilder.append("'" + child.getVitADose8Dt() + "', ");
+            stringBuilder.append("'" + child.getLastUpdateDate() + "', ");
+            stringBuilder.append("'" + child.getRemarks() + "', ");
+            stringBuilder.append("'" + child.getaNMID() + "', ");
+            stringBuilder.append("'" + child.getAshaID() + "', ");
+            stringBuilder.append("'" + child.getCreatedBy() + "', ");
+            stringBuilder.append("'" + child.getUpdatedBy() + "', ");
+            stringBuilder.append("'" + child.getMeasles2Dt() + "', ");
+            stringBuilder.append("'" + child.getWeightOfChild() + "', ");
+            stringBuilder.append("'" + child.getChildAadhaarNo() + "', ");
+            stringBuilder.append("'" + child.getChildEID() + "', ");
+            stringBuilder.append("'" + child.getChildEIDTime() + "', ");
+            stringBuilder.append("'" + child.getFatherName() + "', ");
+            stringBuilder.append("'" + child.getBirthCertificateNumber() + "', ");
+            stringBuilder.append(child.getEntryType() + ", ");
+            stringBuilder.append("'" + child.getSource() + "', ");
             stringBuilder.append("'" + child.getSource() + "', ");
             stringBuilder.append(child.getAccepted() + ", ");
             stringBuilder.append("'" + child.getRejectionReason() + "', ");
