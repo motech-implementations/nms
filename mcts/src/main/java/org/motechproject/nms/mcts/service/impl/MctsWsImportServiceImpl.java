@@ -18,6 +18,7 @@ import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.kilkari.contract.RchChildRecord;
 import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.MctsMother;
@@ -48,6 +49,7 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.kilkari.service.ActionFinderService;
+import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
 import org.motechproject.nms.rejectionhandler.service.FlwRejectionService;
 import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
@@ -68,15 +70,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.ArrayList;
 
-import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanMotherRecords;
-import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanChildRecords;
-import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanFlwRecords;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionMcts;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToChild;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToMother;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.motherRejectionMcts;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.flwRejectionMcts;
-
+import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.*;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.*;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionRch;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToRchChild;
 
 
 @Service("mctsWsImportService")
@@ -380,45 +377,65 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
     private MctsImportAudit saveImportedChildrenData(ChildrenDataSet childrenDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
         LOGGER.info("Starting children import for state {}", stateName);
         List<ChildRecord> childRecords = childrenDataSet.getRecords();
-        List<ChildRecord> validChildRecords = new ArrayList<>();
+        List<Map<String, Object>> validChildRecords = new ArrayList<>();
         validChildRecords = getDOBValidChildRecords(childRecords);
-        List<List<ChildRecord>> childRecordsSet = cleanChildRecords(validChildRecords);
-        List<ChildRecord> rejectedChildRecords = childRecordsSet.get(0);
+        List<List<Map<String, Object>>> childRecordsSet = cleanChildRecords(validChildRecords);
+        List<Map<String, Object>> rejectedChildRecords = childRecordsSet.get(0);
         String action = "";
+
         int saved = 0;
         int rejected = childRecords.size() - validChildRecords.size();
-        for (ChildRecord record : rejectedChildRecords) {
-            action = actionFinderService.childActionFinder(record);
+
+        Map<String, Object> rejectedChilds = new HashMap<>();
+        Map<String, Object> rejectionStatus = new HashMap<>();
+        ChildImportRejection childImportRejection;
+
+        for (Map<String, Object> record : rejectedChildRecords) {
+            action = (String) record.get(KilkariConstants.ACTION);
             LOGGER.error("Existing Child Record with same MSISDN in the data set");
-            childRejectionService.createOrUpdateChild(childRejectionMcts(record, false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action));
+            childImportRejection = childRejectionMcts(convertMapToChild(record), false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action);
+            rejectedChilds.put(childImportRejection.getIdNo(), childImportRejection);
+            rejectionStatus.put(childImportRejection.getIdNo(), childImportRejection.getAccepted());
+//            childRejectionService.createOrUpdateChild(childRejectionMcts(record, false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action));
             rejected++;
         }
-        List<ChildRecord> acceptedChildRecords = childRecordsSet.get(1);
+        List<Map<String, Object>> acceptedChildRecords = childRecordsSet.get(1);
 
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
 
-        for (ChildRecord record : acceptedChildRecords) {
-            action = actionFinderService.childActionFinder(record);
+        for (Map<String, Object> record : acceptedChildRecords) {
+//            action = actionFinderService.childActionFinder(record);
+            String mctsId = (String) record.get(KilkariConstants.BENEFICIARY_ID);
             try {
                 // get user property map
-                Map<String, Object> recordMap = toMap(record);
+//                Map<String, Object> recordMap = toMap(record);
 
                 // validate if user needs to be hpd filtered (true if user can be added)
                 boolean hpdValidation = validateHpdUser(hpdMap,
-                        (long) recordMap.get(KilkariConstants.STATE_ID),
-                        (long) recordMap.get(KilkariConstants.DISTRICT_ID));
+                        (long) record.get(KilkariConstants.STATE_ID),
+                        (long) record.get(KilkariConstants.DISTRICT_ID));
 
                 if (hpdValidation) { // && mctsBeneficiaryImportService.importChildRecord(toMap(record), SubscriptionOrigin.MCTS_IMPORT)) {
-                    saved++;
-                    LOGGER.info("saved child {}", record.getIdNo());
+                    childImportRejection = mctsBeneficiaryImportService.importChildRecord(record, SubscriptionOrigin.MCTS_IMPORT);
+                    if (childImportRejection != null) {
+                        rejectedChilds.put(childImportRejection.getIdNo(), childImportRejection);
+                        rejectionStatus.put(childImportRejection.getIdNo(), childImportRejection.getAccepted());
+                        if (childImportRejection.getAccepted()) {
+                            saved++;
+                            LOGGER.info("saved child {}", mctsId);
+                        } else {
+                            rejected++;
+                            LOGGER.info("rejected child {}", mctsId);
+                        }
+                    }
                 } else {
                     rejected++;
-                    LOGGER.info("rejected child {}", record.getIdNo());
+                    LOGGER.info("rejected child {}", mctsId);
                 }
 
             } catch (RuntimeException e) {
                 LOGGER.error("Child import Error. Cannot import Child with ID: {} for state:{} with state ID: {}",
-                        record.getIdNo(), stateName, stateCode, e);
+                        mctsId, stateName, stateCode, e);
                 rejected++;
             }
 
@@ -426,34 +443,62 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                 LOGGER.debug("{} state, Progress: {} children imported, {} children rejected", stateName, saved, rejected);
             }
         }
+
+        try {
+            mctsBeneficiaryImportService.createOrUpdateRejections(rejectedChilds , rejectionStatus);
+        } catch (RuntimeException e) {
+            LOGGER.error("Error while bulk updating rejection records", e);
+
+        }
         LOGGER.info("{} state, Total: {} children imported, {} children rejected", stateName, saved, rejected);
         return new MctsImportAudit(startReferenceDate, endReferenceDate, MctsUserType.CHILD, stateCode, stateName, saved, rejected, null);
     }
 
-    private  List<ChildRecord> getDOBValidChildRecords(List<ChildRecord> childRecords) {
-        List<ChildRecord> validChildRecords = new ArrayList<>();
+    private  List<Map<String, Object>> getDOBValidChildRecords(List<ChildRecord> childRecords) {
+        List<Map<String, Object>> validChildRecords = new ArrayList<>();
+        Map<String, Object> rejectedChilds = new HashMap<>();
+        Map<String, Object> rejectionStatus = new HashMap<>();
+        ChildImportRejection childImportRejection;
+
         for (ChildRecord record : childRecords) {
             Map<String, Object> recordMap = toMap(record);
             MctsChild child;
             Long msisdn;
             String childId;
-            String action = "";
-            action = actionFinderService.childActionFinder(convertMapToChild(recordMap));
+            String action = KilkariConstants.CREATE;
+//            action = actionFinderService.childActionFinder(convertMapToChild(recordMap));
             childId = (String) recordMap.get(KilkariConstants.BENEFICIARY_ID);
-            child = mctsBeneficiaryValueProcessor.getOrCreateChildInstance(childId);
             msisdn = (Long) recordMap.get(KilkariConstants.MSISDN);
             DateTime dob = (DateTime) recordMap.get(KilkariConstants.DOB);
+            // add child to the record
+            child = mctsBeneficiaryValueProcessor.getOrCreateChildInstance(childId);
+            recordMap.put(KilkariConstants.MCTS_CHILD, child);
             LOGGER.info("Starting children import for size {}", !mctsBeneficiaryImportService.validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, SubscriptionOrigin.MCTS_IMPORT));
+
             if (child == null) {
-                childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(recordMap), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), action));
+                childImportRejection = childRejectionMcts(convertMapToChild(recordMap), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), action);
+                rejectedChilds.put(childImportRejection.getIdNo(), childImportRejection);
+                rejectionStatus.put(childImportRejection.getIdNo(), childImportRejection.getAccepted());
+//                childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(recordMap), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), action));
             } else {
-                boolean isValidDOB = child.getId() == null && !mctsBeneficiaryImportService.validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, SubscriptionOrigin.MCTS_IMPORT);
-                if (isValidDOB) {
-                    childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(recordMap), false, RejectionReasons.INVALID_DOB.toString(), action));
+                boolean isInValidDOB = child.getId() == null && !mctsBeneficiaryImportService.validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, SubscriptionOrigin.MCTS_IMPORT);
+                if (isInValidDOB) {
+                    childImportRejection = childRejectionMcts(convertMapToChild(recordMap), false, RejectionReasons.INVALID_DOB.toString(), action);
+                    rejectedChilds.put(childImportRejection.getIdNo(), childImportRejection);
+                    rejectionStatus.put(childImportRejection.getIdNo(), childImportRejection.getAccepted());
+//                    childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(recordMap), false, RejectionReasons.INVALID_DOB.toString(), action));
                 } else {
-                    validChildRecords.add(record);
+                    action = (child.getId() == null) ? KilkariConstants.CREATE : KilkariConstants.UPDATE;
+                    recordMap.put(KilkariConstants.ACTION, action);
+                    validChildRecords.add(recordMap);
                 }
             }
+        }
+
+        try {
+            mctsBeneficiaryImportService.createOrUpdateRejections(rejectedChilds , rejectionStatus);
+        } catch (RuntimeException e) {
+            LOGGER.error("Error while bulk updating rejection records", e);
         }
         return validChildRecords;
     }

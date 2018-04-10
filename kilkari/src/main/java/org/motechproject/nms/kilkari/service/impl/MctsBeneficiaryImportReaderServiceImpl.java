@@ -21,6 +21,7 @@ import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
+import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,11 +97,9 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
 
         try {
             Map<String, Object> record;
-            List<Map<String, Object>> rejectedRecords = new ArrayList<>();
             Map<String, Object> rejectedChilds = new HashMap<>();
             Map<String, Object> rejectionStatus = new HashMap<>();
-            rejectedRecords.add(rejectedChilds);
-            rejectedRecords.add(rejectionStatus);
+            ChildImportRejection childImportRejection;
 
             Timer timer = new Timer("kid", "kids");
             while (null != (record = csvImporter.read())) {
@@ -120,7 +119,11 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
                 record.put(KilkariConstants.RCH_CHILD, child);
 
                 try {
-                    rejectedRecords = mctsBeneficiaryImportService.importChildRecord(record, importOrigin, rejectedRecords);
+                    childImportRejection = mctsBeneficiaryImportService.importChildRecord(record, importOrigin);
+                    if (childImportRejection != null) {
+                        rejectedChilds.put(childImportRejection.getRegistrationNo(), childImportRejection);
+                        rejectionStatus.put(childImportRejection.getRegistrationNo(), childImportRejection.getAccepted());
+                    }
                     if (count % KilkariConstants.PROGRESS_INTERVAL == 0) {
                         LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
                     }
@@ -131,7 +134,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             }
 
             try {
-                mctsBeneficiaryImportService.createOrUpdateRejections(rejectedRecords.get(0) , rejectedRecords.get(1));
+                mctsBeneficiaryImportService.createOrUpdateRejections(rejectedChilds , rejectionStatus);
             } catch (RuntimeException e) {
                 LOGGER.error("Error while bulk updating rejection records", e);
 

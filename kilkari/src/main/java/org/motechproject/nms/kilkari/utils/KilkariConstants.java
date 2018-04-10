@@ -64,6 +64,7 @@ public final class KilkariConstants {
     public static final String ABORTION_TYPE = "Abortion_Type";
     public static final String DELIVERY_OUTCOMES = "Delivery_Outcomes";
     public static final String EXECUTION_DATE = "Exec_date";
+    public static final String MCTS_CHILD = "Mcts_Child";
     public static final String RCH_CHILD = "Rch_Child";
 
     public static final String CREATE = "CREATE";
