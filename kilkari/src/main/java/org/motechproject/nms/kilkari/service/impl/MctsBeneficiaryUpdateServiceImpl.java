@@ -119,8 +119,7 @@ public class MctsBeneficiaryUpdateServiceImpl implements MctsBeneficiaryUpdateSe
         // Step 2: Re-route and call the import service for the update
         return (beneficiary instanceof MctsMother) ?
                 mctsBeneficiaryImportService.importMotherRecord(record, SubscriptionOrigin.MCTS_IMPORT) :
-                false; // TODO : fix this later if required
-                    // mctsBeneficiaryImportService.importChildRecord(record, SubscriptionOrigin.MCTS_IMPORT);
+                false; // TODO : fix this later if required mctsBeneficiaryImportService.importChildRecord(record, SubscriptionOrigin.MCTS_IMPORT);
     }
 
     private Map<String, Object> mapUpdateHeaders(Map<String, Object> updates, MctsBeneficiary beneficiary) {

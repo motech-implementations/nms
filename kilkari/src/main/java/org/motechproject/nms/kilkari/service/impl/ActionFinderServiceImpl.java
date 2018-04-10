@@ -59,16 +59,4 @@ public class ActionFinderServiceImpl implements ActionFinderService {
             return update;
         }
     }
-
-//    @Override
-//    public String rchChildActionFinder(RchChildRecord record) {
-//        if (record.getRegistrationNo() == null || record.getRegistrationNo().isEmpty() || "".equals(record.getRegistrationNo())) {
-//            return create;
-//        }
-//        if (mctsChildDataService.findByRchId(record.getRegistrationNo()) == null) {
-//            return create;
-//        } else {
-//            return update;
-//        }
-//    }
 }

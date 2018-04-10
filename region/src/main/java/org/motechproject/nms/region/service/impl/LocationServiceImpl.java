@@ -106,6 +106,7 @@ public class LocationServiceImpl implements LocationService {
             return locations;
         }
         State state = stateDataService.findByCode((Long) map.get(STATE_ID));
+        LOGGER.info("state {}", state);
         if (state == null) { // we are here because stateId wasn't null but fetch returned no data
             throw new InvalidLocationException(String.format(INVALID, STATE_ID, map.get(STATE_ID)));
         }

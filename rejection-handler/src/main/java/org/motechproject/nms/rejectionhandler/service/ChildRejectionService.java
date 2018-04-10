@@ -15,6 +15,12 @@ public interface ChildRejectionService {
 
     Map<String, Object> findChildRejectionByRchId(final Set<String> rchIds);
 
-    Long bulkInsert(final List<ChildImportRejection> createObjects);
-    Long bulkUpdate(final List<ChildImportRejection> updateObjects);
+    Map<String, Object> findChildRejectionByMctsId(final Set<String> mctsIds);
+
+    Long mctsBulkInsert(final List<ChildImportRejection> createObjects);
+    Long mctsBulkUpdate(final List<ChildImportRejection> updateObjects);
+
+
+    Long rchBulkInsert(final List<ChildImportRejection> createObjects);
+    Long rchBulkUpdate(final List<ChildImportRejection> updateObjects);
 }

@@ -13,12 +13,9 @@ import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
-import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
@@ -36,9 +33,7 @@ import javax.validation.ConstraintViolationException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionRch;
@@ -49,9 +44,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportReaderServiceImpl.class);
 
-    private SubscriptionService subscriptionService;
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
-    private SubscriptionPack childPack;
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
 
     @Autowired
@@ -59,15 +52,12 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
 
 
     @Autowired
-    public MctsBeneficiaryImportReaderServiceImpl(SubscriptionService subscriptionService,
-                                            MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor, MctsBeneficiaryImportService mctsBeneficiaryImportService) {
-        this.subscriptionService = subscriptionService;
+    public MctsBeneficiaryImportReaderServiceImpl(MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor, MctsBeneficiaryImportService mctsBeneficiaryImportService) {
         this.mctsBeneficiaryValueProcessor = mctsBeneficiaryValueProcessor;
         this.mctsBeneficiaryImportService = mctsBeneficiaryImportService;
     }
 
-    public int importChildData(Reader reader, SubscriptionOrigin importOrigin) throws IOException {
-        childPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.CHILD);
+    public int importChildData(Reader reader, SubscriptionOrigin importOrigin) throws IOException { //NOPMD NcssMethodCount
         int count = 0;
         /**
          * Count of all the records rejected for unknown exceptions. So, doesn't include the ones saved in nms_subscription_errors.
@@ -134,7 +124,11 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             }
 
             try {
-                mctsBeneficiaryImportService.createOrUpdateRejections(rejectedChilds , rejectionStatus);
+                if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+                    mctsBeneficiaryImportService.createOrUpdateMctsRejections(rejectedChilds , rejectionStatus);
+                } else {
+                    mctsBeneficiaryImportService.createOrUpdateRchRejections(rejectedChilds , rejectionStatus);
+                }
             } catch (RuntimeException e) {
                 LOGGER.error("Error while bulk updating rejection records", e);
 
