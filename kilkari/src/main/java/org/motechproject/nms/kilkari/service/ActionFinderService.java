@@ -14,6 +14,4 @@ public interface ActionFinderService {
     String rchMotherActionFinder(RchMotherRecord record);
 
     String childActionFinder(ChildRecord record);
-
-//    String rchChildActionFinder(RchChildRecord record);
 }

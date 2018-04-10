@@ -34,6 +34,7 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
 
     private static final String quotation = "'";
     private static final String quotationComma = "', ";
+    private static final String motechString = "'motech', ";
 
     @Override //NO CHECKSTYLE CyclomaticComplexity
     public boolean createOrUpdateChild(ChildImportRejection childImportRejection) {
@@ -70,7 +71,7 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
 
             @Override
             public String getSqlQuery() {
-                String query = "SELECT id, registrationNo, creationDate FROM nms_child_rejects WHERE registrationNo IN " + queryRchList(rchIds);
+                String query = "SELECT id, registrationNo, creationDate FROM nms_child_rejects WHERE registrationNo IN " + queryIdList(rchIds);
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
             }
@@ -93,15 +94,15 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
         return resultMap;
     }
 
-    private String queryRchList(Set<String> rchList) {
+    private String queryIdList(Set<String> idList) {
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
         stringBuilder.append("(");
-        for (String rch: rchList) {
+        for (String id: idList) {
             if (i != 0) {
                 stringBuilder.append(", ");
             }
-            stringBuilder.append(quotation + rch + quotation);
+            stringBuilder.append(quotation + id + quotation);
             i++;
         }
         stringBuilder.append(")");
@@ -109,7 +110,40 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
         return stringBuilder.toString();
     }
 
-    public Long bulkInsert(final List<ChildImportRejection> createObjects) {
+    @Override
+    public Map<String, Object> findChildRejectionByMctsId(final Set<String> mctsIds) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Map<String, Object>> queryExecution = new SqlQueryExecution<Map<String, Object>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "SELECT id, idNo, creationDate FROM nms_child_rejects WHERE idNo IN " + queryIdList(mctsIds);
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
+            }
+
+            @Override
+            public Map<String, Object> execute(Query query) {
+
+                query.setClass(ChildImportRejection.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                Map<String, Object> resultMap = new HashMap<>();
+                for (ChildImportRejection childReject : (List<ChildImportRejection>) fqr) {
+                    resultMap.put(childReject.getIdNo(), childReject);
+                }
+                return resultMap;
+            }
+        };
+
+        Map<String, Object> resultMap = childRejectionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("List of child rejects in {}", queryTimer.time());
+        return resultMap;
+    }
+
+    @Override
+    public Long rchBulkInsert(final List<ChildImportRejection> createObjects) {
 
         Timer queryTimer = new Timer();
 
@@ -123,6 +157,38 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
                         " accepted, rejectionReason, action, creator, modifiedBy, creationDate, modificationDate) " +
                         "values  " +
                         rchChildToQuerySet(createObjects);
+
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
+            }
+
+            @Override
+            public Long execute(Query query) {
+                query.setClass(ChildImportRejection.class);
+                return (Long) query.execute();
+            }
+        };
+
+        Long insertedNo = childRejectionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("List of child rejects in {}", queryTimer.time());
+        return insertedNo;
+    }
+
+    @Override
+    public Long mctsBulkInsert(final List<ChildImportRejection> createObjects) {
+
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "Insert into nms_child_rejects (subcentreId, subcentreName, villageId, villageName, name, mobileNo, stateId, districtId, districtName, talukaId," +
+                        " talukaName, healthBlockId, healthBlockName, phcId, phcName, birthDate, registrationNo, entryType, idNo, mCTSMotherIDNo, rCHMotherIDNo, execDate, source," +
+                        " accepted, rejectionReason, action, creator, modifiedBy, creationDate, modificationDate) " +
+                        "values  " +
+                        mctsChildToQuerySet(createObjects);
 
                 LOGGER.debug("SQL QUERY: {}", query);
                 return query;
@@ -178,8 +244,8 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
             stringBuilder.append(child.getAccepted() + ", ");
             stringBuilder.append(quotation + child.getRejectionReason() + quotationComma);
             stringBuilder.append(quotation + child.getAction() + quotationComma);
-            stringBuilder.append("'motech', ");
-            stringBuilder.append("'motech', ");
+            stringBuilder.append(motechString);
+            stringBuilder.append(motechString);
             stringBuilder.append(quotation + dateTimeFormatter.print(dateTimeNow) + quotationComma);
             stringBuilder.append(quotation + dateTimeFormatter.print(dateTimeNow) + quotation);
             stringBuilder.append(")");
@@ -187,10 +253,8 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
         }
         return stringBuilder.toString();
     }
-    private String mctsChildToQuerySet(List<ChildImportRejection> childList) {
+    private String mctsChildToQuerySet(List<ChildImportRejection> childList) { //NOPMD NcssMethodCount
         StringBuilder stringBuilder = new StringBuilder();
-//        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-//        Date date = new Date();
 
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
         DateTime dateTimeNow = new DateTime();
@@ -203,98 +267,136 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
             stringBuilder.append("(");
             stringBuilder.append(child.getStateId() + ", ");
             stringBuilder.append(child.getDistrictId() + ", ");
-            stringBuilder.append("'" + child.getDistrictName() + "', ");
+            stringBuilder.append(quotation + child.getDistrictName() + quotationComma);
             stringBuilder.append(child.getTalukaId() + ", ");
-            stringBuilder.append("'" + child.getTalukaName() + "', ");
+            stringBuilder.append(quotation + child.getTalukaName() + quotationComma);
             stringBuilder.append(child.getHealthBlockId() + ", ");
-            stringBuilder.append("'" + child.getHealthBlockName() + "', ");
+            stringBuilder.append(quotation + child.getHealthBlockName() + quotationComma);
             stringBuilder.append(child.getPhcId() + ", ");
-            stringBuilder.append("'" + child.getPhcName() + "', ");
+            stringBuilder.append(quotation + child.getPhcName() + quotationComma);
             stringBuilder.append(child.getSubcentreId() + ", ");
-            stringBuilder.append("'" + child.getSubcentreName() + "', ");
+            stringBuilder.append(quotation + child.getSubcentreName() + quotationComma);
             stringBuilder.append(child.getVillageId() + ", ");
-            stringBuilder.append("'" + child.getVillageName() + "', ");
-            stringBuilder.append("'" + child.getYr() + "', ");
-            stringBuilder.append("'" + child.getCityMaholla() + "', ");
-            stringBuilder.append("'" + child.getgPVillage() + "', ");
-            stringBuilder.append("'" + child.getAddress() + "', ");
-            stringBuilder.append("'" + child.getIdNo() + "', ");
-            stringBuilder.append("'" + child.getName() + "', ");
-            stringBuilder.append("'" + child.getMotherName() + "', ");
-            stringBuilder.append("'" + child.getMotherId() + "', ");
-            stringBuilder.append("'" + child.getPhoneNumberWhom() + "', ");
-            stringBuilder.append("'" + child.getMobileNo() + "', ");
-            stringBuilder.append("'" + child.getBirthDate() + "', ");
-            stringBuilder.append("'" + child.getPlaceOfDelivery() + "', ");
-            stringBuilder.append("'" + child.getBloodGroup() + "', ");
-            stringBuilder.append("'" + child.getCaste() + "', ");
-            stringBuilder.append("'" + child.getSubcenterName1() + "', ");
-            stringBuilder.append("'" + child.getaNMName() + "', ");
-            stringBuilder.append("'" + child.getaNMPhone() + "', ");
-            stringBuilder.append("'" + child.getAshaName() + "', ");
-            stringBuilder.append("'" + child.getAshaPhone() + "', ");
-            stringBuilder.append("'" + child.getbCGDt() + "', ");
-            stringBuilder.append("'" + child.getoPV0Dt() + "', ");
-            stringBuilder.append("'" + child.getHepatitisB1Dt() + "', ");
-            stringBuilder.append("'" + child.getdPT1Dt() + "', ");
-            stringBuilder.append("'" + child.getoPV1Dt() + "', ");
-            stringBuilder.append("'" + child.getHepatitisB2Dt() + "', ");
-            stringBuilder.append("'" + child.getdPT2Dt() + "', ");
-            stringBuilder.append("'" + child.getoPV2Dt() + "', ");
-            stringBuilder.append("'" + child.getHepatitisB3Dt() + "', ");
-            stringBuilder.append("'" + child.getdPT3Dt() + "', ");
-            stringBuilder.append("'" + child.getoPV3Dt() + "', ");
-            stringBuilder.append("'" + child.getHepatitisB4Dt() + "', ");
-            stringBuilder.append("'" + child.getMeaslesDt() + "', ");
-            stringBuilder.append("'" + child.getVitADose1Dt() + "', ");
-            stringBuilder.append("'" + child.getmRDt() + "', ");
-            stringBuilder.append("'" + child.getdPTBoosterDt() + "', ");
-            stringBuilder.append("'" + child.getoPVBoosterDt() + "', ");
-            stringBuilder.append("'" + child.getVitADose2Dt() + "', ");
-            stringBuilder.append("'" + child.getVitADose3Dt() + "', ");
-            stringBuilder.append("'" + child.getjEDt() + "', ");
-            stringBuilder.append("'" + child.getVitADose9Dt() + "', ");
-            stringBuilder.append("'" + child.getdT5Dt() + "', ");
-            stringBuilder.append("'" + child.gettT10Dt() + "', ");
-            stringBuilder.append("'" + child.gettT16Dt() + "', ");
-            stringBuilder.append("'" + child.getcLDRegDATE() + "', ");
-            stringBuilder.append("'" + child.getSex() + "', ");
-            stringBuilder.append("'" + child.getVitADose5Dt() + "', ");
-            stringBuilder.append("'" + child.getVitADose6Dt() + "', ");
-            stringBuilder.append("'" + child.getVitADose7Dt() + "', ");
-            stringBuilder.append("'" + child.getVitADose8Dt() + "', ");
-            stringBuilder.append("'" + child.getLastUpdateDate() + "', ");
-            stringBuilder.append("'" + child.getRemarks() + "', ");
-            stringBuilder.append("'" + child.getaNMID() + "', ");
-            stringBuilder.append("'" + child.getAshaID() + "', ");
-            stringBuilder.append("'" + child.getCreatedBy() + "', ");
-            stringBuilder.append("'" + child.getUpdatedBy() + "', ");
-            stringBuilder.append("'" + child.getMeasles2Dt() + "', ");
-            stringBuilder.append("'" + child.getWeightOfChild() + "', ");
-            stringBuilder.append("'" + child.getChildAadhaarNo() + "', ");
-            stringBuilder.append("'" + child.getChildEID() + "', ");
-            stringBuilder.append("'" + child.getChildEIDTime() + "', ");
-            stringBuilder.append("'" + child.getFatherName() + "', ");
-            stringBuilder.append("'" + child.getBirthCertificateNumber() + "', ");
+            stringBuilder.append(quotation + child.getVillageName() + quotationComma);
+            stringBuilder.append(quotation + child.getYr() + quotationComma);
+            stringBuilder.append(quotation + child.getCityMaholla() + quotationComma);
+            stringBuilder.append(quotation + child.getgPVillage() + quotationComma);
+            stringBuilder.append(quotation + child.getAddress() + quotationComma);
+            stringBuilder.append(quotation + child.getIdNo() + quotationComma);
+            stringBuilder.append(quotation + child.getName() + quotationComma);
+            stringBuilder.append(quotation + child.getMotherName() + quotationComma);
+            stringBuilder.append(quotation + child.getMotherId() + quotationComma);
+            stringBuilder.append(quotation + child.getPhoneNumberWhom() + quotationComma);
+            stringBuilder.append(quotation + child.getMobileNo() + quotationComma);
+            stringBuilder.append(quotation + child.getBirthDate() + quotationComma);
+            stringBuilder.append(quotation + child.getPlaceOfDelivery() + quotationComma);
+            stringBuilder.append(quotation + child.getBloodGroup() + quotationComma);
+            stringBuilder.append(quotation + child.getCaste() + quotationComma);
+            stringBuilder.append(quotation + child.getSubcenterName1() + quotationComma);
+            stringBuilder.append(quotation + child.getaNMName() + quotationComma);
+            stringBuilder.append(quotation + child.getaNMPhone() + quotationComma);
+            stringBuilder.append(quotation + child.getAshaName() + quotationComma);
+            stringBuilder.append(quotation + child.getAshaPhone() + quotationComma);
+            stringBuilder.append(quotation + child.getbCGDt() + quotationComma);
+            stringBuilder.append(quotation + child.getoPV0Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getHepatitisB1Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getdPT1Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getoPV1Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getHepatitisB2Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getdPT2Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getoPV2Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getHepatitisB3Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getdPT3Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getoPV3Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getHepatitisB4Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getMeaslesDt() + quotationComma);
+            stringBuilder.append(quotation + child.getVitADose1Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getmRDt() + quotationComma);
+            stringBuilder.append(quotation + child.getdPTBoosterDt() + quotationComma);
+            stringBuilder.append(quotation + child.getoPVBoosterDt() + quotationComma);
+            stringBuilder.append(quotation + child.getVitADose2Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getVitADose3Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getjEDt() + quotationComma);
+            stringBuilder.append(quotation + child.getVitADose9Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getdT5Dt() + quotationComma);
+            stringBuilder.append(quotation + child.gettT10Dt() + quotationComma);
+            stringBuilder.append(quotation + child.gettT16Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getcLDRegDATE() + quotationComma);
+            stringBuilder.append(quotation + child.getSex() + quotationComma);
+            stringBuilder.append(quotation + child.getVitADose5Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getVitADose6Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getVitADose7Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getVitADose8Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getLastUpdateDate() + quotationComma);
+            stringBuilder.append(quotation + child.getRemarks() + quotationComma);
+            stringBuilder.append(quotation + child.getaNMID() + quotationComma);
+            stringBuilder.append(quotation + child.getAshaID() + quotationComma);
+            stringBuilder.append(quotation + child.getCreatedBy() + quotationComma);
+            stringBuilder.append(quotation + child.getUpdatedBy() + quotationComma);
+            stringBuilder.append(quotation + child.getMeasles2Dt() + quotationComma);
+            stringBuilder.append(quotation + child.getWeightOfChild() + quotationComma);
+            stringBuilder.append(quotation + child.getChildAadhaarNo() + quotationComma);
+            stringBuilder.append(quotation + child.getChildEID() + quotationComma);
+            stringBuilder.append(quotation + child.getChildEIDTime() + quotationComma);
+            stringBuilder.append(quotation + child.getFatherName() + quotationComma);
+            stringBuilder.append(quotation + child.getBirthCertificateNumber() + quotationComma);
             stringBuilder.append(child.getEntryType() + ", ");
-            stringBuilder.append("'" + child.getSource() + "', ");
-            stringBuilder.append("'" + child.getSource() + "', ");
+            stringBuilder.append(quotation + child.getSource() + quotationComma);
+            stringBuilder.append(quotation + child.getSource() + quotationComma);
             stringBuilder.append(child.getAccepted() + ", ");
-            stringBuilder.append("'" + child.getRejectionReason() + "', ");
-            stringBuilder.append("'" + child.getAction() + "', ");
-            stringBuilder.append("'motech', ");
-            stringBuilder.append("'motech', ");
-            stringBuilder.append("'" + dateTimeFormatter.print(dateTimeNow) + "', ");
-            stringBuilder.append("'" + dateTimeFormatter.print(dateTimeNow) + "'");
+            stringBuilder.append(quotation + child.getRejectionReason() + quotationComma);
+            stringBuilder.append(quotation + child.getAction() + quotationComma);
+            stringBuilder.append(motechString);
+            stringBuilder.append(motechString);
+            stringBuilder.append(quotation + dateTimeFormatter.print(dateTimeNow) + quotationComma);
+            stringBuilder.append(quotation + dateTimeFormatter.print(dateTimeNow) + quotation);
             stringBuilder.append(")");
             i++;
         }
-
-        String valueQuery = stringBuilder.toString();
-        return valueQuery;
+        return stringBuilder.toString();
     }
 
-    public Long bulkUpdate(final List<ChildImportRejection> updateObjects) {
+    @Override
+    public Long rchBulkUpdate(final List<ChildImportRejection> updateObjects) {
+
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "Insert into nms_child_rejects (id, subcentreId, subcentreName, villageId, villageName, name, mobileNo, stateId, districtId, districtName, talukaId," +
+                        " talukaName, healthBlockId, healthBlockName, phcId, phcName, birthDate, registrationNo, entryType, idNo, mCTSMotherIDNo, rCHMotherIDNo, execDate, source," +
+                        " accepted, rejectionReason, action, modifiedBy, creationDate, modificationDate, creator) " +
+                        "values  " +
+                        childUpdateQuerySet(updateObjects) +
+                        " ON DUPLICATE KEY UPDATE " +
+                        "subcentreId = VALUES(subcentreId),  subcentreName = VALUES(subcentreName),  villageId = VALUES(villageId),  villageName = VALUES(villageName),  " +
+                        "name = VALUES(name),  mobileNo = VALUES(mobileNo),  stateId = VALUES(stateId),  districtId = VALUES(districtId),  districtName = VALUES(districtName),  talukaId = VALUES(talukaId),  talukaName = VALUES(talukaName),  " +
+                        "healthBlockId = VALUES(healthBlockId),  healthBlockName = VALUES(healthBlockName),  phcId = VALUES(phcId),  phcName = VALUES(phcName),  birthDate = VALUES(birthDate),  entryType = VALUES(entryType),  " +
+                        "idNo = VALUES(idNo),  mCTSMotherIDNo = VALUES(mCTSMotherIDNo),  rCHMotherIDNo = VALUES(rCHMotherIDNo),  execDate = VALUES(execDate),  source = VALUES(source),  " +
+                        "accepted = VALUES(accepted),  rejectionReason = VALUES(rejectionReason),  action = VALUES(action),  modifiedBy = VALUES(modifiedBy), creationDate = VALUES(creationDate), modificationDate = VALUES(modificationDate), creator = VALUES(creator)";
+
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
+            }
+
+            @Override
+            public Long execute(Query query) {
+
+                query.setClass(ChildImportRejection.class);
+                return (Long) query.execute();
+            }
+        };
+
+        Long updatedNo = childRejectionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("List of child rejects in {}", queryTimer.time());
+        return updatedNo;
+    }
+
+    @Override
+    public Long mctsBulkUpdate(final List<ChildImportRejection> updateObjects) {
 
         Timer queryTimer = new Timer();
 
@@ -382,7 +484,7 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
             stringBuilder.append(child.getAccepted() + ", ");
             stringBuilder.append(quotation + child.getRejectionReason() + quotationComma);
             stringBuilder.append(quotation + child.getAction() + quotationComma);
-            stringBuilder.append("'motech', ");
+            stringBuilder.append(motechString);
             stringBuilder.append(quotation + creationTime + quotationComma);
             stringBuilder.append(quotation + dateTimeFormatter.print(dateTimeNow) + quotationComma);
             stringBuilder.append("'motech'");

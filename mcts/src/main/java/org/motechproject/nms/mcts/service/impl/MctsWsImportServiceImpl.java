@@ -396,7 +396,6 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             childImportRejection = childRejectionMcts(convertMapToChild(record), false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action);
             rejectedChilds.put(childImportRejection.getIdNo(), childImportRejection);
             rejectionStatus.put(childImportRejection.getIdNo(), childImportRejection.getAccepted());
-//            childRejectionService.createOrUpdateChild(childRejectionMcts(record, false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action));
             rejected++;
         }
         List<Map<String, Object>> acceptedChildRecords = childRecordsSet.get(1);
@@ -404,18 +403,14 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
 
         for (Map<String, Object> record : acceptedChildRecords) {
-//            action = actionFinderService.childActionFinder(record);
             String mctsId = (String) record.get(KilkariConstants.BENEFICIARY_ID);
             try {
-                // get user property map
-//                Map<String, Object> recordMap = toMap(record);
-
                 // validate if user needs to be hpd filtered (true if user can be added)
                 boolean hpdValidation = validateHpdUser(hpdMap,
                         (long) record.get(KilkariConstants.STATE_ID),
                         (long) record.get(KilkariConstants.DISTRICT_ID));
 
-                if (hpdValidation) { // && mctsBeneficiaryImportService.importChildRecord(toMap(record), SubscriptionOrigin.MCTS_IMPORT)) {
+                if (hpdValidation) {
                     childImportRejection = mctsBeneficiaryImportService.importChildRecord(record, SubscriptionOrigin.MCTS_IMPORT);
                     if (childImportRejection != null) {
                         rejectedChilds.put(childImportRejection.getIdNo(), childImportRejection);
@@ -445,7 +440,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         }
 
         try {
-            mctsBeneficiaryImportService.createOrUpdateRejections(rejectedChilds , rejectionStatus);
+            mctsBeneficiaryImportService.createOrUpdateMctsRejections(rejectedChilds , rejectionStatus);
         } catch (RuntimeException e) {
             LOGGER.error("Error while bulk updating rejection records", e);
 
@@ -466,7 +461,6 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             Long msisdn;
             String childId;
             String action = KilkariConstants.CREATE;
-//            action = actionFinderService.childActionFinder(convertMapToChild(recordMap));
             childId = (String) recordMap.get(KilkariConstants.BENEFICIARY_ID);
             msisdn = (Long) recordMap.get(KilkariConstants.MSISDN);
             DateTime dob = (DateTime) recordMap.get(KilkariConstants.DOB);
@@ -479,14 +473,12 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                 childImportRejection = childRejectionMcts(convertMapToChild(recordMap), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), action);
                 rejectedChilds.put(childImportRejection.getIdNo(), childImportRejection);
                 rejectionStatus.put(childImportRejection.getIdNo(), childImportRejection.getAccepted());
-//                childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(recordMap), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), action));
             } else {
                 boolean isInValidDOB = child.getId() == null && !mctsBeneficiaryImportService.validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, SubscriptionOrigin.MCTS_IMPORT);
                 if (isInValidDOB) {
                     childImportRejection = childRejectionMcts(convertMapToChild(recordMap), false, RejectionReasons.INVALID_DOB.toString(), action);
                     rejectedChilds.put(childImportRejection.getIdNo(), childImportRejection);
                     rejectionStatus.put(childImportRejection.getIdNo(), childImportRejection.getAccepted());
-//                    childRejectionService.createOrUpdateChild(childRejectionMcts(convertMapToChild(recordMap), false, RejectionReasons.INVALID_DOB.toString(), action));
                 } else {
                     action = (child.getId() == null) ? KilkariConstants.CREATE : KilkariConstants.UPDATE;
                     recordMap.put(KilkariConstants.ACTION, action);
@@ -496,7 +488,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         }
 
         try {
-            mctsBeneficiaryImportService.createOrUpdateRejections(rejectedChilds , rejectionStatus);
+            mctsBeneficiaryImportService.createOrUpdateMctsRejections(rejectedChilds , rejectionStatus);
         } catch (RuntimeException e) {
             LOGGER.error("Error while bulk updating rejection records", e);
         }

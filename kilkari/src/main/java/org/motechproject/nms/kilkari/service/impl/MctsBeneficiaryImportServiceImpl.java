@@ -230,7 +230,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
 
         // validate msisdn
-        if (!validateMsisdn(msisdn, SubscriptionPackType.PREGNANCY, beneficiaryId, importOrigin)) {
+        if (!validateMsisdn(msisdn)) {
             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.MOBILE_NUMBER_EMPTY_OR_WRONG_FORMAT, false);
         }
 
@@ -291,7 +291,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         } else {
             Long caseNo = (Long) record.get(KilkariConstants.CASE_NO);
             // validate caseNo
-            if (!validateCaseNo(caseNo, msisdn, mother, SubscriptionPackType.PREGNANCY, beneficiaryId, importOrigin)) {
+            if (!validateCaseNo(caseNo, mother)) {
                 motherRejectionService.createOrUpdateMother(motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.INVALID_CASE_NO.toString(), action));
                 return false;
             }
@@ -388,12 +388,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
 
         //validate mother
-        if (!validateMother(mother, child, msisdn, importOrigin)) {
+        if (!validateMother(mother, child)) {
             return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.ALREADY_LINKED_WITH_A_DIFFERENT_MOTHER_ID, false);
         }
 
         // validate msisdn
-        if (!validateMsisdn(msisdn, SubscriptionPackType.CHILD, childId, importOrigin)) {
+        if (!validateMsisdn(msisdn)) {
             return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.MOBILE_NUMBER_EMPTY_OR_WRONG_FORMAT, false);
         }
 
@@ -437,7 +437,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         child.setMother(mother);
         child.setUpdatedDateNic(lastUpdateDateNic);
 
-//        Subscription childSubscription;
         if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
             return subscriberService.updateChildSubscriber(msisdn, child, dob, record, action);
         } else {
@@ -469,14 +468,14 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
     }
 
-    private boolean validateMother(MctsMother mother, MctsChild child, Long msisdn, SubscriptionOrigin importOrigin) {
+    private boolean validateMother(MctsMother mother, MctsChild child) {
         if (mother != null && child.getMother() != null && !mother.equals(child.getMother())) {
             return false;
         }
         return true;
     }
 
-    private boolean validateMsisdn(Long msisdn, SubscriptionPackType packType, String beneficiaryId, SubscriptionOrigin importOrigin) {
+    private boolean validateMsisdn(Long msisdn) {
         if (msisdn == null || (msisdn.toString().length() != KilkariConstants.MSISDN_LENGTH)) {
             return false;
         }
@@ -484,7 +483,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return true;
     }
 
-    private boolean validateCaseNo(Long caseNo, Long msisdn, MctsMother mother, SubscriptionPackType packType, String beneficiaryId, SubscriptionOrigin importOrigin) {
+    private boolean validateCaseNo(Long caseNo, MctsMother mother) {
         if (caseNo == null || (caseNo <= 0)) {
             return false;
         }
@@ -566,7 +565,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     @Override
     @Transactional
-    public void createOrUpdateRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus) {
+    public void createOrUpdateRchRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus) {
 
         // get rch Ids of all the rejected records
         Set<String> rchIds = rejectedRecords.keySet();
@@ -603,8 +602,52 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             }
         }
 
-        Long createdNo = (createObjects.size() == 0) ? 0 : childRejectionService.bulkInsert(createObjects);
-        Long updatedNo = (updateObjects.size() == 0) ? 0 : childRejectionService.bulkUpdate(updateObjects);
+        Long createdNo = (createObjects.size() == 0) ? 0 : childRejectionService.rchBulkInsert(createObjects);
+        Long updatedNo = (updateObjects.size() == 0) ? 0 : childRejectionService.rchBulkUpdate(updateObjects);
+        LOGGER.debug("Inserted {} and updated {} rejection records into database", createdNo, updatedNo);
+    }
+
+    @Override
+    @Transactional
+    public void createOrUpdateMctsRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus) {
+
+        // get rch Ids of all the rejected records
+        Set<String> mctsIds = rejectedRecords.keySet();
+        List<ChildImportRejection> updateObjects = new ArrayList<>();;
+        List<ChildImportRejection> createObjects = new ArrayList<>();;
+
+        Map<String, Object> childRejects = childRejectionService.findChildRejectionByMctsId(mctsIds);
+        ChildImportRejection child;
+        for (String mctsId : mctsIds) {
+            child = (ChildImportRejection) rejectedRecords.get(mctsId);
+            if (childRejects.get(mctsId) != null) {
+                ChildImportRejection dbChild = (ChildImportRejection) childRejects.get(mctsId);
+                try {
+                    Method method = dbChild.getClass().getMethod("getCreationDate");  // Get creationDate from db object and set it in the update object
+                    DateTime dateTime = (DateTime) method.invoke(dbChild);
+
+                    method = child.getClass().getMethod("setCreationDate", DateTime.class);
+                    method.invoke(child, dateTime);
+
+                    method = dbChild.getClass().getMethod("getId");
+                    Long id = (Long) method.invoke(dbChild);
+                    method = child.getClass().getMethod("setId", Long.class);
+                    method.invoke(child, id);
+                } catch (IllegalAccessException|SecurityException|IllegalArgumentException|NoSuchMethodException|
+                        InvocationTargetException e) {
+                    LOGGER.error("Ignoring creation date and setting as now");
+
+                }
+                updateObjects.add(child);
+                continue;
+            }
+            if (!(Boolean) rejectionStatus.get(mctsId)) {
+                createObjects.add(child);
+            }
+        }
+
+        Long createdNo = (createObjects.size() == 0) ? 0 : childRejectionService.mctsBulkInsert(createObjects);
+        Long updatedNo = (updateObjects.size() == 0) ? 0 : childRejectionService.mctsBulkUpdate(updateObjects);
         LOGGER.debug("Inserted {} and updated {} rejection records into database", createdNo, updatedNo);
     }
 
