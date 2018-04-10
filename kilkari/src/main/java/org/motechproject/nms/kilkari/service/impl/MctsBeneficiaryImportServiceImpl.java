@@ -348,6 +348,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 } catch (Exception e) {
                     mother = mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherRecord.toString());
                 }
+
             } else {
                 mother = null;
             }
@@ -359,9 +360,16 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             child = (MctsChild) record.get(KilkariConstants.RCH_CHILD);
             msisdn = (Long) record.get(KilkariConstants.MOBILE_NO);
             lastUpdateDateNic = (LocalDate) record.get(KilkariConstants.EXECUTION_DATE);
-            if (record.get(KilkariConstants.RCH_MOTHER_ID) != null) {
-                String motherMctsId = record.get(KilkariConstants.MCTS_MOTHER_ID) == null || "".equals(record.get(KilkariConstants.MCTS_MOTHER_ID)) ? null : record.get(KilkariConstants.MCTS_MOTHER_ID).toString();
-                mother = mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance(record.get(KilkariConstants.RCH_MOTHER_ID).toString(), motherMctsId);
+            if (record.get(KilkariConstants.RCH_MOTHER_ID) != null || record.get(KilkariConstants.MCTS_MOTHER_ID) != null) {
+                String motherRchId = record.get(KilkariConstants.RCH_MOTHER_ID) == null || "".equals(record.get(KilkariConstants.RCH_MOTHER_ID)) || "0".equalsIgnoreCase(record.get(KilkariConstants.RCH_MOTHER_ID).toString()) ? null : record.get(KilkariConstants.RCH_MOTHER_ID).toString();
+                String motherMctsId = record.get(KilkariConstants.MCTS_MOTHER_ID) == null || "".equals(record.get(KilkariConstants.MCTS_MOTHER_ID)) || "0".equalsIgnoreCase(record.get(KilkariConstants.MCTS_MOTHER_ID).toString()) ? null : record.get(KilkariConstants.MCTS_MOTHER_ID).toString();
+                if (motherRchId == null && motherMctsId != null) {
+                    mother = mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherMctsId);
+                } else if (motherRchId != null){
+                    mother = mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance(motherRchId, motherMctsId);
+                } else {
+                    mother = null;
+                }
             } else {
                 mother = null;
             }
@@ -440,11 +448,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     // Create rejection records for all the invalid mothers
     private boolean createUpdateMotherRejections(Boolean isMcts, Map<String, Object> record, String action, RejectionReasons rejectionReason, Boolean accepted) {
+        String rejectReason = rejectionReason == null ? null : rejectionReason.toString();
         if (isMcts) {
-            motherRejectionService.createOrUpdateMother(motherRejectionMcts(convertMapToMother(record), accepted, rejectionReason.toString(), action));
+            motherRejectionService.createOrUpdateMother(motherRejectionMcts(convertMapToMother(record), accepted, rejectReason, action));
 
         } else {
-            motherRejectionService.createOrUpdateMother(motherRejectionRch(convertMapToRchMother(record), accepted, rejectionReason.toString(), action));
+            motherRejectionService.createOrUpdateMother(motherRejectionRch(convertMapToRchMother(record), accepted, rejectReason, action));
 
         }
         return accepted;
@@ -452,10 +461,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     // Create rejection records for all the invalid childs
     private ChildImportRejection createUpdateChildRejections(Boolean isMcts, Map<String, Object> record, String action, RejectionReasons rejectionReason, Boolean accepted) {
+        String rejectReason  = rejectionReason == null ? null : rejectionReason.toString();
         if (isMcts) {
-            return childRejectionMcts(convertMapToChild(record), accepted, (rejectionReason == null ? null : rejectionReason.toString()), action);
+            return childRejectionMcts(convertMapToChild(record), accepted, rejectReason, action);
         } else {
-            return childRejectionRch(convertMapToRchChild(record), accepted, (rejectionReason == null ? null : rejectionReason.toString()), action);
+            return childRejectionRch(convertMapToRchChild(record), accepted, rejectReason, action);
         }
     }
 
@@ -544,6 +554,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 return false;
             }
         } else { // childPack
+            LOGGER.debug("bdate: {}", referenceDate);
             String referenceDateValidationError = childPack.isReferenceDateValidForPack(referenceDate);
             if (!referenceDateValidationError.isEmpty()) {
                 return false;
