@@ -62,6 +62,7 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.kilkari.service.ActionFinderService;
+import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
 import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
 import org.motechproject.nms.rejectionhandler.service.FlwRejectionService;
@@ -635,12 +636,23 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         List<List<Map<String, Object>>> rchChildRecordsSet = cleanRchChildRecords(validChildRecords);
         List<Map<String, Object>> rejectedRchChildren = rchChildRecordsSet.get(0);
         String action = "";
+
         int saved = 0;
         int rejected = childRecords.size()-validChildRecords.size();
+
+        Map<String, Object> rejectedChilds = new HashMap<>();
+        Map<String, Object> rejectionStatus = new HashMap<>();
+        ChildImportRejection childImportRejection;
+
         for (Map<String, Object> record : rejectedRchChildren) {
             action = (String) record.get(KilkariConstants.ACTION);
             LOGGER.error("Existing Child Record with same MSISDN in the data set");
-            childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action));
+            childImportRejection = childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action);
+//            childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action));
+
+            rejectedChilds.put(childImportRejection.getRegistrationNo(), childImportRejection);
+            rejectionStatus.put(childImportRejection.getRegistrationNo(), childImportRejection.getAccepted());
+
             rejected++;
         }
         List<Map<String, Object>> acceptedRchChildren = rchChildRecordsSet.get(1);
@@ -660,8 +672,19 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                         (long) recordMap.get(KilkariConstants.DISTRICT_ID));
 
                 if (hpdValidation) {// && mctsBeneficiaryImportService.importChildRecord(recordMap, SubscriptionOrigin.RCH_IMPORT)) {
-                    saved++;
-                    LOGGER.info("saved child {}", rchId);
+
+                    childImportRejection = mctsBeneficiaryImportService.importChildRecord(recordMap, SubscriptionOrigin.RCH_IMPORT);
+                    if (childImportRejection != null) {
+                        rejectedChilds.put(childImportRejection.getRegistrationNo(), childImportRejection);
+                        rejectionStatus.put(childImportRejection.getRegistrationNo(), childImportRejection.getAccepted());
+                        if (childImportRejection.getAccepted()) {
+                            saved++;
+                            LOGGER.info("saved child {}", rchId);
+                        } else {
+                            rejected++;
+                            LOGGER.info("rejected child {}", rchId);
+                        }
+                    }
                 } else {
                     rejected++;
                     LOGGER.info("rejected child {}", rchId);
@@ -677,12 +700,23 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 LOGGER.debug("RCH import: {} state, Progress: {} children imported, {} children rejected", stateName, saved, rejected);
             }
         }
+
+        try {
+            mctsBeneficiaryImportService.createOrUpdateRejections(rejectedChilds , rejectionStatus);
+        } catch (RuntimeException e) {
+            LOGGER.error("Error while bulk updating rejection records", e);
+
+        }
         LOGGER.info("RCH import: {} state, Total: {} children imported, {} children rejected", stateName, saved, rejected);
         return new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, saved, rejected, null);
     }
 
     private  List<Map<String, Object>> getDOBValidChildRecords(List<RchChildRecord> childRecords) {
         List<Map<String, Object>> validChildRecords = new ArrayList<>();
+        Map<String, Object> rejectedChilds = new HashMap<>();
+        Map<String, Object> rejectionStatus = new HashMap<>();
+        ChildImportRejection childImportRejection;
+
         for (RchChildRecord record : childRecords) {
             Map<String, Object> recordMap = toMap(record);
             MctsChild child;
@@ -700,10 +734,16 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
 
             if (child == null) {
-                childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(recordMap), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), action));
+                childImportRejection = childRejectionRch(convertMapToRchChild(recordMap), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), action);
+//                childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(recordMap), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), action));
+                rejectedChilds.put(childImportRejection.getRegistrationNo(), childImportRejection);
+                rejectionStatus.put(childImportRejection.getRegistrationNo(), childImportRejection.getAccepted());
             } else {
-                if (child.getId() == null && !mctsBeneficiaryImportService.validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, SubscriptionOrigin.MCTS_IMPORT)) {
-                    childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(recordMap), false, RejectionReasons.INVALID_DOB.toString(), action));
+                if (child.getId() == null && !mctsBeneficiaryImportService.validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, SubscriptionOrigin.RCH_IMPORT)) {
+                    childImportRejection = childRejectionRch(convertMapToRchChild(recordMap), false, RejectionReasons.INVALID_DOB.toString(), action);
+//                    childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(recordMap), false, RejectionReasons.INVALID_DOB.toString(), action));
+                    rejectedChilds.put(childImportRejection.getRegistrationNo(), childImportRejection);
+                    rejectionStatus.put(childImportRejection.getRegistrationNo(), childImportRejection.getAccepted());
                 } else {
                     action = (child.getId() == null) ? KilkariConstants.CREATE : KilkariConstants.UPDATE;
                     recordMap.put(KilkariConstants.ACTION, action);
@@ -711,6 +751,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
             }
         }
+
+        try {
+            mctsBeneficiaryImportService.createOrUpdateRejections(rejectedChilds , rejectionStatus);
+        } catch (RuntimeException e) {
+            LOGGER.error("Error while bulk updating rejection records", e);
+
+        }
+
         return validChildRecords;
     }
 

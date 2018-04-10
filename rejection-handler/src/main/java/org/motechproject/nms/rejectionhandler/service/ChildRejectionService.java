@@ -11,17 +11,8 @@ import java.util.Set;
  */
 public interface ChildRejectionService {
 
-//    ChildImportRejection findByChildId(String idNo, String registrationNo);
-
     boolean createOrUpdateChild(ChildImportRejection childImportRejection);
 
-    /**
-     * Get the list of ChildImportRejection due for a message on the specified day. Used by the Kilkari outbound dialer to
-     * create the list of message recipients for a given day.
-     * @param rchIds Set of rch registration ids to get the child rejects
-
-     * @return The list of subscriptions due for a message
-     */
     Map<String, Object> findChildRejectionByRchId(final Set<String> rchIds);
 
     Long bulkInsert(final List<ChildImportRejection> createObjects);
