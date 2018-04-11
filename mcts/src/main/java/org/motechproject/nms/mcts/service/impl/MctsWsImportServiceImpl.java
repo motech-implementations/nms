@@ -18,7 +18,6 @@ import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.kilkari.contract.RchChildRecord;
 import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.MctsMother;
@@ -70,10 +69,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.ArrayList;
 
-import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.*;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.*;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionRch;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToRchChild;
+import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanChildRecords;
+import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanFlwRecords;
+import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanMotherRecords;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToChild;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToMother;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.motherRejectionMcts;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionMcts;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.flwRejectionMcts;
 
 
 @Service("mctsWsImportService")
