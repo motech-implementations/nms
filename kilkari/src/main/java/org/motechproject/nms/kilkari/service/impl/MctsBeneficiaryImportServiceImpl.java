@@ -365,7 +365,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 String motherMctsId = record.get(KilkariConstants.MCTS_MOTHER_ID) == null || "".equals(record.get(KilkariConstants.MCTS_MOTHER_ID)) || "0".equalsIgnoreCase(record.get(KilkariConstants.MCTS_MOTHER_ID).toString()) ? null : record.get(KilkariConstants.MCTS_MOTHER_ID).toString();
                 if (motherRchId == null && motherMctsId != null) {
                     mother = mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherMctsId);
-                } else if (motherRchId != null){
+                } else if (motherRchId != null) {
                     mother = mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance(motherRchId, motherMctsId);
                 } else {
                     mother = null;
@@ -602,9 +602,37 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             }
         }
 
-        Long createdNo = (createObjects.size() == 0) ? 0 : childRejectionService.rchBulkInsert(createObjects);
-        Long updatedNo = (updateObjects.size() == 0) ? 0 : childRejectionService.rchBulkUpdate(updateObjects);
+        Long createdNo = (createObjects.size() == 0) ? 0 : rchBulkInsert(createObjects);
+        Long updatedNo = (updateObjects.size() == 0) ? 0 : rchBulkUpdate(updateObjects);
         LOGGER.debug("Inserted {} and updated {} rejection records into database", createdNo, updatedNo);
+    }
+
+    private Long rchBulkInsert(List<ChildImportRejection> createObjects) {
+        int count;
+        Long sqlCount = 0L;
+        for(count = 0; count < createObjects.size(); count++) {
+            List<ChildImportRejection> createObjectsPart = new ArrayList<>();
+            while(createObjectsPart.size() < 20000 && count<createObjects.size()) {
+                createObjectsPart.add(createObjects.get(count));
+                count++;
+            }
+            sqlCount += childRejectionService.rchBulkInsert(createObjectsPart);
+        }
+        return sqlCount;
+    }
+
+    private Long rchBulkUpdate(List<ChildImportRejection> updateObjects) {
+        int count;
+        Long sqlCount = 0L;
+        for(count = 0; count < updateObjects.size(); count++) {
+            List<ChildImportRejection> updateObjectsPart = new ArrayList<>();
+            while(updateObjectsPart.size() < 20000 && count<updateObjects.size()) {
+                updateObjectsPart.add(updateObjects.get(count));
+                count++;
+            }
+            sqlCount += childRejectionService.rchBulkUpdate(updateObjectsPart);
+        }
+        return sqlCount;
     }
 
     @Override
@@ -646,9 +674,37 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             }
         }
 
-        Long createdNo = (createObjects.size() == 0) ? 0 : childRejectionService.mctsBulkInsert(createObjects);
-        Long updatedNo = (updateObjects.size() == 0) ? 0 : childRejectionService.mctsBulkUpdate(updateObjects);
+        Long createdNo = (createObjects.size() == 0) ? 0 : mctsBulkInsert(createObjects);
+        Long updatedNo = (updateObjects.size() == 0) ? 0 : mctsBulkUpdate(updateObjects);
         LOGGER.debug("Inserted {} and updated {} rejection records into database", createdNo, updatedNo);
+    }
+
+    private Long mctsBulkInsert(List<ChildImportRejection> createObjects) {
+        int count;
+        Long sqlCount = 0L;
+        for(count = 0; count < createObjects.size(); count++) {
+            List<ChildImportRejection> createObjectsPart = new ArrayList<>();
+            while(createObjectsPart.size() < 20000 && count<createObjects.size()) {
+                createObjectsPart.add(createObjects.get(count));
+                count++;
+            }
+            sqlCount += childRejectionService.mctsBulkInsert(createObjectsPart);
+        }
+        return sqlCount;
+    }
+
+    private Long mctsBulkUpdate(List<ChildImportRejection> updateObjects) {
+        int count;
+        Long sqlCount = 0L;
+        for(count = 0; count < updateObjects.size(); count++) {
+            List<ChildImportRejection> updateObjectsPart = new ArrayList<>();
+            while(updateObjectsPart.size() < 20000 && count<updateObjects.size()) {
+                updateObjectsPart.add(updateObjects.get(count));
+                count++;
+            }
+            sqlCount += childRejectionService.mctsBulkUpdate(updateObjectsPart);
+        }
+        return sqlCount;
     }
 
     private Map<String, CellProcessor> getMotherProcessorMapping() {
