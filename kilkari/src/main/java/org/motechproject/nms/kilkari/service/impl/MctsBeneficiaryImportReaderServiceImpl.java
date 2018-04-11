@@ -69,15 +69,19 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
         Map<String, CellProcessor> cellProcessorMapper;
         String id;
         String contactNumber;
+        String childInstance;
+        Boolean mctsImport = importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT);
 
-        if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+        if (mctsImport) {
             cellProcessorMapper = this.getChildProcessorMapping();
             id = KilkariConstants.BENEFICIARY_ID;
             contactNumber = KilkariConstants.MSISDN;
+            childInstance = KilkariConstants.MCTS_CHILD;
         } else {
             cellProcessorMapper = this.getRchChildProcessorMapping();
             id = KilkariConstants.RCH_ID;
             contactNumber = KilkariConstants.MOBILE_NO;
+            childInstance = KilkariConstants.RCH_CHILD;
         }
 
         CsvMapImporter csvImporter = new CsvImporterBuilder()
@@ -96,7 +100,8 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
                 count++;
                 LOGGER.debug("Started child import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
 
-                MctsChild child = mctsBeneficiaryValueProcessor.getOrCreateRchChildInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
+                MctsChild child = mctsImport ? mctsBeneficiaryValueProcessor.getOrCreateChildInstance((String) record.get(id)) : mctsBeneficiaryValueProcessor.getOrCreateRchChildInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
+                // TODO: Add this to bulk insert
                 if (child == null) {
                     childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), KilkariConstants.CREATE));
                     LOGGER.error("RchId is empty while importing child at msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
@@ -106,13 +111,18 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
 
                 String action = (child.getId() == null) ? KilkariConstants.CREATE : KilkariConstants.UPDATE;
                 record.put(KilkariConstants.ACTION, action);
-                record.put(KilkariConstants.RCH_CHILD, child);
+                record.put(childInstance, child);
 
                 try {
                     childImportRejection = mctsBeneficiaryImportService.importChildRecord(record, importOrigin);
                     if (childImportRejection != null) {
-                        rejectedChilds.put(childImportRejection.getRegistrationNo(), childImportRejection);
-                        rejectionStatus.put(childImportRejection.getRegistrationNo(), childImportRejection.getAccepted());
+                        if (mctsImport) {
+                            rejectedChilds.put(childImportRejection.getIdNo(), childImportRejection);
+                            rejectionStatus.put(childImportRejection.getIdNo(), childImportRejection.getAccepted());
+                        } else {
+                            rejectedChilds.put(childImportRejection.getRegistrationNo(), childImportRejection);
+                            rejectionStatus.put(childImportRejection.getRegistrationNo(), childImportRejection.getAccepted());
+                        }
                     }
                     if (count % KilkariConstants.PROGRESS_INTERVAL == 0) {
                         LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
@@ -124,7 +134,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             }
 
             try {
-                if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+                if (mctsImport) {
                     mctsBeneficiaryImportService.createOrUpdateMctsRejections(rejectedChilds , rejectionStatus);
                 } else {
                     mctsBeneficiaryImportService.createOrUpdateRchRejections(rejectedChilds , rejectionStatus);
