@@ -7,7 +7,6 @@ import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.List;
 import java.util.Map;
 
 /**

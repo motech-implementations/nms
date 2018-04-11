@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.prefs.CsvPreference;
@@ -57,7 +56,8 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
         this.mctsBeneficiaryImportService = mctsBeneficiaryImportService;
     }
 
-    public int importChildData(Reader reader, SubscriptionOrigin importOrigin) throws IOException { //NOPMD NcssMethodCount
+    @Override //NO CHECKSTYLE Cyclomatic Complexity
+    public int  importChildData(Reader reader, SubscriptionOrigin importOrigin) throws IOException { //NOPMD NcssMethodCount
         int count = 0;
         /**
          * Count of all the records rejected for unknown exceptions. So, doesn't include the ones saved in nms_subscription_errors.

@@ -3,7 +3,6 @@ package org.motechproject.nms.kilkari.utils;
 import org.motechproject.nms.kilkari.contract.RchAnmAshaRecord;
 import org.motechproject.nms.kilkari.contract.RchMotherRecord;
 import org.motechproject.nms.kilkari.contract.AnmAshaRecord;
-import org.motechproject.nms.kilkari.contract.ChildRecord;
 import org.motechproject.nms.kilkari.contract.MotherRecord;
 
 import java.util.ArrayList;
