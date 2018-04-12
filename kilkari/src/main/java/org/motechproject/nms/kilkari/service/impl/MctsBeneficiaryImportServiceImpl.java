@@ -87,6 +87,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private MctsMotherDataService mctsMotherDataService;
     private DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService;
 
+    private static final Integer REJECTION_PART_SIZE = 20000;
+
     @Autowired
     public MctsBeneficiaryImportServiceImpl(SubscriptionService subscriptionService,
                                             SubscriptionErrorDataService subscriptionErrorDataService,
@@ -612,7 +614,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Long sqlCount = 0L;
         for(count = 0; count < createObjects.size(); count++) {
             List<ChildImportRejection> createObjectsPart = new ArrayList<>();
-            while(createObjectsPart.size() < 20000 && count<createObjects.size()) {
+            while(createObjectsPart.size() < REJECTION_PART_SIZE && count<createObjects.size()) {
                 createObjectsPart.add(createObjects.get(count));
                 count++;
             }
@@ -626,7 +628,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Long sqlCount = 0L;
         for(count = 0; count < updateObjects.size(); count++) {
             List<ChildImportRejection> updateObjectsPart = new ArrayList<>();
-            while(updateObjectsPart.size() < 20000 && count<updateObjects.size()) {
+            while(updateObjectsPart.size() < REJECTION_PART_SIZE && count<updateObjects.size()) {
                 updateObjectsPart.add(updateObjects.get(count));
                 count++;
             }
@@ -684,7 +686,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Long sqlCount = 0L;
         for(count = 0; count < createObjects.size(); count++) {
             List<ChildImportRejection> createObjectsPart = new ArrayList<>();
-            while(createObjectsPart.size() < 20000 && count<createObjects.size()) {
+            while(createObjectsPart.size() < REJECTION_PART_SIZE && count<createObjects.size()) {
                 createObjectsPart.add(createObjects.get(count));
                 count++;
             }
@@ -698,7 +700,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Long sqlCount = 0L;
         for(count = 0; count < updateObjects.size(); count++) {
             List<ChildImportRejection> updateObjectsPart = new ArrayList<>();
-            while(updateObjectsPart.size() < 20000 && count<updateObjects.size()) {
+            while(updateObjectsPart.size() < REJECTION_PART_SIZE && count<updateObjects.size()) {
                 updateObjectsPart.add(updateObjects.get(count));
                 count++;
             }
