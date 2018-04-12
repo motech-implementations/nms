@@ -436,7 +436,7 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
                         "  mCTSMotherIDNo = VALUES(mCTSMotherIDNo),  phoneNumberWhom = VALUES(phoneNumberWhom)," +
                         "  mobileNo = VALUES(mobileNo),  birthDate = VALUES(birthDate)," +
                         "  placeOfDelivery = VALUES(placeOfDelivery),  bloodGroup = VALUES(bloodGroup)," +
-                        "  caste = VALUES(caste), subcenterName1 = VALUES(subcenterName1), aNMName = VALUES(aNMName)" +
+                        "  caste = VALUES(caste), subcenterName1 = VALUES(subcenterName1), aNMName = VALUES(aNMName)," +
                         "  aNMPhone = VALUES(aNMPhone),  ashaName = VALUES(ashaName),  ashaPhone = VALUES(ashaPhone)," +
                         "  bCGDt = VALUES(bCGDt), oPV0Dt = VALUES(oPV0Dt), hepatitisB1Dt = VALUES(hepatitisB1Dt)," +
                         "  dPT1Dt = VALUES(dPT1Dt), oPV1Dt = VALUES(oPV1Dt),  hepatitisB2Dt = VALUES(hepatitisB2Dt)," +
