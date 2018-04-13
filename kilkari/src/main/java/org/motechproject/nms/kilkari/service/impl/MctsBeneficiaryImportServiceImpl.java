@@ -87,7 +87,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private MctsMotherDataService mctsMotherDataService;
     private DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService;
 
-    private static final Integer REJECTION_PART_SIZE = 20000;
+    private static final Integer REJECTION_PART_SIZE = 2;
 
     @Autowired
     public MctsBeneficiaryImportServiceImpl(SubscriptionService subscriptionService,
@@ -610,29 +610,31 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     }
 
     private Long rchBulkInsert(List<ChildImportRejection> createObjects) {
-        int count;
+        int count = 0;
         Long sqlCount = 0L;
-        for(count = 0; count < createObjects.size(); count++) {
+        while(count < createObjects.size()) {
             List<ChildImportRejection> createObjectsPart = new ArrayList<>();
             while(createObjectsPart.size() < REJECTION_PART_SIZE && count<createObjects.size()) {
                 createObjectsPart.add(createObjects.get(count));
                 count++;
             }
             sqlCount += childRejectionService.rchBulkInsert(createObjectsPart);
+            createObjectsPart.clear();
         }
         return sqlCount;
     }
 
     private Long rchBulkUpdate(List<ChildImportRejection> updateObjects) {
-        int count;
+        int count = 0;
         Long sqlCount = 0L;
-        for(count = 0; count < updateObjects.size(); count++) {
+        while(count < updateObjects.size()) {
             List<ChildImportRejection> updateObjectsPart = new ArrayList<>();
             while(updateObjectsPart.size() < REJECTION_PART_SIZE && count<updateObjects.size()) {
                 updateObjectsPart.add(updateObjects.get(count));
                 count++;
             }
             sqlCount += childRejectionService.rchBulkUpdate(updateObjectsPart);
+            updateObjectsPart.clear();
         }
         return sqlCount;
     }
@@ -682,29 +684,31 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     }
 
     private Long mctsBulkInsert(List<ChildImportRejection> createObjects) {
-        int count;
+        int count = 0;
         Long sqlCount = 0L;
-        for(count = 0; count < createObjects.size(); count++) {
+        while(count < createObjects.size()) {
             List<ChildImportRejection> createObjectsPart = new ArrayList<>();
             while(createObjectsPart.size() < REJECTION_PART_SIZE && count<createObjects.size()) {
                 createObjectsPart.add(createObjects.get(count));
                 count++;
             }
             sqlCount += childRejectionService.mctsBulkInsert(createObjectsPart);
+            createObjectsPart.clear();
         }
         return sqlCount;
     }
 
     private Long mctsBulkUpdate(List<ChildImportRejection> updateObjects) {
-        int count;
+        int count = 0;
         Long sqlCount = 0L;
-        for(count = 0; count < updateObjects.size(); count++) {
+        while(count < updateObjects.size()) {
             List<ChildImportRejection> updateObjectsPart = new ArrayList<>();
             while(updateObjectsPart.size() < REJECTION_PART_SIZE && count<updateObjects.size()) {
                 updateObjectsPart.add(updateObjects.get(count));
                 count++;
             }
             sqlCount += childRejectionService.mctsBulkUpdate(updateObjectsPart);
+            updateObjectsPart.clear();
         }
         return sqlCount;
     }
