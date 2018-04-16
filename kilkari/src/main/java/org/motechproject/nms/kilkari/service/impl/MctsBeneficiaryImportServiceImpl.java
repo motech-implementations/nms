@@ -87,7 +87,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private MctsMotherDataService mctsMotherDataService;
     private DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService;
 
-    private static final Integer REJECTION_PART_SIZE = 2;
+    private static final Integer REJECTION_PART_SIZE = 20000;
 
     @Autowired
     public MctsBeneficiaryImportServiceImpl(SubscriptionService subscriptionService,
