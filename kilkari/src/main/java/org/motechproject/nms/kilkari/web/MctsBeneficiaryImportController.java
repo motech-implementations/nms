@@ -10,6 +10,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
+import org.motechproject.nms.region.service.LocationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Controller that supports import of Kilkari subscribers (mother and child records) from MCTS
@@ -38,6 +41,12 @@ public class MctsBeneficiaryImportController {
     private MctsBeneficiaryUpdateService mctsBeneficiaryUpdateService;
     private CsvAuditService csvAuditService;
     private MctsBeneficiaryImportReaderService mctsBeneficiaryImportReaderService;
+    private LocationService locationService;
+
+    @Autowired
+    public void setLocationService(LocationService locationService) {
+        this.locationService = locationService;
+    }
 
 
     @Autowired
@@ -96,8 +105,13 @@ public class MctsBeneficiaryImportController {
     public void importChildData(@RequestParam MultipartFile csvFile) {
         LOGGER.debug("importChildData() BEGIN");
         Timer timer = new Timer("kid", "kids");
+        List locationArrayList = new ArrayList();
         int count = 0;
         try {
+            try(InputStream in = csvFile.getInputStream()){
+                locationService.updateLocations(new InputStreamReader(in), locationArrayList);
+            }
+
             try (InputStream in = csvFile.getInputStream()) {
                 count = mctsBeneficiaryImportReaderService.importChildData(new InputStreamReader(in), SubscriptionOrigin.MCTS_IMPORT);
                 csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/child/import");

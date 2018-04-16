@@ -1,5 +1,9 @@
 package org.motechproject.nms.region.service.impl;
 
+import org.motechproject.nms.csv.utils.CsvImporterBuilder;
+import org.motechproject.nms.csv.utils.CsvMapImporter;
+import org.motechproject.nms.csv.utils.GetLong;
+import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
@@ -20,8 +24,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.supercsv.cellprocessor.Optional;
+import org.supercsv.cellprocessor.ift.CellProcessor;
+import org.supercsv.prefs.CsvPreference;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,6 +47,7 @@ public class LocationServiceImpl implements LocationService {
     private static final String INVALID = "<%s - %s : Invalid location>";
     private static final String STATE_ID = "StateID";
     private static final String DISTRICT_ID = "District_ID";
+    private static final String DISTRICT_NAME = "District_Name";
     private static final String TALUKA_ID = "Taluka_ID";
     private static final String TALUKA_NAME = "Taluka_Name";
     private static final String HEALTHBLOCK_ID = "HealthBlock_ID";
@@ -405,4 +418,40 @@ public class LocationServiceImpl implements LocationService {
 
         return null;
     }
+
+    @Override
+    public void updateLocations(Reader reader, List locationArrayList) throws IOException {
+        BufferedReader bufferedReader = new BufferedReader(reader);
+        Map<String, CellProcessor> cellProcessorMapper = new HashMap<>();
+        getBeneficiaryLocationMapping(cellProcessorMapper);
+
+        CsvMapImporter csvImporter = new CsvImporterBuilder()
+                .setProcessorMapping(cellProcessorMapper)
+                .setPreferences(CsvPreference.TAB_PREFERENCE)
+                .createAndOpen(bufferedReader);
+    }
+
+    public static void getBeneficiaryLocationMapping(Map<String, CellProcessor> mapping) {
+        mapping.put(STATE_ID, new Optional(new GetLong()));
+
+        mapping.put(DISTRICT_ID, new Optional(new GetLong()));
+        mapping.put(DISTRICT_NAME, new Optional(new GetString()));
+
+        mapping.put(TALUKA_ID, new Optional(new GetString()));
+        mapping.put(TALUKA_NAME, new Optional(new GetString()));
+
+        mapping.put(VILLAGE_ID, new Optional(new GetLong()));
+        mapping.put(NON_CENSUS_VILLAGE, new Optional(new GetLong()));
+        mapping.put(VILLAGE_NAME, new Optional(new GetString()));
+
+        mapping.put(PHC_ID, new Optional(new GetLong()));
+        mapping.put(PHC_NAME, new Optional(new GetString()));
+
+        mapping.put(HEALTHBLOCK_ID, new Optional(new GetLong()));
+        mapping.put(HEALTHBLOCK_NAME, new Optional(new GetString()));
+
+        mapping.put(SUBCENTRE_ID, new Optional(new GetLong()));
+        mapping.put(SUBCENTRE_NAME, new Optional(new GetString()));
+    }
+
 }
