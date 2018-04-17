@@ -1,16 +1,8 @@
 package org.motechproject.nms.region.service.impl;
 
-import org.motechproject.nms.csv.utils.CsvImporterBuilder;
-import org.motechproject.nms.csv.utils.CsvMapImporter;
-import org.motechproject.nms.csv.utils.GetLong;
-import org.motechproject.nms.csv.utils.GetString;
-import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.HealthBlock;
-import org.motechproject.nms.region.domain.HealthFacility;
-import org.motechproject.nms.region.domain.HealthSubFacility;
-import org.motechproject.nms.region.domain.State;
-import org.motechproject.nms.region.domain.Taluka;
-import org.motechproject.nms.region.domain.Village;
+import org.motechproject.nms.csv.exception.CsvImportDataException;
+import org.motechproject.nms.csv.utils.*;
+import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
@@ -28,6 +20,7 @@ import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.prefs.CsvPreference;
 
+import javax.validation.ConstraintViolationException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -424,11 +417,23 @@ public class LocationServiceImpl implements LocationService {
         BufferedReader bufferedReader = new BufferedReader(reader);
         Map<String, CellProcessor> cellProcessorMapper = new HashMap<>();
         getBeneficiaryLocationMapping(cellProcessorMapper);
+        int count = 0;
+        LocationFinder locationFinder = new LocationFinder();
 
         CsvMapImporter csvImporter = new CsvImporterBuilder()
                 .setProcessorMapping(cellProcessorMapper)
                 .setPreferences(CsvPreference.TAB_PREFERENCE)
                 .createAndOpen(bufferedReader);
+        try {
+            Map<String, Object> record;
+
+            while (null != (record = csvImporter.read())) {
+                count++;
+            }
+        } catch (ConstraintViolationException e) {
+            throw new CsvImportDataException(String.format("Child import error, constraints violated: %s",
+                    ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
+        }
     }
 
     public static void getBeneficiaryLocationMapping(Map<String, CellProcessor> mapping) {
