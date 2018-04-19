@@ -32,6 +32,7 @@ import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.motechproject.nms.kilkari.domain.RejectionReasons;
+import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.service.LocationService;
 import org.motechproject.nms.kilkari.service.ActionFinderService;
@@ -406,6 +407,131 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         // validate and set location
         try {
             MctsBeneficiaryUtils.setLocationFields(locationService.getLocations(record), child);
+            if (mother != null) {
+                MctsBeneficiaryUtils.setLocationFields(locationService.getLocations(record), mother);
+            }
+        } catch (InvalidLocationException le) {
+            LOGGER.error(le.toString());
+            return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.INVALID_LOCATION, false);
+        }
+
+        //validate if it's an updated record compared to one from database
+        if (child.getUpdatedDateNic() != null && (lastUpdateDateNic == null || child.getUpdatedDateNic().isAfter(lastUpdateDateNic))) {
+            return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
+        }
+
+        List<DeactivatedBeneficiary> deactivatedUsers = deactivatedBeneficiaryDataService.findByExternalId(childId);
+        if (deactivatedUsers != null && deactivatedUsers.size() > 0) {
+            for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
+                if (deactivatedUser.getOrigin() == importOrigin) {
+                    String message = deactivatedUser.isCompletedSubscription() ? "Subscription completed" : "User deactivated";
+                    if (message.length() > 2) {
+                        return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
+                    }
+                }
+            }
+        }
+        //1.0.34 Bug child.getId() == null was not checked
+        if ((death != null) && death && (child.getId() == null)) {
+            return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.CHILD_DEATH, false);
+        }
+
+        child.setName(name);
+        child.setMother(mother);
+        child.setUpdatedDateNic(lastUpdateDateNic);
+
+        if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+            return subscriberService.updateChildSubscriber(msisdn, child, dob, record, action);
+        } else {
+            return subscriberService.updateRchChildSubscriber(msisdn, child, dob, record, action);
+
+        }
+    }
+
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
+    @Transactional
+    public ChildImportRejection importChildRecordCSV(Map<String, Object> record, SubscriptionOrigin importOrigin, LocationFinder locationFinder) { //NOPMD NcssMethodCount
+        if (childPack == null) {
+            childPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.CHILD);
+        }
+        MctsChild child;
+        Long msisdn;
+        MctsMother mother;
+        LocalDate lastUpdateDateNic;
+        String childId;
+        String action = "";
+        Boolean flagForMcts = true;
+
+        if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+            action = actionFinderService.childActionFinder(convertMapToChild(record));
+            childId = (String) record.get(KilkariConstants.BENEFICIARY_ID);
+            child = mctsBeneficiaryValueProcessor.getOrCreateChildInstance(childId);
+            msisdn = (Long) record.get(KilkariConstants.MSISDN);
+            if (record.get(KilkariConstants.MOTHER_ID) != null) {
+                Object motherRecord = record.get(KilkariConstants.MOTHER_ID);
+
+                try {
+                    MctsMother motherInstance = (MctsMother) motherRecord;
+                    mother = mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherInstance.getBeneficiaryId());
+                } catch (Exception e) {
+                    mother = mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherRecord.toString());
+                }
+
+            } else {
+                mother = null;
+            }
+            lastUpdateDateNic = (LocalDate) record.get(KilkariConstants.LAST_UPDATE_DATE);
+        } else {
+            flagForMcts = false;
+            action = (String) record.get(KilkariConstants.ACTION);
+            childId = (String) record.get(KilkariConstants.RCH_ID);
+            child = (MctsChild) record.get(KilkariConstants.RCH_CHILD);
+            msisdn = (Long) record.get(KilkariConstants.MOBILE_NO);
+            lastUpdateDateNic = (LocalDate) record.get(KilkariConstants.EXECUTION_DATE);
+            if (record.get(KilkariConstants.RCH_MOTHER_ID) != null || record.get(KilkariConstants.MCTS_MOTHER_ID) != null) {
+                String motherRchId = record.get(KilkariConstants.RCH_MOTHER_ID) == null || "".equals(record.get(KilkariConstants.RCH_MOTHER_ID)) || "0".equalsIgnoreCase(record.get(KilkariConstants.RCH_MOTHER_ID).toString()) ? null : record.get(KilkariConstants.RCH_MOTHER_ID).toString();
+                String motherMctsId = record.get(KilkariConstants.MCTS_MOTHER_ID) == null || "".equals(record.get(KilkariConstants.MCTS_MOTHER_ID)) || "0".equalsIgnoreCase(record.get(KilkariConstants.MCTS_MOTHER_ID).toString()) ? null : record.get(KilkariConstants.MCTS_MOTHER_ID).toString();
+                if (motherRchId == null && motherMctsId != null) {
+                    mother = mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherMctsId);
+                } else if (motherRchId != null) {
+                    mother = mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance(motherRchId, motherMctsId);
+                } else {
+                    mother = null;
+                }
+            } else {
+                mother = null;
+            }
+        }
+        String name = (String) record.get(KilkariConstants.BENEFICIARY_NAME);
+        DateTime dob = (DateTime) record.get(KilkariConstants.DOB);
+        Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
+
+        if ((child == null)) {
+            return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.DATA_INTEGRITY_ERROR, false);
+        }
+
+        boolean isInValidDOB = child.getId() == null && !validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, importOrigin);
+        if (isInValidDOB) {
+            return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.INVALID_DOB, false);
+        }
+
+        //validate mother
+        if (!validateMother(mother, child)) {
+            return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.ALREADY_LINKED_WITH_A_DIFFERENT_MOTHER_ID, false);
+        }
+
+        // validate msisdn
+        if (!validateMsisdn(msisdn)) {
+            return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.MOBILE_NUMBER_EMPTY_OR_WRONG_FORMAT, false);
+        }
+
+        // validate dob. We do not sanitize for dob in the future to be in sync with MCTS data
+        // NOTE: getId is a way to check for new user. We only accept new children if they have 12 weeks left
+        // in the pack. Existing children could have their dob updated to an earlier date
+
+        // validate and set location
+        try {
+            MctsBeneficiaryUtils.setLocationFieldsCSV(locationFinder, record, child);
             if (mother != null) {
                 MctsBeneficiaryUtils.setLocationFields(locationService.getLocations(record), mother);
             }

@@ -1,18 +1,17 @@
 package org.motechproject.nms.region.service;
 
-import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.csv.utils.CsvMapImporter;
+import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthSubFacility;
-import org.motechproject.nms.region.domain.State;
-import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -67,6 +66,6 @@ public interface LocationService {
     HealthSubFacility getHealthSubFacility(Long stateId, Long districtId, String talukaId, Long healthBlockId,
                                            Long healthFacilityId, Long healthSubFacilityId);
 
-    void updateLocations(Reader reader, List locationArrayList) throws IOException;
+    void updateLocations(CsvMapImporter csvMapImporter, LocationFinder locationFinder) throws IOException;
 
 }

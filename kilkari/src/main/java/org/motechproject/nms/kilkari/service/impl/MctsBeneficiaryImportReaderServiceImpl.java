@@ -18,6 +18,8 @@ import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
+import org.motechproject.nms.region.domain.LocationFinder;
+import org.motechproject.nms.region.service.LocationService;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
 import org.slf4j.Logger;
@@ -45,15 +47,17 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
 
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
+    private LocationService locationService;
 
     @Autowired
     private ChildRejectionService childRejectionService;
 
 
     @Autowired
-    public MctsBeneficiaryImportReaderServiceImpl(MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor, MctsBeneficiaryImportService mctsBeneficiaryImportService) {
+    public MctsBeneficiaryImportReaderServiceImpl(MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor, MctsBeneficiaryImportService mctsBeneficiaryImportService, LocationService locationService) {
         this.mctsBeneficiaryValueProcessor = mctsBeneficiaryValueProcessor;
         this.mctsBeneficiaryImportService = mctsBeneficiaryImportService;
+        this.locationService = locationService;
     }
 
     @Override //NO CHECKSTYLE Cyclomatic Complexity
@@ -89,6 +93,16 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
                 .setPreferences(CsvPreference.TAB_PREFERENCE)
                 .createAndOpen(bufferedReader);
 
+        LocationFinder locationFinder = new LocationFinder();
+        locationService.updateLocations(csvImporter, locationFinder);
+
+        bufferedReader = new BufferedReader(reader);
+
+        CsvMapImporter csvImporter1 = new CsvImporterBuilder()
+                .setProcessorMapping(cellProcessorMapper)
+                .setPreferences(CsvPreference.TAB_PREFERENCE)
+                .createAndOpen(bufferedReader);
+
         try {
             Map<String, Object> record;
             Map<String, Object> rejectedChilds = new HashMap<>();
@@ -96,7 +110,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             ChildImportRejection childImportRejection;
 
             Timer timer = new Timer("kid", "kids");
-            while (null != (record = csvImporter.read())) {
+            while (null != (record = csvImporter1.read())) {
                 count++;
                 LOGGER.debug("Started child import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
 
@@ -114,7 +128,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
                 record.put(childInstance, child);
 
                 try {
-                    childImportRejection = mctsBeneficiaryImportService.importChildRecord(record, importOrigin);
+                    childImportRejection = mctsBeneficiaryImportService.importChildRecordCSV(record, importOrigin, locationFinder);
                     if (childImportRejection != null) {
                         if (mctsImport) {
                             rejectedChilds.put(childImportRejection.getIdNo(), childImportRejection);
