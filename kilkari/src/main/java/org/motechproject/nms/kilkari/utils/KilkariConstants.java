@@ -88,6 +88,8 @@ public final class KilkariConstants {
     public static final String MAPPER_CENSUS_VILLAGE = "Village_ID";
     public static final String MAPPER_NON_CENSUS_VILLAGE = "SVID";
 
+    public static final String INVALID_LOCATION = "<%s - %s : Invalid location>";
+
     // Time format constants
     public static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.S");
 

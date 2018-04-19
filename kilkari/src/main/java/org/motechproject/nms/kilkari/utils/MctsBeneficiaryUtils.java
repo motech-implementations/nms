@@ -14,6 +14,7 @@ import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
+import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,4 +93,56 @@ public final class MctsBeneficiaryUtils {
         }
     }
 
+    public static void setLocationFieldsCSV(LocationFinder locationFinder, Map<String, Object> record, MctsBeneficiary beneficiary) throws InvalidLocationException {
+
+        String mapKey = record.get(KilkariConstants.STATE_ID).toString();
+        if (isValidID(record, KilkariConstants.STATE_ID) && (locationFinder.getStateHashMap().get(mapKey) != null)) {
+            beneficiary.setState(locationFinder.getStateHashMap().get(mapKey));
+            String districtCode = record.get(KilkariConstants.DISTRICT_ID).toString();
+            mapKey += "_";
+            mapKey += districtCode;
+
+            if (isValidID(record, KilkariConstants.DISTRICT_ID) && (locationFinder.getDistrictHashMap().get(mapKey) != null)) {
+                beneficiary.setDistrict(locationFinder.getDistrictHashMap().get(mapKey));
+                String talukaCode = record.get(KilkariConstants.TALUKA_ID).toString();
+                mapKey += "_";
+                mapKey += talukaCode;
+                beneficiary.setTaluka(locationFinder.getTalukaHashMap().get(mapKey));
+
+                String villageCode = record.get(KilkariConstants.CENSUS_VILLAGE_ID).toString();
+                String villageSvid = record.get(KilkariConstants.NON_CENSUS_VILLAGE_ID).toString();
+                String healthBlockCode = record.get(KilkariConstants.HEALTH_BLOCK_ID).toString();
+                String healthFacilityCode = record.get(KilkariConstants.PHC_ID).toString();
+                String healthSubFacilityCode = record.get(KilkariConstants.SUB_CENTRE_ID).toString();
+
+                beneficiary.setVillage(locationFinder.getVillageHashMap().get(mapKey + "_" + villageCode + "_" + villageSvid));
+                mapKey += "_";
+                mapKey += healthBlockCode;
+                beneficiary.setHealthBlock(locationFinder.getHealthBlockHashMap().get(mapKey));
+                mapKey += "_";
+                mapKey += healthFacilityCode;
+                beneficiary.setHealthFacility(locationFinder.getHealthFacilityHashMap().get(mapKey));
+                mapKey += "_";
+                mapKey += healthSubFacilityCode;
+                beneficiary.setHealthSubFacility(locationFinder.getHealthSubFacilityHashMap().get(mapKey));
+            } else {
+                throw new InvalidLocationException(String.format(KilkariConstants.INVALID_LOCATION, KilkariConstants.DISTRICT_ID, record.get(KilkariConstants.DISTRICT_ID)));
+            }
+        } else {
+            throw new InvalidLocationException(String.format(KilkariConstants.INVALID_LOCATION, KilkariConstants.STATE_ID, record.get(KilkariConstants.STATE_ID)));
+        }
+    }
+
+    private static boolean isValidID(final Map<String, Object> map, final String key) {
+        Object obj = map.get(key);
+        if (obj == null || obj.toString().isEmpty() || "NULL".equalsIgnoreCase(obj.toString())) {
+            return false;
+        }
+
+        if (obj.getClass().equals(Long.class)) {
+            return (Long) obj > 0L;
+        }
+
+        return !"0".equals(obj);
+    }
 }
