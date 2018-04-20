@@ -806,7 +806,7 @@ public class LocationServiceImpl implements LocationService {
             }
         };
 
-        Long villageCount = talukaDataService.executeSQLQuery(queryExecution);
+        Long villageCount = villageDataService.executeSQLQuery(queryExecution);
         LOGGER.debug("VILLAGEs inserted : {}", villageCount);
         LOGGER.debug("VILLAGE INSERT Query time: {}", queryTimer.time());
     }
@@ -858,7 +858,7 @@ public class LocationServiceImpl implements LocationService {
             }
         };
 
-        List<Village> villages = talukaDataService.executeSQLQuery(queryExecution);
+        List<Village> villages = villageDataService.executeSQLQuery(queryExecution);
         LOGGER.debug("VILLAGE Query time: {}", queryTimer.time());
         for (Village village : villages) {
             String talukaKey = talukaIdMap.get(village.getTaluka().getId());
