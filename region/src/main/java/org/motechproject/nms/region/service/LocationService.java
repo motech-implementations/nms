@@ -12,6 +12,7 @@ import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -66,6 +67,6 @@ public interface LocationService {
     HealthSubFacility getHealthSubFacility(Long stateId, Long districtId, String talukaId, Long healthBlockId,
                                            Long healthFacilityId, Long healthSubFacilityId);
 
-    void updateLocations(CsvMapImporter csvMapImporter, LocationFinder locationFinder) throws IOException;
+    void updateLocations(CsvMapImporter csvMapImporter, LocationFinder locationFinder, List<Map<String, Object>> recordList) throws IOException;
 
 }
