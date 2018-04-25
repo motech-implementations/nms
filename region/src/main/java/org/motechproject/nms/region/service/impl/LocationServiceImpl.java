@@ -449,7 +449,7 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
-    public void updateLocations(CsvMapImporter csvMapImporter, LocationFinder locationFinder) throws IOException {
+    public void updateLocations(CsvMapImporter csvMapImporter, LocationFinder locationFinder, List<Map<String, Object>> recordList) throws IOException {
         int count = 0;
 
         HashMap<String, State> stateHashMap = new HashMap<>();
@@ -463,6 +463,7 @@ public class LocationServiceImpl implements LocationService {
             Map<String, Object> record;
 
             while (null != (record = csvMapImporter.read())) {
+                recordList.add(record);
                 count++;
                 String mapKey = record.get(STATE_ID).toString();
                 if (isValidID(record, STATE_ID)) {

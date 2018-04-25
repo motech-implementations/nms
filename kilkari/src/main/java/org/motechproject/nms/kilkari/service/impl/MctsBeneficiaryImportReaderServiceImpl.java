@@ -34,8 +34,7 @@ import javax.validation.ConstraintViolationException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionRch;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToRchChild;
@@ -74,7 +73,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
         String id;
         String contactNumber;
         String childInstance;
-        Boolean mctsImport = importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT);
+        final Boolean mctsImport = importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT);
 
         if (mctsImport) {
             cellProcessorMapper = this.getChildProcessorMapping();
@@ -94,23 +93,24 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
                 .createAndOpen(bufferedReader);
 
         LocationFinder locationFinder = new LocationFinder();
-        locationService.updateLocations(csvImporter, locationFinder);
+        List<Map<String, Object>> recordList= new ArrayList<>();
+        locationService.updateLocations(csvImporter, locationFinder, recordList);
 
-        bufferedReader = new BufferedReader(reader);
+        Collections.sort(recordList, new Comparator<Map<String, Object>>() {
+            public int compare(Map<String, Object> m1, Map<String, Object> m2) {
+                return ((Integer) m1.get(mctsImport ? KilkariConstants.MSISDN : KilkariConstants.MOBILE_NO))
+                        .compareTo((Integer) m2.get(mctsImport ? KilkariConstants.MSISDN : KilkariConstants.MOBILE_NO)); //ascending order
+            }
+        });
 
-        CsvMapImporter csvImporter1 = new CsvImporterBuilder()
-                .setProcessorMapping(cellProcessorMapper)
-                .setPreferences(CsvPreference.TAB_PREFERENCE)
-                .createAndOpen(bufferedReader);
 
         try {
-            Map<String, Object> record;
             Map<String, Object> rejectedChilds = new HashMap<>();
             Map<String, Object> rejectionStatus = new HashMap<>();
             ChildImportRejection childImportRejection;
 
             Timer timer = new Timer("kid", "kids");
-            while (null != (record = csvImporter1.read())) {
+            for(Map<String, Object> record : recordList) {
                 count++;
                 LOGGER.debug("Started child import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
 
