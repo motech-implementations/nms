@@ -143,7 +143,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     @Override
-    public Subscriber create(Subscriber subscriber) {
+    public synchronized Subscriber create(Subscriber subscriber) {
         return subscriberDataService.create(subscriber);
     }
 

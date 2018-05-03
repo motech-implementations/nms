@@ -67,6 +67,6 @@ public interface LocationService {
     HealthSubFacility getHealthSubFacility(Long stateId, Long districtId, String talukaId, Long healthBlockId,
                                            Long healthFacilityId, Long healthSubFacilityId);
 
-    void updateLocations(CsvMapImporter csvMapImporter, LocationFinder locationFinder, List<Map<String, Object>> recordList) throws IOException;
+    LocationFinder updateLocations(List<Map<String, Object>> recordList) throws IOException;
 
 }
