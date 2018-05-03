@@ -449,7 +449,7 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
-    public void updateLocations(CsvMapImporter csvMapImporter, LocationFinder locationFinder, List<Map<String, Object>> recordList) throws IOException {
+    public LocationFinder updateLocations(List<Map<String, Object>> recordList) throws IOException {
         int count = 0;
 
         HashMap<String, State> stateHashMap = new HashMap<>();
@@ -459,11 +459,10 @@ public class LocationServiceImpl implements LocationService {
         HashMap<String, HealthBlock> healthBlockHashMap = new HashMap<>();
         HashMap<String, HealthFacility> healthFacilityHashMap = new HashMap<>();
         HashMap<String, HealthSubFacility> healthSubFacilityHashMap = new HashMap<>();
+        LocationFinder locationFinder = new LocationFinder();
         try {
-            Map<String, Object> record;
 
-            while (null != (record = csvMapImporter.read())) {
-                recordList.add(record);
+            for(Map<String, Object> record : recordList) {
                 count++;
                 String mapKey = record.get(STATE_ID).toString();
                 if (isValidID(record, STATE_ID)) {
@@ -478,18 +477,18 @@ public class LocationServiceImpl implements LocationService {
                             taluka.setCode((String) record.get(TALUKA_ID));
                             taluka.setName((String) record.get(TALUKA_NAME));
                             mapKey += "_";
-                            mapKey += record.get(TALUKA_ID).toString();
+                            mapKey += Long.parseLong(record.get(TALUKA_ID).toString());
                             talukaHashMap.put(mapKey, taluka);
 
                             Long svid = record.get(NON_CENSUS_VILLAGE) == null ? 0 : (Long) record.get(NON_CENSUS_VILLAGE);
                             Long vcode = record.get(VILLAGE_ID) == null ? 0 : (Long) record.get(VILLAGE_ID);
                             if (vcode != 0 || svid != 0) {
                                 Village village = new Village();
-                                village.setSvid((Long) record.get(NON_CENSUS_VILLAGE));
-                                village.setVcode((Long) record.get(VILLAGE_ID));
+                                village.setSvid(svid);
+                                village.setVcode(vcode);
                                 village.setName((String) record.get(VILLAGE_NAME));
-                                villageHashMap.put(mapKey + "_" + record.get(VILLAGE_ID).toString() + "_" +
-                                        record.get(NON_CENSUS_VILLAGE).toString(), village);
+                                villageHashMap.put(mapKey + "_" + vcode.toString() + "_" +
+                                        svid.toString(), village);
                             }
 
                             if (isValidID(record, HEALTHBLOCK_ID)) {
@@ -497,7 +496,7 @@ public class LocationServiceImpl implements LocationService {
                                 healthBlock.setCode((Long) record.get(HEALTHBLOCK_ID));
                                 healthBlock.setName((String) record.get(HEALTHBLOCK_NAME));
                                 mapKey += "_";
-                                mapKey += record.get(HEALTHBLOCK_ID).toString();
+                                mapKey += ((Long) record.get(HEALTHBLOCK_ID));
                                 healthBlockHashMap.put(mapKey, healthBlock);
 
                                 if (isValidID(record, PHC_ID)) {
@@ -505,7 +504,7 @@ public class LocationServiceImpl implements LocationService {
                                     healthFacility.setCode((Long) record.get(PHC_ID));
                                     healthFacility.setName((String) record.get(PHC_NAME));
                                     mapKey += "_";
-                                    mapKey += record.get(PHC_ID).toString();
+                                    mapKey += ((Long) record.get(PHC_ID));
                                     healthFacilityHashMap.put(mapKey, healthFacility);
 
                                     if (isValidID(record, SUBCENTRE_ID)) {
@@ -513,7 +512,7 @@ public class LocationServiceImpl implements LocationService {
                                         healthSubFacility.setCode((Long) record.get(SUBCENTRE_ID));
                                         healthSubFacility.setName((String) record.get(SUBCENTRE_NAME));
                                         mapKey += "_";
-                                        mapKey += record.get(SUBCENTRE_ID).toString();
+                                        mapKey += ((Long) record.get(SUBCENTRE_ID));
                                         healthSubFacilityHashMap.put(mapKey, healthSubFacility);
                                     }
                                 }
@@ -565,6 +564,8 @@ public class LocationServiceImpl implements LocationService {
             }
         }
         LOGGER.debug("Locations processed. Records Processed : {}", count);
+
+        return locationFinder;
 
     }
 
@@ -766,9 +767,11 @@ public class LocationServiceImpl implements LocationService {
 
         List<Taluka> talukas = talukaDataService.executeSQLQuery(queryExecution);
         LOGGER.debug("TALUKA Query time: {}", queryTimer.time());
-        for (Taluka taluka : talukas) {
-            String districtKey = districtIdMap.get(taluka.getDistrict().getId());
-            talukaHashMap.put(districtKey + "_" + taluka.getCode(), taluka);
+        if(talukas != null && !talukas.isEmpty()) {
+            for (Taluka taluka : talukas) {
+                String districtKey = districtIdMap.get(taluka.getDistrict().getId());
+                talukaHashMap.put(districtKey + "_" + taluka.getCode(), taluka);
+            }
         }
     }
 
@@ -831,7 +834,7 @@ public class LocationServiceImpl implements LocationService {
                     count--;
                     String[] ids = villageString.split("_");
                     Long talukaId = talukaHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]).getId();
-                    query += " (vcode = " + ids[3] + "and svid = " + ids[4] + " and taluka_id_oid = " + talukaId + ")";
+                    query += " (vcode = " + ids[3] + " and svid = " + ids[4] + " and taluka_id_oid = " + talukaId + ")";
                     if (count > 0) {
                         query += " OR ";
                     }
@@ -861,9 +864,11 @@ public class LocationServiceImpl implements LocationService {
 
         List<Village> villages = villageDataService.executeSQLQuery(queryExecution);
         LOGGER.debug("VILLAGE Query time: {}", queryTimer.time());
-        for (Village village : villages) {
-            String talukaKey = talukaIdMap.get(village.getTaluka().getId());
-            villageHashMap.put(talukaKey + "_" + village.getVcode() + "_" + village.getSvid(), village);
+        if(villages != null && !villages.isEmpty()) {
+            for (Village village : villages) {
+                String talukaKey = talukaIdMap.get(village.getTaluka().getId());
+                villageHashMap.put(talukaKey + "_" + village.getVcode() + "_" + village.getSvid(), village);
+            }
         }
     }
 
@@ -956,9 +961,11 @@ public class LocationServiceImpl implements LocationService {
 
         List<HealthBlock> healthBlocks = healthBlockDataService.executeSQLQuery(queryExecution);
         LOGGER.debug("HEALTHBLOCK Query time: {}", queryTimer.time());
-        for (HealthBlock healthBlock : healthBlocks) {
-            String talukaKey = talukaIdMap.get(healthBlock.getTaluka().getId());
-            healthBlockHashMap.put(talukaKey + "_" + healthBlock.getCode(), healthBlock);
+        if(healthBlocks != null && !healthBlocks.isEmpty()) {
+            for (HealthBlock healthBlock : healthBlocks) {
+                String talukaKey = talukaIdMap.get(healthBlock.getTaluka().getId());
+                healthBlockHashMap.put(talukaKey + "_" + healthBlock.getCode(), healthBlock);
+            }
         }
     }
 
@@ -1051,9 +1058,11 @@ public class LocationServiceImpl implements LocationService {
 
         List<HealthFacility> healthFacilities = healthFacilityDataService.executeSQLQuery(queryExecution);
         LOGGER.debug("HEALTHFACILITY Query time: {}", queryTimer.time());
-        for (HealthFacility healthFacility : healthFacilities) {
-            String healthBlockKey = healthBlockIdMap.get(healthFacility.getHealthBlock().getId());
-            healthFacilityHashMap.put(healthBlockKey + "_" + healthFacility.getCode(), healthFacility);
+        if(healthFacilities != null && !healthFacilities.isEmpty()) {
+            for (HealthFacility healthFacility : healthFacilities) {
+                String healthBlockKey = healthBlockIdMap.get(healthFacility.getHealthBlock().getId());
+                healthFacilityHashMap.put(healthBlockKey + "_" + healthFacility.getCode(), healthFacility);
+            }
         }
     }
 
@@ -1144,11 +1153,13 @@ public class LocationServiceImpl implements LocationService {
             }
         };
 
-        List<HealthSubFacility> healthFacilities = healthSubFacilityDataService.executeSQLQuery(queryExecution);
+        List<HealthSubFacility> healthSubFacilities = healthSubFacilityDataService.executeSQLQuery(queryExecution);
         LOGGER.debug("HEALTHSUBFACILITY Query time: {}", queryTimer.time());
-        for (HealthSubFacility healthSubFacility : healthFacilities) {
-            String healthFacilityKey = healthFacilityIdMap.get(healthSubFacility.getHealthFacility().getId());
-            healthSubFacilityHashMap.put(healthFacilityKey + "_" + healthSubFacility.getCode(), healthSubFacility);
+        if(healthSubFacilities != null && !healthSubFacilities.isEmpty()) {
+            for (HealthSubFacility healthSubFacility : healthSubFacilities) {
+                String healthFacilityKey = healthFacilityIdMap.get(healthSubFacility.getHealthFacility().getId());
+                healthSubFacilityHashMap.put(healthFacilityKey + "_" + healthSubFacility.getCode(), healthSubFacility);
+            }
         }
     }
 

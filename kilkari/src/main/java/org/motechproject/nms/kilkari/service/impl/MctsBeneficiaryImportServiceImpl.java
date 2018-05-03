@@ -533,7 +533,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         try {
             MctsBeneficiaryUtils.setLocationFieldsCSV(locationFinder, record, child);
             if (mother != null) {
-                MctsBeneficiaryUtils.setLocationFields(locationService.getLocations(record), mother);
+                MctsBeneficiaryUtils.setLocationFieldsCSV(locationFinder, record, mother);
             }
         } catch (InvalidLocationException le) {
             LOGGER.error(le.toString());
@@ -697,8 +697,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         // get rch Ids of all the rejected records
         Set<String> rchIds = rejectedRecords.keySet();
-        List<ChildImportRejection> updateObjects = new ArrayList<>();;
-        List<ChildImportRejection> createObjects = new ArrayList<>();;
+        List<ChildImportRejection> updateObjects = new ArrayList<>();
+        List<ChildImportRejection> createObjects = new ArrayList<>();
 
         Map<String, Object> childRejects = childRejectionService.findChildRejectionByRchId(rchIds);
         ChildImportRejection child;

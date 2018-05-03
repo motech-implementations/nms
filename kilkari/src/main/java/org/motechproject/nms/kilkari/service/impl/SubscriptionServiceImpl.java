@@ -306,7 +306,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    public Subscription createSubscription(Subscriber subscriber, long callingNumber, Language language, Circle circle,
+    public synchronized Subscription createSubscription(Subscriber subscriber, long callingNumber, Language language, Circle circle,
                                            SubscriptionPack subscriptionPack, SubscriptionOrigin mode) {
 
         long number = PhoneNumberHelper.truncateLongNumber(callingNumber);

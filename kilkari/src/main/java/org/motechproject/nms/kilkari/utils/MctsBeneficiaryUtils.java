@@ -104,26 +104,26 @@ public final class MctsBeneficiaryUtils {
 
             if (isValidID(record, KilkariConstants.DISTRICT_ID) && (locationFinder.getDistrictHashMap().get(mapKey) != null)) {
                 beneficiary.setDistrict(locationFinder.getDistrictHashMap().get(mapKey));
-                String talukaCode = record.get(KilkariConstants.TALUKA_ID).toString();
+                Long talukaCode = Long.parseLong(record.get(KilkariConstants.TALUKA_ID).toString());
                 mapKey += "_";
                 mapKey += talukaCode;
                 beneficiary.setTaluka(locationFinder.getTalukaHashMap().get(mapKey));
 
-                String villageCode = record.get(KilkariConstants.CENSUS_VILLAGE_ID).toString();
-                String villageSvid = record.get(KilkariConstants.NON_CENSUS_VILLAGE_ID).toString();
-                String healthBlockCode = record.get(KilkariConstants.HEALTH_BLOCK_ID).toString();
-                String healthFacilityCode = record.get(KilkariConstants.PHC_ID).toString();
-                String healthSubFacilityCode = record.get(KilkariConstants.SUB_CENTRE_ID).toString();
+                String villageSvid = record.get(KilkariConstants.NON_CENSUS_VILLAGE_ID) == null ? "0" : record.get(KilkariConstants.NON_CENSUS_VILLAGE_ID).toString();
+                String villageCode = record.get(KilkariConstants.CENSUS_VILLAGE_ID) == null ? "0" : record.get(KilkariConstants.CENSUS_VILLAGE_ID).toString();
+                String healthBlockCode = record.get(KilkariConstants.HEALTH_BLOCK_ID) == null ? "0" : record.get(KilkariConstants.HEALTH_BLOCK_ID).toString();
+                String healthFacilityCode = record.get(KilkariConstants.PHC_ID) == null ? "0" : record.get(KilkariConstants.PHC_ID).toString();
+                String healthSubFacilityCode = record.get(KilkariConstants.SUB_CENTRE_ID) == null ? "0" : record.get(KilkariConstants.SUB_CENTRE_ID).toString();
 
-                beneficiary.setVillage(locationFinder.getVillageHashMap().get(mapKey + "_" + villageCode + "_" + villageSvid));
+                beneficiary.setVillage(locationFinder.getVillageHashMap().get(mapKey + "_" + Long.parseLong(villageCode) + "_" + Long.parseLong(villageSvid)));
                 mapKey += "_";
-                mapKey += healthBlockCode;
+                mapKey += Long.parseLong(healthBlockCode);
                 beneficiary.setHealthBlock(locationFinder.getHealthBlockHashMap().get(mapKey));
                 mapKey += "_";
-                mapKey += healthFacilityCode;
+                mapKey += Long.parseLong(healthFacilityCode);
                 beneficiary.setHealthFacility(locationFinder.getHealthFacilityHashMap().get(mapKey));
                 mapKey += "_";
-                mapKey += healthSubFacilityCode;
+                mapKey += Long.parseLong(healthSubFacilityCode);
                 beneficiary.setHealthSubFacility(locationFinder.getHealthSubFacilityHashMap().get(mapKey));
             } else {
                 throw new InvalidLocationException(String.format(KilkariConstants.INVALID_LOCATION, KilkariConstants.DISTRICT_ID, record.get(KilkariConstants.DISTRICT_ID)));
