@@ -62,6 +62,8 @@ import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.Collections;
+import java.util.Comparator;
 
 /**
  * Implementation of the {@link SubscriptionService} interface.
@@ -511,6 +513,37 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 }
             }
         }
+        return null;
+    }
+
+    public Subscription getLatestDeactivatedSubscription(Subscriber subscriber, SubscriptionPackType type) {
+        Iterator<Subscription> subscriptionIterator = subscriber.getSubscriptions().iterator();
+        Subscription existingSubscription;
+        List<Subscription> deactivatedSubscriptions = new ArrayList<>();
+
+        while (subscriptionIterator.hasNext()) {
+            existingSubscription = subscriptionIterator.next();
+            if (existingSubscription.getSubscriptionPack().getType() == type) {
+                if (type == SubscriptionPackType.PREGNANCY &&
+                        (existingSubscription.getStatus() == SubscriptionStatus.DEACTIVATED)) {
+                    deactivatedSubscriptions.add(existingSubscription);
+                }
+                if (type == SubscriptionPackType.CHILD && existingSubscription.getStatus() == SubscriptionStatus.DEACTIVATED) {
+                    deactivatedSubscriptions.add(existingSubscription);
+                }
+            }
+        }
+
+        if (deactivatedSubscriptions != null && !deactivatedSubscriptions.isEmpty()) {
+            Collections.sort(deactivatedSubscriptions, new Comparator<Subscription>() {
+                public int compare(Subscription m1, Subscription m2) {
+                    return (m2.getEndDate())
+                            .compareTo(m1.getEndDate()); //descending order
+                }
+            });
+            return deactivatedSubscriptions.get(0);
+        }
+
         return null;
     }
 
