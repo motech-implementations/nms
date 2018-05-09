@@ -127,6 +127,8 @@ public interface SubscriptionService {
      */
     Subscription getActiveSubscription(Subscriber subscriber, SubscriptionPackType type);
 
+    Subscription getLatestDeactivatedSubscription(Subscriber subscriber, SubscriptionPackType type);
+
     List<Subscription> getActiveSubscriptionBySubscriber(Subscriber subscriber);
 
     List<SubscriptionPack> getSubscriptionPacks();
