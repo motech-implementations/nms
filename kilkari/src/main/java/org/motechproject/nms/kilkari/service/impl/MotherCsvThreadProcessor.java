@@ -47,11 +47,11 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
     }
 
     @Override
-    public ThreadProcessorObject call() throws Exception {
+    public ThreadProcessorObject call() throws Exception { //NOPMD SignatureDeclareThrowsException
         return processCall();
     }
 
-    private ThreadProcessorObject processCall() {
+    private ThreadProcessorObject processCall() { //NOPMD NcssMethodCount
         ThreadProcessorObject threadProcessorObject = new ThreadProcessorObject();
         Map<String, Object> rejectedMothers = new HashMap<>();
         Map<String, Object> rejectionStatus = new HashMap<>();
@@ -70,7 +70,6 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
             motherInstance = KilkariConstants.RCH_MOTHER;
         }
         int count = 0;
-        int rejectedWithException = 0;
         Timer timer = new Timer("kid", "kids");
         for (Map<String, Object> record : recordList) {
             count++;
@@ -80,11 +79,9 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
             // TODO: Add this to bulk insert
             if (mother == null) {
                 MotherImportRejection motherImportRejection1 = motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), KilkariConstants.CREATE);
-//                motherRejectionService.createOrUpdateMother(motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), KilkariConstants.CREATE));
                 rejectedMothers.put(motherImportRejection1.getIdNo(), motherImportRejection1);
                 rejectionStatus.put(motherImportRejection1.getIdNo(), motherImportRejection1.getAccepted());
                 LOGGER.error("RchId is empty while importing mother at msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
-                rejectedWithException++;
                 continue;
             }
 
@@ -108,7 +105,6 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
                 }
             } catch (RuntimeException e) {
                 LOGGER.error("Error while importing mother at msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id), e);
-                rejectedWithException++;
             }
         }
         threadProcessorObject.setRejectedBeneficiaries(rejectedMothers);
