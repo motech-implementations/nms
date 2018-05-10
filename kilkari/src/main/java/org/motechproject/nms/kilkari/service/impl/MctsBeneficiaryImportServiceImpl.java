@@ -680,20 +680,20 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     public List<List<Map<String, Object>>> splitRecords(List<Map<String, Object>> recordList, String contactNumber) {
         List<List<Map<String, Object>>> recordListArray = new ArrayList<>();
         int count = 0;
-        while(count < recordList.size()) {
+        while (count < recordList.size()) {
             List<Map<String, Object>> recordListPart = new ArrayList<>();
-            while(recordListPart.size() < RECORDS_PART_SIZE && count < recordList.size()) {
+            while (recordListPart.size() < RECORDS_PART_SIZE && count < recordList.size()) {
                 recordListPart.add(recordList.get(count));
                 count++;
             }
             //Add all records with same contact number to the same part
-            while(count < recordList.size() && (recordList.get(count).get(contactNumber) == null? "0": recordList.get(count).get(contactNumber))
-                    .equals(recordListPart.get(recordListPart.size()-1)
-                            .get(contactNumber))){
+            while (count < recordList.size() && (recordList.get(count).get(contactNumber) == null ? "0": recordList.get(count).get(contactNumber))
+                    .equals(recordListPart.get(recordListPart.size() - 1)
+                            .get(contactNumber))) {
                 recordListPart.add(recordList.get(count));
                 count++;
             }
-            LOGGER.debug("Added records to part {}",recordListArray.size()+1);
+            LOGGER.debug("Added records to part {}", recordListArray.size() + 1);
             recordListArray.add(recordListPart);
             LOGGER.debug("Added recordListPart to recordListArray");
         }
@@ -843,9 +843,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private Long rchChildBulkInsert(List<ChildImportRejection> createObjects) {
         int count = 0;
         Long sqlCount = 0L;
-        while(count < createObjects.size()) {
+        while (count < createObjects.size()) {
             List<ChildImportRejection> createObjectsPart = new ArrayList<>();
-            while(createObjectsPart.size() < REJECTION_PART_SIZE && count<createObjects.size()) {
+            while (createObjectsPart.size() < REJECTION_PART_SIZE && count < createObjects.size()) {
                 createObjectsPart.add(createObjects.get(count));
                 count++;
             }
@@ -858,9 +858,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private Long rchChildBulkUpdate(List<ChildImportRejection> updateObjects) {
         int count = 0;
         Long sqlCount = 0L;
-        while(count < updateObjects.size()) {
+        while (count < updateObjects.size()) {
             List<ChildImportRejection> updateObjectsPart = new ArrayList<>();
-            while(updateObjectsPart.size() < REJECTION_PART_SIZE && count<updateObjects.size()) {
+            while (updateObjectsPart.size() < REJECTION_PART_SIZE && count < updateObjects.size()) {
                 updateObjectsPart.add(updateObjects.get(count));
                 count++;
             }
@@ -876,8 +876,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         // get rch Ids of all the rejected records
         Set<String> mctsIds = rejectedRecords.keySet();
-        List<ChildImportRejection> updateObjects = new ArrayList<>();;
-        List<ChildImportRejection> createObjects = new ArrayList<>();;
+        List<ChildImportRejection> updateObjects = new ArrayList<>();
+        List<ChildImportRejection> createObjects = new ArrayList<>();
 
         Map<String, Object> childRejects = childRejectionService.findChildRejectionByMctsId(mctsIds);
         ChildImportRejection child;
@@ -918,9 +918,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private Long mctsChildBulkInsert(List<ChildImportRejection> createObjects) {
         int count = 0;
         Long sqlCount = 0L;
-        while(count < createObjects.size()) {
+        while (count < createObjects.size()) {
             List<ChildImportRejection> createObjectsPart = new ArrayList<>();
-            while(createObjectsPart.size() < REJECTION_PART_SIZE && count<createObjects.size()) {
+            while (createObjectsPart.size() < REJECTION_PART_SIZE && count < createObjects.size()) {
                 createObjectsPart.add(createObjects.get(count));
                 count++;
             }
@@ -933,9 +933,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private Long mctsChildBulkUpdate(List<ChildImportRejection> updateObjects) {
         int count = 0;
         Long sqlCount = 0L;
-        while(count < updateObjects.size()) {
+        while (count < updateObjects.size()) {
             List<ChildImportRejection> updateObjectsPart = new ArrayList<>();
-            while(updateObjectsPart.size() < REJECTION_PART_SIZE && count<updateObjects.size()) {
+            while (updateObjectsPart.size() < REJECTION_PART_SIZE && count < updateObjects.size()) {
                 updateObjectsPart.add(updateObjects.get(count));
                 count++;
             }
@@ -993,9 +993,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private Long rchMotherBulkInsert(List<MotherImportRejection> createObjects) {
         int count = 0;
         Long sqlCount = 0L;
-        while(count < createObjects.size()) {
+        while (count < createObjects.size()) {
             List<MotherImportRejection> createObjectsPart = new ArrayList<>();
-            while(createObjectsPart.size() < REJECTION_PART_SIZE && count<createObjects.size()) {
+            while (createObjectsPart.size() < REJECTION_PART_SIZE && count < createObjects.size()) {
                 createObjectsPart.add(createObjects.get(count));
                 count++;
             }
@@ -1008,9 +1008,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private Long rchMotherBulkUpdate(List<MotherImportRejection> updateObjects) {
         int count = 0;
         Long sqlCount = 0L;
-        while(count < updateObjects.size()) {
+        while (count < updateObjects.size()) {
             List<MotherImportRejection> updateObjectsPart = new ArrayList<>();
-            while(updateObjectsPart.size() < REJECTION_PART_SIZE && count<updateObjects.size()) {
+            while (updateObjectsPart.size() < REJECTION_PART_SIZE && count < updateObjects.size()) {
                 updateObjectsPart.add(updateObjects.get(count));
                 count++;
             }
@@ -1026,8 +1026,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         // get rch Ids of all the rejected records
         Set<String> mctsIds = rejectedRecords.keySet();
-        List<MotherImportRejection> updateObjects = new ArrayList<>();;
-        List<MotherImportRejection> createObjects = new ArrayList<>();;
+        List<MotherImportRejection> updateObjects = new ArrayList<>();
+        List<MotherImportRejection> createObjects = new ArrayList<>();
 
         Map<String, Object> motherRejects = motherRejectionService.findMotherRejectionByMctsId(mctsIds);
         MotherImportRejection mother;
@@ -1067,9 +1067,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private Long mctsMotherBulkInsert(List<MotherImportRejection> createObjects) {
         int count = 0;
         Long sqlCount = 0L;
-        while(count < createObjects.size()) {
+        while (count < createObjects.size()) {
             List<MotherImportRejection> createObjectsPart = new ArrayList<>();
-            while(createObjectsPart.size() < REJECTION_PART_SIZE && count<createObjects.size()) {
+            while (createObjectsPart.size() < REJECTION_PART_SIZE && count < createObjects.size()) {
                 createObjectsPart.add(createObjects.get(count));
                 count++;
             }
@@ -1082,9 +1082,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private Long mctsMotherBulkUpdate(List<MotherImportRejection> updateObjects) {
         int count = 0;
         Long sqlCount = 0L;
-        while(count < updateObjects.size()) {
+        while (count < updateObjects.size()) {
             List<MotherImportRejection> updateObjectsPart = new ArrayList<>();
-            while(updateObjectsPart.size() < REJECTION_PART_SIZE && count<updateObjects.size()) {
+            while (updateObjectsPart.size() < REJECTION_PART_SIZE && count < updateObjects.size()) {
                 updateObjectsPart.add(updateObjects.get(count));
                 count++;
             }
