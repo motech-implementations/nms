@@ -88,7 +88,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
                 .createAndOpen(bufferedReader);
 
 
-        List<Map<String, Object>> recordList= new ArrayList<>();
+        List<Map<String, Object>> recordList = new ArrayList<>();
         Map<String, Object> record;
         while (null != (record = csvImporter.read())) {
             recordList.add(record);
@@ -102,8 +102,8 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             public int compare(Map<String, Object> m1, Map<String, Object> m2) {
                 Object phoneM1 = m1.get(mctsImport ? KilkariConstants.MSISDN : KilkariConstants.MOBILE_NO);
                 Object phoneM2 = m2.get(mctsImport ? KilkariConstants.MSISDN : KilkariConstants.MOBILE_NO);
-                return ((Long)(phoneM1==null?0L:phoneM1))
-                        .compareTo((Long)(phoneM2==null?0L:phoneM2)); //ascending order
+                return ((Long) (phoneM1 == null ? 0L : phoneM1))
+                        .compareTo((Long) (phoneM2 == null ? 0L : phoneM2)); //ascending order
             }
         });
 
@@ -120,28 +120,28 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             ExecutorService executor = Executors.newCachedThreadPool();
             List<Future<ThreadProcessorObject>> list = new ArrayList<>();
 
-            for(int i=0; i<recordListArray.size();i++){
-                Callable<ThreadProcessorObject> callable = new ChildCsvThreadProcessor(recordListArray.get(i),mctsImport,importOrigin,locationFinder,
+            for (int i = 0 ; i < recordListArray.size() ; i++) {
+                Callable<ThreadProcessorObject> callable = new ChildCsvThreadProcessor(recordListArray.get(i), mctsImport, importOrigin, locationFinder,
                         mctsBeneficiaryValueProcessor, mctsBeneficiaryImportService);
                 Future<ThreadProcessorObject> future = executor.submit(callable);
                 list.add(future);
             }
 
-            for(Future<ThreadProcessorObject> fut : list){
+            for (Future<ThreadProcessorObject> fut : list) {
                 try {
                     ThreadProcessorObject threadProcessorObject = fut.get();
                     rejectedChilds.putAll(threadProcessorObject.getRejectedBeneficiaries());
                     rejectionStatus.putAll(threadProcessorObject.getRejectionStatus());
                     recordsProcessed += threadProcessorObject.getRecordsProcessed();
                 } catch (InterruptedException | ExecutionException e) {
-                    LOGGER.error("Error while running thread",e);
+                    LOGGER.error("Error while running thread", e);
                 }
             }
             executor.shutdown();
             try {
                 executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
             } catch (InterruptedException e) {
-                LOGGER.error("Error while Terminating thread",e);
+                LOGGER.error("Error while Terminating thread", e);
             }
             LOGGER.debug("Thread Processing End");
             try {
@@ -200,7 +200,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
                 .setPreferences(CsvPreference.TAB_PREFERENCE)
                 .createAndOpen(bufferedReader);
 
-        List<Map<String, Object>> recordList= new ArrayList<>();
+        List<Map<String, Object>> recordList = new ArrayList<>();
         Map<String, Object> record;
         while (null != (record = csvImporter.read())) {
             recordList.add(record);
@@ -214,8 +214,8 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             public int compare(Map<String, Object> m1, Map<String, Object> m2) {
                 Object phoneM1 = m1.get(mctsImport ? KilkariConstants.MSISDN : KilkariConstants.MOBILE_NO);
                 Object phoneM2 = m2.get(mctsImport ? KilkariConstants.MSISDN : KilkariConstants.MOBILE_NO);
-                return ((Long)(phoneM1==null?0L:phoneM1))
-                        .compareTo((Long)(phoneM2==null?0L:phoneM2)); //ascending order
+                return ((Long) (phoneM1 == null ? 0L : phoneM1))
+                        .compareTo((Long) (phoneM2 == null ? 0L : phoneM2)); //ascending order
             }
         });
 
@@ -232,28 +232,28 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             ExecutorService executor = Executors.newCachedThreadPool();
             List<Future<ThreadProcessorObject>> list = new ArrayList<>();
 
-            for(int i=0; i<recordListArray.size();i++){
-                Callable<ThreadProcessorObject> callable = new MotherCsvThreadProcessor(recordListArray.get(i),mctsImport,importOrigin,locationFinder,
+            for (int i = 0 ; i < recordListArray.size() ; i++) {
+                Callable<ThreadProcessorObject> callable = new MotherCsvThreadProcessor(recordListArray.get(i), mctsImport, importOrigin, locationFinder,
                         mctsBeneficiaryValueProcessor, mctsBeneficiaryImportService);
                 Future<ThreadProcessorObject> future = executor.submit(callable);
                 list.add(future);
             }
 
-            for(Future<ThreadProcessorObject> fut : list){
+            for (Future<ThreadProcessorObject> fut : list) {
                 try {
                     ThreadProcessorObject threadProcessorObject = fut.get();
                     rejectedMothers.putAll(threadProcessorObject.getRejectedBeneficiaries());
                     rejectionStatus.putAll(threadProcessorObject.getRejectionStatus());
                     recordsProcessed += threadProcessorObject.getRecordsProcessed();
                 } catch (InterruptedException | ExecutionException e) {
-                    LOGGER.error("Error while running thread",e);
+                    LOGGER.error("Error while running thread", e);
                 }
             }
             executor.shutdown();
             try {
                 executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
             } catch (InterruptedException e) {
-                LOGGER.error("Error while Terminating thread",e);
+                LOGGER.error("Error while Terminating thread", e);
             }
             LOGGER.debug("Thread Processing End");
             try {

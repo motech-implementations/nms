@@ -10,7 +10,6 @@ import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
-import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
