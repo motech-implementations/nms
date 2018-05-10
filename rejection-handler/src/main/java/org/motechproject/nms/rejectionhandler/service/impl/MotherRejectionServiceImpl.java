@@ -1,10 +1,24 @@
 package org.motechproject.nms.rejectionhandler.service.impl;
 
+import org.datanucleus.store.rdbms.query.ForwardQueryResult;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.motechproject.mds.query.SqlQueryExecution;
+import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
 import org.motechproject.nms.rejectionhandler.repository.MotherRejectionDataService;
 import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import javax.jdo.Query;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.motechproject.nms.tracking.utils.TrackChangeUtils.LOGGER;
 
@@ -13,6 +27,13 @@ import static org.motechproject.nms.tracking.utils.TrackChangeUtils.LOGGER;
  */
 @Service("motherRejectionService")
 public class MotherRejectionServiceImpl implements MotherRejectionService {
+
+    private static final String QUOTATION = "'";
+    private static final String QUOTATION_COMMA = "', ";
+    private static final String MOTECH_STRING = "'motech', ";
+    private static final String SQL_QUERY_LOG = "SQL QUERY: {}";
+    private static final String CHILD_LOG_STRING = "List of child rejects in {}";
+    private static final String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
 
     @Autowired
     private MotherRejectionDataService motherRejectionDataService;
@@ -40,6 +61,524 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
             }
         }
     }
+
+    @Override
+    public Map<String, Object> findMotherRejectionByRchId(final Set<String> rchIds) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Map<String, Object>> queryExecution = new SqlQueryExecution<Map<String, Object>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "SELECT id, registrationNo, creationDate FROM nms_mother_rejects WHERE registrationNo IN " + queryIdList(rchIds);
+                LOGGER.debug(SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public Map<String, Object> execute(Query query) {
+
+                query.setClass(MotherImportRejection.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                Map<String, Object> resultMap = new HashMap<>();
+                for (MotherImportRejection motherReject : (List<MotherImportRejection>) fqr) {
+                    resultMap.put(motherReject.getRegistrationNo(), motherReject);
+                }
+                return resultMap;
+            }
+        };
+
+        Map<String, Object> resultMap = motherRejectionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
+        return resultMap;
+    }
+
+    @Override
+    public Map<String, Object> findMotherRejectionByMctsId(final Set<String> mctsIds) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Map<String, Object>> queryExecution = new SqlQueryExecution<Map<String, Object>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "SELECT id, idNo, creationDate FROM nms_mother_rejects WHERE idNo IN " + queryIdList(mctsIds);
+                LOGGER.debug(SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public Map<String, Object> execute(Query query) {
+
+                query.setClass(MotherImportRejection.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                Map<String, Object> resultMap = new HashMap<>();
+                for (MotherImportRejection motherReject : (List<MotherImportRejection>) fqr) {
+                    resultMap.put(motherReject.getIdNo(), motherReject);
+                }
+                return resultMap;
+            }
+        };
+
+        Map<String, Object> resultMap = motherRejectionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
+        return resultMap;
+    }
+
+    private String queryIdList(Set<String> idList) {
+        StringBuilder stringBuilder = new StringBuilder();
+        int i = 0;
+        stringBuilder.append("(");
+        for (String id: idList) {
+            if (i != 0) {
+                stringBuilder.append(", ");
+            }
+            stringBuilder.append(QUOTATION + id + QUOTATION);
+            i++;
+        }
+        stringBuilder.append(")");
+
+        return stringBuilder.toString();
+    }
+
+    @Override
+    public Long mctsBulkInsert(final List<MotherImportRejection> createObjects) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "INSERT INTO nms_mother_rejects (stateId, districtId, districtName, talukaId, talukaName," +
+                        " healthBlockId, healthBlockName, phcId, phcName, subcentreId, subcentreName, villageId," +
+                        " villageName, yr, gPVillage, address, idNo, name, husbandName, phoneNumberWhom, mobileNo, birthDate," +
+                        " jSYBeneficiary, caste, subcenterName1, aNMName, aNMPhone, ashaName, ashaPhone, deliveryLnkFacility," +
+                        " facilityName, lmpDate, aNC1Date, aNC2Date, aNC3Date, aNC4Date, tT1Date, tT2Date, tTBoosterDate," +
+                        " iFA100GivenDate, anemia, aNCComplication, rTISTI, dlyDate, dlyPlaceHomeType, dlyPlacePublic," +
+                        " dlyPlacePrivate, dlyType, dlyComplication, dischargeDate, jSYPaidDate, abortion, pNCHomeVisit," +
+                        " pNCComplication, pPCMethod, pNCCheckup, outcomeNos, child1Name, child1Sex, child1Wt, child1Brestfeeding," +
+                        " child2Name, child2Sex, child2Wt, child2Brestfeeding, child3Name, child3Sex, child3Wt, child3Brestfeeding," +
+                        " child4Name, child4Sex, child4Wt, child4Brestfeeding, age, mTHRREGDATE, lastUpdateDate, remarks, aNMID," +
+                        " aSHAID, callAns, noCallReason, noPhoneReason, createdBy, updatedBy, aadharNo, bPLAPL, eID, eIDTime," +
+                        " entryType, source, accepted, rejectionReason, action, creator, modifiedBy, creationDate," +
+                        " modificationDate) values " +
+                        mctsMotherToQuerySet(createObjects);
+
+                LOGGER.debug(SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public Long execute(Query query) {
+                query.setClass(MotherImportRejection.class);
+                return (Long) query.execute();
+            }
+        };
+
+        Long insertedNo = motherRejectionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
+        return insertedNo;
+    }
+
+    @Override
+    public Long mctsBulkUpdate(final List<MotherImportRejection> updateObjects) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "INSERT INTO nms_mother_rejects (id, stateId, districtId, districtName, talukaId, talukaName," +
+                        " healthBlockId, healthBlockName, phcId, phcName, subcentreId, subcentreName, villageId, villageName, yr," +
+                        " gPVillage, address, idNo, name, husbandName, phoneNumberWhom, mobileNo, birthDate, jSYBeneficiary, caste," +
+                        " subcenterName1, aNMName, aNMPhone, ashaName, ashaPhone, deliveryLnkFacility, facilityName, lmpDate, aNC1Date," +
+                        " aNC2Date, aNC3Date, aNC4Date, tT1Date, tT2Date, tTBoosterDate, iFA100GivenDate, anemia, aNCComplication," +
+                        " rTISTI, dlyDate, dlyPlaceHomeType, dlyPlacePublic, dlyPlacePrivate, dlyType, dlyComplication, dischargeDate," +
+                        " jSYPaidDate, abortion, pNCHomeVisit, pNCComplication, pPCMethod, pNCCheckup, outcomeNos, child1Name," +
+                        " child1Sex, child1Wt, child1Brestfeeding, child2Name, child2Sex, child2Wt, child2Brestfeeding, child3Name," +
+                        " child3Sex, child3Wt, child3Brestfeeding, child4Name, child4Sex, child4Wt, child4Brestfeeding, age," +
+                        " mTHRREGDATE, lastUpdateDate, remarks, aNMID, aSHAID, callAns, noCallReason, noPhoneReason, createdBy," +
+                        " updatedBy, aadharNo, bPLAPL, eID, eIDTime, entryType, source, accepted, rejectionReason, action, creator," +
+                        " modifiedBy, creationDate, modificationDate) values " +
+                        mctsMotherUpdateQuerySet(updateObjects) +
+                        " ON DUPLICATE KEY UPDATE " +
+                        " stateId = VALUES(stateId),  districtId = VALUES(districtId),  districtName = VALUES(districtName)," +
+                        " talukaId = VALUES(talukaId),  talukaName = VALUES(talukaName),  healthBlockId = VALUES(healthBlockId)," +
+                        " healthBlockName = VALUES(healthBlockName),  phcId = VALUES(phcId),  phcName = VALUES(phcName)," +
+                        " subcentreId = VALUES(subcentreId),  subcentreName = VALUES(subcentreName), villageId = VALUES(villageId)," +
+                        " villageName = VALUES(villageName),  yr = VALUES(yr), gPVillage = VALUES(gPVillage), address = VALUES(address)," +
+                        " idNo = VALUES(idNo), name = VALUES(name),  husbandName = VALUES(husbandName)," +
+                        " phoneNumberWhom = VALUES(phoneNumberWhom), mobileNo = VALUES(mobileNo),  birthDate = VALUES(birthDate)," +
+                        " jSYBeneficiary = VALUES(jSYBeneficiary), caste = VALUES(caste),  subcenterName1 = VALUES(subcenterName1)," +
+                        " aNMName = VALUES(aNMName), aNMPhone = VALUES(aNMPhone),  ashaName = VALUES(ashaName)," +
+                        " ashaPhone = VALUES(ashaPhone), deliveryLnkFacility = VALUES(deliveryLnkFacility)," +
+                        " facilityName = VALUES(facilityName),  lmpDate = VALUES(lmpDate), aNC1Date = VALUES(aNC1Date)," +
+                        " aNC2Date = VALUES(aNC2Date),  aNC3Date = VALUES(aNC3Date), aNC4Date = VALUES(aNC4Date)," +
+                        " tT1Date = VALUES(tT1Date),  tT2Date = VALUES(tT2Date), tTBoosterDate = VALUES(tTBoosterDate)," +
+                        " iFA100GivenDate = VALUES(iFA100GivenDate),  anemia = VALUES(anemia), aNCComplication = VALUES(aNCComplication)," +
+                        " rTISTI = VALUES(rTISTI),  dlyDate = VALUES(dlyDate), dlyPlaceHomeType = VALUES(dlyPlaceHomeType)," +
+                        " dlyPlacePublic = VALUES(dlyPlacePublic),  dlyPlacePrivate = VALUES(dlyPlacePrivate), dlyType = VALUES(dlyType)," +
+                        " dlyComplication = VALUES(dlyComplication),  dischargeDate = VALUES(dischargeDate), jSYPaidDate = VALUES(jSYPaidDate)," +
+                        " abortion = VALUES(abortion),  pNCHomeVisit = VALUES(pNCHomeVisit), pNCComplication = VALUES(pNCComplication)," +
+                        " pPCMethod = VALUES(pPCMethod),  pNCCheckup = VALUES(pNCCheckup), outcomeNos = VALUES(outcomeNos)," +
+                        " child1Name = VALUES(child1Name),  child1Sex = VALUES(child1Sex), child1Wt = VALUES(child1Wt)," +
+                        " child1Brestfeeding = VALUES(child1Brestfeeding), child2Name = VALUES(child2Name)," +
+                        " child2Sex = VALUES(child2Sex), child2Wt = VALUES(child2Wt), child2Brestfeeding = VALUES(child2Brestfeeding)," +
+                        " child3Name = VALUES(child3Name),  child3Sex = VALUES(child3Sex), child3Wt = VALUES(child3Wt)," +
+                        " child3Brestfeeding = VALUES(child3Brestfeeding), child4Name = VALUES(child4Name)," +
+                        " child4Sex = VALUES(child4Sex), child4Wt = VALUES(child4Wt), child4Brestfeeding = VALUES(child4Brestfeeding)," +
+                        " age = VALUES(age), mTHRREGDATE = VALUES(mTHRREGDATE), lastUpdateDate = VALUES(lastUpdateDate)," +
+                        " remarks = VALUES(remarks), aNMID = VALUES(aNMID), aSHAID = VALUES(aSHAID), callAns = VALUES(callAns)," +
+                        " noCallReason = VALUES(noCallReason), noPhoneReason = VALUES(noPhoneReason), createdBy = VALUES(createdBy)," +
+                        " updatedBy = VALUES(updatedBy), aadharNo = VALUES(aadharNo), bPLAPL = VALUES(bPLAPL), eID = VALUES(eID)," +
+                        " eIDTime = VALUES(eIDTime), entryType = VALUES(entryType), source = VALUES(source)," +
+                        " accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason), action = VALUES(action)," +
+                        " creator = VALUES(creator), modifiedBy = VALUES(modifiedBy), creationDate = VALUES(creationDate)," +
+                        " modificationDate = VALUES(modificationDate)";
+                LOGGER.debug(SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public Long execute(Query query) {
+
+                query.setClass(MotherImportRejection.class);
+                return (Long) query.execute();
+            }
+        };
+
+        Long updatedNo = motherRejectionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
+        return updatedNo;
+    }
+
+
+    @Override
+    public Long rchBulkInsert(final List<MotherImportRejection> createObjects) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "INSERT INTO nms_mother_rejects (stateId, districtId, districtName, talukaId, talukaName," +
+                        " healthBlockId, healthBlockName, phcId, phcName, subcentreId, subcentreName, villageId," +
+                        " villageName, idNo, registrationNo, caseNo, name, mobileNo, lmpDate, birthDate, abortionType," +
+                        " deliveryOutcomes, entryType, execDate, source, accepted, rejectionReason, action, creator," +
+                        " modifiedBy, creationDate, modificationDate) " +
+                        "values  " +
+                        rchMotherToQuerySet(createObjects);
+
+                LOGGER.debug(SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public Long execute(Query query) {
+                query.setClass(MotherImportRejection.class);
+                return (Long) query.execute();
+            }
+        };
+
+        Long insertedNo = motherRejectionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
+        return insertedNo;
+    }
+
+    @Override
+    public Long rchBulkUpdate(final List<MotherImportRejection> updateObjects) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "INSERT INTO nms_mother_rejects (id, stateId, districtId, districtName, talukaId," +
+                        " talukaName, healthBlockId, healthBlockName, phcId, phcName, subcentreId, subcentreName," +
+                        " villageId, villageName, idNo, registrationNo, caseNo, name, mobileNo, lmpDate, birthDate," +
+                        " abortionType, deliveryOutcomes, entryType, execDate, source, accepted, rejectionReason, action," +
+                        " creator, modifiedBy, creationDate, modificationDate)  " +
+                        "values  " +
+                        rchMotherUpdateQuerySet(updateObjects) +
+                        " ON DUPLICATE KEY UPDATE " +
+                        "stateId = VALUES(stateId), districtId = VALUES(districtId), districtName = VALUES(districtName)," +
+                        " talukaId = VALUES(talukaId), talukaName = VALUES(talukaName)," +
+                        " healthBlockId = VALUES(healthBlockId), healthBlockName = VALUES(healthBlockName), phcId = VALUES(phcId)," +
+                        " phcName = VALUES(phcName), subcentreId = VALUES(subcentreId), subcentreName = VALUES(subcentreName)," +
+                        " villageId = VALUES(villageId), villageName = VALUES(villageName), idNo = VALUES(idNo)," +
+                        " registrationNo = VALUES(registrationNo), caseNo = VALUES(caseNo), name = VALUES(name)," +
+                        " mobileNo = VALUES(mobileNo), lmpDate = VALUES(lmpDate), birthDate = VALUES(birthDate)," +
+                        " abortionType = VALUES(abortionType), deliveryOutcomes = VALUES(deliveryOutcomes)," +
+                        " entryType = VALUES(entryType), execDate = VALUES(execDate), source = VALUES(source)," +
+                        " accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason), action = VALUES(action)," +
+                        " creator = VALUES(creator), modifiedBy = VALUES(modifiedBy), creationDate = VALUES(creationDate)," +
+                        " modificationDate = VALUES(modificationDate)";
+
+                LOGGER.debug(SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public Long execute(Query query) {
+
+                query.setClass(MotherImportRejection.class);
+                return (Long) query.execute();
+            }
+        };
+
+        Long updatedNo = motherRejectionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
+        return updatedNo;
+    }
+
+    private String rchMotherToQuerySet(List<MotherImportRejection> createObjects) {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
+        DateTime dateTimeNow = new DateTime();
+
+        int i = 0;
+        for (MotherImportRejection mother: createObjects) {
+            if (i != 0) {
+                stringBuilder.append(", ");
+            }
+            stringBuilder.append("(");
+            stringBuilder = rchQueryHelper(stringBuilder, mother);
+            stringBuilder.append(MOTECH_STRING);
+            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+            stringBuilder.append(")");
+            i++;
+        }
+        return stringBuilder.toString();
+    }
+
+    private String mctsMotherToQuerySet(List<MotherImportRejection> createObjects) {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
+        DateTime dateTimeNow = new DateTime();
+
+        int i = 0;
+        for (MotherImportRejection mother: createObjects) {
+            if (i != 0) {
+                stringBuilder.append(", ");
+            }
+            stringBuilder.append("(");
+            stringBuilder = mctsQueryHelper(stringBuilder, mother);
+            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+            stringBuilder.append(")");
+            i++;
+        }
+        return stringBuilder.toString();
+    }
+
+    private String rchMotherUpdateQuerySet(List<MotherImportRejection> updateObjects) {
+        StringBuilder stringBuilder = new StringBuilder();
+        int i = 0;
+        DateTime dateTimeNow = new DateTime();
+        DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
+        for (MotherImportRejection mother: updateObjects) {
+            Long id = null;
+            String creationTime = "";
+            try {
+                Method method = mother.getClass().getMethod("getCreationDate");
+                DateTime dateTime = (DateTime) method.invoke(mother);
+                method = mother.getClass().getMethod("getId");
+                creationTime = dateTimeFormatter.print(dateTime);
+
+                id = (Long) method.invoke(mother);
+            } catch (IllegalAccessException|SecurityException|IllegalArgumentException|NoSuchMethodException|
+                    InvocationTargetException e) {
+                LOGGER.error("Ignoring creation date and setting as now");
+            }
+            if (i != 0) {
+                stringBuilder.append(", ");
+            }
+            stringBuilder.append("(");
+            stringBuilder.append(id + ", ");
+            stringBuilder = rchQueryHelper(stringBuilder, mother);
+            stringBuilder.append(MOTECH_STRING);
+            stringBuilder.append(QUOTATION + creationTime + QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+            stringBuilder.append(")");
+            i++;
+        }
+        return stringBuilder.toString();
+    }
+
+    private String mctsMotherUpdateQuerySet(List<MotherImportRejection> updateObjects) {
+        StringBuilder stringBuilder = new StringBuilder();
+        DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
+        DateTime dateTimeNow = new DateTime();
+        int i = 0;
+        for (MotherImportRejection mother: updateObjects) {
+            String creationTime = "";
+            Long id = null;
+            if (i != 0) {
+                stringBuilder.append(", ");
+            }
+            try {
+                Method method = mother.getClass().getMethod("getCreationDate");
+                DateTime dateTime = (DateTime) method.invoke(mother);
+                creationTime = dateTimeFormatter.print(dateTime);
+
+                method = mother.getClass().getMethod("getId");
+                id = (Long) method.invoke(mother);
+            } catch (IllegalAccessException|SecurityException|IllegalArgumentException|NoSuchMethodException|
+                    InvocationTargetException e) {
+                LOGGER.error("Ignoring creation date and setting as now");
+            }
+            stringBuilder.append("(");
+            stringBuilder.append(id + ", ");
+            stringBuilder = mctsQueryHelper(stringBuilder, mother);
+            stringBuilder.append(QUOTATION + creationTime + QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+            stringBuilder.append(")");
+            i++;
+        }
+        return stringBuilder.toString();
+    }
+
+    private StringBuilder mctsQueryHelper(StringBuilder stringBuilder, MotherImportRejection mother) { //NOPMD NcssMethodCount
+        stringBuilder.append(mother.getStateId() + ", ");
+        stringBuilder.append(mother.getDistrictId() + ", ");
+        stringBuilder.append(QUOTATION + mother.getDistrictName() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getTalukaId() + ", ");
+        stringBuilder.append(QUOTATION + mother.getTalukaName() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getHealthBlockId() + ", ");
+        stringBuilder.append(QUOTATION + mother.getHealthBlockName() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getPhcId() + ", ");
+        stringBuilder.append(QUOTATION + mother.getPhcName() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getSubcentreId() + ", ");
+        stringBuilder.append(QUOTATION + mother.getSubcentreName() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getVillageId() + ", ");
+        stringBuilder.append(QUOTATION + mother.getVillageName() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getYr() + ", ");
+        stringBuilder.append(QUOTATION + mother.getgPVillage() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getAddress() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getIdNo() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getHusbandName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getPhoneNumberWhom() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getMobileNo() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getBirthDate() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getjSYBeneficiary() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getCaste() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getSubcenterName1() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getaNMName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getaNMPhone() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getAshaName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getAshaPhone() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getDeliveryLnkFacility() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getFacilityName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getLmpDate() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getaNC1Date() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getaNC2Date() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getaNC3Date() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getaNC4Date() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.gettT1Date() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.gettT2Date() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.gettTBoosterDate() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getiFA100GivenDate() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getAnemia() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getaNCComplication() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getrTISTI() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getDlyDate() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getDlyPlaceHomeType() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getDlyPlacePublic() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getDlyPlacePrivate() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getDlyType() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getDlyComplication() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getDischargeDate() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getjSYPaidDate() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getAbortion() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getpNCHomeVisit() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getpNCComplication() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getpPCMethod() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getpNCCheckup() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getOutcomeNos() + ", ");
+        stringBuilder.append(QUOTATION + mother.getChild1Name() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getChild1Sex() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getChild1Wt() + ", ");
+        stringBuilder.append(QUOTATION + mother.getChild1Brestfeeding() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getChild2Name() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getChild2Sex() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getChild2Wt() + ", ");
+        stringBuilder.append(QUOTATION + mother.getChild2Brestfeeding() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getChild3Name() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getChild3Sex() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getChild3Wt() + ", ");
+        stringBuilder.append(QUOTATION + mother.getChild3Brestfeeding() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getChild4Name() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getChild4Sex() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getChild4Wt() + ", ");
+        stringBuilder.append(QUOTATION + mother.getChild4Brestfeeding() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getAge() + ", ");
+        stringBuilder.append(QUOTATION + mother.getmTHRREGDATE() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getLastUpdateDate() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getRemarks() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getaNMID() + ", ");
+        stringBuilder.append(mother.getaSHAID() + ", ");
+        stringBuilder.append(mother.getCallAns() + ", ");
+        stringBuilder.append(mother.getNoCallReason() + ", ");
+        stringBuilder.append(mother.getNoPhoneReason() + ", ");
+        stringBuilder.append(mother.getCreatedBy() + ", ");
+        stringBuilder.append(mother.getUpdatedBy() + ", ");
+        stringBuilder.append(mother.getAadharNo() + ", ");
+        stringBuilder.append(mother.getbPLAPL() + ", ");
+        stringBuilder.append(mother.geteID() + ", ");
+        stringBuilder.append(QUOTATION + mother.geteIDTime() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getEntryType() + ", ");
+        stringBuilder.append(QUOTATION + mother.getSource() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getAccepted() + ", ");
+        stringBuilder.append(QUOTATION + mother.getRejectionReason() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getAction() + QUOTATION_COMMA);
+        stringBuilder.append(MOTECH_STRING);
+        stringBuilder.append(MOTECH_STRING);
+        return stringBuilder;
+    }
+
+
+    private StringBuilder rchQueryHelper(StringBuilder stringBuilder, MotherImportRejection mother) {
+        stringBuilder.append(mother.getStateId() + ", ");
+        stringBuilder.append(mother.getDistrictId() + ", ");
+        stringBuilder.append(QUOTATION + mother.getDistrictName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getTalukaId() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getTalukaName() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getHealthBlockId() + ", ");
+        stringBuilder.append(QUOTATION + mother.getHealthBlockName() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getPhcId() + ", ");
+        stringBuilder.append(QUOTATION + mother.getPhcName() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getSubcentreId() + ", ");
+        stringBuilder.append(QUOTATION + mother.getSubcentreName() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getVillageId() + ", ");
+        stringBuilder.append(QUOTATION + mother.getVillageName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getIdNo() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getRegistrationNo() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getCaseNo() + ", ");
+        stringBuilder.append(QUOTATION + mother.getName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getMobileNo() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getLmpDate() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getBirthDate() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getAbortionType() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getDeliveryOutcomes() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getEntryType() + ", ");
+        stringBuilder.append(QUOTATION + mother.getExecDate() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getSource() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getAccepted() + ", ");
+        stringBuilder.append(QUOTATION + mother.getRejectionReason() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getAction() + QUOTATION_COMMA);
+        stringBuilder.append(MOTECH_STRING);
+        return stringBuilder;
+    }
+
 
     private static MotherImportRejection setNewData1(MotherImportRejection motherImportRejection, MotherImportRejection motherImportRejection1) {
         motherImportRejection1.setStateId(motherImportRejection.getStateId());

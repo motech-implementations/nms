@@ -34,20 +34,17 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
     private LocationFinder locationFinder;
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
-    private ChildRejectionService childRejectionService;
 
     public ChildCsvThreadProcessor(List<Map<String, Object>> recordList, Boolean mctsImport,
                                    SubscriptionOrigin importOrigin, LocationFinder locationFinder,
                                    MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor,
-                                   MctsBeneficiaryImportService mctsBeneficiaryImportService,
-                                   ChildRejectionService childRejectionService) {
+                                   MctsBeneficiaryImportService mctsBeneficiaryImportService) {
         this.recordList = recordList;
         this.mctsImport = mctsImport;
         this.importOrigin = importOrigin;
         this.locationFinder = locationFinder;
         this.mctsBeneficiaryValueProcessor = mctsBeneficiaryValueProcessor;
         this.mctsBeneficiaryImportService = mctsBeneficiaryImportService;
-        this.childRejectionService = childRejectionService;
     }
 
     @Override
@@ -70,7 +67,6 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
             childInstance = KilkariConstants.RCH_CHILD;
         }
         int count = 0;
-        int rejectedWithException = 0;
         Timer timer = new Timer("kid", "kids");
         for(Map<String, Object> record : recordList) {
             count++;
@@ -79,9 +75,11 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
             MctsChild child = mctsImport ? mctsBeneficiaryValueProcessor.getOrCreateChildInstance((String) record.get(id)) : mctsBeneficiaryValueProcessor.getOrCreateRchChildInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
             // TODO: Add this to bulk insert
             if (child == null) {
-                childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), KilkariConstants.CREATE));
+                ChildImportRejection childImportRejection1 = childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), KilkariConstants.CREATE);
+//                childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), KilkariConstants.CREATE));
+                rejectedChilds.put(childImportRejection1.getIdNo(), childImportRejection1);
+                rejectionStatus.put(childImportRejection1.getIdNo(), childImportRejection1.getAccepted());
                 LOGGER.error("RchId is empty while importing child at msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
-                rejectedWithException++;
                 continue;
             }
 
@@ -105,7 +103,6 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
                 }
             } catch (RuntimeException e) {
                 LOGGER.error("Error while importing child at msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id), e);
-                rejectedWithException++;
             }
         }
         threadProcessorObject.setRejectedBeneficiaries(rejectedChilds);

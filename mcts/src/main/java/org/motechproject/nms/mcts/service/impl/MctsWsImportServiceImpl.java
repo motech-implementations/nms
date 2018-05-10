@@ -443,7 +443,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         }
 
         try {
-            mctsBeneficiaryImportService.createOrUpdateMctsRejections(rejectedChilds , rejectionStatus);
+            mctsBeneficiaryImportService.createOrUpdateMctsChildRejections(rejectedChilds , rejectionStatus);
         } catch (RuntimeException e) {
             LOGGER.error("Error while bulk updating rejection records", e);
 
@@ -491,7 +491,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         }
 
         try {
-            mctsBeneficiaryImportService.createOrUpdateMctsRejections(rejectedChilds , rejectionStatus);
+            mctsBeneficiaryImportService.createOrUpdateMctsChildRejections(rejectedChilds , rejectionStatus);
         } catch (RuntimeException e) {
             LOGGER.error("Error while bulk updating rejection records", e);
         }

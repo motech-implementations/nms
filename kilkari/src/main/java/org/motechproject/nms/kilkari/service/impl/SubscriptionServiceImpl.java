@@ -254,7 +254,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    public Boolean activeSubscriptionByMsisdn(Long msisdn, SubscriptionPackType packType, String motherBeneficiaryId, String childBeneficiaryId) {
+    public synchronized Boolean activeSubscriptionByMsisdn(Long msisdn, SubscriptionPackType packType, String motherBeneficiaryId, String childBeneficiaryId) {
         List<Subscriber> subscribers = subscriberDataService.findByNumber(msisdn);
         int subscriptionsSize = 0;
         if (packType == SubscriptionPackType.PREGNANCY) {
