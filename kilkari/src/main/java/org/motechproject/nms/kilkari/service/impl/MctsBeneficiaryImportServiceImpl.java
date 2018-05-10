@@ -82,6 +82,14 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService;
 
     private static final Integer REJECTION_PART_SIZE = 10;
+    private static final String SUBSCRIPTION_COMPLETED = "Subscription completed";
+    private static final String USER_DEACTIVATED = "User deactivated";
+    private static final String GET_CREATION = "getCreationDate";
+    private static final String SET_CREATION = "setCreationDate";
+    private static final String GET_ID = "getId";
+    private static final String SET_ID = "setId";
+    private static final String IGNORE_CREATION_DATE = "Ignoring creation date and setting as now";
+    private static final String IMPORT_STATS_LOG = "Inserted {} and updated {} rejection records into database";
 
     @Autowired
     public MctsBeneficiaryImportServiceImpl(SubscriptionService subscriptionService,
@@ -190,7 +198,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         if (deactivatedUsers != null && deactivatedUsers.size() > 0) {
             for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
                 if (deactivatedUser.getOrigin() == importOrigin) {
-                    String message = deactivatedUser.isCompletedSubscription() ? "Subscription completed" : "User deactivated";
+                    String message = deactivatedUser.isCompletedSubscription() ? SUBSCRIPTION_COMPLETED : USER_DEACTIVATED;
                     if (message.length() > 2) {
                         subscriptionErrorDataService.create(new SubscriptionError(msisdn, beneficiaryId,
                                 SubscriptionRejectionReason.BENEFICIARY_ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY, message, importOrigin));
@@ -330,7 +338,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         if (deactivatedUsers != null && deactivatedUsers.size() > 0) {
             for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
                 if (deactivatedUser.getOrigin() == importOrigin) {
-                    String message = deactivatedUser.isCompletedSubscription() ? "Subscription completed" : "User deactivated";
+                    String message = deactivatedUser.isCompletedSubscription() ? SUBSCRIPTION_COMPLETED : USER_DEACTIVATED;
                     if (message.length() > 2) {
                         subscriptionErrorDataService.create(new SubscriptionError(msisdn, beneficiaryId,
                                 SubscriptionRejectionReason.BENEFICIARY_ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY, message, importOrigin));
@@ -368,9 +376,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             subscription = subscriberService.updateRchMotherSubscriber(msisdn, mother, lmp, caseNo, deactivate, record, action);
         }
         // We rejected the update/create for the subscriber
-//        if (subscription == null) {
-//            return false;
-//        }
 
         if ((abortion != null) && abortion) {
             subscriptionService.deactivateSubscription(subscription, DeactivationReason.MISCARRIAGE_OR_ABORTION);
@@ -488,7 +493,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         if (deactivatedUsers != null && deactivatedUsers.size() > 0) {
             for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
                 if (deactivatedUser.getOrigin() == importOrigin) {
-                    String message = deactivatedUser.isCompletedSubscription() ? "Subscription completed" : "User deactivated";
+                    String message = deactivatedUser.isCompletedSubscription() ? SUBSCRIPTION_COMPLETED : USER_DEACTIVATED;
                     if (message.length() > 2) {
                         return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
                     }
@@ -613,7 +618,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         if (deactivatedUsers != null && deactivatedUsers.size() > 0) {
             for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
                 if (deactivatedUser.getOrigin() == importOrigin) {
-                    String message = deactivatedUser.isCompletedSubscription() ? "Subscription completed" : "User deactivated";
+                    String message = deactivatedUser.isCompletedSubscription() ? SUBSCRIPTION_COMPLETED : USER_DEACTIVATED;
                     if (message.length() > 2) {
                         return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
                     }
@@ -807,19 +812,19 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             if (childRejects.get(rchId) != null) {
                 ChildImportRejection dbChild = (ChildImportRejection) childRejects.get(rchId);
                 try {
-                    Method method = dbChild.getClass().getMethod("getCreationDate");  // Get creationDate from db object and set it in the update object
+                    Method method = dbChild.getClass().getMethod(GET_CREATION);  // Get creationDate from db object and set it in the update object
                     DateTime dateTime = (DateTime) method.invoke(dbChild);
 
-                    method = child.getClass().getMethod("setCreationDate", DateTime.class);
+                    method = child.getClass().getMethod(SET_CREATION, DateTime.class);
                     method.invoke(child, dateTime);
 
-                    method = dbChild.getClass().getMethod("getId");
+                    method = dbChild.getClass().getMethod(GET_ID);
                     Long id = (Long) method.invoke(dbChild);
-                    method = child.getClass().getMethod("setId", Long.class);
+                    method = child.getClass().getMethod(SET_ID, Long.class);
                     method.invoke(child, id);
                 } catch (IllegalAccessException|SecurityException|IllegalArgumentException|NoSuchMethodException|
                         InvocationTargetException e) {
-                    LOGGER.error("Ignoring creation date and setting as now");
+                    LOGGER.error(IGNORE_CREATION_DATE);
 
                 }
                 updateObjects.add(child);
@@ -832,7 +837,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         Long createdNo = (createObjects.size() == 0) ? 0 : rchChildBulkInsert(createObjects);
         Long updatedNo = (updateObjects.size() == 0) ? 0 : rchChildBulkUpdate(updateObjects);
-        LOGGER.debug("Inserted {} and updated {} rejection records into database", createdNo, updatedNo);
+        LOGGER.debug(IMPORT_STATS_LOG, createdNo, updatedNo);
     }
 
     private Long rchChildBulkInsert(List<ChildImportRejection> createObjects) {
@@ -881,19 +886,19 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             if (childRejects.get(mctsId) != null) {
                 ChildImportRejection dbChild = (ChildImportRejection) childRejects.get(mctsId);
                 try {
-                    Method method = dbChild.getClass().getMethod("getCreationDate");  // Get creationDate from db object and set it in the update object
+                    Method method = dbChild.getClass().getMethod(GET_CREATION);  // Get creationDate from db object and set it in the update object
                     DateTime dateTime = (DateTime) method.invoke(dbChild);
 
-                    method = child.getClass().getMethod("setCreationDate", DateTime.class);
+                    method = child.getClass().getMethod(SET_CREATION, DateTime.class);
                     method.invoke(child, dateTime);
 
-                    method = dbChild.getClass().getMethod("getId");
+                    method = dbChild.getClass().getMethod(GET_ID);
                     Long id = (Long) method.invoke(dbChild);
-                    method = child.getClass().getMethod("setId", Long.class);
+                    method = child.getClass().getMethod(SET_ID, Long.class);
                     method.invoke(child, id);
                 } catch (IllegalAccessException|SecurityException|IllegalArgumentException|NoSuchMethodException|
                         InvocationTargetException e) {
-                    LOGGER.error("Ignoring creation date and setting as now");
+                    LOGGER.error(IGNORE_CREATION_DATE);
 
                 }
                 updateObjects.add(child);
@@ -906,7 +911,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         Long createdNo = (createObjects.size() == 0) ? 0 : mctsChildBulkInsert(createObjects);
         Long updatedNo = (updateObjects.size() == 0) ? 0 : mctsChildBulkUpdate(updateObjects);
-        LOGGER.debug("Inserted {} and updated {} rejection records into database", createdNo, updatedNo);
+        LOGGER.debug(IMPORT_STATS_LOG, createdNo, updatedNo);
     }
 
 
@@ -957,19 +962,19 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             if (motherRejects.get(rchId) != null) {
                 MotherImportRejection dbMother = (MotherImportRejection) motherRejects.get(rchId);
                 try {
-                    Method method = dbMother.getClass().getMethod("getCreationDate");  // Get creationDate from db object and set it in the update object
+                    Method method = dbMother.getClass().getMethod(GET_CREATION);  // Get creationDate from db object and set it in the update object
                     DateTime dateTime = (DateTime) method.invoke(dbMother);
 
-                    method = mother.getClass().getMethod("setCreationDate", DateTime.class);
+                    method = mother.getClass().getMethod(SET_CREATION, DateTime.class);
                     method.invoke(mother, dateTime);
 
-                    method = dbMother.getClass().getMethod("getId");
+                    method = dbMother.getClass().getMethod(GET_ID);
                     Long id = (Long) method.invoke(dbMother);
-                    method = mother.getClass().getMethod("setId", Long.class);
+                    method = mother.getClass().getMethod(SET_ID, Long.class);
                     method.invoke(mother, id);
                 } catch (IllegalAccessException|SecurityException|IllegalArgumentException|NoSuchMethodException|
                         InvocationTargetException e) {
-                    LOGGER.error("Ignoring creation date and setting as now");
+                    LOGGER.error(IGNORE_CREATION_DATE);
 
                 }
                 updateObjects.add(mother);
@@ -982,7 +987,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         Long createdNo = (createObjects.size() == 0) ? 0 : rchMotherBulkInsert(createObjects);
         Long updatedNo = (updateObjects.size() == 0) ? 0 : rchMotherBulkUpdate(updateObjects);
-        LOGGER.debug("Inserted {} and updated {} rejection records into database", createdNo, updatedNo);
+        LOGGER.debug(IMPORT_STATS_LOG, createdNo, updatedNo);
     }
 
     private Long rchMotherBulkInsert(List<MotherImportRejection> createObjects) {
@@ -1031,19 +1036,19 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             if (motherRejects.get(mctsId) != null) {
                 MotherImportRejection dbMother = (MotherImportRejection) motherRejects.get(mctsId);
                 try {
-                    Method method = dbMother.getClass().getMethod("getCreationDate");  // Get creationDate from db object and set it in the update object
+                    Method method = dbMother.getClass().getMethod(GET_CREATION);  // Get creationDate from db object and set it in the update object
                     DateTime dateTime = (DateTime) method.invoke(dbMother);
 
-                    method = mother.getClass().getMethod("setCreationDate", DateTime.class);
+                    method = mother.getClass().getMethod(SET_CREATION, DateTime.class);
                     method.invoke(mother, dateTime);
 
-                    method = dbMother.getClass().getMethod("getId");
+                    method = dbMother.getClass().getMethod(GET_ID);
                     Long id = (Long) method.invoke(dbMother);
-                    method = mother.getClass().getMethod("setId", Long.class);
+                    method = mother.getClass().getMethod(SET_ID, Long.class);
                     method.invoke(mother, id);
                 } catch (IllegalAccessException|SecurityException|IllegalArgumentException|NoSuchMethodException|
                         InvocationTargetException e) {
-                    LOGGER.error("Ignoring creation date and setting as now");
+                    LOGGER.error(IGNORE_CREATION_DATE);
 
                 }
                 updateObjects.add(mother);
@@ -1056,7 +1061,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         Long createdNo = (createObjects.size() == 0) ? 0 : mctsMotherBulkInsert(createObjects);
         Long updatedNo = (updateObjects.size() == 0) ? 0 : mctsMotherBulkUpdate(updateObjects);
-        LOGGER.debug("Inserted {} and updated {} rejection records into database", createdNo, updatedNo);
+        LOGGER.debug(IMPORT_STATS_LOG, createdNo, updatedNo);
     }
 
     private Long mctsMotherBulkInsert(List<MotherImportRejection> createObjects) {

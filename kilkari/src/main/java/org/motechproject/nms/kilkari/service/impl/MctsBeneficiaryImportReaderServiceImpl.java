@@ -15,7 +15,6 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
-import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.motechproject.nms.region.domain.LocationFinder;
@@ -32,22 +31,30 @@ import javax.validation.ConstraintViolationException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 @Service("mctsBeneficiaryImportReaderService")
 public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryImportReaderService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportReaderServiceImpl.class);
 
-    private SubscriptionService subscriptionService;
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
     private LocationService locationService;
 
     @Autowired
-    public MctsBeneficiaryImportReaderServiceImpl(SubscriptionService subscriptionService, MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor, MctsBeneficiaryImportService mctsBeneficiaryImportService, LocationService locationService) {
-        this.subscriptionService = subscriptionService;
+    public MctsBeneficiaryImportReaderServiceImpl(MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor, MctsBeneficiaryImportService mctsBeneficiaryImportService, LocationService locationService) {
         this.mctsBeneficiaryValueProcessor = mctsBeneficiaryValueProcessor;
         this.mctsBeneficiaryImportService = mctsBeneficiaryImportService;
         this.locationService = locationService;
@@ -64,21 +71,15 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
 
         BufferedReader bufferedReader = new BufferedReader(reader);
         Map<String, CellProcessor> cellProcessorMapper;
-        String id;
         String contactNumber;
-        String childInstance;
         final Boolean mctsImport = importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT);
 
         if (mctsImport) {
             cellProcessorMapper = this.getChildProcessorMapping();
-            id = KilkariConstants.BENEFICIARY_ID;
             contactNumber = KilkariConstants.MSISDN;
-            childInstance = KilkariConstants.MCTS_CHILD;
         } else {
             cellProcessorMapper = this.getRchChildProcessorMapping();
-            id = KilkariConstants.RCH_ID;
             contactNumber = KilkariConstants.MOBILE_NO;
-            childInstance = KilkariConstants.RCH_CHILD;
         }
 
         CsvMapImporter csvImporter = new CsvImporterBuilder()
@@ -133,14 +134,14 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
                     rejectionStatus.putAll(threadProcessorObject.getRejectionStatus());
                     recordsProcessed += threadProcessorObject.getRecordsProcessed();
                 } catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
+                    LOGGER.error("Error while running thread",e);
                 }
             }
             executor.shutdown();
             try {
                 executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                LOGGER.error("Error while Terminating thread",e);
             }
             LOGGER.debug("Thread Processing End");
             try {
@@ -172,9 +173,8 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
      * - one empty line
      * - CSV data (tab-separated)
      */
-    @Override
-    public int importMotherData(Reader reader, SubscriptionOrigin importOrigin) throws IOException {
-//        pregnancyPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.PREGNANCY);
+    @Override //NO CHECKSTYLE Cyclomatic Complexity
+    public int importMotherData(Reader reader, SubscriptionOrigin importOrigin) throws IOException { //NOPMD NcssMethodCount
         int count = 0;
         /**
          * Count of all the records rejected for unknown exceptions. So, doesn't include the ones saved in nms_subscription_errors.
@@ -184,17 +184,14 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
 
         BufferedReader bufferedReader = new BufferedReader(reader);
         Map<String, CellProcessor> cellProcessorMapper;
-        String id;
         String contactNumber;
         final Boolean mctsImport = importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT);
 
         if (mctsImport) {
             cellProcessorMapper = mctsBeneficiaryImportService.getMotherProcessorMapping();
-            id = KilkariConstants.BENEFICIARY_ID;
             contactNumber = KilkariConstants.MSISDN;
         } else {
             cellProcessorMapper = mctsBeneficiaryImportService.getRchMotherProcessorMapping();
-            id = KilkariConstants.RCH_ID;
             contactNumber = KilkariConstants.MOBILE_NO;
         }
 
@@ -249,14 +246,14 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
                     rejectionStatus.putAll(threadProcessorObject.getRejectionStatus());
                     recordsProcessed += threadProcessorObject.getRecordsProcessed();
                 } catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
+                    LOGGER.error("Error while running thread",e);
                 }
             }
             executor.shutdown();
             try {
                 executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                LOGGER.error("Error while Terminating thread",e);
             }
             LOGGER.debug("Thread Processing End");
             try {
