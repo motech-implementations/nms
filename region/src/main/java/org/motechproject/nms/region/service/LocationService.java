@@ -1,6 +1,5 @@
 package org.motechproject.nms.region.service;
 
-import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
