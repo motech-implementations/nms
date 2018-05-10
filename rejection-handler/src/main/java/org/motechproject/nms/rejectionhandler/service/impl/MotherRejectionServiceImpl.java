@@ -446,20 +446,8 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
         return stringBuilder.toString();
     }
 
-    private StringBuilder mctsQueryHelper(StringBuilder stringBuilder, MotherImportRejection mother) { //NOPMD NcssMethodCount
-        stringBuilder.append(mother.getStateId() + ", ");
-        stringBuilder.append(mother.getDistrictId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getDistrictName() + QUOTATION_COMMA);
-        stringBuilder.append(mother.getTalukaId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getTalukaName() + QUOTATION_COMMA);
-        stringBuilder.append(mother.getHealthBlockId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getHealthBlockName() + QUOTATION_COMMA);
-        stringBuilder.append(mother.getPhcId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getPhcName() + QUOTATION_COMMA);
-        stringBuilder.append(mother.getSubcentreId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getSubcentreName() + QUOTATION_COMMA);
-        stringBuilder.append(mother.getVillageId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getVillageName() + QUOTATION_COMMA);
+    private StringBuilder mctsQueryHelper(StringBuilder stringBuilder1, MotherImportRejection mother) { //NOPMD NcssMethodCount
+        StringBuilder stringBuilder = addLocations(stringBuilder1, mother);
         stringBuilder.append(mother.getYr() + ", ");
         stringBuilder.append(QUOTATION + mother.getgPVillage() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getAddress() + QUOTATION_COMMA);
@@ -546,20 +534,8 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
     }
 
 
-    private StringBuilder rchQueryHelper(StringBuilder stringBuilder, MotherImportRejection mother) {
-        stringBuilder.append(mother.getStateId() + ", ");
-        stringBuilder.append(mother.getDistrictId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getDistrictName() + QUOTATION_COMMA);
-        stringBuilder.append(QUOTATION + mother.getTalukaId() + QUOTATION_COMMA);
-        stringBuilder.append(QUOTATION + mother.getTalukaName() + QUOTATION_COMMA);
-        stringBuilder.append(mother.getHealthBlockId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getHealthBlockName() + QUOTATION_COMMA);
-        stringBuilder.append(mother.getPhcId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getPhcName() + QUOTATION_COMMA);
-        stringBuilder.append(mother.getSubcentreId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getSubcentreName() + QUOTATION_COMMA);
-        stringBuilder.append(mother.getVillageId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getVillageName() + QUOTATION_COMMA);
+    private StringBuilder rchQueryHelper(StringBuilder stringBuilder1, MotherImportRejection mother) {
+        StringBuilder stringBuilder = addLocations(stringBuilder1, mother);
         stringBuilder.append(QUOTATION + mother.getIdNo() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getRegistrationNo() + QUOTATION_COMMA);
         stringBuilder.append(mother.getCaseNo() + ", ");
@@ -576,6 +552,23 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
         stringBuilder.append(QUOTATION + mother.getRejectionReason() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getAction() + QUOTATION_COMMA);
         stringBuilder.append(MOTECH_STRING);
+        return stringBuilder;
+    }
+
+    private StringBuilder addLocations(StringBuilder stringBuilder, MotherImportRejection mother) {
+        stringBuilder.append(mother.getStateId() + ", ");
+        stringBuilder.append(mother.getDistrictId() + ", ");
+        stringBuilder.append(QUOTATION + mother.getDistrictName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getTalukaId() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getTalukaName() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getHealthBlockId() + ", ");
+        stringBuilder.append(QUOTATION + mother.getHealthBlockName() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getPhcId() + ", ");
+        stringBuilder.append(QUOTATION + mother.getPhcName() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getSubcentreId() + ", ");
+        stringBuilder.append(QUOTATION + mother.getSubcentreName() + QUOTATION_COMMA);
+        stringBuilder.append(mother.getVillageId() + ", ");
+        stringBuilder.append(QUOTATION + mother.getVillageName() + QUOTATION_COMMA);
         return stringBuilder;
     }
 

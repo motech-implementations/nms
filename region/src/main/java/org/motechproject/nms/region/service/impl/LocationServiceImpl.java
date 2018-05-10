@@ -56,7 +56,6 @@ public class LocationServiceImpl implements LocationService {
     private static final String INVALID = "<%s - %s : Invalid location>";
     private static final String STATE_ID = "StateID";
     private static final String DISTRICT_ID = "District_ID";
-    private static final String DISTRICT_NAME = "District_Name";
     private static final String TALUKA_ID = "Taluka_ID";
     private static final String TALUKA_NAME = "Taluka_Name";
     private static final String HEALTHBLOCK_ID = "HealthBlock_ID";
@@ -68,6 +67,12 @@ public class LocationServiceImpl implements LocationService {
     private static final String VILLAGE_ID = "Village_ID";
     private static final String VILLAGE_NAME = "Village_Name";
     private static final String NON_CENSUS_VILLAGE = "SVID";
+    private static final String OR_SQL_STRING = " OR ";
+    private static final String CODE_SQL_STRING = " (code = ";
+    private static final String OPEN_PARANTHESES_STRING = " ( ";
+    private static final String COMMA_QUOTATION_STRING = ", '";
+    private static final String QUOTATION_COMMA_STRING = "', ";
+    private static final String COMMA_STRING = " , ";
 
     private static final String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
 
@@ -448,17 +453,17 @@ public class LocationServiceImpl implements LocationService {
         return null;
     }
 
-    @Override
-    public LocationFinder updateLocations(List<Map<String, Object>> recordList) throws IOException {
+    @Override //NO CHECKSTYLE Cyclomatic Complexity
+    public LocationFinder updateLocations(List<Map<String, Object>> recordList) throws IOException { //NOPMD NcssMethodCount
         int count = 0;
 
-        HashMap<String, State> stateHashMap = new HashMap<>();
-        HashMap<String, District> districtHashMap = new HashMap<>();
-        HashMap<String, Taluka> talukaHashMap = new HashMap<>();
-        HashMap<String, Village> villageHashMap = new HashMap<>();
-        HashMap<String, HealthBlock> healthBlockHashMap = new HashMap<>();
-        HashMap<String, HealthFacility> healthFacilityHashMap = new HashMap<>();
-        HashMap<String, HealthSubFacility> healthSubFacilityHashMap = new HashMap<>();
+        Map<String, State> stateHashMap = new HashMap<>();
+        Map<String, District> districtHashMap = new HashMap<>();
+        Map<String, Taluka> talukaHashMap = new HashMap<>();
+        Map<String, Village> villageHashMap = new HashMap<>();
+        Map<String, HealthBlock> healthBlockHashMap = new HashMap<>();
+        Map<String, HealthFacility> healthFacilityHashMap = new HashMap<>();
+        Map<String, HealthSubFacility> healthSubFacilityHashMap = new HashMap<>();
         LocationFinder locationFinder = new LocationFinder();
         try {
 
@@ -570,7 +575,7 @@ public class LocationServiceImpl implements LocationService {
     }
 
 
-    private void fillStates(HashMap<String, State> stateHashMap) {
+    private void fillStates(Map<String, State> stateHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> stateKeys = stateHashMap.keySet();
 
@@ -585,7 +590,7 @@ public class LocationServiceImpl implements LocationService {
                     count--;
                     query += " code = " + stateString;
                     if (count > 0) {
-                        query += " OR ";
+                        query += OR_SQL_STRING;
                     }
                 }
 
@@ -601,11 +606,6 @@ public class LocationServiceImpl implements LocationService {
                 if (fqr.isEmpty()) {
                     return null;
                 }
-//                Long count = 0L;
-//                while (fqr.size() > count) {
-//                    states.add((State) fqr.get(count.intValue()));
-//                    count++;
-//                }
                 states = (List<State>) fqr;
                 return states;
             }
@@ -618,10 +618,10 @@ public class LocationServiceImpl implements LocationService {
         }
     }
 
-    private void fillDistricts(HashMap<String, District> districtHashMap, final HashMap<String, State> stateHashMap) {
+    private void fillDistricts(Map<String, District> districtHashMap, final Map<String, State> stateHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> districtKeys = districtHashMap.keySet();
-        HashMap<Long, String> stateIdMap = new HashMap<>();
+        Map<Long, String> stateIdMap = new HashMap<>();
         for (String stateKey : stateHashMap.keySet()) {
             stateIdMap.put(stateHashMap.get(stateKey).getId(), stateKey);
         }
@@ -638,9 +638,9 @@ public class LocationServiceImpl implements LocationService {
                     count--;
                     String[] ids = districtString.split("_");
                     Long stateId = stateHashMap.get(ids[0]).getId();
-                    query += " (code = " + ids[1] + " and state_id_oid = " + stateId + ")";
+                    query += CODE_SQL_STRING + ids[1] + " and state_id_oid = " + stateId + ")";
                     if (count > 0) {
-                        query += " OR ";
+                        query += OR_SQL_STRING;
                     }
                 }
 
@@ -656,11 +656,6 @@ public class LocationServiceImpl implements LocationService {
                 if (fqr.isEmpty()) {
                     return null;
                 }
-//                Long count = 0L;
-//                while (fqr.size() > count) {
-//                    districts.add((District) fqr.get(count.intValue()));
-//                    count++;
-//                }
                 districts = (List<District>) fqr;
                 return districts;
             }
@@ -678,7 +673,7 @@ public class LocationServiceImpl implements LocationService {
 
 
     @Transactional
-    private void createUpdateTalukas(final HashMap<String, Taluka> talukaHashMap, final HashMap<String, District> districtHashMap) {
+    private void createUpdateTalukas(final Map<String, Taluka> talukaHashMap, final Map<String, District> districtHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> talukaKeys = talukaHashMap.keySet();
 
@@ -693,12 +688,12 @@ public class LocationServiceImpl implements LocationService {
                     count--;
                     String[] ids = talukaString.split("_");
                     Long districtId = districtHashMap.get(ids[0] + "_" + ids[1]).getId();
-                    query += " ( " + ids[2] + ", " + districtId + ", '" + talukaHashMap.get(talukaString).getName() +
-                            "', ";
+                    query += OPEN_PARANTHESES_STRING + ids[2] + ", " + districtId + COMMA_QUOTATION_STRING + talukaHashMap.get(talukaString).getName() +
+                            QUOTATION_COMMA_STRING;
                     query += addDateColumns();
                     query += " )";
                     if (count > 0) {
-                        query += " , ";
+                        query += COMMA_STRING;
                     }
                 }
 
@@ -719,10 +714,10 @@ public class LocationServiceImpl implements LocationService {
     }
 
 
-    private void fillTalukas(HashMap<String, Taluka> talukaHashMap, final HashMap<String, District> districtHashMap) {
+    private void fillTalukas(Map<String, Taluka> talukaHashMap, final Map<String, District> districtHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> talukaKeys = talukaHashMap.keySet();
-        HashMap<Long, String> districtIdMap = new HashMap<>();
+        Map<Long, String> districtIdMap = new HashMap<>();
         for (String districtKey : districtHashMap.keySet()) {
             districtIdMap.put(districtHashMap.get(districtKey).getId(), districtKey);
         }
@@ -738,9 +733,9 @@ public class LocationServiceImpl implements LocationService {
                     count--;
                     String[] ids = talukaString.split("_");
                     Long districtId = districtHashMap.get(ids[0] + "_" + ids[1]).getId();
-                    query += " (code = " + ids[2] + " and district_id_oid = " + districtId + ")";
+                    query += CODE_SQL_STRING + ids[2] + " and district_id_oid = " + districtId + ")";
                     if (count > 0) {
-                        query += " OR ";
+                        query += OR_SQL_STRING;
                     }
                 }
 
@@ -756,11 +751,6 @@ public class LocationServiceImpl implements LocationService {
                 if (fqr.isEmpty()) {
                     return null;
                 }
-//                Long count = 0L;
-//                while (fqr.size() > count) {
-//                    talukas.add((Taluka) fqr.get(count.intValue()));
-//                    count++;
-//                }
                 talukas = (List<Taluka>) fqr;
                 return talukas;
             }
@@ -777,7 +767,7 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Transactional
-    private void createUpdateVillages(final HashMap<String, Village> villageHashMap, final HashMap<String, Taluka> talukaHashMap) {
+    private void createUpdateVillages(final Map<String, Village> villageHashMap, final Map<String, Taluka> talukaHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> villageKeys = villageHashMap.keySet();
 
@@ -792,12 +782,12 @@ public class LocationServiceImpl implements LocationService {
                     count--;
                     String[] ids = villageString.split("_");
                     Long talukaId = talukaHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]).getId();
-                    query += " ( " + ids[3] + ", " + ids[4] + ", " + talukaId + ", '" +
-                            villageHashMap.get(villageString).getName() + "', ";
+                    query += OPEN_PARANTHESES_STRING + ids[3] + ", " + ids[4] + ", " + talukaId + COMMA_QUOTATION_STRING +
+                            villageHashMap.get(villageString).getName() + QUOTATION_COMMA_STRING;
                     query += addDateColumns();
                     query += " )";
                     if (count > 0) {
-                        query += " , ";
+                        query += COMMA_STRING;
                     }
                 }
 
@@ -817,10 +807,10 @@ public class LocationServiceImpl implements LocationService {
         LOGGER.debug("VILLAGE INSERT Query time: {}", queryTimer.time());
     }
 
-    private void fillVillages(HashMap<String, Village> villageHashMap, final HashMap<String, Taluka> talukaHashMap) {
+    private void fillVillages(Map<String, Village> villageHashMap, final Map<String, Taluka> talukaHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> villageKeys = villageHashMap.keySet();
-        HashMap<Long, String> talukaIdMap = new HashMap<>();
+        Map<Long, String> talukaIdMap = new HashMap<>();
         for (String districtKey : talukaHashMap.keySet()) {
             talukaIdMap.put(talukaHashMap.get(districtKey).getId(), districtKey);
         }
@@ -838,7 +828,7 @@ public class LocationServiceImpl implements LocationService {
                     Long talukaId = talukaHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]).getId();
                     query += " (vcode = " + ids[3] + " and svid = " + ids[4] + " and taluka_id_oid = " + talukaId + ")";
                     if (count > 0) {
-                        query += " OR ";
+                        query += OR_SQL_STRING;
                     }
                 }
 
@@ -854,11 +844,6 @@ public class LocationServiceImpl implements LocationService {
                 if (fqr.isEmpty()) {
                     return null;
                 }
-//                Long count = 0L;
-//                while (fqr.size() > count) {
-//                    villages.add((Village) fqr.get(count.intValue()));
-//                    count++;
-//                }
                 villages = (List<Village>) fqr;
                 return villages;
             }
@@ -875,7 +860,7 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Transactional
-    private void createUpdateHealthBlocks(final HashMap<String, HealthBlock> healthBlockHashMap, final HashMap<String, Taluka> talukaHashMap) {
+    private void createUpdateHealthBlocks(final Map<String, HealthBlock> healthBlockHashMap, final Map<String, Taluka> talukaHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> healthBlockKeys = healthBlockHashMap.keySet();
 
@@ -890,12 +875,12 @@ public class LocationServiceImpl implements LocationService {
                     count--;
                     String[] ids = healthBlockString.split("_");
                     Long talukaId = talukaHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]).getId();
-                    query += " ( " + ids[3] + ", " + talukaId + ", '" +
-                            healthBlockHashMap.get(healthBlockString).getName() + "', ";
+                    query += OPEN_PARANTHESES_STRING + ids[3] + ", " + talukaId + COMMA_QUOTATION_STRING +
+                            healthBlockHashMap.get(healthBlockString).getName() + QUOTATION_COMMA_STRING;
                     query += addDateColumns();
                     query += " )";
                     if (count > 0) {
-                        query += " , ";
+                        query += COMMA_STRING;
                     }
                 }
 
@@ -915,10 +900,10 @@ public class LocationServiceImpl implements LocationService {
         LOGGER.debug("HEALTHBLOCK INSERT Query time: {}", queryTimer.time());
     }
 
-    private void fillHealthBlocks(HashMap<String, HealthBlock> healthBlockHashMap, final HashMap<String, Taluka> talukaHashMap) {
+    private void fillHealthBlocks(Map<String, HealthBlock> healthBlockHashMap, final Map<String, Taluka> talukaHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> healthBlockKeys = healthBlockHashMap.keySet();
-        HashMap<Long, String> talukaIdMap = new HashMap<>();
+        Map<Long, String> talukaIdMap = new HashMap<>();
         for (String talukaKey : talukaHashMap.keySet()) {
             talukaIdMap.put(talukaHashMap.get(talukaKey).getId(), talukaKey);
         }
@@ -934,9 +919,9 @@ public class LocationServiceImpl implements LocationService {
                     count--;
                     String[] ids = villageString.split("_");
                     Long talukaId = talukaHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]).getId();
-                    query += " (code = " + ids[3] +  " and taluka_id_oid = " + talukaId + ")";
+                    query += CODE_SQL_STRING + ids[3] +  " and taluka_id_oid = " + talukaId + ")";
                     if (count > 0) {
-                        query += " OR ";
+                        query += OR_SQL_STRING;
                     }
                 }
 
@@ -952,11 +937,6 @@ public class LocationServiceImpl implements LocationService {
                 if (fqr.isEmpty()) {
                     return null;
                 }
-//                Long count = 0L;
-//                while (fqr.size() > count) {
-//                    healthBlocks.add((HealthBlock) fqr.get(count.intValue()));
-//                    count++;
-//                }
                 healthBlocks = (List<HealthBlock>) fqr;
                 return healthBlocks;
             }
@@ -973,7 +953,7 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Transactional
-    private void createUpdateHealthFacilities(final HashMap<String, HealthFacility> healthFacilityHashMap, final HashMap<String, HealthBlock> healthBlockHashMap) {
+    private void createUpdateHealthFacilities(final Map<String, HealthFacility> healthFacilityHashMap, final Map<String, HealthBlock> healthBlockHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> healthFacilityKeys = healthFacilityHashMap.keySet();
 
@@ -988,12 +968,12 @@ public class LocationServiceImpl implements LocationService {
                     count--;
                     String[] ids = healthFacilityString.split("_");
                     Long healthBlockId = healthBlockHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2] + "_" + ids[3]).getId();
-                    query += " ( " + ids[4] + ", " + healthBlockId + ", '" +
-                            healthFacilityHashMap.get(healthFacilityString).getName() + "', ";
+                    query += OPEN_PARANTHESES_STRING + ids[4] + ", " + healthBlockId + COMMA_QUOTATION_STRING +
+                            healthFacilityHashMap.get(healthFacilityString).getName() + QUOTATION_COMMA_STRING;
                     query += addDateColumns();
                     query += " )";
                     if (count > 0) {
-                        query += " , ";
+                        query += COMMA_STRING;
                     }
                 }
 
@@ -1013,10 +993,10 @@ public class LocationServiceImpl implements LocationService {
         LOGGER.debug("HEALTHFACILITY INSERT Query time: {}", queryTimer.time());
     }
 
-    private void fillHealthFacilities(HashMap<String, HealthFacility> healthFacilityHashMap, final HashMap<String, HealthBlock> healthBlockHashMap) {
+    private void fillHealthFacilities(Map<String, HealthFacility> healthFacilityHashMap, final Map<String, HealthBlock> healthBlockHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> healthFacilityKeys = healthFacilityHashMap.keySet();
-        HashMap<Long, String> healthBlockIdMap = new HashMap<>();
+        Map<Long, String> healthBlockIdMap = new HashMap<>();
         for (String healthBlockKey : healthBlockHashMap.keySet()) {
             healthBlockIdMap.put(healthBlockHashMap.get(healthBlockKey).getId(), healthBlockKey);
         }
@@ -1032,9 +1012,9 @@ public class LocationServiceImpl implements LocationService {
                     count--;
                     String[] ids = healthFacilityString.split("_");
                     Long healthBlockId = healthBlockHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2] + "_" + ids[3]).getId();
-                    query += " (code = " + ids[4] +  " and healthBlock_id_oid = " + healthBlockId + ")";
+                    query += CODE_SQL_STRING + ids[4] +  " and healthBlock_id_oid = " + healthBlockId + ")";
                     if (count > 0) {
-                        query += " OR ";
+                        query += OR_SQL_STRING;
                     }
                 }
 
@@ -1050,11 +1030,6 @@ public class LocationServiceImpl implements LocationService {
                 if (fqr.isEmpty()) {
                     return null;
                 }
-//                Long count = 0L;
-//                while (fqr.size() > count) {
-//                    healthFacilities.add((HealthFacility) fqr.get(count.intValue()));
-//                    count++;
-//                }
                 healthFacilities = (List<HealthFacility>) fqr;
                 return healthFacilities;
             }
@@ -1071,7 +1046,7 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Transactional
-    private void createUpdateHealthSubFacilities(final HashMap<String, HealthSubFacility> healthSubFacilityHashMap, final HashMap<String, HealthFacility> healthFacilityHashMap) {
+    private void createUpdateHealthSubFacilities(final Map<String, HealthSubFacility> healthSubFacilityHashMap, final Map<String, HealthFacility> healthFacilityHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> healthSubFacilityKeys = healthSubFacilityHashMap.keySet();
 
@@ -1086,12 +1061,12 @@ public class LocationServiceImpl implements LocationService {
                     count--;
                     String[] ids = healthSubFacilityString.split("_");
                     Long healthFacilityId = healthFacilityHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2] + "_" + ids[3] + "_" + ids[4]).getId();
-                    query += " ( " + ids[5] + ", " + healthFacilityId + ", '" +
-                            healthSubFacilityHashMap.get(healthSubFacilityString).getName() + "', ";
+                    query += OPEN_PARANTHESES_STRING + ids[5] + ", " + healthFacilityId + COMMA_QUOTATION_STRING +
+                            healthSubFacilityHashMap.get(healthSubFacilityString).getName() + QUOTATION_COMMA_STRING;
                     query += addDateColumns();
                     query += " )";
                     if (count > 0) {
-                        query += " , ";
+                        query += COMMA_STRING;
                     }
                 }
 
@@ -1111,10 +1086,10 @@ public class LocationServiceImpl implements LocationService {
         LOGGER.debug("HEALTHSUBFACILITY INSERT Query time: {}", queryTimer.time());
     }
 
-    private void fillHealthSubFacilities(HashMap<String, HealthSubFacility> healthSubFacilityHashMap, final HashMap<String, HealthFacility> healthFacilityHashMap) {
+    private void fillHealthSubFacilities(Map<String, HealthSubFacility> healthSubFacilityHashMap, final Map<String, HealthFacility> healthFacilityHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> healthSubFacilityKeys = healthSubFacilityHashMap.keySet();
-        HashMap<Long, String> healthFacilityIdMap = new HashMap<>();
+        Map<Long, String> healthFacilityIdMap = new HashMap<>();
         for (String healthFacilityKey : healthFacilityHashMap.keySet()) {
             healthFacilityIdMap.put(healthFacilityHashMap.get(healthFacilityKey).getId(), healthFacilityKey);
         }
@@ -1130,9 +1105,9 @@ public class LocationServiceImpl implements LocationService {
                     count--;
                     String[] ids = healthFacilityString.split("_");
                     Long healthFacilityId = healthFacilityHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2] + "_" + ids[3] + "_" + ids[4]).getId();
-                    query += " (code = " + ids[5] +  " and healthFacility_id_oid = " + healthFacilityId + ")";
+                    query += CODE_SQL_STRING + ids[5] +  " and healthFacility_id_oid = " + healthFacilityId + ")";
                     if (count > 0) {
-                        query += " OR ";
+                        query += OR_SQL_STRING;
                     }
                 }
 
@@ -1148,11 +1123,6 @@ public class LocationServiceImpl implements LocationService {
                 if (fqr.isEmpty()) {
                     return null;
                 }
-//                Long count = 0L;
-//                while (fqr.size() > count) {
-//                    healthSubFacilities.add((HealthSubFacility) fqr.get(count.intValue()));
-//                    count++;
-//                }
                 healthSubFacilities = (List<HealthSubFacility>) fqr;
                 return healthSubFacilities;
             }
