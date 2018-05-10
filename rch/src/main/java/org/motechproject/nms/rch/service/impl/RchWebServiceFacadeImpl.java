@@ -696,7 +696,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
 
         try {
-            mctsBeneficiaryImportService.createOrUpdateRchRejections(rejectedChilds , rejectionStatus);
+            mctsBeneficiaryImportService.createOrUpdateRchChildRejections(rejectedChilds , rejectionStatus);
         } catch (RuntimeException e) {
             LOGGER.error("Error while bulk updating rejection records", e);
 
@@ -744,7 +744,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
 
         try {
-            mctsBeneficiaryImportService.createOrUpdateRchRejections(rejectedChilds , rejectionStatus);
+            mctsBeneficiaryImportService.createOrUpdateRchChildRejections(rejectedChilds , rejectionStatus);
         } catch (RuntimeException e) {
             LOGGER.error("Error while bulk updating rejection records", e);
 

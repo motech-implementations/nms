@@ -7,7 +7,6 @@ import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
-import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.District;
@@ -38,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
+import javax.jdo.annotations.Transactional;
 import javax.validation.ConstraintViolationException;
 import java.io.IOException;
 import java.util.HashMap;
@@ -677,6 +677,7 @@ public class LocationServiceImpl implements LocationService {
     }
 
 
+    @Transactional
     private void createUpdateTalukas(final HashMap<String, Taluka> talukaHashMap, final HashMap<String, District> districtHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> talukaKeys = talukaHashMap.keySet();
@@ -775,6 +776,7 @@ public class LocationServiceImpl implements LocationService {
         }
     }
 
+    @Transactional
     private void createUpdateVillages(final HashMap<String, Village> villageHashMap, final HashMap<String, Taluka> talukaHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> villageKeys = villageHashMap.keySet();
@@ -872,6 +874,7 @@ public class LocationServiceImpl implements LocationService {
         }
     }
 
+    @Transactional
     private void createUpdateHealthBlocks(final HashMap<String, HealthBlock> healthBlockHashMap, final HashMap<String, Taluka> talukaHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> healthBlockKeys = healthBlockHashMap.keySet();
@@ -969,6 +972,7 @@ public class LocationServiceImpl implements LocationService {
         }
     }
 
+    @Transactional
     private void createUpdateHealthFacilities(final HashMap<String, HealthFacility> healthFacilityHashMap, final HashMap<String, HealthBlock> healthBlockHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> healthFacilityKeys = healthFacilityHashMap.keySet();
@@ -1066,6 +1070,7 @@ public class LocationServiceImpl implements LocationService {
         }
     }
 
+    @Transactional
     private void createUpdateHealthSubFacilities(final HashMap<String, HealthSubFacility> healthSubFacilityHashMap, final HashMap<String, HealthFacility> healthFacilityHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> healthSubFacilityKeys = healthSubFacilityHashMap.keySet();

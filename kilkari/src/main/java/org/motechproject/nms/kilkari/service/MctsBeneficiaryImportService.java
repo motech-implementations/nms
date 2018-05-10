@@ -5,9 +5,11 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
+import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
+import org.springframework.transaction.annotation.Transactional;
+import org.supercsv.cellprocessor.ift.CellProcessor;
 
-import java.io.IOException;
-import java.io.Reader;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -15,18 +17,29 @@ import java.util.Map;
  */
 public interface MctsBeneficiaryImportService {
 
-    int importMotherData(Reader reader, SubscriptionOrigin origin) throws IOException;
-
     boolean importMotherRecord(Map<String, Object> record, SubscriptionOrigin origin);
+
+    MotherImportRejection importMotherRecordCSV(Map<String, Object> record, SubscriptionOrigin origin, LocationFinder locationFinder);
 
     ChildImportRejection importChildRecord(Map<String, Object> record, SubscriptionOrigin origin);
 
     ChildImportRejection importChildRecordCSV(Map<String, Object> record, SubscriptionOrigin origin, LocationFinder locationFinder);
 
+    List<List<Map<String, Object>>> splitRecords(List<Map<String, Object>> recordList, String contactNumber);
+
     boolean validateReferenceDate(DateTime referenceDate, SubscriptionPackType packType, Long msisdn, String beneficiaryId, SubscriptionOrigin importOrigin);
 
-    void createOrUpdateRchRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus);
+    void createOrUpdateRchChildRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus);
 
-    void createOrUpdateMctsRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus);
+    void createOrUpdateMctsChildRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus);
 
-    }
+    @Transactional
+    void createOrUpdateRchMotherRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus);
+
+    @Transactional
+    void createOrUpdateMctsMotherRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus);
+
+    Map<String, CellProcessor> getMotherProcessorMapping();
+
+    Map<String, CellProcessor> getRchMotherProcessorMapping();
+}

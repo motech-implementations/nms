@@ -66,6 +66,8 @@ public final class KilkariConstants {
     public static final String EXECUTION_DATE = "Exec_date";
     public static final String MCTS_CHILD = "Mcts_Child";
     public static final String RCH_CHILD = "Rch_Child";
+    public static final String MCTS_MOTHER = "Mcts_Mother";
+    public static final String RCH_MOTHER = "Rch_Mother";
 
     public static final String CREATE = "CREATE";
     public static final String UPDATE = "UPDATE";

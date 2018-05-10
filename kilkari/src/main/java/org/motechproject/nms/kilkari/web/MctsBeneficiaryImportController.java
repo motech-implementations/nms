@@ -77,7 +77,7 @@ public class MctsBeneficiaryImportController {
         int count = 0;
         try {
             try (InputStream in = csvFile.getInputStream()) {
-                count = mctsBeneficiaryImportService.importMotherData(new InputStreamReader(in), SubscriptionOrigin.MCTS_IMPORT);
+                count = mctsBeneficiaryImportReaderService.importMotherData(new InputStreamReader(in), SubscriptionOrigin.MCTS_IMPORT);
                 csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/mother/import");
             }
         } catch (CsvImportException e) {

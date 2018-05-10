@@ -2,11 +2,6 @@ package org.motechproject.nms.kilkari.service.impl;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.motechproject.metrics.service.Timer;
-import org.motechproject.nms.csv.exception.CsvImportDataException;
-import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
-import org.motechproject.nms.csv.utils.CsvImporterBuilder;
-import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.kilkari.domain.DeactivatedBeneficiary;
@@ -37,6 +32,7 @@ import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.service.LocationService;
 import org.motechproject.nms.kilkari.service.ActionFinderService;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
+import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
 import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
 import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
 import org.slf4j.Logger;
@@ -46,12 +42,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
-import org.supercsv.prefs.CsvPreference;
 
-import javax.validation.ConstraintViolationException;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.Reader;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -68,7 +60,6 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childR
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.motherRejectionRch;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToRchChild;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToRchMother;
-import static org.motechproject.nms.tracking.utils.TrackChangeUtils.LOGGER;
 
 /**
  * Implementation of the {@link MctsBeneficiaryImportService} interface.
@@ -77,6 +68,8 @@ import static org.motechproject.nms.tracking.utils.TrackChangeUtils.LOGGER;
 public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportServiceImpl.class);
+    private static final int RECORDS_PART_SIZE = 100;
+
 
     private SubscriptionService subscriptionService;
     private SubscriptionErrorDataService subscriptionErrorDataService;
@@ -88,7 +81,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private MctsMotherDataService mctsMotherDataService;
     private DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService;
 
-    private static final Integer REJECTION_PART_SIZE = 20000;
+    private static final Integer REJECTION_PART_SIZE = 10;
 
     @Autowired
     public MctsBeneficiaryImportServiceImpl(SubscriptionService subscriptionService,
@@ -116,71 +109,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private ActionFinderService actionFinderService;
 
 
-    /**
-     * Expected file format:
-     * - any number of empty lines
-     * - header lines in the following format:  State Name : ACTUAL STATE_ID NAME
-     * - one empty line
-     * - CSV data (tab-separated)
-     */
-    @Override
-    @Transactional
-    public int importMotherData(Reader reader, SubscriptionOrigin importOrigin) throws IOException {
-        pregnancyPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.PREGNANCY);
-        int count = 0;
-        /**
-         * Count of all the records rejected for unknown exceptions. So, doesn't include the ones saved in nms_subscription_errors.
-         * This is used just for debugging purpose.
-         */
-        int rejectedWithException = 0;
-
-        BufferedReader bufferedReader = new BufferedReader(reader);
-        Map<String, CellProcessor> cellProcessorMapper;
-        String id;
-        String contactNumber;
-
-        if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
-            cellProcessorMapper = this.getMotherProcessorMapping();
-            id = KilkariConstants.BENEFICIARY_ID;
-            contactNumber = KilkariConstants.MSISDN;
-        } else {
-            cellProcessorMapper = this.getRchMotherProcessorMapping();
-            id = KilkariConstants.RCH_ID;
-            contactNumber = KilkariConstants.MOBILE_NO;
-        }
-
-        CsvMapImporter csvImporter = new CsvImporterBuilder()
-                .setProcessorMapping(cellProcessorMapper)
-                .setPreferences(CsvPreference.TAB_PREFERENCE)
-                .createAndOpen(bufferedReader);
-
-        try {
-            Map<String, Object> record;
-            Timer timer = new Timer("mom", "moms");
-            while (null != (record = csvImporter.read())) {
-                LOGGER.debug("Started import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
-                try {
-                    importMotherRecord(record, importOrigin);
-                    count++;
-                    if (count % KilkariConstants.PROGRESS_INTERVAL == 0) {
-                        LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
-                    }
-                } catch (RuntimeException e) {
-                    LOGGER.error("Error at msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id), e);
-                    rejectedWithException++;
-                }
-            }
-
-            LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
-            LOGGER.debug(KilkariConstants.REJECTED, timer.frequency(rejectedWithException));
-
-        } catch (ConstraintViolationException e) {
-            throw new CsvImportDataException(String.format("Mother import error, constraints violated: %s",
-                    ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
-        }
-
-        return count;
-    }
 
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
@@ -321,6 +249,142 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
 
         return createUpdateMotherRejections(flagForMcts, record, action, null, true);
+    }
+
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
+    @Transactional
+    public MotherImportRejection importMotherRecordCSV(Map<String, Object> record, SubscriptionOrigin importOrigin, LocationFinder locationFinder) { //NOPMD NcssMethodCount
+        if (pregnancyPack == null) {
+            pregnancyPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.PREGNANCY);
+        }
+        MctsMother mother;
+        Long msisdn;
+        Boolean abortion;
+        Boolean stillBirth;
+        LocalDate lastUpdatedDateNic;
+        String beneficiaryId;
+        String action = "";
+        Boolean flagForMcts = true;
+        if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+            action = actionFinderService.motherActionFinder(convertMapToMother(record));
+            beneficiaryId = (String) record.get(KilkariConstants.BENEFICIARY_ID);
+            mother = mctsBeneficiaryValueProcessor.getOrCreateMotherInstance(beneficiaryId);
+            msisdn = (Long) record.get(KilkariConstants.MSISDN);
+            abortion = (Boolean) record.get(KilkariConstants.ABORTION);
+            stillBirth = (Boolean) record.get(KilkariConstants.STILLBIRTH);
+            lastUpdatedDateNic = (LocalDate) record.get(KilkariConstants.LAST_UPDATE_DATE);
+        } else {
+            flagForMcts = false;
+            action = actionFinderService.rchMotherActionFinder((convertMapToRchMother(record)));
+            beneficiaryId = (String) record.get(KilkariConstants.RCH_ID);
+            String mctsId = (String) record.get(KilkariConstants.MCTS_ID);
+            mother = mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance(beneficiaryId, mctsId);
+            msisdn = (Long) record.get(KilkariConstants.MOBILE_NO);
+            abortion = (Boolean) record.get(KilkariConstants.ABORTION_TYPE);
+            stillBirth = (Boolean) record.get(KilkariConstants.DELIVERY_OUTCOMES);
+            lastUpdatedDateNic = (LocalDate) record.get(KilkariConstants.EXECUTION_DATE);
+        }
+
+        String name = (String) record.get(KilkariConstants.BENEFICIARY_NAME);
+        DateTime lmp = (DateTime) record.get(KilkariConstants.LMP);
+        DateTime motherDOB = (DateTime) record.get(KilkariConstants.MOTHER_DOB);
+        Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
+
+        if (mother == null) {
+            return createUpdateMotherRejectionsCSV(flagForMcts, record, action, RejectionReasons.DATA_INTEGRITY_ERROR, false);
+        }
+
+        boolean isInvalidLMP = (mother.getId() == null || (mother.getId() != null && mother.getLastMenstrualPeriod() == null)) && !validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, importOrigin);
+
+        if (isInvalidLMP) {
+            return createUpdateMotherRejectionsCSV(flagForMcts, record, action, RejectionReasons.INVALID_LMP_DATE, false);
+        }
+
+        // validate msisdn
+        if (!validateMsisdn(msisdn)) {
+            return createUpdateMotherRejectionsCSV(flagForMcts, record, action, RejectionReasons.MOBILE_NUMBER_EMPTY_OR_WRONG_FORMAT, false);
+        }
+
+        // validate lmp date. We do not sanitize for lmp in the future to be in sync with MCTS data
+        // NOTE: getId is a way to see if this is a new user. We only accept new users if they
+        // have 12 weeks left in the pack. For existing users, their lmp could be updated to
+        // an earlier date if it's an complete mother record(i.e not created through child import)
+        // validate and set location
+        try {
+            MctsBeneficiaryUtils.setLocationFieldsCSV(locationFinder, record, mother);
+        } catch (InvalidLocationException le) {
+            LOGGER.error(le.toString());
+            subscriptionErrorDataService.create(new SubscriptionError(msisdn, beneficiaryId, SubscriptionRejectionReason.INVALID_LOCATION,
+                    SubscriptionPackType.PREGNANCY, le.getMessage(), importOrigin));
+            return createUpdateMotherRejectionsCSV(flagForMcts, record, action, RejectionReasons.INVALID_LOCATION, false);
+        }
+
+        //validate if it's an updated record compared to one from database
+        if (mother.getUpdatedDateNic() != null && (lastUpdatedDateNic == null || mother.getUpdatedDateNic().isAfter(lastUpdatedDateNic))) {
+            subscriptionErrorDataService.create(new SubscriptionError(msisdn, beneficiaryId,
+                    SubscriptionRejectionReason.BENEFICIARY_ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY, "Updated Record exits", importOrigin));
+            return createUpdateMotherRejectionsCSV(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
+        }
+
+        List<DeactivatedBeneficiary> deactivatedUsers = deactivatedBeneficiaryDataService.findByExternalId(beneficiaryId);
+        if (deactivatedUsers != null && deactivatedUsers.size() > 0) {
+            for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
+                if (deactivatedUser.getOrigin() == importOrigin) {
+                    String message = deactivatedUser.isCompletedSubscription() ? "Subscription completed" : "User deactivated";
+                    if (message.length() > 2) {
+                        subscriptionErrorDataService.create(new SubscriptionError(msisdn, beneficiaryId,
+                                SubscriptionRejectionReason.BENEFICIARY_ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY, message, importOrigin));
+                        return createUpdateMotherRejectionsCSV(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
+                    }
+                }
+            }
+        }
+
+        // Check if existing subscription needs to be deactivated
+        Boolean deactivate = ((abortion != null) && abortion) || ((stillBirth != null) && stillBirth) || ((death != null) && death);  // NO CHECKSTYLE Boolean Expression Complexity
+        if (deactivate && (mother.getId() == null)) {
+            return createUpdateMotherRejectionsCSV(flagForMcts, record, action, RejectionReasons.ABORT_STILLBIRTH_DEATH, false);
+        }
+
+        mother.setName(name);
+        mother.setDateOfBirth(motherDOB);
+        mother.setUpdatedDateNic(lastUpdatedDateNic);
+
+        Subscription subscription;
+        if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+            //validate if an ACTIVE child is already present for the mother. If yes, ignore the update
+            if (childAlreadyPresent(beneficiaryId)) {
+                subscriptionErrorDataService.create(new SubscriptionError(msisdn, beneficiaryId,
+                        SubscriptionRejectionReason.ACTIVE_CHILD_PRESENT, SubscriptionPackType.PREGNANCY, "Active child is present for this mother.", importOrigin));
+                return createUpdateMotherRejectionsCSV(flagForMcts, record, action, RejectionReasons.ACTIVE_CHILD_PRESENT, false);
+            }
+            subscription = subscriberService.updateMotherSubscriber(msisdn, mother, lmp, record, action);
+        } else {
+            Long caseNo = (Long) record.get(KilkariConstants.CASE_NO);
+            // validate caseNo
+            if (!validateCaseNo(caseNo, mother)) {
+                return motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.INVALID_CASE_NO.toString(), action);
+            }
+            subscription = subscriberService.updateRchMotherSubscriber(msisdn, mother, lmp, caseNo, deactivate, record, action);
+        }
+        // We rejected the update/create for the subscriber
+//        if (subscription == null) {
+//            return false;
+//        }
+
+        if ((abortion != null) && abortion) {
+            subscriptionService.deactivateSubscription(subscription, DeactivationReason.MISCARRIAGE_OR_ABORTION);
+        }
+
+        if ((stillBirth != null) && stillBirth) {
+            subscriptionService.deactivateSubscription(subscription, DeactivationReason.STILL_BIRTH);
+        }
+
+        if ((death != null) && death) {
+            subscriptionService.deactivateSubscription(subscription, DeactivationReason.MATERNAL_DEATH);
+        }
+
+        return createUpdateMotherRejectionsCSV(flagForMcts, record, action, null, true);
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
@@ -586,6 +650,17 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return accepted;
     }
 
+    private MotherImportRejection createUpdateMotherRejectionsCSV(Boolean isMcts, Map<String, Object> record, String action, RejectionReasons rejectionReason, Boolean accepted) {
+        String rejectReason = rejectionReason == null ? null : rejectionReason.toString();
+        if (isMcts) {
+            return motherRejectionMcts(convertMapToMother(record), accepted, rejectReason, action);
+
+        } else {
+            return motherRejectionRch(convertMapToRchMother(record), accepted, rejectReason, action);
+
+        }
+    }
+
     // Create rejection records for all the invalid childs
     private ChildImportRejection createUpdateChildRejections(Boolean isMcts, Map<String, Object> record, String action, RejectionReasons rejectionReason, Boolean accepted) {
         String rejectReason  = rejectionReason == null ? null : rejectionReason.toString();
@@ -594,6 +669,31 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         } else {
             return childRejectionRch(convertMapToRchChild(record), accepted, rejectReason, action);
         }
+    }
+
+    @Override
+    public List<List<Map<String, Object>>> splitRecords(List<Map<String, Object>> recordList, String contactNumber) {
+        List<List<Map<String, Object>>> recordListArray = new ArrayList<>();
+        int count = 0;
+        while(count < recordList.size()) {
+            List<Map<String, Object>> recordListPart = new ArrayList<>();
+            while(recordListPart.size() < RECORDS_PART_SIZE && count < recordList.size()) {
+                recordListPart.add(recordList.get(count));
+                count++;
+            }
+            //Add all records with same contact number to the same part
+            while(count < recordList.size() && (recordList.get(count).get(contactNumber) == null? "0": recordList.get(count).get(contactNumber))
+                    .equals(recordListPart.get(recordListPart.size()-1)
+                            .get(contactNumber))){
+                recordListPart.add(recordList.get(count));
+                count++;
+            }
+            LOGGER.debug("Added records to part {}",recordListArray.size()+1);
+            recordListArray.add(recordListPart);
+            LOGGER.debug("Added recordListPart to recordListArray");
+        }
+        LOGGER.debug("Split {} records to {} parts", recordList.size(), recordListArray.size());
+        return recordListArray;
     }
 
     private boolean validateMother(MctsMother mother, MctsChild child) {
@@ -693,7 +793,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     @Override
     @Transactional
-    public void createOrUpdateRchRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus) {
+    public void createOrUpdateRchChildRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus) {
 
         // get rch Ids of all the rejected records
         Set<String> rchIds = rejectedRecords.keySet();
@@ -730,12 +830,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             }
         }
 
-        Long createdNo = (createObjects.size() == 0) ? 0 : rchBulkInsert(createObjects);
-        Long updatedNo = (updateObjects.size() == 0) ? 0 : rchBulkUpdate(updateObjects);
+        Long createdNo = (createObjects.size() == 0) ? 0 : rchChildBulkInsert(createObjects);
+        Long updatedNo = (updateObjects.size() == 0) ? 0 : rchChildBulkUpdate(updateObjects);
         LOGGER.debug("Inserted {} and updated {} rejection records into database", createdNo, updatedNo);
     }
 
-    private Long rchBulkInsert(List<ChildImportRejection> createObjects) {
+    private Long rchChildBulkInsert(List<ChildImportRejection> createObjects) {
         int count = 0;
         Long sqlCount = 0L;
         while(count < createObjects.size()) {
@@ -750,7 +850,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return sqlCount;
     }
 
-    private Long rchBulkUpdate(List<ChildImportRejection> updateObjects) {
+    private Long rchChildBulkUpdate(List<ChildImportRejection> updateObjects) {
         int count = 0;
         Long sqlCount = 0L;
         while(count < updateObjects.size()) {
@@ -767,7 +867,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     @Override
     @Transactional
-    public void createOrUpdateMctsRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus) {
+    public void createOrUpdateMctsChildRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus) {
 
         // get rch Ids of all the rejected records
         Set<String> mctsIds = rejectedRecords.keySet();
@@ -804,12 +904,13 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             }
         }
 
-        Long createdNo = (createObjects.size() == 0) ? 0 : mctsBulkInsert(createObjects);
-        Long updatedNo = (updateObjects.size() == 0) ? 0 : mctsBulkUpdate(updateObjects);
+        Long createdNo = (createObjects.size() == 0) ? 0 : mctsChildBulkInsert(createObjects);
+        Long updatedNo = (updateObjects.size() == 0) ? 0 : mctsChildBulkUpdate(updateObjects);
         LOGGER.debug("Inserted {} and updated {} rejection records into database", createdNo, updatedNo);
     }
 
-    private Long mctsBulkInsert(List<ChildImportRejection> createObjects) {
+
+    private Long mctsChildBulkInsert(List<ChildImportRejection> createObjects) {
         int count = 0;
         Long sqlCount = 0L;
         while(count < createObjects.size()) {
@@ -824,7 +925,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return sqlCount;
     }
 
-    private Long mctsBulkUpdate(List<ChildImportRejection> updateObjects) {
+    private Long mctsChildBulkUpdate(List<ChildImportRejection> updateObjects) {
         int count = 0;
         Long sqlCount = 0L;
         while(count < updateObjects.size()) {
@@ -839,7 +940,158 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return sqlCount;
     }
 
-    private Map<String, CellProcessor> getMotherProcessorMapping() {
+
+    @Override
+    @Transactional
+    public void createOrUpdateRchMotherRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus) {
+
+        // get rch Ids of all the rejected records
+        Set<String> rchIds = rejectedRecords.keySet();
+        List<MotherImportRejection> updateObjects = new ArrayList<>();
+        List<MotherImportRejection> createObjects = new ArrayList<>();
+
+        Map<String, Object> motherRejects = motherRejectionService.findMotherRejectionByRchId(rchIds);
+        MotherImportRejection mother;
+        for (String rchId : rchIds) {
+            mother = (MotherImportRejection) rejectedRecords.get(rchId);
+            if (motherRejects.get(rchId) != null) {
+                MotherImportRejection dbMother = (MotherImportRejection) motherRejects.get(rchId);
+                try {
+                    Method method = dbMother.getClass().getMethod("getCreationDate");  // Get creationDate from db object and set it in the update object
+                    DateTime dateTime = (DateTime) method.invoke(dbMother);
+
+                    method = mother.getClass().getMethod("setCreationDate", DateTime.class);
+                    method.invoke(mother, dateTime);
+
+                    method = dbMother.getClass().getMethod("getId");
+                    Long id = (Long) method.invoke(dbMother);
+                    method = mother.getClass().getMethod("setId", Long.class);
+                    method.invoke(mother, id);
+                } catch (IllegalAccessException|SecurityException|IllegalArgumentException|NoSuchMethodException|
+                        InvocationTargetException e) {
+                    LOGGER.error("Ignoring creation date and setting as now");
+
+                }
+                updateObjects.add(mother);
+                continue;
+            }
+            if (!(Boolean) rejectionStatus.get(rchId)) {
+                createObjects.add(mother);
+            }
+        }
+
+        Long createdNo = (createObjects.size() == 0) ? 0 : rchMotherBulkInsert(createObjects);
+        Long updatedNo = (updateObjects.size() == 0) ? 0 : rchMotherBulkUpdate(updateObjects);
+        LOGGER.debug("Inserted {} and updated {} rejection records into database", createdNo, updatedNo);
+    }
+
+    private Long rchMotherBulkInsert(List<MotherImportRejection> createObjects) {
+        int count = 0;
+        Long sqlCount = 0L;
+        while(count < createObjects.size()) {
+            List<MotherImportRejection> createObjectsPart = new ArrayList<>();
+            while(createObjectsPart.size() < REJECTION_PART_SIZE && count<createObjects.size()) {
+                createObjectsPart.add(createObjects.get(count));
+                count++;
+            }
+            sqlCount += motherRejectionService.rchBulkInsert(createObjectsPart);
+            createObjectsPart.clear();
+        }
+        return sqlCount;
+    }
+
+    private Long rchMotherBulkUpdate(List<MotherImportRejection> updateObjects) {
+        int count = 0;
+        Long sqlCount = 0L;
+        while(count < updateObjects.size()) {
+            List<MotherImportRejection> updateObjectsPart = new ArrayList<>();
+            while(updateObjectsPart.size() < REJECTION_PART_SIZE && count<updateObjects.size()) {
+                updateObjectsPart.add(updateObjects.get(count));
+                count++;
+            }
+            sqlCount += motherRejectionService.rchBulkUpdate(updateObjectsPart);
+            updateObjectsPart.clear();
+        }
+        return sqlCount;
+    }
+
+    @Override
+    @Transactional
+    public void createOrUpdateMctsMotherRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus) {
+
+        // get rch Ids of all the rejected records
+        Set<String> mctsIds = rejectedRecords.keySet();
+        List<MotherImportRejection> updateObjects = new ArrayList<>();;
+        List<MotherImportRejection> createObjects = new ArrayList<>();;
+
+        Map<String, Object> motherRejects = motherRejectionService.findMotherRejectionByMctsId(mctsIds);
+        MotherImportRejection mother;
+        for (String mctsId : mctsIds) {
+            mother = (MotherImportRejection) rejectedRecords.get(mctsId);
+            if (motherRejects.get(mctsId) != null) {
+                MotherImportRejection dbMother = (MotherImportRejection) motherRejects.get(mctsId);
+                try {
+                    Method method = dbMother.getClass().getMethod("getCreationDate");  // Get creationDate from db object and set it in the update object
+                    DateTime dateTime = (DateTime) method.invoke(dbMother);
+
+                    method = mother.getClass().getMethod("setCreationDate", DateTime.class);
+                    method.invoke(mother, dateTime);
+
+                    method = dbMother.getClass().getMethod("getId");
+                    Long id = (Long) method.invoke(dbMother);
+                    method = mother.getClass().getMethod("setId", Long.class);
+                    method.invoke(mother, id);
+                } catch (IllegalAccessException|SecurityException|IllegalArgumentException|NoSuchMethodException|
+                        InvocationTargetException e) {
+                    LOGGER.error("Ignoring creation date and setting as now");
+
+                }
+                updateObjects.add(mother);
+                continue;
+            }
+            if (!(Boolean) rejectionStatus.get(mctsId)) {
+                createObjects.add(mother);
+            }
+        }
+
+        Long createdNo = (createObjects.size() == 0) ? 0 : mctsMotherBulkInsert(createObjects);
+        Long updatedNo = (updateObjects.size() == 0) ? 0 : mctsMotherBulkUpdate(updateObjects);
+        LOGGER.debug("Inserted {} and updated {} rejection records into database", createdNo, updatedNo);
+    }
+
+    private Long mctsMotherBulkInsert(List<MotherImportRejection> createObjects) {
+        int count = 0;
+        Long sqlCount = 0L;
+        while(count < createObjects.size()) {
+            List<MotherImportRejection> createObjectsPart = new ArrayList<>();
+            while(createObjectsPart.size() < REJECTION_PART_SIZE && count<createObjects.size()) {
+                createObjectsPart.add(createObjects.get(count));
+                count++;
+            }
+            sqlCount += motherRejectionService.mctsBulkInsert(createObjectsPart);
+            createObjectsPart.clear();
+        }
+        return sqlCount;
+    }
+
+    private Long mctsMotherBulkUpdate(List<MotherImportRejection> updateObjects) {
+        int count = 0;
+        Long sqlCount = 0L;
+        while(count < updateObjects.size()) {
+            List<MotherImportRejection> updateObjectsPart = new ArrayList<>();
+            while(updateObjectsPart.size() < REJECTION_PART_SIZE && count<updateObjects.size()) {
+                updateObjectsPart.add(updateObjects.get(count));
+                count++;
+            }
+            sqlCount += motherRejectionService.mctsBulkUpdate(updateObjectsPart);
+            updateObjectsPart.clear();
+        }
+        return sqlCount;
+    }
+
+
+    @Override
+    public Map<String, CellProcessor> getMotherProcessorMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
 
         MctsBeneficiaryUtils.getBeneficiaryLocationMapping(mapping);
@@ -896,7 +1148,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }));
     }
 
-    private Map<String, CellProcessor> getRchMotherProcessorMapping() {
+    @Override
+    public Map<String, CellProcessor> getRchMotherProcessorMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
 
         MctsBeneficiaryUtils.getBeneficiaryLocationMapping(mapping);
