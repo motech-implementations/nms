@@ -48,7 +48,7 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
     }
 
     @Override
-    public ThreadProcessorObject call() throws Exception {
+    public ThreadProcessorObject call() throws Exception { //NOPMD SignatureDeclareThrowsException
         ThreadProcessorObject threadProcessorObject = new ThreadProcessorObject();
         Map<String, Object> rejectedChilds = new HashMap<>();
         Map<String, Object> rejectionStatus = new HashMap<>();
@@ -76,7 +76,6 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
             // TODO: Add this to bulk insert
             if (child == null) {
                 ChildImportRejection childImportRejection1 = childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), KilkariConstants.CREATE);
-//                childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), KilkariConstants.CREATE));
                 rejectedChilds.put(childImportRejection1.getIdNo(), childImportRejection1);
                 rejectionStatus.put(childImportRejection1.getIdNo(), childImportRejection1.getAccepted());
                 LOGGER.error("RchId is empty while importing child at msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));

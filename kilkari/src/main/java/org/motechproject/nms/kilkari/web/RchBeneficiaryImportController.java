@@ -33,18 +33,12 @@ public class RchBeneficiaryImportController {
 
 
     private AlertService alertService;
-    private MctsBeneficiaryImportService mctsBeneficiaryImportService;
     private CsvAuditService csvAuditService;
     private MctsBeneficiaryImportReaderService mctsBeneficiaryImportReaderService;
 
     @Autowired
     public void setAlertService(AlertService alertService) {
         this.alertService = alertService;
-    }
-
-    @Autowired
-    public void setMctsBeneficiaryImportService(MctsBeneficiaryImportService mctsBeneficiaryImportService) {
-        this.mctsBeneficiaryImportService = mctsBeneficiaryImportService;
     }
 
     @Autowired

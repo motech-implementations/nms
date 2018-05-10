@@ -34,7 +34,6 @@ public class MctsBeneficiaryImportController {
 
 
     private AlertService alertService;
-    private MctsBeneficiaryImportService mctsBeneficiaryImportService;
     private MctsBeneficiaryUpdateService mctsBeneficiaryUpdateService;
     private CsvAuditService csvAuditService;
     private MctsBeneficiaryImportReaderService mctsBeneficiaryImportReaderService;
@@ -48,11 +47,6 @@ public class MctsBeneficiaryImportController {
     @Autowired
     public void setMctsBeneficiaryImportReaderService(MctsBeneficiaryImportReaderService mctsBeneficiaryImportReaderService) {
         this.mctsBeneficiaryImportReaderService = mctsBeneficiaryImportReaderService;
-    }
-
-    @Autowired
-    public void setMctsBeneficiaryImportService(MctsBeneficiaryImportService mctsBeneficiaryImportService) {
-        this.mctsBeneficiaryImportService = mctsBeneficiaryImportService;
     }
 
     @Autowired
