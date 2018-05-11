@@ -110,9 +110,9 @@ public class SubscriptionPack {
         }
 
         int packLengthInDays = weeks * DAYS_IN_WEEK; //72 weeks
-        int minDaysLeftInPack = MIN_MSG_WEEKS * DAYS_IN_WEEK; // BBC requirement to have at least 12 weeks of messages to send //12 weeks
-        DateTime startDate = (type == SubscriptionPackType.PREGNANCY) ? date.plusDays(THREE_MONTHS) : date; //add 3 months to lmp --oct 2016
-        DateTime cutOff = DateUtil.now().plusDays(minDaysLeftInPack + 1); // plus 1 since we start calling people the next day  //12 weeks from now --- 2018 may
+        int minDaysLeftInPack = MIN_MSG_WEEKS * DAYS_IN_WEEK; // BBC requirement to have at least 12 weeks of messages to send
+        DateTime startDate = (type == SubscriptionPackType.PREGNANCY) ? date.plusDays(THREE_MONTHS) : date; //add 3 months to lmp
+        DateTime cutOff = DateUtil.now().plusDays(minDaysLeftInPack + 1); // plus 1 since we start calling people the next day
 
         // Cutoff date is the minimum days left in  pack for us to deliver 12 weeks worth of messages
         if (startDate.plusDays(packLengthInDays).isBefore(cutOff)) {
