@@ -18,7 +18,6 @@ public class ReactivatedBeneficiaryAudit {
 
     @Field
     @Column(allowsNull = "false")
-    @NotNull
     private SubscriptionOrigin origin;
 
     @Field

@@ -20,10 +20,10 @@ public class DeactivatedBeneficiaryServiceImpl implements DeactivatedBeneficiary
         this.deactivatedBeneficiaryDataService = deactivatedBeneficiaryDataService;
     }
 
-    public List<DeactivatedBeneficiary> findByExternalId(String externalId) {
+    public List<DeactivatedBeneficiary> findDeactivatedBeneficiariesOtherThanManualDeactivation(String externalId) {
         List<DeactivatedBeneficiary> deactivatedBeneficiaryWithSelectDeactivationReasons = new ArrayList<>();
         List<DeactivatedBeneficiary> deactivatedBeneficiaries = deactivatedBeneficiaryDataService.findByExternalId(externalId);
-        if (deactivatedBeneficiaries.size() != 0) {
+        if (deactivatedBeneficiaries != null && deactivatedBeneficiaries.size() != 0) {
             for (DeactivatedBeneficiary deactivatedBeneficiary : deactivatedBeneficiaries
                     ) {
                 if (!deactivatedBeneficiary.getDeactivationReason().equals(DeactivationReason.LOW_LISTENERSHIP) && !deactivatedBeneficiary.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED)) {

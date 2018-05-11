@@ -9,5 +9,5 @@ import java.util.List;
  */
 public interface DeactivatedBeneficiaryService {
 
-    List<DeactivatedBeneficiary> findByExternalId(String externalId);
+    List<DeactivatedBeneficiary> findDeactivatedBeneficiariesOtherThanManualDeactivation(String externalId);
 }

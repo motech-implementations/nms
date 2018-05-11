@@ -261,7 +261,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
         }
 
-        List<DeactivatedBeneficiary> deactivatedUsers = deactivatedBeneficiaryService.findByExternalId(beneficiaryId);
+        List<DeactivatedBeneficiary> deactivatedUsers = deactivatedBeneficiaryService.findDeactivatedBeneficiariesOtherThanManualDeactivation(beneficiaryId);
         if (deactivatedUsers != null && deactivatedUsers.size() > 0) {
             for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
                 if (deactivatedUser.getOrigin() == importOrigin) {
@@ -364,6 +364,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             action = (String) record.get(KilkariConstants.ACTION);
             childId = (String) record.get(KilkariConstants.RCH_ID);
             child = (MctsChild) record.get(KilkariConstants.RCH_CHILD);
+            LOGGER.debug("Child:{}", child.getName());
             msisdn = (Long) record.get(KilkariConstants.MOBILE_NO);
             lastUpdateDateNic = (LocalDate) record.get(KilkariConstants.EXECUTION_DATE);
             if (record.get(KilkariConstants.RCH_MOTHER_ID) != null || record.get(KilkariConstants.MCTS_MOTHER_ID) != null) {
@@ -381,6 +382,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             }
         }
         String name = (String) record.get(KilkariConstants.BENEFICIARY_NAME);
+        LOGGER.debug("ChildName:{}", name);
         DateTime dob = (DateTime) record.get(KilkariConstants.DOB);
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
         MctsChild childById = mctsChildDataService.findByBeneficiaryId(childId);
@@ -427,7 +429,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         if (childById != null && subscriptionService.getActiveSubscription(subscriberService.getSubscriberByBeneficiary(childById), SubscriptionPackType.PREGNANCY) != null && subscriptionService.getActiveSubscription(subscriberService.getSubscriberByBeneficiary(childById), SubscriptionPackType.PREGNANCY).getStatus() == SubscriptionStatus.ACTIVE) {
             LOGGER.debug("Active mother. We ignore the deactivated case scenario.");
         } else {
-            List<DeactivatedBeneficiary> deactivatedUsers = deactivatedBeneficiaryService.findByExternalId(childId);
+            List<DeactivatedBeneficiary> deactivatedUsers = deactivatedBeneficiaryService.findDeactivatedBeneficiariesOtherThanManualDeactivation(childId);
             if (deactivatedUsers != null && deactivatedUsers.size() > 0) {
                 for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
                     if (deactivatedUser.getOrigin() == importOrigin) {
@@ -445,6 +447,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
 
         child.setName(name);
+        LOGGER.debug("Name:{}", child.getName());
         child.setMother(mother);
         child.setUpdatedDateNic(lastUpdateDateNic);
 
@@ -616,7 +619,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             method.invoke(child, id);
         } catch (IllegalAccessException|SecurityException|IllegalArgumentException|NoSuchMethodException|
                 InvocationTargetException e) {
-            LOGGER.error("Ignoring creation date and setting as now");
+            LOGGER.error("Ignoring creation date and setting as now: {}", e);
 
         }
         updateObjects.add(child);

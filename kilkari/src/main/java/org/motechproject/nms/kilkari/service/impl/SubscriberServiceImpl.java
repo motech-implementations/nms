@@ -29,6 +29,7 @@ import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.BlockedMsisdnRecordDataService;
 import org.motechproject.nms.kilkari.repository.DeactivationSubscriptionAuditRecordDataService;
 import org.motechproject.nms.kilkari.repository.ReactivatedBeneficiaryAuditDataService;
+import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
@@ -77,6 +78,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     private BlockedMsisdnRecordDataService blockedMsisdnRecordDataService;
     private MotherRejectionService motherRejectionService;
     private ReactivatedBeneficiaryAuditDataService reactivatedBeneficiaryAuditDataService;
+    private MctsChildDataService mctsChildDataService;
 
     @Autowired
     public SubscriberServiceImpl(SubscriberDataService subscriberDataService, SubscriptionService subscriptionService,
@@ -86,7 +88,8 @@ public class SubscriberServiceImpl implements SubscriberService {
                                  BlockedMsisdnRecordDataService blockedMsisdnRecordDataService,
                                  DeactivationSubscriptionAuditRecordDataService deactivationSubscriptionAuditRecordDataService,
                                  MotherRejectionService motherRejectionService,
-                                 ReactivatedBeneficiaryAuditDataService reactivatedBeneficiaryAuditDataService) {
+                                 ReactivatedBeneficiaryAuditDataService reactivatedBeneficiaryAuditDataService,
+                                 MctsChildDataService mctsChildDataService) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionService = subscriptionService;
         this.subscriptionDataService = subscriptionDataService;
@@ -96,6 +99,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         this.blockedMsisdnRecordDataService = blockedMsisdnRecordDataService;
         this.motherRejectionService = motherRejectionService;
         this.reactivatedBeneficiaryAuditDataService = reactivatedBeneficiaryAuditDataService;
+        this.mctsChildDataService = mctsChildDataService;
     }
 
     @Override
@@ -539,6 +543,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                             subscriberByRchId.setMother(childUpdate.getMother());
                         }
                         childUpdate.setDateOfBirth(dob);
+                        LOGGER.debug("ChildNameFinal: {}", childUpdate.getName());
                         subscriberByRchId.setDateOfBirth(dob);
                         finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
                     } else {
@@ -600,18 +605,19 @@ public class SubscriberServiceImpl implements SubscriberService {
         }
 
         liveBirthChildDeathCheck(finalSubscription, record);
+        mctsChildDataService.update(childUpdate);
 
         return childRejectionRch(convertMapToRchChild(record), true, null, action);
     }
 
     public Subscription updateOrCreateSubscription(Subscriber subscriber, Subscription subscription, DateTime dateTime, SubscriptionPack pack, Language language, Circle circle, SubscriptionOrigin origin, Boolean greaterCaseNo) { // NO CHECKSTYLE Cyclomatic Complexity
         Subscription deactivatedSubscripion = subscriptionService.getLatestDeactivatedSubscription(subscriber, pack.getType());
-        if (subscription != null && (subscription.getStatus() == SubscriptionStatus.ACTIVE || subscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
+        if (subscription != null && (SubscriptionStatus.ACTIVE == subscription.getStatus() || SubscriptionStatus.PENDING_ACTIVATION == subscription.getStatus())) {
             subscriptionService.updateStartDate(subscription, dateTime);
             return subscription;
         } else if (subscription == null && deactivatedSubscripion != null && pack.getType() == SubscriptionPackType.CHILD) {
             return reactivateSubscription(subscriber, deactivatedSubscripion, dateTime);
-        } else if (subscription == null  && deactivatedSubscripion != null  && (deactivatedSubscripion.getDeactivationReason() == DeactivationReason.LOW_LISTENERSHIP || deactivatedSubscripion.getDeactivationReason() == DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED)) {
+        } else if (subscription == null  && deactivatedSubscripion != null  && (DeactivationReason.LOW_LISTENERSHIP == deactivatedSubscripion.getDeactivationReason() ||  DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED == deactivatedSubscripion.getDeactivationReason())) {
             if (!greaterCaseNo) {
                 return reactivateSubscription(subscriber, deactivatedSubscripion, dateTime);
             } else {
