@@ -20,7 +20,7 @@ import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
-import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -110,7 +110,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
     @Inject
     private MctsMotherDataService mctsMotherDataService;
     @Inject
-    private MctsBeneficiaryImportService mctsBeneficiaryImportService;
+    private MctsBeneficiaryImportReaderService mctsBeneficiaryImportReaderService;
     @Inject
     PlatformTransactionManager transactionManager;
 
@@ -305,7 +305,7 @@ public class MctsBeneficiaryUpdateServiceBundleIT extends BasePaxIT {
         String dobString = getDateString(dob);
         Reader reader = createChildDataReader("21\t3\t\t\t\t\t1234567891\tBaby1 of Shanti Ekka\t9876543210\t"+oldMsisdn+"\t"
                 + dobString + "\t");
-        mctsBeneficiaryImportService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         assertEquals(1, subscriberDataService.findByNumber(oldMsisdn).get(0).getActiveAndPendingSubscriptions().size());

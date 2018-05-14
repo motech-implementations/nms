@@ -1,15 +1,14 @@
 package org.motechproject.nms.kilkari.utils;
 
 import org.motechproject.nms.kilkari.contract.RchAnmAshaRecord;
-import org.motechproject.nms.kilkari.contract.RchChildRecord;
 import org.motechproject.nms.kilkari.contract.RchMotherRecord;
 import org.motechproject.nms.kilkari.contract.AnmAshaRecord;
-import org.motechproject.nms.kilkari.contract.ChildRecord;
 import org.motechproject.nms.kilkari.contract.MotherRecord;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by beehyv on 24/7/17.
@@ -80,25 +79,28 @@ public final class ObjectListCleaner {
         return full;
     }
 
-    public static List<List<ChildRecord>> cleanChildRecords(List<ChildRecord> childRecords) {
-        List<ChildRecord> rejectedRecords = new ArrayList<>();
-        List<ChildRecord> acceptedRecords = new ArrayList<>();
-        List<List<ChildRecord>> full = new ArrayList<>();
+    public static List<List<Map<String, Object>>> cleanChildRecords(List<Map<String, Object>> childRecords) {
+        List<Map<String, Object>> rejectedRecords = new ArrayList<>();
+        List<Map<String, Object>> acceptedRecords = new ArrayList<>();
+        List<List<Map<String, Object>>> full = new ArrayList<>();
         HashMap<String, Integer> motherPhoneMap = new HashMap<>();
         HashMap<String, String> motherPhoneIdMap = new HashMap<>();
-        for (ChildRecord record : childRecords) {
-            if (motherPhoneMap.containsKey(record.getWhomPhoneNo())) {
-                boolean identicalIdContact = motherPhoneIdMap.get(record.getWhomPhoneNo()).equals(record.getIdNo());
+        for (Map<String, Object> record : childRecords) {
+            String msisdn = (String) record.get(KilkariConstants.MSISDN);
+            String mctsId = (String) record.get(KilkariConstants.BENEFICIARY_ID);
+            if (motherPhoneMap.containsKey(msisdn)) {
+                boolean identicalIdContact = motherPhoneIdMap.get(msisdn).equals(mctsId);
                 if (!identicalIdContact) {
-                    motherPhoneMap.put(record.getWhomPhoneNo(), motherPhoneMap.get(record.getWhomPhoneNo()) + 1);
+                    motherPhoneMap.put(msisdn, motherPhoneMap.get(msisdn) + 1);
                 }
             } else {
-                motherPhoneMap.put(record.getWhomPhoneNo(), 1);
-                motherPhoneIdMap.put(record.getWhomPhoneNo(), record.getIdNo());
+                motherPhoneMap.put(msisdn, 1);
+                motherPhoneIdMap.put(msisdn, mctsId);
             }
         }
-        for (ChildRecord record : childRecords) {
-            Integer count = motherPhoneMap.get(record.getWhomPhoneNo());
+        for (Map<String, Object> record : childRecords) {
+            String msisdn = (String) record.get(KilkariConstants.MSISDN);
+            Integer count = motherPhoneMap.get(msisdn);
             if (count > 1) {
                 rejectedRecords.add(record);
             } else {
@@ -110,25 +112,28 @@ public final class ObjectListCleaner {
         return full;
     }
 
-    public static List<List<RchChildRecord>> cleanRchChildRecords(List<RchChildRecord> rchChildRecords) {
-        List<RchChildRecord> rejectedRecords = new ArrayList<>();
-        List<RchChildRecord> acceptedRecords = new ArrayList<>();
-        List<List<RchChildRecord>> full = new ArrayList<>();
+    public static List<List<Map<String, Object>>> cleanRchChildRecords(List<Map<String, Object>> rchChildRecords) {
+        List<Map<String, Object>> rejectedRecords = new ArrayList<>();
+        List<Map<String, Object>> acceptedRecords = new ArrayList<>();
+        List<List<Map<String, Object>>> full = new ArrayList<>();
         HashMap<String, Integer> motherPhoneMap = new HashMap<>();
         HashMap<String, String> motherPhoneIdMap = new HashMap<>();
-        for (RchChildRecord record : rchChildRecords) {
-            if (motherPhoneMap.containsKey(record.getMobileNo())) {
-                boolean identicalIdContact = motherPhoneIdMap.get(record.getMobileNo()).equals(record.getRegistrationNo());
+        for (Map<String, Object> record : rchChildRecords) {
+            String msisdn = (String) record.get(KilkariConstants.MOBILE_NO);
+            String rchId = (String) record.get(KilkariConstants.RCH_ID);
+            if (motherPhoneMap.containsKey(msisdn)) {
+                boolean identicalIdContact = motherPhoneIdMap.get(msisdn).equals(rchId);
                 if (!identicalIdContact) {
-                    motherPhoneMap.put(record.getMobileNo(), motherPhoneMap.get(record.getMobileNo()) + 1);
+                    motherPhoneMap.put(msisdn, motherPhoneMap.get(msisdn) + 1);
                 }
             } else {
-                motherPhoneMap.put(record.getMobileNo(), 1);
-                motherPhoneIdMap.put(record.getMobileNo(), record.getRegistrationNo());
+                motherPhoneMap.put(msisdn, 1);
+                motherPhoneIdMap.put(msisdn, rchId);
             }
         }
-        for (RchChildRecord record : rchChildRecords) {
-            Integer count = motherPhoneMap.get(record.getMobileNo());
+        for (Map<String, Object> record : rchChildRecords) {
+            String msisdn = (String) record.get(KilkariConstants.MOBILE_NO);
+            Integer count = motherPhoneMap.get(msisdn);
             if (count > 1) {
                 rejectedRecords.add(record);
             } else {

@@ -11,6 +11,12 @@ import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 public interface ChildRejectionDataService extends MotechDataService<ChildImportRejection> {
 
     @Lookup
-    ChildImportRejection findRejectedChild(@LookupField(name = "idNo") String idNo,
-                                           @LookupField(name = "registrationNo") String registrationNo);
+    ChildImportRejection findByIdno(@LookupField(name = "idNo") String idNo);
+
+    @Lookup
+    ChildImportRejection findByRegistrationNo(@LookupField(name = "registrationNo") String registrationNo);
+
+
 }
+
+
