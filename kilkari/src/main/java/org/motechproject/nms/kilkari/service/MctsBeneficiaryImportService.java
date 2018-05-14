@@ -3,6 +3,7 @@ package org.motechproject.nms.kilkari.service;
 import org.joda.time.DateTime;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
+import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -15,12 +16,14 @@ public interface MctsBeneficiaryImportService {
 
     int importMotherData(Reader reader, SubscriptionOrigin origin) throws IOException;
 
-    int importChildData(Reader reader, SubscriptionOrigin origin) throws IOException;
-
     boolean importMotherRecord(Map<String, Object> record, SubscriptionOrigin origin);
 
-    boolean importChildRecord(Map<String, Object> record, SubscriptionOrigin origin);
+    ChildImportRejection importChildRecord(Map<String, Object> record, SubscriptionOrigin origin);
 
     boolean validateReferenceDate(DateTime referenceDate, SubscriptionPackType packType, Long msisdn, String beneficiaryId, SubscriptionOrigin importOrigin);
+
+    void createOrUpdateRchRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus);
+
+    void createOrUpdateMctsRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus);
 
     }

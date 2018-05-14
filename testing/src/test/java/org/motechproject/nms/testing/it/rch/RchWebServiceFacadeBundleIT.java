@@ -96,7 +96,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Before
     public void setUp() throws ServletException, NamespaceException {
-       testingService.clearDatabase();
+        testingService.clearDatabase();
         State state = stateDataService.create(new State("My State", 21L));
 
         District district = new District();

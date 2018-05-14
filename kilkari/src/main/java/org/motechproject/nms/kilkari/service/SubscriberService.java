@@ -9,6 +9,7 @@ import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.Subscriber;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
+import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 
 import java.util.List;
 import java.util.Map;
@@ -81,7 +82,7 @@ public interface SubscriberService {
      * @param dob the reference date for the child (date of birth)
      * @return New or updated subscription, null if creation/update fails
      */
-    Subscription updateChildSubscriber(Long msisdn, MctsChild child, DateTime dob, Map<String, Object> record, String action);
+    ChildImportRejection updateChildSubscriber(Long msisdn, MctsChild child, DateTime dob, Map<String, Object> record, String action);
 
     /**
      * Lifecycle listener that verifies a subscriber can only be deleted if all of their subscriptions have
@@ -113,5 +114,5 @@ public interface SubscriberService {
      * @param dob reference date for the child
      * @return new or updated subscription, null if create/update fails
      */
-    Subscription updateRchChildSubscriber(Long msisdn, MctsChild child, DateTime dob, Map<String, Object> record, String action);
+    ChildImportRejection updateRchChildSubscriber(Long msisdn, MctsChild child, DateTime dob, Map<String, Object> record, String action);
 }
