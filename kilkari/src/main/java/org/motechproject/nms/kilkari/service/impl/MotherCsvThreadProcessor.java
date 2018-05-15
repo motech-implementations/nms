@@ -48,10 +48,6 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
 
     @Override
     public ThreadProcessorObject call() throws Exception { //NOPMD SignatureDeclareThrowsException
-        return processCall();
-    }
-
-    private ThreadProcessorObject processCall() { //NOPMD NcssMethodCount
         ThreadProcessorObject threadProcessorObject = new ThreadProcessorObject();
         Map<String, Object> rejectedMothers = new HashMap<>();
         Map<String, Object> rejectionStatus = new HashMap<>();

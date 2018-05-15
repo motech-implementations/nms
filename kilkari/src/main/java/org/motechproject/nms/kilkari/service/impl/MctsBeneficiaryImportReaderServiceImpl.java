@@ -120,7 +120,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             ExecutorService executor = Executors.newCachedThreadPool();
             List<Future<ThreadProcessorObject>> list = new ArrayList<>();
 
-            for (int i = 0 ; i < recordListArray.size() ; i++) {
+            for (int i = 0; i < recordListArray.size(); i++) {
                 Callable<ThreadProcessorObject> callable = new ChildCsvThreadProcessor(recordListArray.get(i), mctsImport, importOrigin, locationFinder,
                         mctsBeneficiaryValueProcessor, mctsBeneficiaryImportService);
                 Future<ThreadProcessorObject> future = executor.submit(callable);
@@ -232,7 +232,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             ExecutorService executor = Executors.newCachedThreadPool();
             List<Future<ThreadProcessorObject>> list = new ArrayList<>();
 
-            for (int i = 0 ; i < recordListArray.size() ; i++) {
+            for (int i = 0; i < recordListArray.size(); i++) {
                 Callable<ThreadProcessorObject> callable = new MotherCsvThreadProcessor(recordListArray.get(i), mctsImport, importOrigin, locationFinder,
                         mctsBeneficiaryValueProcessor, mctsBeneficiaryImportService);
                 Future<ThreadProcessorObject> future = executor.submit(callable);
@@ -277,6 +277,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
 
         return count;
     }
+
 
     private Map<String, CellProcessor> getChildProcessorMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
