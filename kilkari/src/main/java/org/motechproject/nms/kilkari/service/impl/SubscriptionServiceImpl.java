@@ -254,7 +254,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    public synchronized Boolean activeSubscriptionByMsisdn(Long msisdn, SubscriptionPackType packType, String motherBeneficiaryId, String childBeneficiaryId) {
+    public Boolean activeSubscriptionByMsisdn(Long msisdn, SubscriptionPackType packType, String motherBeneficiaryId, String childBeneficiaryId) {
         List<Subscriber> subscribers = subscriberDataService.findByNumber(msisdn);
         int subscriptionsSize = 0;
         if (packType == SubscriptionPackType.PREGNANCY) {
@@ -306,7 +306,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    public synchronized Subscription createSubscription(Subscriber subscriber, long callingNumber, Language language, Circle circle,
+    public Subscription createSubscription(Subscriber subscriber, long callingNumber, Language language, Circle circle,
                                            SubscriptionPack subscriptionPack, SubscriptionOrigin mode) {
 
         long number = PhoneNumberHelper.truncateLongNumber(callingNumber);
