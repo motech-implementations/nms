@@ -48,13 +48,10 @@ import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.kilkari.service.ActionFinderService;
 import org.motechproject.nms.region.service.LocationService;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
-import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
 import org.motechproject.nms.rejectionhandler.service.FlwRejectionService;
-import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +60,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
@@ -88,6 +84,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsWsImportServiceImpl.class);
     private static final String MCTS_WEB_SERVICE = "MCTS Web Service";
+    private static final String BULK_REJECTION_ERROR_MESSAGE = "Error while bulk updating rejection records";
     private static final double THOUSAND = 1000d;
 
     @Autowired
@@ -120,15 +117,6 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     @Autowired
     private FlwRejectionService flwRejectionService;
-
-    @Autowired
-    private MotherRejectionService motherRejectionService;
-
-    @Autowired
-    private ChildRejectionService childRejectionService;
-
-    @Autowired
-    private ActionFinderService actionFinderService;
 
     @Autowired
     private FrontLineWorkerService frontLineWorkerService;
@@ -247,7 +235,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         }
     }
 
-    public MctsImportAudit saveImportedMothersData(MothersDataSet mothersDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
+    public MctsImportAudit saveImportedMothersData(MothersDataSet mothersDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) { //NOPMD NcssMethodCount
         LOGGER.info("Starting mother import for state {}", stateName);
         List<MotherRecord> motherRecords = mothersDataSet.getRecords();
         List<Map<String, Object>> validMotherRecords = new ArrayList<>();
@@ -260,7 +248,6 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         Map<String, Object> rejectedMothers = new HashMap<>();
         Map<String, Object> rejectionStatus = new HashMap<>();
         MotherImportRejection motherImportRejection;
-
         for (Map<String, Object> record : rejectedMotherRecords) {
             action = (String) record.get(KilkariConstants.ACTION);
             LOGGER.error("Existing Mother Record with same MSISDN in the data set");
@@ -270,13 +257,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             rejected++;
         }
         List<Map<String, Object>> acceptedMotherRecords = motherRecordsSet.get(1);
-        LocationFinder locationFinder = new LocationFinder();
-        try {
-            locationFinder = locationService.updateLocations(acceptedMotherRecords);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        LocationFinder locationFinder = locationService.updateLocations(acceptedMotherRecords);
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
         for (Map<String, Object> recordMap : acceptedMotherRecords) {
             String mctsId = (String) recordMap.get(KilkariConstants.BENEFICIARY_ID);
@@ -286,7 +267,6 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                         (long) recordMap.get(KilkariConstants.STATE_ID),
                         (long) recordMap.get(KilkariConstants.DISTRICT_ID));
                 if (hpdValidation) {
-
                     motherImportRejection = mctsBeneficiaryImportService.importMotherRecord(recordMap, SubscriptionOrigin.MCTS_IMPORT, locationFinder);
                     if(motherImportRejection != null) {
                         rejectedMothers.put(motherImportRejection.getIdNo(), motherImportRejection);
@@ -318,7 +298,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         try {
             mctsBeneficiaryImportService.createOrUpdateMctsMotherRejections(rejectedMothers , rejectionStatus);
         } catch (RuntimeException e) {
-            LOGGER.error("Error while bulk updating rejection records", e);
+            LOGGER.error(BULK_REJECTION_ERROR_MESSAGE, e);
 
         }
         LOGGER.info("{} state, Total: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
@@ -361,7 +341,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         try {
             mctsBeneficiaryImportService.createOrUpdateMctsMotherRejections(rejectedMothers , rejectionStatus);
         } catch (RuntimeException e) {
-            LOGGER.error("Error while bulk updating rejection records", e);
+            LOGGER.error(BULK_REJECTION_ERROR_MESSAGE, e);
         }
         return validMotherRecords;
     }
@@ -422,7 +402,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         }
     }
 
-    private MctsImportAudit saveImportedChildrenData(ChildrenDataSet childrenDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
+    private MctsImportAudit saveImportedChildrenData(ChildrenDataSet childrenDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) { //NOPMD NcssMethodCount
         LOGGER.info("Starting children import for state {}", stateName);
         List<ChildRecord> childRecords = childrenDataSet.getRecords();
         List<Map<String, Object>> validChildRecords = new ArrayList<>();
@@ -447,12 +427,8 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             rejected++;
         }
         List<Map<String, Object>> acceptedChildRecords = childRecordsSet.get(1);
-        LocationFinder locationFinder = new LocationFinder();
-        try {
-            locationFinder = locationService.updateLocations(acceptedChildRecords);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        LocationFinder locationFinder = locationService.updateLocations(acceptedChildRecords);
+
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
 
         for (Map<String, Object> record : acceptedChildRecords) {
@@ -495,7 +471,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         try {
             mctsBeneficiaryImportService.createOrUpdateMctsChildRejections(rejectedChilds , rejectionStatus);
         } catch (RuntimeException e) {
-            LOGGER.error("Error while bulk updating rejection records", e);
+            LOGGER.error(BULK_REJECTION_ERROR_MESSAGE, e);
 
         }
         LOGGER.info("{} state, Total: {} children imported, {} children rejected", stateName, saved, rejected);
@@ -543,7 +519,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         try {
             mctsBeneficiaryImportService.createOrUpdateMctsChildRejections(rejectedChilds , rejectionStatus);
         } catch (RuntimeException e) {
-            LOGGER.error("Error while bulk updating rejection records", e);
+            LOGGER.error(BULK_REJECTION_ERROR_MESSAGE, e);
         }
         return validChildRecords;
     }
