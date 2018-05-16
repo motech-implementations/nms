@@ -86,7 +86,7 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
             record.put(motherInstance, mother);
 
             try {
-                motherImportRejection = mctsBeneficiaryImportService.importMotherRecordCSV(record, importOrigin, locationFinder);
+                motherImportRejection = mctsBeneficiaryImportService.importMotherRecord(record, importOrigin, locationFinder);
                 if (motherImportRejection != null) {
                     if (mctsImport) {
                         rejectedMothers.put(motherImportRejection.getIdNo(), motherImportRejection);

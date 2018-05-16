@@ -117,11 +117,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private ActionFinderService actionFinderService;
 
 
-
-
     @Override // NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
-    public boolean importMotherRecord(Map<String, Object> record, SubscriptionOrigin importOrigin) { //NOPMD NcssMethodCount
+    public MotherImportRejection importMotherRecord(Map<String, Object> record, SubscriptionOrigin importOrigin, LocationFinder locationFinder) { //NOPMD NcssMethodCount
         if (pregnancyPack == null) {
             pregnancyPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.PREGNANCY);
         }
@@ -179,166 +177,26 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         // an earlier date if it's an complete mother record(i.e not created through child import)
         // validate and set location
         try {
-            MctsBeneficiaryUtils.setLocationFields(locationService.getLocations(record), mother);
+            mctsBeneficiaryValueProcessor.setLocationFieldsCSV(locationFinder, record, mother);
         } catch (InvalidLocationException le) {
             LOGGER.error(le.toString());
-            subscriptionErrorDataService.create(new SubscriptionError(msisdn, beneficiaryId, SubscriptionRejectionReason.INVALID_LOCATION,
-                    SubscriptionPackType.PREGNANCY, le.getMessage(), importOrigin));
-            return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.INVALID_LOCATION, false);
+           return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.INVALID_LOCATION, false);
         }
 
         //validate if it's an updated record compared to one from database
         if (mother.getUpdatedDateNic() != null && (lastUpdatedDateNic == null || mother.getUpdatedDateNic().isAfter(lastUpdatedDateNic))) {
-            subscriptionErrorDataService.create(new SubscriptionError(msisdn, beneficiaryId,
-                    SubscriptionRejectionReason.BENEFICIARY_ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY, "Updated Record exits", importOrigin));
-            return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
+           return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
         }
 
-        List<DeactivatedBeneficiary> deactivatedUsers = deactivatedBeneficiaryDataService.findByExternalId(beneficiaryId);
-        if (deactivatedUsers != null && deactivatedUsers.size() > 0) {
-            for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
-                if (deactivatedUser.getOrigin() == importOrigin) {
-                    String message = deactivatedUser.isCompletedSubscription() ? SUBSCRIPTION_COMPLETED : USER_DEACTIVATED;
-                    if (message.length() > 2) {
-                        subscriptionErrorDataService.create(new SubscriptionError(msisdn, beneficiaryId,
-                                SubscriptionRejectionReason.BENEFICIARY_ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY, message, importOrigin));
-                        return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
-                    }
-                }
-            }
-        }
+        mother.setName(name);
+        mother.setDateOfBirth(motherDOB);
+        mother.setUpdatedDateNic(lastUpdatedDateNic);
+
 
         // Check if existing subscription needs to be deactivated
         Boolean deactivate = ((abortion != null) && abortion) || ((stillBirth != null) && stillBirth) || ((death != null) && death);  // NO CHECKSTYLE Boolean Expression Complexity
         if (deactivate && (mother.getId() == null)) {
             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ABORT_STILLBIRTH_DEATH, false);
-        }
-
-        mother.setName(name);
-        mother.setDateOfBirth(motherDOB);
-        mother.setUpdatedDateNic(lastUpdatedDateNic);
-
-        Subscription subscription;
-        if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
-            //validate if an ACTIVE child is already present for the mother. If yes, ignore the update
-            if (childAlreadyPresent(beneficiaryId)) {
-                subscriptionErrorDataService.create(new SubscriptionError(msisdn, beneficiaryId,
-                        SubscriptionRejectionReason.ACTIVE_CHILD_PRESENT, SubscriptionPackType.PREGNANCY, "Active child is present for this mother.", importOrigin));
-                return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ACTIVE_CHILD_PRESENT, false);
-            }
-            subscription = subscriberService.updateMotherSubscriber(msisdn, mother, lmp, record, action);
-        } else {
-            Long caseNo = (Long) record.get(KilkariConstants.CASE_NO);
-            // validate caseNo
-            if (!validateCaseNo(caseNo, mother)) {
-                motherRejectionService.createOrUpdateMother(motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.INVALID_CASE_NO.toString(), action));
-                return false;
-            }
-            subscription = subscriberService.updateRchMotherSubscriber(msisdn, mother, lmp, caseNo, deactivate, record, action);
-        }
-        // We rejected the update/create for the subscriber
-        if (subscription == null) {
-            return false;
-        }
-
-        if ((abortion != null) && abortion) {
-            subscriptionService.deactivateSubscription(subscription, DeactivationReason.MISCARRIAGE_OR_ABORTION);
-            return true;
-        }
-
-        if ((stillBirth != null) && stillBirth) {
-            subscriptionService.deactivateSubscription(subscription, DeactivationReason.STILL_BIRTH);
-            return true;
-        }
-
-        if ((death != null) && death) {
-            subscriptionService.deactivateSubscription(subscription, DeactivationReason.MATERNAL_DEATH);
-            return true;
-        }
-
-        return createUpdateMotherRejections(flagForMcts, record, action, null, true);
-    }
-
-    @Override // NO CHECKSTYLE Cyclomatic Complexity
-    @Transactional
-    public MotherImportRejection importMotherRecordCSV(Map<String, Object> record, SubscriptionOrigin importOrigin, LocationFinder locationFinder) { //NOPMD NcssMethodCount
-        if (pregnancyPack == null) {
-            pregnancyPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.PREGNANCY);
-        }
-        MctsMother mother;
-        Long msisdn;
-        Boolean abortion;
-        Boolean stillBirth;
-        LocalDate lastUpdatedDateNic;
-        String beneficiaryId;
-        String action = "";
-        Boolean flagForMcts = true;
-        if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
-            action = actionFinderService.motherActionFinder(convertMapToMother(record));
-            beneficiaryId = (String) record.get(KilkariConstants.BENEFICIARY_ID);
-            mother = mctsBeneficiaryValueProcessor.getOrCreateMotherInstance(beneficiaryId);
-            msisdn = (Long) record.get(KilkariConstants.MSISDN);
-            abortion = (Boolean) record.get(KilkariConstants.ABORTION);
-            stillBirth = (Boolean) record.get(KilkariConstants.STILLBIRTH);
-            lastUpdatedDateNic = (LocalDate) record.get(KilkariConstants.LAST_UPDATE_DATE);
-        } else {
-            flagForMcts = false;
-            action = actionFinderService.rchMotherActionFinder((convertMapToRchMother(record)));
-            beneficiaryId = (String) record.get(KilkariConstants.RCH_ID);
-            String mctsId = (String) record.get(KilkariConstants.MCTS_ID);
-            mother = mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance(beneficiaryId, mctsId);
-            msisdn = (Long) record.get(KilkariConstants.MOBILE_NO);
-            abortion = (Boolean) record.get(KilkariConstants.ABORTION_TYPE);
-            stillBirth = (Boolean) record.get(KilkariConstants.DELIVERY_OUTCOMES);
-            lastUpdatedDateNic = (LocalDate) record.get(KilkariConstants.EXECUTION_DATE);
-        }
-
-        String name = (String) record.get(KilkariConstants.BENEFICIARY_NAME);
-        DateTime lmp = (DateTime) record.get(KilkariConstants.LMP);
-        DateTime motherDOB = (DateTime) record.get(KilkariConstants.MOTHER_DOB);
-        Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
-
-        if (mother == null) {
-            return createUpdateMotherRejectionsCSV(flagForMcts, record, action, RejectionReasons.DATA_INTEGRITY_ERROR, false);
-        }
-
-        boolean isInvalidLMP = (mother.getId() == null || (mother.getId() != null && mother.getLastMenstrualPeriod() == null)) && !validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, importOrigin);
-
-        if (isInvalidLMP) {
-            return createUpdateMotherRejectionsCSV(flagForMcts, record, action, RejectionReasons.INVALID_LMP_DATE, false);
-        }
-
-        // validate msisdn
-        if (!validateMsisdn(msisdn)) {
-            return createUpdateMotherRejectionsCSV(flagForMcts, record, action, RejectionReasons.MOBILE_NUMBER_EMPTY_OR_WRONG_FORMAT, false);
-        }
-
-        // validate lmp date. We do not sanitize for lmp in the future to be in sync with MCTS data
-        // NOTE: getId is a way to see if this is a new user. We only accept new users if they
-        // have 12 weeks left in the pack. For existing users, their lmp could be updated to
-        // an earlier date if it's an complete mother record(i.e not created through child import)
-        // validate and set location
-        try {
-            mctsBeneficiaryValueProcessor.setLocationFieldsCSV(locationFinder, record, mother);
-        } catch (InvalidLocationException le) {
-            LOGGER.error(le.toString());
-           return createUpdateMotherRejectionsCSV(flagForMcts, record, action, RejectionReasons.INVALID_LOCATION, false);
-        }
-
-        //validate if it's an updated record compared to one from database
-        if (mother.getUpdatedDateNic() != null && (lastUpdatedDateNic == null || mother.getUpdatedDateNic().isAfter(lastUpdatedDateNic))) {
-           return createUpdateMotherRejectionsCSV(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
-        }
-
-        mother.setName(name);
-        mother.setDateOfBirth(motherDOB);
-        mother.setUpdatedDateNic(lastUpdatedDateNic);
-
-
-        // Check if existing subscription needs to be deactivated
-        Boolean deactivate = ((abortion != null) && abortion) || ((stillBirth != null) && stillBirth) || ((death != null) && death);  // NO CHECKSTYLE Boolean Expression Complexity
-        if (deactivate && (mother.getId() == null)) {
-            return createUpdateMotherRejectionsCSV(flagForMcts, record, action, RejectionReasons.ABORT_STILLBIRTH_DEATH, false);
         }
 
         List<DeactivatedBeneficiary> deactivatedUsers = null;
@@ -350,7 +208,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     if (deactivatedUser.getOrigin() == importOrigin) {
                         String message = deactivatedUser.isCompletedSubscription() ? SUBSCRIPTION_COMPLETED : USER_DEACTIVATED;
                         if (message.length() > 2) {
-                            return createUpdateMotherRejectionsCSV(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
+                            return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
                         }
                     }
                 }
@@ -361,7 +219,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
                 //validate if an ACTIVE child is already present for the mother. If yes, ignore the update
                 if (childAlreadyPresent(beneficiaryId)) {
-                    return createUpdateMotherRejectionsCSV(flagForMcts, record, action, RejectionReasons.ACTIVE_CHILD_PRESENT, false);
+                    return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ACTIVE_CHILD_PRESENT, false);
                 }
                 subscription = subscriberService.updateMotherSubscriber(msisdn, mother, lmp, record, action);
             } else {
@@ -386,138 +244,14 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 subscriptionService.deactivateSubscription(subscription, DeactivationReason.MATERNAL_DEATH);
             }
 
-            return createUpdateMotherRejectionsCSV(flagForMcts, record, action, null, true);
+            return createUpdateMotherRejections(flagForMcts, record, action, null, true);
         }
     }
 
-    @Override // NO CHECKSTYLE Cyclomatic Complexity
-    @Transactional
-    public ChildImportRejection importChildRecord(Map<String, Object> record, SubscriptionOrigin importOrigin) { //NOPMD NcssMethodCount
-        if (childPack == null) {
-            childPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.CHILD);
-        }
-        MctsChild child;
-        Long msisdn;
-        MctsMother mother;
-        LocalDate lastUpdateDateNic;
-        String childId;
-        String action = "";
-        Boolean flagForMcts = true;
-
-        if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
-            action = actionFinderService.childActionFinder(convertMapToChild(record));
-            childId = (String) record.get(KilkariConstants.BENEFICIARY_ID);
-            child = mctsBeneficiaryValueProcessor.getOrCreateChildInstance(childId);
-            msisdn = (Long) record.get(KilkariConstants.MSISDN);
-            if (record.get(KilkariConstants.MOTHER_ID) != null) {
-                Object motherRecord = record.get(KilkariConstants.MOTHER_ID);
-
-                try {
-                    MctsMother motherInstance = (MctsMother) motherRecord;
-                    mother = mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherInstance.getBeneficiaryId());
-                } catch (Exception e) {
-                    mother = mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherRecord.toString());
-                }
-
-            } else {
-                mother = null;
-            }
-            lastUpdateDateNic = (LocalDate) record.get(KilkariConstants.LAST_UPDATE_DATE);
-        } else {
-            flagForMcts = false;
-            action = (String) record.get(KilkariConstants.ACTION);
-            childId = (String) record.get(KilkariConstants.RCH_ID);
-            child = (MctsChild) record.get(KilkariConstants.RCH_CHILD);
-            msisdn = (Long) record.get(KilkariConstants.MOBILE_NO);
-            lastUpdateDateNic = (LocalDate) record.get(KilkariConstants.EXECUTION_DATE);
-            if (record.get(KilkariConstants.RCH_MOTHER_ID) != null || record.get(KilkariConstants.MCTS_MOTHER_ID) != null) {
-                String motherRchId = record.get(KilkariConstants.RCH_MOTHER_ID) == null || "".equals(record.get(KilkariConstants.RCH_MOTHER_ID)) || "0".equalsIgnoreCase(record.get(KilkariConstants.RCH_MOTHER_ID).toString()) ? null : record.get(KilkariConstants.RCH_MOTHER_ID).toString();
-                String motherMctsId = record.get(KilkariConstants.MCTS_MOTHER_ID) == null || "".equals(record.get(KilkariConstants.MCTS_MOTHER_ID)) || "0".equalsIgnoreCase(record.get(KilkariConstants.MCTS_MOTHER_ID).toString()) ? null : record.get(KilkariConstants.MCTS_MOTHER_ID).toString();
-                if (motherRchId == null && motherMctsId != null) {
-                    mother = mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherMctsId);
-                } else if (motherRchId != null) {
-                    mother = mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance(motherRchId, motherMctsId);
-                } else {
-                    mother = null;
-                }
-            } else {
-                mother = null;
-            }
-        }
-        String name = (String) record.get(KilkariConstants.BENEFICIARY_NAME);
-        DateTime dob = (DateTime) record.get(KilkariConstants.DOB);
-        Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
-
-        if ((child == null)) {
-            return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.DATA_INTEGRITY_ERROR, false);
-        }
-
-        boolean isInValidDOB = child.getId() == null && !validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, importOrigin);
-        if (isInValidDOB) {
-            return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.INVALID_DOB, false);
-        }
-
-        //validate mother
-        if (!validateMother(mother, child)) {
-            return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.ALREADY_LINKED_WITH_A_DIFFERENT_MOTHER_ID, false);
-        }
-
-        // validate msisdn
-        if (!validateMsisdn(msisdn)) {
-            return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.MOBILE_NUMBER_EMPTY_OR_WRONG_FORMAT, false);
-        }
-
-        // validate dob. We do not sanitize for dob in the future to be in sync with MCTS data
-        // NOTE: getId is a way to check for new user. We only accept new children if they have 12 weeks left
-        // in the pack. Existing children could have their dob updated to an earlier date
-
-        // validate and set location
-        try {
-            MctsBeneficiaryUtils.setLocationFields(locationService.getLocations(record), child);
-            if (mother != null) {
-                MctsBeneficiaryUtils.setLocationFields(locationService.getLocations(record), mother);
-            }
-        } catch (InvalidLocationException le) {
-            LOGGER.error(le.toString());
-            return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.INVALID_LOCATION, false);
-        }
-
-        //validate if it's an updated record compared to one from database
-        if (child.getUpdatedDateNic() != null && (lastUpdateDateNic == null || child.getUpdatedDateNic().isAfter(lastUpdateDateNic))) {
-            return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
-        }
-
-        List<DeactivatedBeneficiary> deactivatedUsers = deactivatedBeneficiaryDataService.findByExternalId(childId);
-        if (deactivatedUsers != null && deactivatedUsers.size() > 0) {
-            for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
-                if (deactivatedUser.getOrigin() == importOrigin) {
-                    String message = deactivatedUser.isCompletedSubscription() ? SUBSCRIPTION_COMPLETED : USER_DEACTIVATED;
-                    if (message.length() > 2) {
-                        return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
-                    }
-                }
-            }
-        }
-        //1.0.34 Bug child.getId() == null was not checked
-        if ((death != null) && death && (child.getId() == null)) {
-            return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.CHILD_DEATH, false);
-        }
-
-        child.setName(name);
-        child.setMother(mother);
-        child.setUpdatedDateNic(lastUpdateDateNic);
-
-        if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
-            return subscriberService.updateChildSubscriber(msisdn, child, dob, record, action);
-        } else {
-            return subscriberService.updateRchChildSubscriber(msisdn, child, dob, record, action);
-
-        }
-    }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
-    public ChildImportRejection importChildRecordCSV(Map<String, Object> record, SubscriptionOrigin importOrigin, LocationFinder locationFinder) { //NOPMD NcssMethodCount
+    public ChildImportRejection importChildRecord(Map<String, Object> record, SubscriptionOrigin importOrigin, LocationFinder locationFinder) { //NOPMD NcssMethodCount
         if (childPack == null) {
             childPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.CHILD);
         }
@@ -646,19 +380,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     }
 
     // Create rejection records for all the invalid mothers
-    private boolean createUpdateMotherRejections(Boolean isMcts, Map<String, Object> record, String action, RejectionReasons rejectionReason, Boolean accepted) {
-        String rejectReason = rejectionReason == null ? null : rejectionReason.toString();
-        if (isMcts) {
-            motherRejectionService.createOrUpdateMother(motherRejectionMcts(convertMapToMother(record), accepted, rejectReason, action));
-
-        } else {
-            motherRejectionService.createOrUpdateMother(motherRejectionRch(convertMapToRchMother(record), accepted, rejectReason, action));
-
-        }
-        return accepted;
-    }
-
-    private MotherImportRejection createUpdateMotherRejectionsCSV(Boolean isMcts, Map<String, Object> record, String action, RejectionReasons rejectionReason, Boolean accepted) {
+   private MotherImportRejection createUpdateMotherRejections(Boolean isMcts, Map<String, Object> record, String action, RejectionReasons rejectionReason, Boolean accepted) {
         String rejectReason = rejectionReason == null ? null : rejectionReason.toString();
         if (isMcts) {
             return motherRejectionMcts(convertMapToMother(record), accepted, rejectReason, action);
