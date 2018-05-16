@@ -62,7 +62,6 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
 
     @Override //NO CHECKSTYLE Cyclomatic Complexity
     public int  importChildData(Reader reader, SubscriptionOrigin importOrigin) throws IOException { //NOPMD NcssMethodCount
-        int count = 0;
         /**
          * Count of all the records rejected for unknown exceptions. So, doesn't include the ones saved in nms_subscription_errors.
          * This is used just for debugging purpose.
@@ -82,31 +81,11 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             contactNumber = KilkariConstants.MOBILE_NO;
         }
 
-        CsvMapImporter csvImporter = new CsvImporterBuilder()
-                .setProcessorMapping(cellProcessorMapper)
-                .setPreferences(CsvPreference.TAB_PREFERENCE)
-                .createAndOpen(bufferedReader);
-
-
-        List<Map<String, Object>> recordList = new ArrayList<>();
-        Map<String, Object> record;
-        while (null != (record = csvImporter.read())) {
-            recordList.add(record);
-            count++;
-        }
-        LOGGER.debug("{} records added to object", count);
+        List<Map<String, Object>> recordList = readCsv(bufferedReader, cellProcessorMapper);
 
         LocationFinder locationFinder = locationService.updateLocations(recordList);
 
-        Collections.sort(recordList, new Comparator<Map<String, Object>>() {
-            public int compare(Map<String, Object> m1, Map<String, Object> m2) {
-                Object phoneM1 = m1.get(mctsImport ? KilkariConstants.MSISDN : KilkariConstants.MOBILE_NO);
-                Object phoneM2 = m2.get(mctsImport ? KilkariConstants.MSISDN : KilkariConstants.MOBILE_NO);
-                return ((Long) (phoneM1 == null ? 0L : phoneM1))
-                        .compareTo((Long) (phoneM2 == null ? 0L : phoneM2)); //ascending order
-            }
-        });
-
+        recordList = sortByMobileNumber(recordList, mctsImport);
 
         try {
             Map<String, Object> rejectedChilds = new HashMap<>();
@@ -163,7 +142,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
                     ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
         }
 
-        return count;
+        return recordList.size();
     }
 
     /**
@@ -175,7 +154,6 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
      */
     @Override //NO CHECKSTYLE Cyclomatic Complexity
     public int importMotherData(Reader reader, SubscriptionOrigin importOrigin) throws IOException { //NOPMD NcssMethodCount
-        int count = 0;
         /**
          * Count of all the records rejected for unknown exceptions. So, doesn't include the ones saved in nms_subscription_errors.
          * This is used just for debugging purpose.
@@ -195,31 +173,11 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             contactNumber = KilkariConstants.MOBILE_NO;
         }
 
-        CsvMapImporter csvImporter = new CsvImporterBuilder()
-                .setProcessorMapping(cellProcessorMapper)
-                .setPreferences(CsvPreference.TAB_PREFERENCE)
-                .createAndOpen(bufferedReader);
-
-        List<Map<String, Object>> recordList = new ArrayList<>();
-        Map<String, Object> record;
-        while (null != (record = csvImporter.read())) {
-            recordList.add(record);
-            count++;
-        }
-        LOGGER.debug("{} records added to object", count);
+        List<Map<String, Object>> recordList = readCsv(bufferedReader, cellProcessorMapper);
 
         LocationFinder locationFinder = locationService.updateLocations(recordList);
 
-        Collections.sort(recordList, new Comparator<Map<String, Object>>() {
-            public int compare(Map<String, Object> m1, Map<String, Object> m2) {
-                Object phoneM1 = m1.get(mctsImport ? KilkariConstants.MSISDN : KilkariConstants.MOBILE_NO);
-                Object phoneM2 = m2.get(mctsImport ? KilkariConstants.MSISDN : KilkariConstants.MOBILE_NO);
-                return ((Long) (phoneM1 == null ? 0L : phoneM1))
-                        .compareTo((Long) (phoneM2 == null ? 0L : phoneM2)); //ascending order
-            }
-        });
-
-
+        recordList = sortByMobileNumber(recordList, mctsImport);
 
         try {
             Map<String, Object> rejectedMothers = new HashMap<>();
@@ -267,7 +225,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
 
             }
 
-            LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
+            LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(recordsProcessed));
             LOGGER.debug(KilkariConstants.REJECTED, timer.frequency(rejectedWithException));
 
         } catch (ConstraintViolationException e) {
@@ -275,7 +233,37 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
                     ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
         }
 
-        return count;
+        return recordList.size();
+    }
+
+    private List<Map<String, Object>> readCsv(BufferedReader bufferedReader, Map<String, CellProcessor> cellProcessorMapper) throws IOException {
+        int count = 0;
+
+        CsvMapImporter csvImporter = new CsvImporterBuilder()
+                .setProcessorMapping(cellProcessorMapper)
+                .setPreferences(CsvPreference.TAB_PREFERENCE)
+                .createAndOpen(bufferedReader);
+
+        List<Map<String, Object>> recordList = new ArrayList<>();
+        Map<String, Object> record;
+        while (null != (record = csvImporter.read())) {
+            recordList.add(record);
+            count++;
+        }
+        LOGGER.debug("{} records added to object", count);
+        return recordList;
+    }
+
+    private List<Map<String, Object>> sortByMobileNumber(List<Map<String, Object>> recordList, final Boolean mctsImport) {
+        Collections.sort(recordList, new Comparator<Map<String, Object>>() {
+            public int compare(Map<String, Object> m1, Map<String, Object> m2) {
+                Object phoneM1 = m1.get(mctsImport ? KilkariConstants.MSISDN : KilkariConstants.MOBILE_NO);
+                Object phoneM2 = m2.get(mctsImport ? KilkariConstants.MSISDN : KilkariConstants.MOBILE_NO);
+                return ((Long) (phoneM1 == null ? 0L : phoneM1))
+                        .compareTo((Long) (phoneM2 == null ? 0L : phoneM2)); //ascending order
+            }
+        });
+        return recordList;
     }
 
 
