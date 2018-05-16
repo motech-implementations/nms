@@ -86,7 +86,7 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
             record.put(childInstance, child);
 
             try {
-                childImportRejection = mctsBeneficiaryImportService.importChildRecordCSV(record, importOrigin, locationFinder);
+                childImportRejection = mctsBeneficiaryImportService.importChildRecord(record, importOrigin, locationFinder);
                 if (childImportRejection != null) {
                     if (mctsImport) {
                         rejectedChilds.put(childImportRejection.getIdNo(), childImportRejection);

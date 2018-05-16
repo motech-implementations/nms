@@ -44,11 +44,14 @@ import org.motechproject.nms.mcts.repository.MctsImportFailRecordDataService;
 import org.motechproject.nms.mcts.service.MctsWebServiceFacade;
 import org.motechproject.nms.mcts.service.MctsWsImportService;
 import org.motechproject.nms.mcts.utils.Constants;
+import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.kilkari.service.ActionFinderService;
+import org.motechproject.nms.region.service.LocationService;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
+import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
 import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
 import org.motechproject.nms.rejectionhandler.service.FlwRejectionService;
 import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
@@ -60,6 +63,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
@@ -128,6 +132,9 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     @Autowired
     private FrontLineWorkerService frontLineWorkerService;
+
+    @Autowired
+    private LocationService locationService;
 
     /**
      * Event relay service to handle async notifications
@@ -243,45 +250,64 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
     public MctsImportAudit saveImportedMothersData(MothersDataSet mothersDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
         LOGGER.info("Starting mother import for state {}", stateName);
         List<MotherRecord> motherRecords = mothersDataSet.getRecords();
-        List<MotherRecord> validMotherRecords = new ArrayList<>();
+        List<Map<String, Object>> validMotherRecords = new ArrayList<>();
         validMotherRecords = getLMPValidRecords(motherRecords);
-        List<List<MotherRecord>> motherRecordsSet = cleanMotherRecords(validMotherRecords);
-        List<MotherRecord> rejectedMotherRecords = motherRecordsSet.get(0);
+        List<List<Map<String, Object>>> motherRecordsSet = cleanMotherRecords(validMotherRecords);
+        List<Map<String, Object>> rejectedMotherRecords = motherRecordsSet.get(0);
         String action = "";
         int saved = 0;
         int rejected = motherRecords.size() - validMotherRecords.size();
-        for (MotherRecord record : rejectedMotherRecords) {
-            action = actionFinderService.motherActionFinder(record);
-            LOGGER.error("Existing Mother Record with same MSISDN in the data set");
-            motherRejectionService.createOrUpdateMother(motherRejectionMcts(record, false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action));
-            rejected++;
+        Map<String, Object> rejectedMothers = new HashMap<>();
+        Map<String, Object> rejectionStatus = new HashMap<>();
+        MotherImportRejection motherImportRejection;
 
+        for (Map<String, Object> record : rejectedMotherRecords) {
+            action = (String) record.get(KilkariConstants.ACTION);
+            LOGGER.error("Existing Mother Record with same MSISDN in the data set");
+            motherImportRejection = motherRejectionMcts(convertMapToMother(record), false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action);
+            rejectedMothers.put(motherImportRejection.getIdNo(), motherImportRejection);
+            rejectionStatus.put(motherImportRejection.getIdNo(), motherImportRejection.getAccepted());
+            rejected++;
+        }
+        List<Map<String, Object>> acceptedMotherRecords = motherRecordsSet.get(1);
+        LocationFinder locationFinder = new LocationFinder();
+        try {
+            locationFinder = locationService.updateLocations(acceptedMotherRecords);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-
-        List<MotherRecord> acceptedMotherRecords = motherRecordsSet.get(1);
-
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
-        for (MotherRecord record : acceptedMotherRecords) {
-            action = actionFinderService.motherActionFinder(record);
+        for (Map<String, Object> recordMap : acceptedMotherRecords) {
+            String mctsId = (String) recordMap.get(KilkariConstants.BENEFICIARY_ID);
             try {
-                // get user property map
-                Map<String, Object> recordMap = toMap(record);
-
                 // validate if user needs to be hpd filtered (true if user can be added)
                 boolean hpdValidation = validateHpdUser(hpdMap,
                         (long) recordMap.get(KilkariConstants.STATE_ID),
                         (long) recordMap.get(KilkariConstants.DISTRICT_ID));
-                if (hpdValidation && mctsBeneficiaryImportService.importMotherRecord(recordMap, SubscriptionOrigin.MCTS_IMPORT)) {
+                if (hpdValidation) {
+
+                    motherImportRejection = mctsBeneficiaryImportService.importMotherRecord(recordMap, SubscriptionOrigin.MCTS_IMPORT, locationFinder);
+                    if(motherImportRejection != null) {
+                        rejectedMothers.put(motherImportRejection.getIdNo(), motherImportRejection);
+                        rejectionStatus.put(motherImportRejection.getIdNo(), motherImportRejection.getAccepted());
+                        if (motherImportRejection.getAccepted()) {
+                            saved++;
+                            LOGGER.info("saved mother {}", mctsId);
+                        } else {
+                            rejected++;
+                            LOGGER.info("rejected mother {}", mctsId);
+                        }
+                    }
                     saved++;
-                    LOGGER.info("saved mother {}", record.getIdNo());
+                    LOGGER.info("saved mother {}", mctsId);
                 } else {
                     rejected++;
-                    LOGGER.info("rejected mother {}", record.getIdNo());
+                    LOGGER.info("rejected mother {}", mctsId);
                 }
             } catch (RuntimeException e) {
                 LOGGER.error("Mother import Error. Cannot import Mother with ID: {} for state ID: {}",
-                        record.getIdNo(), stateCode, e);
+                        mctsId, stateCode, e);
                 rejected++;
 
             }
@@ -289,34 +315,53 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                 LOGGER.debug("{} state, Progress: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
             }
         }
+        try {
+            mctsBeneficiaryImportService.createOrUpdateMctsMotherRejections(rejectedMothers , rejectionStatus);
+        } catch (RuntimeException e) {
+            LOGGER.error("Error while bulk updating rejection records", e);
+
+        }
         LOGGER.info("{} state, Total: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
         LOGGER.info("rejected mothers count {}", rejected);
         return new MctsImportAudit(startReferenceDate, endReferenceDate, MctsUserType.MOTHER, stateCode, stateName, saved, rejected, null);
     }
 
-    private  List<MotherRecord> getLMPValidRecords(List<MotherRecord> motherRecords) {
-        List<MotherRecord> validMotherRecords = new ArrayList<>();
+    private  List<Map<String, Object>> getLMPValidRecords(List<MotherRecord> motherRecords) {
+        List<Map<String, Object>> validMotherRecords = new ArrayList<>();
+        Map<String, Object> rejectedMothers = new HashMap<>();
+        Map<String, Object> rejectionStatus = new HashMap<>();
+        MotherImportRejection motherImportRejection;
         for (MotherRecord record : motherRecords) {
             Map<String, Object> recordMap = toMap(record);
             MctsMother mother;
             Long msisdn;
             String beneficiaryId;
-            String action = "";
-            action = actionFinderService.motherActionFinder(convertMapToMother(recordMap));
+            String action = KilkariConstants.CREATE;
             beneficiaryId = (String) recordMap.get(KilkariConstants.BENEFICIARY_ID);
-            mother = mctsBeneficiaryValueProcessor.getOrCreateMotherInstance(beneficiaryId);
             msisdn = (Long) recordMap.get(KilkariConstants.MSISDN);
             DateTime lmp = (DateTime) recordMap.get(KilkariConstants.LMP);
+            mother = mctsBeneficiaryValueProcessor.getOrCreateMotherInstance(beneficiaryId);
+            recordMap.put(KilkariConstants.MCTS_MOTHER, mother);
             if(mother == null) {
-                motherRejectionService.createOrUpdateMother(motherRejectionMcts(convertMapToMother(recordMap), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), action));
+                motherImportRejection = motherRejectionMcts(convertMapToMother(recordMap), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), action);
+                rejectedMothers.put(motherImportRejection.getIdNo(), motherImportRejection);
+                rejectionStatus.put(motherImportRejection.getIdNo(), motherImportRejection.getAccepted());
             } else {
                 boolean isValidLMP =  (mother.getId() == null || (mother.getId() != null && mother.getLastMenstrualPeriod() == null)) && !mctsBeneficiaryImportService.validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, SubscriptionOrigin.MCTS_IMPORT);
                         if (isValidLMP) {
-                        motherRejectionService.createOrUpdateMother(motherRejectionMcts(convertMapToMother(recordMap), false, RejectionReasons.INVALID_LMP_DATE.toString(), action));
+                            motherImportRejection = motherRejectionMcts(convertMapToMother(recordMap), false, RejectionReasons.INVALID_LMP_DATE.toString(), action);
+                            rejectedMothers.put(motherImportRejection.getIdNo(), motherImportRejection);
+                            rejectionStatus.put(motherImportRejection.getIdNo(), motherImportRejection.getAccepted());
                         } else {
-                             validMotherRecords.add(record);
+                             validMotherRecords.add(recordMap);
                         }
                     }
+        }
+
+        try {
+            mctsBeneficiaryImportService.createOrUpdateMctsMotherRejections(rejectedMothers , rejectionStatus);
+        } catch (RuntimeException e) {
+            LOGGER.error("Error while bulk updating rejection records", e);
         }
         return validMotherRecords;
     }
@@ -402,7 +447,12 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             rejected++;
         }
         List<Map<String, Object>> acceptedChildRecords = childRecordsSet.get(1);
-
+        LocationFinder locationFinder = new LocationFinder();
+        try {
+            locationFinder = locationService.updateLocations(acceptedChildRecords);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
 
         for (Map<String, Object> record : acceptedChildRecords) {
@@ -414,7 +464,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                         (long) record.get(KilkariConstants.DISTRICT_ID));
 
                 if (hpdValidation) {
-                    childImportRejection = mctsBeneficiaryImportService.importChildRecord(record, SubscriptionOrigin.MCTS_IMPORT);
+                    childImportRejection = mctsBeneficiaryImportService.importChildRecord(record, SubscriptionOrigin.MCTS_IMPORT, locationFinder);
                     if (childImportRejection != null) {
                         rejectedChilds.put(childImportRejection.getIdNo(), childImportRejection);
                         rejectionStatus.put(childImportRejection.getIdNo(), childImportRejection.getAccepted());

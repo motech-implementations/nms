@@ -17,13 +17,9 @@ import java.util.Map;
  */
 public interface MctsBeneficiaryImportService {
 
-    boolean importMotherRecord(Map<String, Object> record, SubscriptionOrigin origin);
+    MotherImportRejection importMotherRecord(Map<String, Object> record, SubscriptionOrigin origin, LocationFinder locationFinder);
 
-    MotherImportRejection importMotherRecordCSV(Map<String, Object> record, SubscriptionOrigin origin, LocationFinder locationFinder);
-
-    ChildImportRejection importChildRecord(Map<String, Object> record, SubscriptionOrigin origin);
-
-    ChildImportRejection importChildRecordCSV(Map<String, Object> record, SubscriptionOrigin origin, LocationFinder locationFinder);
+    ChildImportRejection importChildRecord(Map<String, Object> record, SubscriptionOrigin origin, LocationFinder locationFinder);
 
     List<List<Map<String, Object>>> splitRecords(List<Map<String, Object>> recordList, String contactNumber);
 
