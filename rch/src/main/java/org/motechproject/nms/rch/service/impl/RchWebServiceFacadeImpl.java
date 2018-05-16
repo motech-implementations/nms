@@ -62,12 +62,9 @@ import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.kilkari.service.ActionFinderService;
 import org.motechproject.nms.region.service.LocationService;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
-import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
-import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
 import org.motechproject.nms.rejectionhandler.service.FlwRejectionService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
@@ -119,6 +116,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String SCP_TIMEOUT_SETTING = "rch.scp_timeout";
     private static final Long SCP_TIME_OUT = 60000L;
     private static final String RCH_WEB_SERVICE = "RCH Web Service";
+    private static final String BULK_REJECTION_ERROR_MESSAGE = "Error while bulk updating rejection records";
     private static final double THOUSAND = 1000d;
 
     @Autowired
@@ -157,15 +155,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     @Autowired
     private FlwRejectionService flwRejectionService;
-
-    @Autowired
-    private MotherRejectionService motherRejectionService;
-
-    @Autowired
-    private ChildRejectionService childRejectionService;
-
-    @Autowired
-    private ActionFinderService actionFinderService;
 
     @Autowired
     private FrontLineWorkerService frontLineWorkerService;
@@ -559,7 +548,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
 
-    private RchImportAudit saveImportedMothersData(RchMothersDataSet mothersDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
+    private RchImportAudit saveImportedMothersData(RchMothersDataSet mothersDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) { //NOPMD NcssMethodCount
         LOGGER.info("Starting RCH mother import for state {}", stateName);
         List<RchMotherRecord> motherRecords = mothersDataSet.getRecords();
         List<Map<String, Object>> validMotherRecords = new ArrayList<>();
@@ -583,12 +572,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             rejected++;
         }
         List<Map<String, Object>> acceptedRchMothers = rchMotherRecordsSet.get(1);
-        LocationFinder locationFinder = new LocationFinder();
-        try {
-            locationFinder = locationService.updateLocations(acceptedRchMothers);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        LocationFinder locationFinder = locationService.updateLocations(acceptedRchMothers);
+
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
         for (Map<String, Object> recordMap : acceptedRchMothers) {
             String rchId = (String) recordMap.get(KilkariConstants.RCH_ID);
@@ -627,7 +612,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
             mctsBeneficiaryImportService.createOrUpdateRchMotherRejections(rejectedMothers , rejectionStatus);
         } catch (RuntimeException e) {
-            LOGGER.error("Error while bulk updating rejection records", e);
+            LOGGER.error(BULK_REJECTION_ERROR_MESSAGE, e);
 
         }
         LOGGER.info("RCH import: {} state, Total: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
@@ -673,14 +658,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
             mctsBeneficiaryImportService.createOrUpdateRchMotherRejections(rejectedMothers , rejectionStatus);
         } catch (RuntimeException e) {
-            LOGGER.error("Error while bulk updating rejection records", e);
+            LOGGER.error(BULK_REJECTION_ERROR_MESSAGE, e);
 
         }
 
         return validMotherRecords;
     }
 
-    private RchImportAudit saveImportedChildrenData(RchChildrenDataSet childrenDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
+    private RchImportAudit saveImportedChildrenData(RchChildrenDataSet childrenDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {  //NOPMD NcssMethodCount
         LOGGER.info("Starting RCH children import for state {}", stateName);
         List<RchChildRecord> childRecords = childrenDataSet.getRecords();
         List<Map<String, Object>> validChildRecords = new ArrayList<>();
@@ -706,13 +691,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             rejected++;
         }
         List<Map<String, Object>> acceptedRchChildren = rchChildRecordsSet.get(1);
-        LocationFinder locationFinder = new LocationFinder();
-        try {
-            locationFinder = locationService.updateLocations(acceptedRchChildren);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        LocationFinder locationFinder = locationService.updateLocations(acceptedRchChildren);
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
 
         for (Map<String, Object> recordMap : acceptedRchChildren) {
@@ -756,7 +735,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
             mctsBeneficiaryImportService.createOrUpdateRchChildRejections(rejectedChilds , rejectionStatus);
         } catch (RuntimeException e) {
-            LOGGER.error("Error while bulk updating rejection records", e);
+            LOGGER.error(BULK_REJECTION_ERROR_MESSAGE, e);
 
         }
         LOGGER.info("RCH import: {} state, Total: {} children imported, {} children rejected", stateName, saved, rejected);
@@ -804,7 +783,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
             mctsBeneficiaryImportService.createOrUpdateRchChildRejections(rejectedChilds , rejectionStatus);
         } catch (RuntimeException e) {
-            LOGGER.error("Error while bulk updating rejection records", e);
+            LOGGER.error(BULK_REJECTION_ERROR_MESSAGE, e);
 
         }
 

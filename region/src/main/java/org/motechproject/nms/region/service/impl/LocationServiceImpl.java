@@ -39,7 +39,6 @@ import org.springframework.stereotype.Service;
 import javax.jdo.Query;
 import javax.jdo.annotations.Transactional;
 import javax.validation.ConstraintViolationException;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -454,7 +453,7 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override //NO CHECKSTYLE Cyclomatic Complexity
-    public LocationFinder updateLocations(List<Map<String, Object>> recordList) throws IOException { //NOPMD NcssMethodCount
+    public LocationFinder updateLocations(List<Map<String, Object>> recordList) { //NOPMD NcssMethodCount
         int count = 0;
 
         Map<String, State> stateHashMap = new HashMap<>();

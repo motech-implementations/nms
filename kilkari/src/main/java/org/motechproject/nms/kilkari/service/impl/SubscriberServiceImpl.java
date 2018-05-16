@@ -473,8 +473,15 @@ public class SubscriberServiceImpl implements SubscriberService {
             }
         }
 
+        liveBirthChildDeathCheck(finalSubscription, record);
+
+        return childRejectionMcts(convertMapToChild(record), true, null, action);
+
+    }
+
+    private void liveBirthChildDeathCheck(Subscription subscription, Map<String, Object> record) {
         // a child subscription was created -- deactivate mother's pregnancy subscription if she has one
-        Subscriber subscriber = finalSubscription != null ? finalSubscription.getSubscriber() : null;
+        Subscriber subscriber = subscription != null ? subscription.getSubscriber() : null;
         Subscription pregnancySubscription = subscriptionService.getActiveSubscription(subscriber,
                 SubscriptionPackType.PREGNANCY);
         if (pregnancySubscription != null) {
@@ -483,11 +490,8 @@ public class SubscriberServiceImpl implements SubscriberService {
 
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
         if ((death != null) && death) {
-            subscriptionService.deactivateSubscription(finalSubscription, DeactivationReason.CHILD_DEATH);
+            subscriptionService.deactivateSubscription(subscription, DeactivationReason.CHILD_DEATH);
         }
-
-        return childRejectionMcts(convertMapToChild(record), true, null, action);
-
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
@@ -584,17 +588,7 @@ public class SubscriberServiceImpl implements SubscriberService {
             }
         }
 
-        Subscriber subscriber = finalSubscription != null ? finalSubscription.getSubscriber() : null;
-        Subscription pregnancySubscription = subscriptionService.getActiveSubscription(subscriber,
-                SubscriptionPackType.PREGNANCY);
-        if (pregnancySubscription != null) {
-            subscriptionService.deactivateSubscription(pregnancySubscription, DeactivationReason.LIVE_BIRTH);
-        }
-
-        Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
-        if ((death != null) && death) {
-            subscriptionService.deactivateSubscription(finalSubscription, DeactivationReason.CHILD_DEATH);
-        }
+        liveBirthChildDeathCheck(finalSubscription, record);
 
         return childRejectionRch(convertMapToRchChild(record), true, null, action);
     }
@@ -656,7 +650,7 @@ public class SubscriberServiceImpl implements SubscriberService {
 
     @Override
     public void deactivateAllSubscriptionsForSubscriber(long callingNumber, DeactivationReason deactivationReason) {
-        LOGGER.info("Recieved Release Number {} for Deactivation.", callingNumber);
+        LOGGER.info("Receieved Release Number {} for Deactivation.", callingNumber);
         List<Subscriber> subscriberByMsisdns = this.getSubscriber(callingNumber);
         if (subscriberByMsisdns.isEmpty()) {
             LOGGER.info("Subscriber for msisdn {} is not found.", callingNumber);
