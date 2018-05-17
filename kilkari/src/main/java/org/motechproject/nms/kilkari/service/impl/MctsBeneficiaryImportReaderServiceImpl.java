@@ -48,6 +48,7 @@ import java.util.concurrent.TimeUnit;
 public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryImportReaderService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportReaderServiceImpl.class);
+    private static final int RECORDS_PART_SIZE = 10000;
 
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
@@ -92,7 +93,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             Map<String, Object> rejectionStatus = new HashMap<>();
             Timer timer = new Timer("kid", "kids");
 
-            List<List<Map<String, Object>>> recordListArray = mctsBeneficiaryImportService.splitRecords(recordList, contactNumber);
+            List<List<Map<String, Object>>> recordListArray = splitRecords(recordList, contactNumber);
 
             LOGGER.debug("Thread Processing Start");
             Integer recordsProcessed = 0;
@@ -183,7 +184,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             Map<String, Object> rejectedMothers = new HashMap<>();
             Map<String, Object> rejectionStatus = new HashMap<>();
             Timer timer = new Timer("mom", "moms");
-            List<List<Map<String, Object>>> recordListArray = mctsBeneficiaryImportService.splitRecords(recordList, contactNumber);
+            List<List<Map<String, Object>>> recordListArray = splitRecords(recordList, contactNumber);
 
             LOGGER.debug("Thread Processing Start");
             Integer recordsProcessed = 0;
@@ -234,6 +235,30 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
         }
 
         return recordList.size();
+    }
+
+    private List<List<Map<String, Object>>> splitRecords(List<Map<String, Object>> recordList, String contactNumber) {
+        List<List<Map<String, Object>>> recordListArray = new ArrayList<>();
+        int count = 0;
+        while (count < recordList.size()) {
+            List<Map<String, Object>> recordListPart = new ArrayList<>();
+            while (recordListPart.size() < RECORDS_PART_SIZE && count < recordList.size()) {
+                recordListPart.add(recordList.get(count));
+                count++;
+            }
+            //Add all records with same contact number to the same part
+            while (count < recordList.size() && (recordList.get(count).get(contactNumber) == null ? "0": recordList.get(count).get(contactNumber))
+                    .equals(recordListPart.get(recordListPart.size() - 1)
+                            .get(contactNumber))) {
+                recordListPart.add(recordList.get(count));
+                count++;
+            }
+            LOGGER.debug("Added records to part {}", recordListArray.size() + 1);
+            recordListArray.add(recordListPart);
+            LOGGER.debug("Added recordListPart to recordListArray");
+        }
+        LOGGER.debug("Split {} records to {} parts", recordList.size(), recordListArray.size());
+        return recordListArray;
     }
 
     private List<Map<String, Object>> readCsv(BufferedReader bufferedReader, Map<String, CellProcessor> cellProcessorMapper) throws IOException {

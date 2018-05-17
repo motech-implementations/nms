@@ -21,8 +21,6 @@ public interface MctsBeneficiaryImportService {
 
     ChildImportRejection importChildRecord(Map<String, Object> record, SubscriptionOrigin origin, LocationFinder locationFinder);
 
-    List<List<Map<String, Object>>> splitRecords(List<Map<String, Object>> recordList, String contactNumber);
-
     boolean validateReferenceDate(DateTime referenceDate, SubscriptionPackType packType, Long msisdn, String beneficiaryId, SubscriptionOrigin importOrigin);
 
     void createOrUpdateRchChildRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus);
