@@ -31,8 +31,6 @@ import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.region.exception.InvalidLocationException;
-import org.motechproject.nms.kilkari.service.ActionFinderService;
-import org.motechproject.nms.region.service.LocationService;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
 import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
@@ -62,7 +60,6 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childR
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.motherRejectionRch;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToRchChild;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToRchMother;
-import static org.motechproject.nms.tracking.utils.TrackChangeUtils.LOGGER;
 
 /**
  * Implementation of the {@link MctsBeneficiaryImportService} interface.
@@ -203,7 +200,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         List<DeactivatedBeneficiary> deactivatedUsers = null;
         synchronized (this) {
-            deactivatedUsers = deactivatedBeneficiaryDataService.findByExternalId(beneficiaryId);
+            deactivatedUsers = deactivatedBeneficiaryService.findDeactivatedBeneficiariesOtherThanManualDeactivation(beneficiaryId);
 
             if (deactivatedUsers != null && deactivatedUsers.size() > 0) {
                 for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
@@ -366,7 +363,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 if (deactivatedUsers != null && deactivatedUsers.size() > 0) {
                     for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
                         if (deactivatedUser.getOrigin() == importOrigin) {
-                            String message = deactivatedUser.isCompletedSubscription() ? "Subscription completed" : "User deactivated";
+                            String message = deactivatedUser.isCompletedSubscription() ? SUBSCRIPTION_COMPLETED : USER_DEACTIVATED;
                             if (message.length() > 2) {
                                 return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
                             }
@@ -525,21 +522,21 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         Long createdNo = (createObjects.size() == 0) ? 0 : rchChildBulkInsert(createObjects);
         Long updatedNo = (updateObjects.size() == 0) ? 0 : rchChildBulkUpdate(updateObjects);
-        LOGGER.debug("Inserted {} and updated {} rejection records into database", createdNo, updatedNo);
+        LOGGER.debug(IMPORT_STATS_LOG, createdNo, updatedNo);
     }
 
     private void updateChildRejectionRecord(Map<String, Object> childRejects, String beneficiaryId, ChildImportRejection child, List<ChildImportRejection> updateObjects) {
         ChildImportRejection dbChild = (ChildImportRejection) childRejects.get(beneficiaryId);
         try {
-            Method method = dbChild.getClass().getMethod("getCreationDate");  // Get creationDate from db object and set it in the update object
+            Method method = dbChild.getClass().getMethod(GET_CREATION);  // Get creationDate from db object and set it in the update object
             DateTime dateTime = (DateTime) method.invoke(dbChild);
 
-            method = child.getClass().getMethod("setCreationDate", DateTime.class);
+            method = child.getClass().getMethod(SET_CREATION, DateTime.class);
             method.invoke(child, dateTime);
 
-            method = dbChild.getClass().getMethod("getId");
+            method = dbChild.getClass().getMethod(GET_ID);
             Long id = (Long) method.invoke(dbChild);
-            method = child.getClass().getMethod("setId", Long.class);
+            method = child.getClass().getMethod(SET_ID, Long.class);
             method.invoke(child, id);
         } catch (IllegalAccessException|SecurityException|IllegalArgumentException|NoSuchMethodException|
                 InvocationTargetException e) {
