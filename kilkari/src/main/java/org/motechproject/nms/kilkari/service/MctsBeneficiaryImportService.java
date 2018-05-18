@@ -9,7 +9,6 @@ import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
 import org.springframework.transaction.annotation.Transactional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 
-import java.util.List;
 import java.util.Map;
 
 /**

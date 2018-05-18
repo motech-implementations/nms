@@ -2076,14 +2076,14 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
                 lmpString + "\t\t\t\t");
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        mctsBeneficiaryImportService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
         subscriberService.deactivateAllSubscriptionsForSubscriber(9439986187L, DeactivationReason.LOW_LISTENERSHIP);
         transactionManager.commit(status);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         reader = createMotherDataReader("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
                 lmpString + "\t\t\t\t");
-        mctsBeneficiaryImportService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
         List<Subscription> subscriptions = subscriptionDataService.retrieveAll();
         assertEquals(1, subscriptions.size());
         assertEquals(null, subscriptions.get(0).getDeactivationReason());
@@ -2097,7 +2097,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         subscriberService.deactivateAllSubscriptionsForSubscriber(9439986187L, DeactivationReason.LOW_LISTENERSHIP);
         reader = createMotherDataReader("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986100\t\t" +
                 lmpString + "\t\t\t\t");
-        mctsBeneficiaryImportService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
         subscriptions = subscriptionDataService.retrieveAll();
         assertEquals(2, subscriptions.size());
         assertEquals(null, subscriptions.get(0).getDeactivationReason());
@@ -2150,7 +2150,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
                 lmpString + "\t\t\t\t");
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        mctsBeneficiaryImportService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
         subscriberService.deactivateAllSubscriptionsForSubscriber(9439986187L, DeactivationReason.LOW_LISTENERSHIP);
         transactionManager.commit(status);
 
@@ -2161,7 +2161,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         subscriberService.deactivateAllSubscriptionsForSubscriber(9439986187L, DeactivationReason.DEACTIVATED_BY_USER);
         reader = createMotherDataReader("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
                 lmpString + "\t\t\t\t");
-        mctsBeneficiaryImportService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         List<Subscription> subscriptions = subscriptionDataService.retrieveAll();
         assertEquals(2, subscriptions.size());
