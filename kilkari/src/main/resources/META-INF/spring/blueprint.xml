@@ -31,6 +31,12 @@
     <osgi:service ref="mctsBeneficiaryImportService"
                   interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService" />
 
+    <osgi:service ref="deactivatedBeneficiaryService"
+                  interface="org.motechproject.nms.kilkari.service.DeactivatedBeneficiaryService" />
+
+    <osgi:service ref="mctsBeneficiaryImportReaderService"
+                  interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService" />
+
     <osgi:service ref="mctsChildFixService"
                   interface="org.motechproject.nms.kilkari.service.MctsChildFixService" />
 
@@ -51,6 +57,9 @@
 
     <osgi:reference id="subscriberDataService"
                     interface="org.motechproject.nms.kilkari.repository.SubscriberDataService" />
+
+    <osgi:reference id="reactivatedBeneficiaryAuditDataService"
+                    interface="org.motechproject.nms.kilkari.repository.ReactivatedBeneficiaryAuditDataService" />
 
     <osgi:reference id="subscriptionPackDataService"
                     interface="org.motechproject.nms.kilkari.repository.SubscriptionPackDataService" />

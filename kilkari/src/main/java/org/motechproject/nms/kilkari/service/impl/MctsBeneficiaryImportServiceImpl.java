@@ -17,19 +17,22 @@ import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
 import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.exception.MultipleSubscriberException;
-import org.motechproject.nms.kilkari.repository.DeactivatedBeneficiaryDataService;
+import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.kilkari.service.ActionFinderService;
+import org.motechproject.nms.kilkari.service.DeactivatedBeneficiaryService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.kilkari.service.ActionFinderService;
+import org.motechproject.nms.region.service.LocationService;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
 import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
@@ -59,6 +62,7 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childR
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.motherRejectionRch;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToRchChild;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToRchMother;
+import static org.motechproject.nms.tracking.utils.TrackChangeUtils.LOGGER;
 
 /**
  * Implementation of the {@link MctsBeneficiaryImportService} interface.
@@ -75,7 +79,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private SubscriptionPack pregnancyPack;
     private SubscriptionPack childPack;
     private MctsMotherDataService mctsMotherDataService;
-    private DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService;
+    private MctsChildDataService mctsChildDataService;
+    private DeactivatedBeneficiaryService deactivatedBeneficiaryService;
 
     private static final Integer REJECTION_PART_SIZE = 5000;
     private static final String SUBSCRIPTION_COMPLETED = "Subscription completed";
@@ -93,13 +98,15 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                                             SubscriberService subscriberService,
                                             MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor,
                                             MctsMotherDataService mctsMotherDataService,
-                                            DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService) {
+                                            MctsChildDataService mctsChildDataService,
+                                            DeactivatedBeneficiaryService deactivatedBeneficiaryService) {
         this.subscriptionService = subscriptionService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
         this.subscriberService = subscriberService;
         this.mctsBeneficiaryValueProcessor = mctsBeneficiaryValueProcessor;
         this.mctsMotherDataService = mctsMotherDataService;
-        this.deactivatedBeneficiaryDataService = deactivatedBeneficiaryDataService;
+        this.deactivatedBeneficiaryService = deactivatedBeneficiaryService;
+        this.mctsChildDataService = mctsChildDataService;
     }
 
     @Autowired
@@ -243,7 +250,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
     }
 
-
     @Override // NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public ChildImportRejection importChildRecord(Map<String, Object> record, SubscriptionOrigin importOrigin, LocationFinder locationFinder) { //NOPMD NcssMethodCount
@@ -301,6 +307,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         String name = (String) record.get(KilkariConstants.BENEFICIARY_NAME);
         DateTime dob = (DateTime) record.get(KilkariConstants.DOB);
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
+        MctsChild childById = mctsChildDataService.findByBeneficiaryId(childId);
 
         if ((child == null)) {
             return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.DATA_INTEGRITY_ERROR, false);
@@ -352,14 +359,17 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         List<DeactivatedBeneficiary> deactivatedUsers = null;
         synchronized(this) {
-            deactivatedUsers = deactivatedBeneficiaryDataService.findByExternalId(childId);
-
-            if (deactivatedUsers != null && deactivatedUsers.size() > 0) {
-                for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
-                    if (deactivatedUser.getOrigin() == importOrigin) {
-                        String message = deactivatedUser.isCompletedSubscription() ? SUBSCRIPTION_COMPLETED : USER_DEACTIVATED;
-                        if (message.length() > 2) {
-                            return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
+            if (childById != null && subscriptionService.getActiveSubscription(subscriberService.getSubscriberByBeneficiary(childById), SubscriptionPackType.PREGNANCY) != null && subscriptionService.getActiveSubscription(subscriberService.getSubscriberByBeneficiary(childById), SubscriptionPackType.PREGNANCY).getStatus() == SubscriptionStatus.ACTIVE) {
+                LOGGER.debug("Active mother. We ignore the deactivated case scenario.");
+            } else {
+                deactivatedUsers = deactivatedBeneficiaryService.findDeactivatedBeneficiariesOtherThanManualDeactivation(childId);
+                if (deactivatedUsers != null && deactivatedUsers.size() > 0) {
+                    for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
+                        if (deactivatedUser.getOrigin() == importOrigin) {
+                            String message = deactivatedUser.isCompletedSubscription() ? "Subscription completed" : "User deactivated";
+                            if (message.length() > 2) {
+                                return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
+                            }
                         }
                     }
                 }
@@ -395,7 +405,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return childRejectionRch(convertMapToRchChild(record), accepted, rejectReason, action);
         }
     }
-
 
     private boolean validateMother(MctsMother mother, MctsChild child) {
         if (mother != null && child.getMother() != null && !mother.equals(child.getMother())) {
@@ -534,7 +543,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             method.invoke(child, id);
         } catch (IllegalAccessException|SecurityException|IllegalArgumentException|NoSuchMethodException|
                 InvocationTargetException e) {
-            LOGGER.error("Ignoring creation date and setting as now");
+            LOGGER.error("Ignoring creation date and setting as now: {}", e);
 
         }
         updateObjects.add(child);
