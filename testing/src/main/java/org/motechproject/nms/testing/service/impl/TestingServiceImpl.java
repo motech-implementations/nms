@@ -163,7 +163,9 @@ public class TestingServiceImpl implements TestingService {
         "nms_mother_rejects",
         "nms_mother_rejects__TRASH",
         "nms_rch_import_facilitator",
-        "nms_rch_import_facilitator__TRASH"
+        "nms_rch_import_facilitator__TRASH",
+        "nms_reactivated_beneficiary",
+        "nms_reactivated_beneficiary__TRASH"
     };
 
     /**

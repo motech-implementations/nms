@@ -62,6 +62,8 @@ import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.Collections;
+import java.util.Comparator;
 
 /**
  * Implementation of the {@link SubscriptionService} interface.
@@ -495,22 +497,67 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public Subscription getActiveSubscription(Subscriber subscriber, SubscriptionPackType type) {
+        if (subscriber != null && subscriber.getSubscriptions() != null) {
+            Iterator<Subscription> subscriptionIterator = subscriber.getSubscriptions().iterator();
+            Subscription existingSubscription;
+
+            while (subscriptionIterator.hasNext()) {
+                existingSubscription = subscriptionIterator.next();
+                if (existingSubscription.getSubscriptionPack().getType() == type) {
+                    if (type == SubscriptionPackType.PREGNANCY &&
+                            (existingSubscription.getStatus() == SubscriptionStatus.ACTIVE ||
+                                    existingSubscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
+                        return existingSubscription;
+                    }
+                    if (type == SubscriptionPackType.CHILD && existingSubscription.getStatus() == SubscriptionStatus.ACTIVE) {
+                        return existingSubscription;
+                    }
+                }
+            }
+            return null;
+        }
+        return null;
+    }
+
+    public Subscription getLatestDeactivatedSubscription(Subscriber subscriber, SubscriptionPackType type) {
         Iterator<Subscription> subscriptionIterator = subscriber.getSubscriptions().iterator();
         Subscription existingSubscription;
+        List<Subscription> deactivatedSubscriptions = new ArrayList<>();
 
         while (subscriptionIterator.hasNext()) {
             existingSubscription = subscriptionIterator.next();
             if (existingSubscription.getSubscriptionPack().getType() == type) {
                 if (type == SubscriptionPackType.PREGNANCY &&
-                        (existingSubscription.getStatus() == SubscriptionStatus.ACTIVE ||
-                         existingSubscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
-                    return existingSubscription;
+                        (existingSubscription.getStatus() == SubscriptionStatus.DEACTIVATED)) {
+                    deactivatedSubscriptions.add(existingSubscription);
                 }
-                if (type == SubscriptionPackType.CHILD && existingSubscription.getStatus() == SubscriptionStatus.ACTIVE) {
-                    return existingSubscription;
+                if (type == SubscriptionPackType.CHILD && existingSubscription.getStatus() == SubscriptionStatus.DEACTIVATED) {
+                    deactivatedSubscriptions.add(existingSubscription);
                 }
             }
         }
+
+        if (!deactivatedSubscriptions.isEmpty()) {
+            Collections.sort(deactivatedSubscriptions, new Comparator<Subscription>() {
+                public int compare(Subscription m1, Subscription m2) { //descending order
+                    if (m2.getEndDate() == null && m1.getEndDate() != null) {
+                        return (m2.getModificationDate())
+                                .compareTo(m1.getEndDate());
+                    } else if (m1.getEndDate() == null && m2.getEndDate() != null) {
+                        return (m2.getEndDate())
+                                .compareTo(m1.getModificationDate());
+                    } else if (m1.getEndDate() == null && m2.getEndDate() == null) {
+                        return (m2.getModificationDate())
+                                .compareTo(m1.getModificationDate());
+                    } else {
+                        return (m2.getEndDate())
+                                .compareTo(m1.getEndDate());
+                    }
+                }
+            });
+            return deactivatedSubscriptions.get(0);
+        }
+
         return null;
     }
 

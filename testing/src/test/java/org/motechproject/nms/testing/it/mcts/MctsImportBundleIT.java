@@ -184,6 +184,7 @@ public class MctsImportBundleIT extends BasePaxIT {
         httpService.registerServlet("/mctsWsNoUpdateDate", new MockWsHttpServletForNoUpdateDate(), null, null);
         httpService.registerServlet("/mctsWsOneUpdateDate", new MockWsHttpServletForOneUpdateDate(), null, null);
         httpService.registerServlet("/mctsMotherRejection", new MockWsHttpServletForMotherRejection(), null, null);
+        httpService.registerServlet("/mctsChildRejection", new MockWsHttpServletForChildRejection(), null, null);
         httpService.registerServlet("/mctsWsDuplicateASHACheck", new MockWsHttpServletForDuplicateASHACheck(), null, null);
         httpService.registerServlet("/mctsWsDuplicateMsisdnInDataset", new MockWsHttpServletForDuplicateMsisdnInDataset(), null, null);
         httpService.registerServlet("/mctsWsTestChildMotherCast", new MockWsHttpServletForTestChildMotherCast(), null, null);
@@ -199,6 +200,7 @@ public class MctsImportBundleIT extends BasePaxIT {
         httpService.unregister("/mctsWsNoUpdateDate");
         httpService.unregister("/mctsWsOneUpdateDate");
         httpService.unregister("/mctsMotherRejection");
+        httpService.unregister("/mctsChildRejection");
         httpService.unregister("/mctsWsDuplicateASHACheck");
         httpService.unregister("/mctsWsDuplicateMsisdnInDataset");
         httpService.unregister("/mctsWsTestChildMotherCast");
@@ -290,7 +292,38 @@ public class MctsImportBundleIT extends BasePaxIT {
 //        Since the response while reading the xmls is a Remote server exception, the import should not take place and the data should be updated in nms_mcts_failure table
         List<MotherImportRejection> motherImportRejections = motherRejectionDataService.retrieveAll();
         assertEquals(2, motherImportRejections.size());
+        assertEquals(RejectionReasons.INVALID_LMP_DATE.toString(), motherImportRejections.get(0).getRejectionReason());
+        assertEquals(RejectionReasons.INVALID_LOCATION.toString(), motherImportRejections.get(1).getRejectionReason());
 
+    }
+
+    @Test
+    public void testChildRejection() throws MalformedURLException {
+        URL endpoint = new URL(String.format("http://localhost:%d/mctsChildRejection", TestContext.getJettyPort()));
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        List<Long> stateIds = singletonList(21L);
+
+        // this CL workaround is for an issue with PAX IT logging messing things up
+        // shouldn't affect production
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
+
+        // setup motech event
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        MotechEvent event = new MotechEvent("foobar", params);
+        mctsWsImportService.importMothersData(event);
+        Thread.currentThread().setContextClassLoader(cl);
+
+//        Since the response while reading the xmls is a Remote server exception, the import should not take place and the data should be updated in nms_mcts_failure table
+        List<MotherImportRejection> motherImportRejections = motherRejectionDataService.retrieveAll();
+        assertEquals(2, motherImportRejections.size());
+        assertEquals(RejectionReasons.INVALID_LMP_DATE.toString(), motherImportRejections.get(0).getRejectionReason());
+        assertEquals(RejectionReasons.INVALID_LOCATION.toString(), motherImportRejections.get(1).getRejectionReason());
 
     }
 
@@ -740,6 +773,32 @@ public class MctsImportBundleIT extends BasePaxIT {
         assertEquals(RejectionReasons.CHILD_DEATH.toString(), childImportRejections.get(1).getRejectionReason());
     }
 
+    @Test
+    public void testForMotherRejection() throws MalformedURLException {
+        URL endpoint = new URL(String.format("http://localhost:%d/mctsWsTestChildMotherCast", TestContext.getJettyPort()));
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+
+        // this CL workaround is for an issue with PAX IT logging messing things up
+        // shouldn't affect production
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(mctsWsImportService.getClass().getClassLoader());
+
+        // setup motech event
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        MotechEvent event = new MotechEvent("foobar", params);
+        mctsWsImportService.importChildrenData(event);
+        Thread.currentThread().setContextClassLoader(cl);
+
+        List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
+        assertEquals(2, childImportRejections.size());
+        assertEquals(RejectionReasons.INVALID_DOB.toString(), childImportRejections.get(0).getRejectionReason());
+        assertEquals(RejectionReasons.CHILD_DEATH.toString(), childImportRejections.get(1).getRejectionReason());
+    }
 
 }
 

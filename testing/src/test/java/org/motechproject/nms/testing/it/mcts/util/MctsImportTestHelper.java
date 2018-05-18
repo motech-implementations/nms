@@ -27,6 +27,10 @@ public final class MctsImportTestHelper {
         return readMctsFile("mcts-mothers-data-rejection.xml");
     }
 
+    public static String getChildResponseForMotherRejection() throws IOException {
+        return readMctsFile("mcts-child-data-rejection.xml");
+    }
+
     public static String getResponseForDuplicateASHACheck() throws IOException {
         return readMctsFile("mcts-asha-data-duplicate.xml");
     }
