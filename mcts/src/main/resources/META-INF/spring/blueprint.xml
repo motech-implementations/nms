@@ -23,6 +23,9 @@
     <osgi:reference id="stateDataService"
                     interface="org.motechproject.nms.region.repository.StateDataService" />
 
+    <osgi:reference id="locationService"
+                    interface="org.motechproject.nms.region.service.LocationService" />
+
     <osgi:reference id="frontLineWorkerImportService"
                   interface="org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService" />
 
