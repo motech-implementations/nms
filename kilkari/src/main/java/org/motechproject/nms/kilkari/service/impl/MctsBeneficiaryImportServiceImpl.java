@@ -364,7 +364,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             action = (String) record.get(KilkariConstants.ACTION);
             childId = (String) record.get(KilkariConstants.RCH_ID);
             child = (MctsChild) record.get(KilkariConstants.RCH_CHILD);
-            LOGGER.debug("Child:{}", child.getName());
             msisdn = (Long) record.get(KilkariConstants.MOBILE_NO);
             lastUpdateDateNic = (LocalDate) record.get(KilkariConstants.EXECUTION_DATE);
             if (record.get(KilkariConstants.RCH_MOTHER_ID) != null || record.get(KilkariConstants.MCTS_MOTHER_ID) != null) {
@@ -382,7 +381,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             }
         }
         String name = (String) record.get(KilkariConstants.BENEFICIARY_NAME);
-        LOGGER.debug("ChildName:{}", name);
         DateTime dob = (DateTime) record.get(KilkariConstants.DOB);
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
         MctsChild childById = mctsChildDataService.findByBeneficiaryId(childId);
@@ -567,7 +565,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 return false;
             }
         } else { // childPack
-            LOGGER.debug("bdate: {}", referenceDate);
             String referenceDateValidationError = childPack.isReferenceDateValidForPack(referenceDate);
             if (!referenceDateValidationError.isEmpty()) {
                 return false;
