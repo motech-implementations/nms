@@ -51,11 +51,7 @@ import javax.inject.Inject;
 import javax.servlet.ServletException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
@@ -140,9 +136,12 @@ public class MctsImportBundleIT extends BasePaxIT {
         healthBlock.setName("HealthBlock_Name 1");
         healthBlock.setRegionalName("HB1");
         healthBlock.setHq("An HQ");
-
-        healthBlock.setTaluka(taluka);
-        taluka.setHealthBlocks(new ArrayList<>(singletonList(healthBlock)));
+        Set<Taluka> talukas = new HashSet<>();
+        talukas.add(taluka);
+        healthBlock.setTalukas(talukas);
+        Set<HealthBlock> healthBlocks = new HashSet<>();
+        healthBlocks.add(healthBlock);
+        taluka.setHealthBlocks(healthBlocks);
 
         HealthFacilityType phcType = new HealthFacilityType();
         phcType.setCode(11L);

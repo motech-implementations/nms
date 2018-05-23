@@ -1,9 +1,7 @@
 package org.motechproject.nms.testing.it.rch;
 
 import org.joda.time.LocalDate;
-import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.commons.date.util.DateUtil;
@@ -19,17 +17,14 @@ import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
-import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
 import org.motechproject.nms.rejectionhandler.repository.ChildRejectionDataService;
 import org.motechproject.nms.rejectionhandler.repository.MotherRejectionDataService;
 import org.motechproject.nms.testing.it.rch.util.*;
 import org.motechproject.nms.testing.service.TestingService;
-import org.motechproject.scheduler.contract.RunOnceSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
 import org.motechproject.testing.osgi.http.SimpleHttpServer;
-import org.motechproject.testing.utils.TestContext;
 import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
@@ -40,7 +35,6 @@ import org.osgi.service.http.HttpService;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
@@ -119,9 +113,12 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         healthBlock.setName("HealthBlock_Name 1");
         healthBlock.setRegionalName("HB1");
         healthBlock.setHq("An HQ");
-
-        healthBlock.setTaluka(taluka);
-        taluka.setHealthBlocks(new ArrayList<>(singletonList(healthBlock)));
+        Set<Taluka> talukas = new HashSet<>();
+        talukas.add(taluka);
+        healthBlock.setTalukas(talukas);
+        Set<HealthBlock> healthBlocks = new HashSet<>();
+        healthBlocks.add(healthBlock);
+        taluka.setHealthBlocks(healthBlocks);
 
         HealthFacilityType phcType = new HealthFacilityType();
         phcType.setCode(11L);

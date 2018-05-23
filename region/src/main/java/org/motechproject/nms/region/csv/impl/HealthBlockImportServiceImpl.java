@@ -54,7 +54,8 @@ public class HealthBlockImportServiceImpl extends BaseLocationImportService<Heal
 
     @Override
     protected void createOrUpdateInstance(HealthBlock instance) {
-        HealthBlock existing = healthBlockService.findByTalukaAndCode(instance.getTaluka(), instance.getCode());
+        //TODO: Check whether .get(0) gives the correct taluka after reading csv with same mapping or else change mapping
+        HealthBlock existing = healthBlockService.findByTalukaAndCode(instance.getTalukas().iterator().next(), instance.getCode());
 
         if (existing != null) {
             existing.setName(instance.getName());
