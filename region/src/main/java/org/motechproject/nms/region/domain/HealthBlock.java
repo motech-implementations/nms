@@ -16,13 +16,15 @@ import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This class Models data for HealthBlock location records
  */
 @Entity(tableName = "nms_health_blocks")
-@Unique(name = "UNIQUE_TALUKA_CODE", members = { "taluka", "code" })
+@Unique(name = "UNIQUE_TALUKA_CODE", members = { "talukas", "code" })
 @TrackClass
 @TrackFields
 @InstanceLifecycleListeners
@@ -51,9 +53,10 @@ public class HealthBlock extends MdsEntity {
 
     @Field
     @Column(allowsNull = "false")
+    @Persistent(mappedBy = "healthBlocks", defaultFetchGroup = "false")
     @NotNull
     @JsonBackReference
-    private Taluka taluka;
+    private Set<Taluka> talukas;
 
     @Field
     @Cascade(delete = true)
@@ -62,6 +65,7 @@ public class HealthBlock extends MdsEntity {
     private List<HealthFacility> healthFacilities;
 
     public HealthBlock() {
+        this.talukas = new HashSet<>();
         this.healthFacilities = new ArrayList<>();
     }
 
@@ -97,12 +101,12 @@ public class HealthBlock extends MdsEntity {
         this.code = code;
     }
 
-    public Taluka getTaluka() {
-        return taluka;
+    public Set<Taluka> getTalukas() {
+        return talukas;
     }
 
-    public void setTaluka(Taluka taluka) {
-        this.taluka = taluka;
+    public void setTalukas(Set<Taluka> talukas) {
+        this.talukas = talukas;
     }
 
     public List<HealthFacility> getHealthFacilities() {

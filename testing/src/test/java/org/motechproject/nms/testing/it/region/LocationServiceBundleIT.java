@@ -37,6 +37,8 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -132,7 +134,13 @@ public class LocationServiceBundleIT extends BasePaxIT {
         taluka.setIdentity(1);
         taluka.setCode("0004");
         taluka.getVillages().add(village);
+        Set<HealthBlock> healthBlocks = null;
+        healthBlocks.add(healthBlock);
         taluka.getHealthBlocks().add(healthBlock);
+
+        Set<Taluka> talukas = new HashSet<>();
+        talukas.add(taluka);
+        healthBlock.setTalukas(talukas);
 
         district = new District();
         district.setName("District 1");
@@ -361,7 +369,7 @@ public class LocationServiceBundleIT extends BasePaxIT {
         healthBlock2.setRegionalName("Health Block 2");
         healthBlock2.setHq("Health Block 2 HQ");
         healthBlock2.setCode(2L);
-        healthBlock2.setTaluka(t);
+        healthBlock2.getTalukas().add(t);
 
         healthBlockDataService.create(healthBlock2);
 
@@ -440,11 +448,11 @@ public class LocationServiceBundleIT extends BasePaxIT {
         assertEquals(1, villageList.size());
         assertTrue(villageList.contains(village));
 
-        List<HealthBlock> healthBlockList = talukaList.get(0).getHealthBlocks();
+        Set<HealthBlock> healthBlockList = talukaList.get(0).getHealthBlocks();
         assertEquals(1, healthBlockList.size());
         assertTrue(healthBlockList.contains(healthBlock));
 
-        List<HealthFacility> healthFacilityList = healthBlockList.get(0).getHealthFacilities();
+        List<HealthFacility> healthFacilityList = healthBlockList.iterator().next().getHealthFacilities();
         assertEquals(1, healthFacilityList.size());
         Assert.assertEquals(healthFacilityType, healthFacilityList.get(0).getHealthFacilityType());
         assertTrue(healthFacilityList.contains(healthFacility));

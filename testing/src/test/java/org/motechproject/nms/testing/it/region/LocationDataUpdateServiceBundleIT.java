@@ -43,6 +43,10 @@ import org.ops4j.pax.exam.spi.reactors.PerSuite;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -127,7 +131,9 @@ public class LocationDataUpdateServiceBundleIT extends BasePaxIT {
 
     private HealthBlock createHealthBlock(Taluka taluka) {
         HealthBlock healthBlock = new HealthBlock();
-        healthBlock.setTaluka(taluka);
+        Set<Taluka> talukas = new HashSet<>();
+        talukas.add(taluka);
+        healthBlock.setTalukas(talukas);
         healthBlock.setCode(6l);
         healthBlock.setName("health block name");
         healthBlock.setRegionalName("health block regional name");
@@ -253,7 +259,9 @@ public class LocationDataUpdateServiceBundleIT extends BasePaxIT {
 
         // add health block
         HealthBlock orignalHealthBlock = new HealthBlock();
-        orignalHealthBlock.setTaluka(taluka);
+        Set<Taluka> talukas = new HashSet<>();
+        talukas.add(taluka);
+        orignalHealthBlock.setTalukas(talukas);
         orignalHealthBlock.setCode(6l);
         orignalHealthBlock.setName("name");
         orignalHealthBlock.setRegionalName("rn");

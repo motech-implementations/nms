@@ -42,6 +42,7 @@ import javax.validation.ConstraintViolationException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -211,7 +212,9 @@ public class LocationServiceImpl implements LocationService {
         HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka, (Long) map.get(HEALTHBLOCK_ID));
         if (healthBlock == null && createIfNotExists) {
             healthBlock = new HealthBlock();
-            healthBlock.setTaluka(taluka);
+            Set<Taluka> talukas = new HashSet<>();
+            talukas.add(taluka);
+            healthBlock.setTalukas(talukas);
             healthBlock.setCode((Long) map.get(HEALTHBLOCK_ID));
             healthBlock.setName((String) map.get(HEALTHBLOCK_NAME));
             taluka.getHealthBlocks().add(healthBlock);
@@ -285,7 +288,9 @@ public class LocationServiceImpl implements LocationService {
         HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka, (Long) flw.get(HEALTHBLOCK_ID));
         if (healthBlock == null && createIfNotExists) {
             healthBlock = new HealthBlock();
-            healthBlock.setTaluka(taluka);
+            Set<Taluka> talukas = new HashSet<>();
+            talukas.add(taluka);
+            healthBlock.setTalukas(talukas);
             healthBlock.setCode((Long) flw.get(HEALTHBLOCK_ID));
             healthBlock.setName((String) flw.get(HEALTHBLOCK_NAME));
             taluka.getHealthBlocks().add(healthBlock);
@@ -945,8 +950,10 @@ public class LocationServiceImpl implements LocationService {
         LOGGER.debug("HEALTHBLOCK Query time: {}", queryTimer.time());
         if(healthBlocks != null && !healthBlocks.isEmpty()) {
             for (HealthBlock healthBlock : healthBlocks) {
-                String talukaKey = talukaIdMap.get(healthBlock.getTaluka().getId());
-                healthBlockHashMap.put(talukaKey + "_" + healthBlock.getCode(), healthBlock);
+                for (Taluka taluka : healthBlock.getTalukas()) {
+                    String talukaKey = talukaIdMap.get(taluka.getId());
+                    healthBlockHashMap.put(talukaKey + "_" + healthBlock.getCode(), healthBlock);
+                }
             }
         }
     }
