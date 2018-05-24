@@ -640,7 +640,11 @@ public class SubscriberServiceImpl implements SubscriberService {
         subscription.setStatus(SubscriptionStatus.ACTIVE);
         subscription.setDeactivationReason(null);
         subscriptionService.updateStartDate(subscription, dateTime);
-        subscriptionService.deleteBlockedMsisdn(subscriber.getMother().getId(), null, subscriber.getCallingNumber());
+        if (subscriber.getMother() != null) {
+            subscriptionService.deleteBlockedMsisdn(subscriber.getMother().getId(), null, subscriber.getCallingNumber());
+        } else {
+            subscriptionService.deleteBlockedMsisdn(subscriber.getChild().getId(), null, subscriber.getCallingNumber());
+        }
         return subscription;
     }
 
