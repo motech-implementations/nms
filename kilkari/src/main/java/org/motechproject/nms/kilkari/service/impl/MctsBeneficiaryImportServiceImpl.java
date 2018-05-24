@@ -488,7 +488,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 return false;
             }
         } else { // childPack
-            LOGGER.debug("bdate: {}", referenceDate);
             String referenceDateValidationError = childPack.isReferenceDateValidForPack(referenceDate);
             if (!referenceDateValidationError.isEmpty()) {
                 return false;

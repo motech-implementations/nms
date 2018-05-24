@@ -90,7 +90,7 @@ public final class ObjectListCleaner {
         HashMap<String, Integer> motherPhoneMap = new HashMap<>();
         HashMap<String, String> motherPhoneIdMap = new HashMap<>();
         for (Map<String, Object> record : childRecords) {
-            String msisdn = (String) record.get(KilkariConstants.MSISDN);
+            String msisdn = record.get(KilkariConstants.MSISDN) == null ? null : record.get(KilkariConstants.MSISDN).toString();
             String mctsId = (String) record.get(KilkariConstants.BENEFICIARY_ID);
             if (motherPhoneMap.containsKey(msisdn)) {
                 boolean identicalIdContact = motherPhoneIdMap.get(msisdn).equals(mctsId);
@@ -103,7 +103,7 @@ public final class ObjectListCleaner {
             }
         }
         for (Map<String, Object> record : childRecords) {
-            String msisdn = (String) record.get(KilkariConstants.MSISDN);
+            String msisdn = record.get(KilkariConstants.MSISDN) == null ? null : record.get(KilkariConstants.MSISDN).toString();
             Integer count = motherPhoneMap.get(msisdn);
             if (count > 1) {
                 rejectedRecords.add(record);
@@ -123,7 +123,7 @@ public final class ObjectListCleaner {
         HashMap<String, Integer> motherPhoneMap = new HashMap<>();
         HashMap<String, String> motherPhoneIdMap = new HashMap<>();
         for (Map<String, Object> record : rchChildRecords) {
-            String msisdn = (String) record.get(KilkariConstants.MOBILE_NO);
+            String msisdn = record.get(KilkariConstants.MOBILE_NO) == null ? null : record.get(KilkariConstants.MOBILE_NO).toString();
             String rchId = (String) record.get(KilkariConstants.RCH_ID);
             if (motherPhoneMap.containsKey(msisdn)) {
                 boolean identicalIdContact = motherPhoneIdMap.get(msisdn).equals(rchId);
@@ -136,7 +136,7 @@ public final class ObjectListCleaner {
             }
         }
         for (Map<String, Object> record : rchChildRecords) {
-            String msisdn = (String) record.get(KilkariConstants.MOBILE_NO);
+            String msisdn = record.get(KilkariConstants.MOBILE_NO) == null ? null : record.get(KilkariConstants.MOBILE_NO).toString();
             Integer count = motherPhoneMap.get(msisdn);
             if (count > 1) {
                 rejectedRecords.add(record);
