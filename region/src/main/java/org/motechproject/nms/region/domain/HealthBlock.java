@@ -1,6 +1,5 @@
 package org.motechproject.nms.region.domain;
 
-import org.codehaus.jackson.annotate.JsonBackReference;
 import org.codehaus.jackson.annotate.JsonManagedReference;
 import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
@@ -13,6 +12,9 @@ import org.motechproject.nms.tracking.annotation.TrackFields;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.ArrayList;
@@ -51,11 +53,11 @@ public class HealthBlock extends MdsEntity {
     @NotNull
     private Long code;
 
-    @Field
-    @Column(allowsNull = "false")
-    @Persistent(mappedBy = "healthBlocks", defaultFetchGroup = "false")
-    @NotNull
-    @JsonBackReference
+    @ManyToMany
+    @Cascade(persist = true)
+    @JoinTable(name="nms_taluka_healthblock",
+            joinColumns={@JoinColumn(name="healthBlock")},
+            inverseJoinColumns={@JoinColumn(name="taluka")})
     private Set<Taluka> talukas;
 
     @Field
