@@ -9,12 +9,11 @@ import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.tracking.annotation.TrackClass;
 import org.motechproject.nms.tracking.annotation.TrackFields;
 
+import javax.jdo.annotations.Unique;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
-import javax.jdo.annotations.Unique;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
+import javax.jdo.annotations.Join;
+import javax.jdo.annotations.Element;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.ArrayList;
@@ -53,11 +52,10 @@ public class HealthBlock extends MdsEntity {
     @NotNull
     private Long code;
 
-    @ManyToMany
-    @Cascade(persist = true)
-    @JoinTable(name="nms_taluka_healthblock",
-            joinColumns={@JoinColumn(name="healthBlock")},
-            inverseJoinColumns={@JoinColumn(name="taluka")})
+    @Persistent(table="nms_taluka_healthblock")
+    @Join(column = "healthblock_id")
+    @Element(column = "taluka_id")
+    @JsonManagedReference
     private Set<Taluka> talukas;
 
     @Field
