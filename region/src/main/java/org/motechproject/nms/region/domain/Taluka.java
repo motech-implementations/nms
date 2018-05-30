@@ -13,7 +13,6 @@ import org.motechproject.nms.tracking.annotation.TrackFields;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
-import javax.persistence.ManyToMany;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.ArrayList;
@@ -57,10 +56,8 @@ public class Taluka extends MdsEntity {
     @JsonBackReference
     private District district;
 
-    @Field
-    @ManyToMany(mappedBy="talukas")
-    @Cascade(delete = true)
     @Persistent(mappedBy = "talukas", defaultFetchGroup = "false")
+    @JsonManagedReference
     private Set<HealthBlock> healthBlocks;
 
     @Field
