@@ -60,6 +60,11 @@ import org.motechproject.nms.rch.utils.ExecutionHelper;
 import org.motechproject.nms.rch.utils.MarshallUtils;
 import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.Taluka;
+import org.motechproject.nms.region.domain.HealthBlock;
+import org.motechproject.nms.region.domain.HealthFacility;
+import org.motechproject.nms.region.domain.HealthSubFacility;
+import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.LocationService;
@@ -111,6 +116,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String DATE_FORMAT = "dd-MM-yyyy";
     private static final String LOCAL_RESPONSE_DIR = "rch.local_response_dir";
     private static final String REMOTE_RESPONSE_DIR = "rch.remote_response_dir";
+    private static final String LOC_UPDATE_DIR = "rch.loc_update_dir";
+    private static final String NULL = "NULL";
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("dd-MM-yyyy");
     private static final String SCP_TIMEOUT_SETTING = "rch.scp_timeout";
@@ -261,7 +268,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                         rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
                         rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.MOTHER, stateId));
                     } catch (NullPointerException e) {
-                        LOGGER.error("No files saved : ", e);
+                        LOGGER.error("No files saved a : ", e);
                     }
                 }
             }
@@ -364,7 +371,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
                     rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
                 } catch (NullPointerException e) {
-                    LOGGER.error("No files saved : ", e);
+                    LOGGER.error("No files saved b : ", e);
                 }
             }
         } catch (ExecutionException e) {
@@ -467,7 +474,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, error));
                     rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
                 } catch (NullPointerException e) {
-                    LOGGER.error("No files saved : ", e);
+                    LOGGER.error("No files saved c : ", e);
                 }
             }
         } catch (ExecutionException e) {
@@ -557,7 +564,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         List<Map<String, Object>> rejectedRchMothers = rchMotherRecordsSet.get(0);
         String action = "";
         int saved = 0;
-        int rejected = motherRecords.size()-validMotherRecords.size();
+        int rejected = motherRecords.size() - validMotherRecords.size();
 
         Map<String, Object> rejectedMothers = new HashMap<>();
         Map<String, Object> rejectionStatus = new HashMap<>();
@@ -585,7 +592,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 if (hpdValidation) {
 
                     motherImportRejection = mctsBeneficiaryImportService.importMotherRecord(recordMap, SubscriptionOrigin.RCH_IMPORT, locationFinder);
-                    if(motherImportRejection != null) {
+                    if (motherImportRejection != null) {
                         rejectedMothers.put(motherImportRejection.getRegistrationNo(), motherImportRejection);
                         rejectionStatus.put(motherImportRejection.getRegistrationNo(), motherImportRejection.getAccepted());
                     }
@@ -675,7 +682,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         String action = "";
 
         int saved = 0;
-        int rejected = childRecords.size()-validChildRecords.size();
+        int rejected = childRecords.size() - validChildRecords.size();
 
         Map<String, Object> rejectedChilds = new HashMap<>();
         Map<String, Object> rejectionStatus = new HashMap<>();
@@ -863,19 +870,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private Map<String, Object> toMap(RchMotherRecord motherRecord) {
         Map<String, Object> map = new HashMap<>();
-        map.put(KilkariConstants.STATE_ID, motherRecord.getStateId());
-        map.put(KilkariConstants.DISTRICT_ID, motherRecord.getDistrictId());
-        map.put(KilkariConstants.DISTRICT_NAME, motherRecord.getDistrictName());
-        map.put(KilkariConstants.TALUKA_ID, motherRecord.getTalukaId());
-        map.put(KilkariConstants.TALUKA_NAME, motherRecord.getTalukaName());
-        map.put(KilkariConstants.HEALTH_BLOCK_ID, motherRecord.getHealthBlockId());
-        map.put(KilkariConstants.HEALTH_BLOCK_NAME, motherRecord.getHealthBlockName());
-        map.put(KilkariConstants.PHC_ID, motherRecord.getPhcId());
-        map.put(KilkariConstants.PHC_NAME, motherRecord.getPhcName());
-        map.put(KilkariConstants.SUB_CENTRE_ID, motherRecord.getSubCentreId());
-        map.put(KilkariConstants.SUB_CENTRE_NAME, motherRecord.getSubCentreName());
-        map.put(KilkariConstants.CENSUS_VILLAGE_ID, motherRecord.getVillageId());
-        map.put(KilkariConstants.VILLAGE_NAME, motherRecord.getVillageName());
+
+        toMapLocMother(map, motherRecord);
 
         map.put(KilkariConstants.MCTS_ID, motherRecord.getMctsIdNo());
         map.put(KilkariConstants.RCH_ID, motherRecord.getRegistrationNo());
@@ -892,9 +888,45 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return map;
     }
 
+    private void toMapLocMother(Map<String, Object> map, RchMotherRecord motherRecord) {
+        map.put(KilkariConstants.STATE_ID, motherRecord.getStateId());
+        map.put(KilkariConstants.DISTRICT_ID, motherRecord.getDistrictId());
+        map.put(KilkariConstants.DISTRICT_NAME, motherRecord.getDistrictName());
+        map.put(KilkariConstants.TALUKA_ID, motherRecord.getTalukaId());
+        map.put(KilkariConstants.TALUKA_NAME, motherRecord.getTalukaName());
+        map.put(KilkariConstants.HEALTH_BLOCK_ID, motherRecord.getHealthBlockId());
+        map.put(KilkariConstants.HEALTH_BLOCK_NAME, motherRecord.getHealthBlockName());
+        map.put(KilkariConstants.PHC_ID, motherRecord.getPhcId());
+        map.put(KilkariConstants.PHC_NAME, motherRecord.getPhcName());
+        map.put(KilkariConstants.SUB_CENTRE_ID, motherRecord.getSubCentreId());
+        map.put(KilkariConstants.SUB_CENTRE_NAME, motherRecord.getSubCentreName());
+        map.put(KilkariConstants.CENSUS_VILLAGE_ID, motherRecord.getVillageId());
+        map.put(KilkariConstants.VILLAGE_NAME, motherRecord.getVillageName());
+    }
+
     private Map<String, Object> toMap(RchChildRecord childRecord) {
         Map<String, Object> map = new HashMap<>();
 
+        toMapLocChild(map, childRecord);
+
+        map.put(KilkariConstants.BENEFICIARY_NAME, childRecord.getName());
+
+        map.put(KilkariConstants.MOBILE_NO, mctsBeneficiaryValueProcessor.getMsisdnByString(childRecord.getMobileNo()));
+        map.put(KilkariConstants.DOB, mctsBeneficiaryValueProcessor.getDateByString(childRecord.getBirthdate()));
+
+        map.put(KilkariConstants.MCTS_ID, childRecord.getMctsId());
+        map.put(KilkariConstants.MCTS_MOTHER_ID,
+                mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(childRecord.getMctsMotherIdNo()) == null ? null : mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(childRecord.getMctsMotherIdNo()).getBeneficiaryId());
+        map.put(KilkariConstants.RCH_ID, childRecord.getRegistrationNo());
+        map.put(KilkariConstants.RCH_MOTHER_ID, childRecord.getMotherRegistrationNo());
+        map.put(KilkariConstants.DEATH,
+                mctsBeneficiaryValueProcessor.getDeathFromString(String.valueOf(childRecord.getEntryType())));
+        map.put(KilkariConstants.EXECUTION_DATE, "".equals(childRecord.getExecDate()) ? null : mctsBeneficiaryValueProcessor.getLocalDateByString(childRecord.getExecDate()));
+
+        return map;
+    }
+
+    private void toMapLocChild(Map<String, Object> map, RchChildRecord childRecord) {
         map.put(KilkariConstants.STATE_ID, childRecord.getStateId());
         map.put(KilkariConstants.DISTRICT_ID, childRecord.getDistrictId());
         map.put(KilkariConstants.DISTRICT_NAME, childRecord.getDistrictName());
@@ -908,22 +940,22 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         map.put(KilkariConstants.SUB_CENTRE_NAME, childRecord.getSubCentreName());
         map.put(KilkariConstants.CENSUS_VILLAGE_ID, childRecord.getVillageId());
         map.put(KilkariConstants.VILLAGE_NAME, childRecord.getVillageName());
+    }
 
-        map.put(KilkariConstants.BENEFICIARY_NAME, childRecord.getName());
-
-        map.put(KilkariConstants.MOBILE_NO, mctsBeneficiaryValueProcessor.getMsisdnByString(childRecord.getMobileNo()));
-        map.put(KilkariConstants.DOB, mctsBeneficiaryValueProcessor.getDateByString(childRecord.getBirthdate()));
-
-        map.put(KilkariConstants.MCTS_ID, childRecord.getMctsId());
-        map.put(KilkariConstants.MCTS_MOTHER_ID,
-                mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(childRecord.getMctsMotherIdNo()) == null ? null : mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(childRecord.getMctsMotherIdNo()).getBeneficiaryId() );
-        map.put(KilkariConstants.RCH_ID, childRecord.getRegistrationNo());
-        map.put(KilkariConstants.RCH_MOTHER_ID, childRecord.getMotherRegistrationNo());
-        map.put(KilkariConstants.DEATH,
-                mctsBeneficiaryValueProcessor.getDeathFromString(String.valueOf(childRecord.getEntryType())));
-        map.put(KilkariConstants.EXECUTION_DATE, "".equals(childRecord.getExecDate()) ? null : mctsBeneficiaryValueProcessor.getLocalDateByString(childRecord.getExecDate()));
-
-        return map;
+    private void toMapLoc(Map<String, Object> map, RchAnmAshaRecord anmAshaRecord) {
+        map.put(KilkariConstants.STATE_ID, anmAshaRecord.getStateId());
+        map.put(KilkariConstants.DISTRICT_ID, anmAshaRecord.getDistrictId());
+        map.put(KilkariConstants.DISTRICT_NAME, anmAshaRecord.getDistrictName());
+        map.put(KilkariConstants.TALUKA_ID, anmAshaRecord.getTalukaId());
+        map.put(KilkariConstants.TALUKA_NAME, anmAshaRecord.getTalukaName());
+        map.put(KilkariConstants.HEALTH_BLOCK_ID, anmAshaRecord.getHealthBlockId());
+        map.put(KilkariConstants.HEALTH_BLOCK_NAME, anmAshaRecord.getHealthBlockName());
+        map.put(KilkariConstants.PHC_ID, anmAshaRecord.getPhcId());
+        map.put(KilkariConstants.PHC_NAME, anmAshaRecord.getPhcName());
+        map.put(KilkariConstants.SUB_CENTRE_ID, anmAshaRecord.getSubCentreId());
+        map.put(KilkariConstants.SUB_CENTRE_NAME, anmAshaRecord.getSubCentreName());
+        map.put(KilkariConstants.CENSUS_VILLAGE_ID, anmAshaRecord.getVillageId());
+        map.put(KilkariConstants.VILLAGE_NAME, anmAshaRecord.getVillageName());
     }
 
     private Map<Long, Set<Long>> getHpdFilters() {
@@ -1012,6 +1044,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         ExecutionHelper execHelper = new ExecutionHelper();
         execHelper.exec(command, getScpTimeout());
         return new File(localResponseFile(fileName));
+    }
+
+    private File fileForLocUpdate(String fileName) {
+        return new File(remoteResponseFile(fileName));
     }
 
     public String localResponseFile(String file) {
@@ -1139,6 +1175,269 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         } else {
             LOGGER.info("update");
             return "UPDATE";
+        }
+    }
+
+    @Transactional
+    public void locationUpdateInTable(Long stateId, RchUserType rchUserType) {
+        try {
+            List<RchImportFacilitator> rchImportFiles = rchImportFacilitatorService.findByStateIdAndRchUserType(stateId, rchUserType);
+            for (RchImportFacilitator rchImportFile : rchImportFiles
+                    ) {
+                File remoteResponseFile = fileForLocUpdate(rchImportFile.getFileName());
+
+                if (remoteResponseFile.exists() && !remoteResponseFile.isDirectory()) {
+                    DS_DataResponseDS_DataResult result = readResponses(remoteResponseFile);
+
+                    if (rchUserType == RchUserType.MOTHER) {
+                        motherLocUpdate(result, stateId);
+                    } else if (rchUserType == RchUserType.CHILD) {
+                        childLocUpdate(result, stateId);
+                    } else if (rchUserType == RchUserType.ASHA) {
+                        ashaLocUpdate(result, stateId);
+                    }
+                } else {
+                    continue;
+                }
+
+            }
+        } catch (ExecutionException e) {
+            LOGGER.error("Failed to copy file from remote server to local directory." + e);
+        } catch (RchFileManipulationException e) {
+            LOGGER.error("No files saved d : {}", e);
+        }
+    }
+
+    private void motherLocUpdate(DS_DataResponseDS_DataResult result, Long stateId) {
+        try {
+            validMothersDataResponse(result, stateId);
+            List motherResultFeed = result.get_any()[1].getChildren();
+            ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
+
+            RchMothersDataSet mothersDataSet = (motherResultFeed == null) ?
+                    null :
+                    (RchMothersDataSet) MarshallUtils.unmarshall(motherResultFeed.get(0).toString(), RchMothersDataSet.class);
+
+            if (mothersDataSet == null || mothersDataSet.getRecords() == null) {
+                String warning = String.format("No mother data set received from RCH for %d stateId", stateId);
+                LOGGER.warn(warning);
+            } else {
+                List<RchMotherRecord> motherRecords = mothersDataSet.getRecords();
+                for (RchMotherRecord record : motherRecords) {
+                    Map<String, Object> locMap = new HashMap<>();
+                    toMapLocMother(locMap, record);
+                    locMap.put(KilkariConstants.RCH_ID, record.getRegistrationNo());
+                    locArrList.add(locMap);
+                }
+            }
+
+            updateLocInMap(locArrList);
+
+        } catch (JAXBException e) {
+            throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH mother data from %d stateId.", stateId), e);
+        } catch (NullPointerException e) {
+            LOGGER.error("No files saved e : ", e);
+        } catch (RchInvalidResponseStructureException e) {
+            String error = String.format("Cannot read RCH mothers data from stateId: %d. Response Deserialization Error", stateId);
+            LOGGER.error(error, e);
+        } catch (IOException e) {
+            LOGGER.error("Input output exception.");
+        } catch (InvalidLocationException e) {
+            LOGGER.error("Invalid location");
+        }
+    }
+
+    private void childLocUpdate(DS_DataResponseDS_DataResult result, Long stateId) {
+        try {
+            validChildrenDataResponse(result, stateId);
+            List childResultFeed = result.get_any()[1].getChildren();
+            ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
+            RchChildrenDataSet childrenDataSet = (childResultFeed == null) ?
+                    null :
+                    (RchChildrenDataSet) MarshallUtils.unmarshall(childResultFeed.get(0).toString(), RchChildrenDataSet.class);
+
+            if (childrenDataSet == null || childrenDataSet.getRecords() == null) {
+                String warning = String.format("No child data set received from RCH for %d stateId", stateId);
+                LOGGER.warn(warning);
+            } else {
+                List<RchChildRecord> childRecords = childrenDataSet.getRecords();
+                for (RchChildRecord record : childRecords
+                     ) {
+                    Map<String, Object> locMap = new HashMap<>();
+                    toMapLocChild(locMap, record);
+                    locMap.put(KilkariConstants.RCH_ID, record.getRegistrationNo());
+                    locArrList.add(locMap);
+                }
+            }
+
+            updateLocInMap(locArrList);
+
+        } catch (JAXBException e) {
+            throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH children data from %d stateId.", stateId), e);
+        } catch (NullPointerException e) {
+            LOGGER.error("No files saved f : ", e);
+        } catch (RchInvalidResponseStructureException e) {
+            String error = String.format("Cannot read RCH children data from stateId:%d. Response Deserialization Error", stateId);
+            LOGGER.error(error, e);
+        } catch (IOException e) {
+            LOGGER.error("Input output exception.");
+        } catch (InvalidLocationException e) {
+            LOGGER.error("Invalid location");
+        }
+    }
+
+    private void ashaLocUpdate(DS_DataResponseDS_DataResult result, Long stateId) {
+        try {
+            validAnmAshaDataResponse(result, stateId);
+            List ashaResultFeed = result.get_any()[1].getChildren();
+            RchAnmAshaDataSet ashaDataSet = (ashaResultFeed == null) ?
+                    null :
+                    (RchAnmAshaDataSet) MarshallUtils.unmarshall(ashaResultFeed.get(0).toString(), RchAnmAshaDataSet.class);
+            if (ashaDataSet == null || ashaDataSet.getRecords() == null) {
+                String warning = String.format("No FLW data set received from RCH for %d stateId", stateId);
+                LOGGER.warn(warning);
+            } else {
+                List<RchAnmAshaRecord> anmAshaRecords = ashaDataSet.getRecords();
+                for (RchAnmAshaRecord record : anmAshaRecords
+                     ) {
+                    Map<String, Object> locMap = new HashMap<>();
+                    toMapLoc(locMap, record);
+                    locMap.put("Flw_Id", record.getGfId());
+                }
+            }
+        } catch (JAXBException e) {
+            throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH FLW data from %d stateId.", stateId), e);
+        } catch (RchInvalidResponseStructureException e) {
+            String error = String.format("Cannot read RCH FLW data from stateId:%d. Response Deserialization Error", stateId);
+            LOGGER.error(error, e);
+        } catch (NullPointerException e) {
+            LOGGER.error("No files saved g : ", e);
+        }
+
+    }
+
+    public Map<String, Object> setLocationFields(LocationFinder locationFinder, Map<String, Object> record) throws InvalidLocationException { //NO CHECKSTYLE Cyclomatic Complexity
+
+        Map<String, Object> updatedLoc = new HashMap<>();
+        String mapKey = record.get(KilkariConstants.STATE_ID).toString();
+        if (isValidID(record, KilkariConstants.STATE_ID) && (locationFinder.getStateHashMap().get(mapKey) != null)) {
+            updatedLoc.put(KilkariConstants.STATE_ID, locationFinder.getStateHashMap().get(mapKey).getId());
+            String districtCode = record.get(KilkariConstants.DISTRICT_ID).toString();
+            mapKey += "_";
+            mapKey += districtCode;
+
+            if (isValidID(record, KilkariConstants.DISTRICT_ID) && (locationFinder.getDistrictHashMap().get(mapKey) != null)) {
+                updatedLoc.put(KilkariConstants.DISTRICT_ID, locationFinder.getDistrictHashMap().get(mapKey).getId());
+                updatedLoc.put(KilkariConstants.DISTRICT_NAME, locationFinder.getDistrictHashMap().get(mapKey).getName());
+                Long talukaCode = Long.parseLong(record.get(KilkariConstants.TALUKA_ID).toString());
+                mapKey += "_";
+                mapKey += talukaCode;
+                Taluka taluka = locationFinder.getTalukaHashMap().get(mapKey);
+                updatedLoc.put(KilkariConstants.TALUKA_ID, taluka == null ? null : taluka.getId());
+                updatedLoc.put(KilkariConstants.TALUKA_NAME, taluka == null ? null : taluka.getName());
+
+                String villageSvid = record.get(KilkariConstants.NON_CENSUS_VILLAGE_ID) == null ? "0" : record.get(KilkariConstants.NON_CENSUS_VILLAGE_ID).toString();
+                String villageCode = record.get(KilkariConstants.CENSUS_VILLAGE_ID) == null ? "0" : record.get(KilkariConstants.CENSUS_VILLAGE_ID).toString();
+                String healthBlockCode = record.get(KilkariConstants.HEALTH_BLOCK_ID) == null ? "0" : record.get(KilkariConstants.HEALTH_BLOCK_ID).toString();
+                String healthFacilityCode = record.get(KilkariConstants.PHC_ID) == null ? "0" : record.get(KilkariConstants.PHC_ID).toString();
+                String healthSubFacilityCode = record.get(KilkariConstants.SUB_CENTRE_ID) == null ? "0" : record.get(KilkariConstants.SUB_CENTRE_ID).toString();
+
+                Village village = locationFinder.getVillageHashMap().get(mapKey + "_" + Long.parseLong(villageCode) + "_" + Long.parseLong(villageSvid));
+                updatedLoc.put(KilkariConstants.CENSUS_VILLAGE_ID, village == null ? null : village.getId());
+                updatedLoc.put(KilkariConstants.VILLAGE_NAME, village == null ? null : village.getName());
+                mapKey += "_";
+                mapKey += Long.parseLong(healthBlockCode);
+                HealthBlock healthBlock = locationFinder.getHealthBlockHashMap().get(mapKey);
+                updatedLoc.put(KilkariConstants.HEALTH_BLOCK_ID, healthBlock == null ? null : healthBlock.getId());
+                updatedLoc.put(KilkariConstants.HEALTH_BLOCK_NAME, healthBlock == null ? null : healthBlock.getName());
+                mapKey += "_";
+                mapKey += Long.parseLong(healthFacilityCode);
+                HealthFacility healthFacility = locationFinder.getHealthFacilityHashMap().get(mapKey);
+                updatedLoc.put(KilkariConstants.PHC_ID, healthFacility == null ? null : healthFacility.getId());
+                updatedLoc.put(KilkariConstants.PHC_NAME, healthFacility == null ? null : healthFacility.getName());
+                mapKey += "_";
+                mapKey += Long.parseLong(healthSubFacilityCode);
+                HealthSubFacility healthSubFacility = locationFinder.getHealthSubFacilityHashMap().get(mapKey);
+                updatedLoc.put(KilkariConstants.SUB_CENTRE_ID, healthSubFacility == null ? null : healthSubFacility.getId());
+                updatedLoc.put(KilkariConstants.SUB_CENTRE_NAME, healthSubFacility == null ? null : healthSubFacility.getName());
+                return updatedLoc;
+            } else {
+                throw new InvalidLocationException(String.format(KilkariConstants.INVALID_LOCATION, KilkariConstants.DISTRICT_ID, record.get(KilkariConstants.DISTRICT_ID)));
+            }
+        } else {
+            throw new InvalidLocationException(String.format(KilkariConstants.INVALID_LOCATION, KilkariConstants.STATE_ID, record.get(KilkariConstants.STATE_ID)));
+        }
+    }
+
+    private boolean isValidID(final Map<String, Object> map, final String key) {
+        Object obj = map.get(key);
+        if (obj == null || obj.toString().isEmpty() || "NULL".equalsIgnoreCase(obj.toString())) {
+            return false;
+        }
+
+        if (obj.getClass().equals(Long.class)) {
+            return (Long) obj > 0L;
+        }
+
+        return !"0".equals(obj);
+    }
+
+    private void updateLocInMap(List<Map<String, Object>> locArrList) throws InvalidLocationException, IOException {
+
+        ArrayList<Map<String, Object>> updatedLocArrList = new ArrayList<>();
+
+        LocationFinder locationFinder = locationService.updateLocations(locArrList);
+
+        for (Map<String, Object> record : locArrList
+                ) {
+            Map<String, Object> updatedMap = setLocationFields(locationFinder, record);
+            updatedMap.put(KilkariConstants.RCH_ID, record.get(KilkariConstants.RCH_ID));
+            updatedLocArrList.add(updatedMap);
+        }
+
+        csvWriter(updatedLocArrList);
+    }
+
+    private void csvWriter(List<Map<String, Object>> locArrList) throws IOException { //NO CHECKSTYLE Cyclomatic Complexity
+        String locUpdateDir = settingsFacade.getProperty(LOC_UPDATE_DIR);
+        if (!locArrList.isEmpty()) {
+            FileWriter writer;
+            writer = new FileWriter(locUpdateDir, true);
+
+            for (Map<String, Object> map : locArrList
+                    ) {
+
+                writer.write(map.get(KilkariConstants.RCH_ID).toString());
+                writer.write(",");
+                writer.write(map.get(KilkariConstants.STATE_ID).toString());
+                writer.write(",");
+                writer.write(map.get(KilkariConstants.DISTRICT_ID).toString());
+                writer.write(",");
+                writer.write(map.get(KilkariConstants.DISTRICT_NAME).toString());
+                writer.write(",");
+                writer.write(map.get(KilkariConstants.TALUKA_ID) == null ? NULL : map.get(KilkariConstants.TALUKA_ID).toString());
+                writer.write(",");
+                writer.write(map.get(KilkariConstants.TALUKA_NAME) == null ? NULL : map.get(KilkariConstants.TALUKA_NAME).toString());
+                writer.write(",");
+                writer.write(map.get(KilkariConstants.HEALTH_BLOCK_ID) == null ? NULL : map.get(KilkariConstants.HEALTH_BLOCK_ID).toString());
+                writer.write(",");
+                writer.write(map.get(KilkariConstants.HEALTH_BLOCK_NAME) == null ? NULL : map.get(KilkariConstants.HEALTH_BLOCK_NAME).toString());
+                writer.write(",");
+                writer.write(map.get(KilkariConstants.PHC_ID) == null ? NULL : map.get(KilkariConstants.PHC_ID).toString());
+                writer.write(",");
+                writer.write(map.get(KilkariConstants.PHC_NAME) == null ? NULL : map.get(KilkariConstants.PHC_NAME).toString());
+                writer.write(",");
+                writer.write(map.get(KilkariConstants.SUB_CENTRE_ID) == null ? NULL : map.get(KilkariConstants.SUB_CENTRE_ID).toString());
+                writer.write(",");
+                writer.write(map.get(KilkariConstants.SUB_CENTRE_NAME) == null ? NULL : map.get(KilkariConstants.SUB_CENTRE_NAME).toString());
+                writer.write(",");
+                writer.write(map.get(KilkariConstants.CENSUS_VILLAGE_ID) == null ? NULL : map.get(KilkariConstants.CENSUS_VILLAGE_ID).toString());
+                writer.write(",");
+                writer.write(map.get(KilkariConstants.VILLAGE_NAME) == null ? NULL : map.get(KilkariConstants.VILLAGE_NAME).toString());
+                writer.write("\r\n");
+            }
+
+            writer.close();
         }
     }
 }

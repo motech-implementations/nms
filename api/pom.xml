@@ -67,6 +67,12 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>rch</artifactId>
+            <version>1.0.36</version>
+        </dependency>
+
     </dependencies>
 
     <repositories>
