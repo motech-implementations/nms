@@ -22,6 +22,8 @@ import org.motechproject.nms.props.service.LogHelper;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 
+import org.motechproject.nms.rch.domain.RchUserType;
+import org.motechproject.nms.rch.service.RchWebServiceFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
@@ -74,6 +77,9 @@ public class OpsController extends BaseController {
 
     @Autowired
     private FlwCsvService flwCsvService;
+
+    @Autowired
+    private RchWebServiceFacade rchWebServiceFacade;
 
     private final String contactNumber = "contactNumber";
 
@@ -234,6 +240,30 @@ public class OpsController extends BaseController {
             throw new CsvImportException("An error occurred during CSV import", e);
         }
         LOGGER.debug("updateMotherInChild() END");
+    }
+
+    @RequestMapping(value = "/locUpdate/{stateID}/{type}",
+            method = RequestMethod.GET)
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public Boolean locationUpdate(@PathVariable("stateID") Long stateID, @PathVariable("type") String type) {
+        log("REQUEST: /ops/locUpdate", String.format(
+                "type=%s",
+                type));
+        if ("mother".equalsIgnoreCase(type)) {
+            LOGGER.debug("mother");
+            rchWebServiceFacade.locationUpdateInTable(stateID, RchUserType.MOTHER);
+        } else if ("child".equalsIgnoreCase(type)) {
+            LOGGER.debug("child");
+            rchWebServiceFacade.locationUpdateInTable(stateID, RchUserType.CHILD);
+        } else if ("asha".equalsIgnoreCase(type)) {
+            LOGGER.debug("asha");
+            rchWebServiceFacade.locationUpdateInTable(stateID, RchUserType.ASHA);
+        } else {
+            LOGGER.debug("No such type, duh");
+        }
+
+        return true;
     }
 
 }

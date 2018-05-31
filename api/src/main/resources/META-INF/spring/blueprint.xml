@@ -61,6 +61,8 @@
 
     <osgi:reference id="flwRejectionService" interface="org.motechproject.nms.rejectionhandler.service.FlwRejectionService"/>
 
+    <osgi:reference id="rchWebServiceFacade" interface="org.motechproject.nms.rch.service.RchWebServiceFacade"/>
+
     <osgi:reference id="eventRelay" interface="org.motechproject.event.listener.EventRelay"/>
 
     <osgi:reference id="cdrFileService" interface="org.motechproject.nms.imi.service.CdrFileService" />
