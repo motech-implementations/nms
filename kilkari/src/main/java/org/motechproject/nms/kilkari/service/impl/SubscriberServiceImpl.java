@@ -475,6 +475,8 @@ public class SubscriberServiceImpl implements SubscriberService {
                         subscriberByMctsId.setDateOfBirth(dob);
                         if (subscriberByMctsId.getMother() == null) {
                             subscriberByMctsId.setMother(childUpdate.getMother());
+                        } else  if (subscriberByMctsId.getMother() != null && childUpdate.getMother() == null) {
+                            childUpdate.setMother(subscriberByMctsId.getMother());
                         }
                         finalSubscription = updateOrCreateSubscription(subscriberByMctsId, subscription, dob, pack, language, circle, SubscriptionOrigin.MCTS_IMPORT, false);
                     } else {
@@ -489,6 +491,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         }
 
         liveBirthChildDeathCheck(finalSubscription, record);
+        mctsChildDataService.update(childUpdate);
 
         return childRejectionMcts(convertMapToChild(record), true, null, action);
 
@@ -541,9 +544,10 @@ public class SubscriberServiceImpl implements SubscriberService {
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                         if (subscriberByRchId.getMother() == null) {
                             subscriberByRchId.setMother(childUpdate.getMother());
+                        } else if (subscriberByRchId.getMother() != null && childUpdate.getMother() == null) {
+                            childUpdate.setMother(subscriberByRchId.getMother());
                         }
                         childUpdate.setDateOfBirth(dob);
-                        LOGGER.debug("ChildNameFinal: {}", childUpdate.getName());
                         subscriberByRchId.setDateOfBirth(dob);
                         finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
                     } else {
