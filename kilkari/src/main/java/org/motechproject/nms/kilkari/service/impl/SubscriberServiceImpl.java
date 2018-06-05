@@ -585,6 +585,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 if (subscribersByMsisdn.size() == 1 && childUpdate.getMother() != null && subscribersByMsisdn.get(0).getMother() != null && subscribersByMsisdn.get(0).getChild() == null) {
                     //update subscriber with child
                     if (subscribersByMsisdn.get(0).getMother().equals(childUpdate.getMother())) {
+                        childUpdate.setDateOfBirth(dob);
                         Subscriber subscriber = subscribersByMsisdn.get(0);
                         subscriber.setDateOfBirth(dob);
                         subscriber.setChild(childUpdate);
