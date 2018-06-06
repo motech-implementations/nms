@@ -445,7 +445,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
 
         child.setName(name);
-        child.setMother(mother);
+        if (child.getId() != null && mother == null) {
+            LOGGER.debug("Not updating the child with null mother.");
+        } else {
+            child.setMother(mother);
+        }
+        child.setDateOfBirth(dob);
         child.setUpdatedDateNic(lastUpdateDateNic);
 
         if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
