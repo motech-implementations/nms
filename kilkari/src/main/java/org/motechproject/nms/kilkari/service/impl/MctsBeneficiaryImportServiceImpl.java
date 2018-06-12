@@ -291,7 +291,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             if (record.get(KilkariConstants.RCH_MOTHER_ID) != null || record.get(KilkariConstants.MCTS_MOTHER_ID) != null) {
                 String motherRchId = record.get(KilkariConstants.RCH_MOTHER_ID) == null || "".equals(record.get(KilkariConstants.RCH_MOTHER_ID)) || "0".equalsIgnoreCase(record.get(KilkariConstants.RCH_MOTHER_ID).toString()) ? null : record.get(KilkariConstants.RCH_MOTHER_ID).toString();
                 String motherMctsId = record.get(KilkariConstants.MCTS_MOTHER_ID) == null || "".equals(record.get(KilkariConstants.MCTS_MOTHER_ID)) || "0".equalsIgnoreCase(record.get(KilkariConstants.MCTS_MOTHER_ID).toString()) ? null : record.get(KilkariConstants.MCTS_MOTHER_ID).toString();
-                if (motherRchId == null && motherMctsId != null) {
+                if ((motherRchId == null) && motherMctsId != null) {
                     mother = mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherMctsId);
                 } else if (motherRchId != null) {
                     mother = mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance(motherRchId, motherMctsId);
@@ -352,7 +352,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
 
         child.setName(name);
-        child.setMother(mother);
+        if (child.getId() != null && mother == null) {
+            LOGGER.debug("Not updating the child with null mother.");
+        } else {
+            child.setMother(mother);
+        }
+        child.setDateOfBirth(dob);
         child.setUpdatedDateNic(lastUpdateDateNic);
 
         List<DeactivatedBeneficiary> deactivatedUsers = null;
