@@ -30,7 +30,8 @@ public class HealthBlockServiceImpl implements HealthBlockService {
             public String getSqlQuery() {
                 return "select * " +
                          "from nms_health_blocks " +
-                         "join nms_talukas t on nms_health_blocks.taluka_id_oid = t.id " +
+                         "join nms_taluka_healthblock j on j.healthblock_id = nms_health_blocks.id " +
+                         "join nms_talukas t on j.taluka_id = t.id " +
                          "join nms_districts d on t.district_id_oid = d.id " +
                          "join nms_states s on d.state_id_oid = s.id " +
                          "join nms_states s2 on s.id = s2.id " +

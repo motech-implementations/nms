@@ -134,13 +134,11 @@ public class LocationServiceBundleIT extends BasePaxIT {
         taluka.setIdentity(1);
         taluka.setCode("0004");
         taluka.getVillages().add(village);
-        Set<HealthBlock> healthBlocks = null;
-        healthBlocks.add(healthBlock);
-        taluka.getHealthBlocks().add(healthBlock);
 
-        Set<Taluka> talukas = new HashSet<>();
-        talukas.add(taluka);
-        healthBlock.setTalukas(talukas);
+        taluka.addHealthBlock(healthBlock);
+
+
+        healthBlock.addTaluka(taluka);
 
         district = new District();
         district.setName("District 1");
@@ -332,7 +330,7 @@ public class LocationServiceBundleIT extends BasePaxIT {
         taluka2.setIdentity(2);
         taluka2.setCode("0005");
         taluka2.setDistrict(district);
-        taluka2.getHealthBlocks().add(healthBlock2);
+        taluka2.addHealthBlock(healthBlock2);
 
         taluka2 = talukaDataService.create(taluka2);
         healthBlockDataService.create(healthBlock2);
@@ -369,7 +367,7 @@ public class LocationServiceBundleIT extends BasePaxIT {
         healthBlock2.setRegionalName("Health Block 2");
         healthBlock2.setHq("Health Block 2 HQ");
         healthBlock2.setCode(2L);
-        healthBlock2.getTalukas().add(t);
+        healthBlock2.addTaluka(t);
 
         healthBlockDataService.create(healthBlock2);
 
@@ -402,7 +400,7 @@ public class LocationServiceBundleIT extends BasePaxIT {
         taluka2.setRegionalName("Taluka 2");
         taluka2.setIdentity(2);
         taluka2.setCode("0005");
-        taluka2.getHealthBlocks().add(healthBlock2);
+        taluka2.addHealthBlock(healthBlock2);
 
         District district2 = new District();
         district2.setName("District 2");

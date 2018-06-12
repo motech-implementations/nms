@@ -1,6 +1,7 @@
 package org.motechproject.nms.region.domain;
 
 import org.codehaus.jackson.annotate.JsonBackReference;
+import org.codehaus.jackson.annotate.JsonManagedReference;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.InstanceLifecycleListeners;
@@ -10,8 +11,13 @@ import org.motechproject.nms.tracking.annotation.TrackFields;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Unique;
+import javax.jdo.annotations.Persistent;
+import javax.jdo.annotations.Join;
+import javax.jdo.annotations.Element;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity(tableName = "nms_health_sub_facilities")
 @Unique(name = "UNIQUE_HEALTH_FACILITY_CODE", members = { "healthFacility", "code" })
@@ -42,7 +48,14 @@ public class HealthSubFacility extends MdsEntity {
     @JsonBackReference
     private HealthFacility healthFacility;
 
+    @Persistent(table="nms_village_healthsubfacility")
+    @Join(column = "healthsubfacility_id")
+    @Element(column = "village_id")
+    @JsonManagedReference
+    private Set<Village> villages;
+
     public HealthSubFacility() {
+        this.villages = new HashSet<>();
     }
 
     public String getName() {
@@ -75,6 +88,22 @@ public class HealthSubFacility extends MdsEntity {
 
     public void setHealthFacility(HealthFacility healthFacility) {
         this.healthFacility = healthFacility;
+    }
+
+    public Set<Village> getVillages() {
+        return villages;
+    }
+
+    public void setVillages(Set<Village> villages) {
+        this.villages = villages;
+    }
+
+    public void addVillage(Village village) {
+        this.villages.add(village);
+    }
+
+    public void removeVillage(Village village) {
+        this.villages.remove(village);
     }
 
     @Override

@@ -143,13 +143,10 @@ public class CircleServiceBundleIT extends BasePaxIT {
         taluka.setIdentity(1);
         taluka.setCode("0004");
         taluka.getVillages().add(village);
-        Set<HealthBlock> healthBlocks = new HashSet<>();
-        healthBlocks.add(healthBlock);
-        taluka.setHealthBlocks(healthBlocks);
 
-        Set<Taluka> talukas = new HashSet<>();
-        talukas.add(taluka);
-        healthBlock.setTalukas(talukas);
+        taluka.addHealthBlock(healthBlock);
+
+        healthBlock.addTaluka(taluka);
 
         district = new District();
         district.setName("District 1");
