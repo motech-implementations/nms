@@ -79,6 +79,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private MctsChildDataService mctsChildDataService;
     private DeactivatedBeneficiaryService deactivatedBeneficiaryService;
 
+    // Number of rejected mother/children in a single query for bulk insert/update
     private static final Integer REJECTION_PART_SIZE = 5000;
     private static final String SUBSCRIPTION_COMPLETED = "Subscription completed";
     private static final String USER_DEACTIVATED = "User deactivated";

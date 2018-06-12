@@ -48,6 +48,8 @@ import java.util.concurrent.TimeUnit;
 public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryImportReaderService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportReaderServiceImpl.class);
+
+    //Number of records to be processed by each thread
     private static final int RECORDS_PART_SIZE = 10000;
 
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;

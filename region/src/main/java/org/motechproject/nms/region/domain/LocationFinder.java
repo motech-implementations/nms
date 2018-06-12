@@ -5,6 +5,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * This object acts as a cache for locations while reading through a csv or xml
+ * The mapKey for stateHashMap is stateCode,
+ * for districtHashMap is stateCode_districtCode,
+ * for talukaHashMap is stateCode_districtCode_talukaCode,
+ * for villageHashMap is stateCode_districtCode_talukaCode_villageCode_Svid,
+ * for healthBlockHashMap is stateCode_districtCode_talukaCode_healthBlockCode,
+ * for healthFacilityHashMap is stateCode_districtCode_talukaCode_healthBlockCode_healthFacilityCode,
+ * for healthSubFacilityHashMap is stateCode_districtCode_talukaCode_healthBlockCode_healthFacilityCode_healthSubfacilityCode
  * Created by beehyv on 16/4/18.
  */
 public class LocationFinder {
