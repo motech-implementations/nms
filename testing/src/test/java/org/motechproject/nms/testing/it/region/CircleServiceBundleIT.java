@@ -32,7 +32,7 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
 
 import javax.inject.Inject;
-import java.util.Arrays;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -143,7 +143,10 @@ public class CircleServiceBundleIT extends BasePaxIT {
         taluka.setIdentity(1);
         taluka.setCode("0004");
         taluka.getVillages().add(village);
-        taluka.getHealthBlocks().add(healthBlock);
+
+        taluka.addHealthBlock(healthBlock);
+
+        healthBlock.addTaluka(taluka);
 
         district = new District();
         district.setName("District 1");

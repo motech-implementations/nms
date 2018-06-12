@@ -17,6 +17,11 @@ import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.LanguageService;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 public class RegionHelper {
     private LanguageDataService languageDataService;
     private LanguageService languageService;
@@ -284,7 +289,8 @@ public class RegionHelper {
 
     public static HealthBlock createHealthBlock(Taluka taluka, Long code, String name, String hq) {
         HealthBlock healthBlock = new HealthBlock();
-        healthBlock.setTaluka(taluka);
+        healthBlock.addTaluka(taluka);
+        healthBlock.setDistrict(taluka.getDistrict());
         healthBlock.setCode(code);
         healthBlock.setName(name);
         healthBlock.setRegionalName(regionalName(name));

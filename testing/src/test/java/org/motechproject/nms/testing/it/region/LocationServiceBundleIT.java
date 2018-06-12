@@ -37,6 +37,8 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -132,7 +134,11 @@ public class LocationServiceBundleIT extends BasePaxIT {
         taluka.setIdentity(1);
         taluka.setCode("0004");
         taluka.getVillages().add(village);
-        taluka.getHealthBlocks().add(healthBlock);
+
+        taluka.addHealthBlock(healthBlock);
+
+
+        healthBlock.addTaluka(taluka);
 
         district = new District();
         district.setName("District 1");
@@ -324,7 +330,7 @@ public class LocationServiceBundleIT extends BasePaxIT {
         taluka2.setIdentity(2);
         taluka2.setCode("0005");
         taluka2.setDistrict(district);
-        taluka2.getHealthBlocks().add(healthBlock2);
+        taluka2.addHealthBlock(healthBlock2);
 
         taluka2 = talukaDataService.create(taluka2);
         healthBlockDataService.create(healthBlock2);
@@ -361,7 +367,7 @@ public class LocationServiceBundleIT extends BasePaxIT {
         healthBlock2.setRegionalName("Health Block 2");
         healthBlock2.setHq("Health Block 2 HQ");
         healthBlock2.setCode(2L);
-        healthBlock2.setTaluka(t);
+        healthBlock2.addTaluka(t);
 
         healthBlockDataService.create(healthBlock2);
 
@@ -394,7 +400,7 @@ public class LocationServiceBundleIT extends BasePaxIT {
         taluka2.setRegionalName("Taluka 2");
         taluka2.setIdentity(2);
         taluka2.setCode("0005");
-        taluka2.getHealthBlocks().add(healthBlock2);
+        taluka2.addHealthBlock(healthBlock2);
 
         District district2 = new District();
         district2.setName("District 2");
@@ -440,11 +446,11 @@ public class LocationServiceBundleIT extends BasePaxIT {
         assertEquals(1, villageList.size());
         assertTrue(villageList.contains(village));
 
-        List<HealthBlock> healthBlockList = talukaList.get(0).getHealthBlocks();
+        Set<HealthBlock> healthBlockList = talukaList.get(0).getHealthBlocks();
         assertEquals(1, healthBlockList.size());
         assertTrue(healthBlockList.contains(healthBlock));
 
-        List<HealthFacility> healthFacilityList = healthBlockList.get(0).getHealthFacilities();
+        List<HealthFacility> healthFacilityList = healthBlockList.iterator().next().getHealthFacilities();
         assertEquals(1, healthFacilityList.size());
         Assert.assertEquals(healthFacilityType, healthFacilityList.get(0).getHealthFacilityType());
         assertTrue(healthFacilityList.contains(healthFacility));

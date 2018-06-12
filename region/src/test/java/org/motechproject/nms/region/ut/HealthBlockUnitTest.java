@@ -100,13 +100,4 @@ public class HealthBlockUnitTest {
         assertEquals("may not be null", constraintViolations.iterator().next().getMessage());
     }
 
-    @Test
-    public void testTalukaNull() {
-        HealthBlock healthBlock = new HealthBlock();
-
-        Set<ConstraintViolation<HealthBlock>> constraintViolations = validator
-                .validateProperty(healthBlock, "taluka");
-
-        assertEquals(1, constraintViolations.size());
-        assertEquals("may not be null", constraintViolations.iterator().next().getMessage());
-    }}
+    }
