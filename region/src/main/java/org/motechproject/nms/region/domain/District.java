@@ -59,6 +59,12 @@ public class District extends MdsEntity {
     private List<Taluka> talukas;
 
     @Field
+    @Cascade(delete = true)
+    @Persistent(mappedBy = "district", defaultFetchGroup = "false")
+    @JsonManagedReference
+    private List<HealthBlock> healthBlocks;
+
+    @Field
     @JsonBackReference
     private Circle circle;
 
@@ -108,6 +114,14 @@ public class District extends MdsEntity {
 
     public void setTalukas(List<Taluka> talukas) {
         this.talukas = talukas;
+    }
+
+    public List<HealthBlock> getHealthBlocks() {
+        return healthBlocks;
+    }
+
+    public void setHealthBlocks(List<HealthBlock> healthBlocks) {
+        this.healthBlocks = healthBlocks;
     }
 
     public Circle getCircle() {

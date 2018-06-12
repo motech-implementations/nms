@@ -182,13 +182,13 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         district4.getTalukas().add(taluka46);
 
         HealthBlock healthBlock259 = createHealthBlock(taluka24, 259L, "Laikera", "hq");
-        taluka24.getHealthBlocks().add(healthBlock259);
+        taluka24.addHealthBlock(healthBlock259);
 
         HealthBlock healthBlock453 = createHealthBlock(taluka26, 453L, "Bamara", "hq");
-        taluka26.getHealthBlocks().add(healthBlock453);
+        taluka26.addHealthBlock(healthBlock453);
 
         HealthBlock healthBlock153 = createHealthBlock(taluka46, 153L, "Tileibani", "hq");
-        taluka46.getHealthBlocks().add(healthBlock153);
+        taluka46.addHealthBlock(healthBlock153);
 
         HealthFacilityType facilityType635 = createHealthFacilityType("Mundrajore CHC", 635L);
         HealthFacility healthFacility635 = createHealthFacility(healthBlock259, 635L, "Mundrajore CHC", facilityType635);

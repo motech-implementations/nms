@@ -189,8 +189,9 @@ public class LocationServiceImpl implements LocationService {
         // set and/or create village
         Long svid = map.get(NON_CENSUS_VILLAGE) == null ? 0 : (Long) map.get(NON_CENSUS_VILLAGE);
         Long vcode = map.get(VILLAGE_ID) == null ? 0 : (Long) map.get(VILLAGE_ID);
+        Village village = new Village();
         if (vcode != 0 || svid != 0) {
-            Village village = villageService.findByTalukaAndVcodeAndSvid(taluka, vcode, svid);
+            village = villageService.findByTalukaAndVcodeAndSvid(taluka, vcode, svid);
             if (village == null && createIfNotExists) {
                 village = new Village();
                 village.setSvid(svid);
@@ -211,10 +212,12 @@ public class LocationServiceImpl implements LocationService {
         HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka, (Long) map.get(HEALTHBLOCK_ID));
         if (healthBlock == null && createIfNotExists) {
             healthBlock = new HealthBlock();
-            healthBlock.setTaluka(taluka);
+            healthBlock.addTaluka(taluka);
+            healthBlock.setDistrict(district);
             healthBlock.setCode((Long) map.get(HEALTHBLOCK_ID));
             healthBlock.setName((String) map.get(HEALTHBLOCK_NAME));
-            taluka.getHealthBlocks().add(healthBlock);
+            taluka.addHealthBlock(healthBlock);
+            district.getHealthBlocks().add(healthBlock);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthBlock, taluka, healthBlock.getId()));
         }
         locations.put(HEALTHBLOCK_ID, healthBlock);
@@ -243,10 +246,12 @@ public class LocationServiceImpl implements LocationService {
         HealthSubFacility healthSubFacility = healthSubFacilityService.findByHealthFacilityAndCode(healthFacility, (Long) map.get(SUBCENTRE_ID));
         if (healthSubFacility == null && createIfNotExists) {
             healthSubFacility = new HealthSubFacility();
+            healthSubFacility.addVillage(village);
             healthSubFacility.setHealthFacility(healthFacility);
             healthSubFacility.setCode((Long) map.get(SUBCENTRE_ID));
             healthSubFacility.setName((String) map.get(SUBCENTRE_NAME));
             healthFacility.getHealthSubFacilities().add(healthSubFacility);
+            village.addHealthSubFacility(healthSubFacility);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthSubFacility, healthFacility, healthSubFacility.getId()));
         }
         locations.put(SUBCENTRE_ID, healthSubFacility);
@@ -285,10 +290,11 @@ public class LocationServiceImpl implements LocationService {
         HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka, (Long) flw.get(HEALTHBLOCK_ID));
         if (healthBlock == null && createIfNotExists) {
             healthBlock = new HealthBlock();
-            healthBlock.setTaluka(taluka);
+            healthBlock.addTaluka(taluka);
+            healthBlock.setDistrict(taluka.getDistrict());
             healthBlock.setCode((Long) flw.get(HEALTHBLOCK_ID));
             healthBlock.setName((String) flw.get(HEALTHBLOCK_NAME));
-            taluka.getHealthBlocks().add(healthBlock);
+            taluka.addHealthBlock(healthBlock);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthBlock, taluka, healthBlock.getId()));
         }
         return healthBlock;
@@ -945,8 +951,10 @@ public class LocationServiceImpl implements LocationService {
         LOGGER.debug("HEALTHBLOCK Query time: {}", queryTimer.time());
         if(healthBlocks != null && !healthBlocks.isEmpty()) {
             for (HealthBlock healthBlock : healthBlocks) {
-                String talukaKey = talukaIdMap.get(healthBlock.getTaluka().getId());
-                healthBlockHashMap.put(talukaKey + "_" + healthBlock.getCode(), healthBlock);
+                for (Taluka taluka : healthBlock.getTalukas()) {
+                    String talukaKey = talukaIdMap.get(taluka.getId());
+                    healthBlockHashMap.put(talukaKey + "_" + healthBlock.getCode(), healthBlock);
+                }
             }
         }
     }
