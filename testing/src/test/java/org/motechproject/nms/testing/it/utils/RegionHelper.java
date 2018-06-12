@@ -289,9 +289,8 @@ public class RegionHelper {
 
     public static HealthBlock createHealthBlock(Taluka taluka, Long code, String name, String hq) {
         HealthBlock healthBlock = new HealthBlock();
-        Set<Taluka> talukas = new HashSet<>();
-        talukas.add(taluka);
-        healthBlock.setTalukas(talukas);
+        healthBlock.addTaluka(taluka);
+        healthBlock.setDistrict(taluka.getDistrict());
         healthBlock.setCode(code);
         healthBlock.setName(name);
         healthBlock.setRegionalName(regionalName(name));

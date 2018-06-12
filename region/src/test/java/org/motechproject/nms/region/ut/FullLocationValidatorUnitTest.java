@@ -75,13 +75,10 @@ public class FullLocationValidatorUnitTest {
         taluka.getVillages().add(village);
         village.setTaluka(taluka);
 
-        Set<Taluka> talukas = new HashSet<>();
-        talukas.add(taluka);
-        healthBlock.setTalukas(talukas);
+        healthBlock.addTaluka(taluka);
+        healthBlock.setDistrict(district);
 
-        Set<HealthBlock> healthBlocks = new HashSet<>();
-        healthBlocks.add(healthBlock);
-        taluka.setHealthBlocks(healthBlocks);
+        taluka.addHealthBlock(healthBlock);
 
         healthBlock.getHealthFacilities().add(healthFacility);
         healthFacility.setHealthBlock(healthBlock);

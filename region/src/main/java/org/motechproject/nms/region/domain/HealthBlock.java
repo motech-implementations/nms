@@ -1,5 +1,6 @@
 package org.motechproject.nms.region.domain;
 
+import org.codehaus.jackson.annotate.JsonBackReference;
 import org.codehaus.jackson.annotate.JsonManagedReference;
 import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
@@ -25,7 +26,7 @@ import java.util.Set;
  * This class Models data for HealthBlock location records
  */
 @Entity(tableName = "nms_health_blocks")
-@Unique(name = "UNIQUE_TALUKA_CODE", members = { "talukas", "code" })
+@Unique(name = "UNIQUE_DISTRICT_CODE", members = { "district", "code" })
 @TrackClass
 @TrackFields
 @InstanceLifecycleListeners
@@ -52,6 +53,12 @@ public class HealthBlock extends MdsEntity {
     @NotNull
     private Long code;
 
+    @Field
+    @Column(allowsNull = "false")
+    @NotNull
+    @JsonBackReference
+    private District district;
+
     @Persistent(table="nms_taluka_healthblock")
     @Join(column = "healthblock_id")
     @Element(column = "taluka_id")
@@ -67,6 +74,14 @@ public class HealthBlock extends MdsEntity {
     public HealthBlock() {
         this.talukas = new HashSet<>();
         this.healthFacilities = new ArrayList<>();
+    }
+
+    public District getDistrict() {
+        return district;
+    }
+
+    public void setDistrict(District district) {
+        this.district = district;
     }
 
     public String getName() {
@@ -107,6 +122,14 @@ public class HealthBlock extends MdsEntity {
 
     public void setTalukas(Set<Taluka> talukas) {
         this.talukas = talukas;
+    }
+
+    public void addTaluka(Taluka taluka) {
+        this.talukas.add(taluka);
+    }
+
+    public void removeTaluka(Taluka taluka) {
+        this.talukas.remove(taluka);
     }
 
     public List<HealthFacility> getHealthFacilities() {

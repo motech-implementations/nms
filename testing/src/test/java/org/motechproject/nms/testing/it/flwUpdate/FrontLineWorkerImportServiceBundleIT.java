@@ -199,14 +199,14 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         Village Bharatipur = createVillage(pipili, 0L, 28981L, "Bharatipur(28981)");
         Village Nuasahi = createVillage(pipili, 0L, 10005284L, "Nuasahi *");
 
-        similiguda.getHealthBlocks().add(kunduli);
-        Phulabani.getHealthBlocks().add(Phulbani);
-        kotagarh.getHealthBlocks().add(Kotagarh);
-        digapahandi.getHealthBlocks().add(DIGAPAHANDI);
-        lakhanpur.getHealthBlocks().add(Lakhanpur);
-        baliguda.getHealthBlocks().add(Baliguda);
-        bhatli.getHealthBlocks().add(BHATLI);
-        pipili.getHealthBlocks().add(Pipli);
+        similiguda.addHealthBlock(kunduli);
+        Phulabani.addHealthBlock(Phulbani);
+        kotagarh.addHealthBlock(Kotagarh);
+        digapahandi.addHealthBlock(DIGAPAHANDI);
+        lakhanpur.addHealthBlock(Lakhanpur);
+        baliguda.addHealthBlock(Baliguda);
+        bhatli.addHealthBlock(BHATLI);
+        pipili.addHealthBlock(Pipli);
 
         kunduli.getHealthFacilities().add(CHC_Kunduli);
         Phulbani.getHealthFacilities().add(PHC_N_Katringia);

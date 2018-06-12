@@ -119,6 +119,14 @@ public class Taluka extends MdsEntity {
         this.healthBlocks = healthBlocks;
     }
 
+    public void addHealthBlock(HealthBlock healthBlock) {
+        this.healthBlocks.add(healthBlock);
+    }
+
+    public void removeHealthBlock(HealthBlock healthBlock) {
+        this.healthBlocks.remove(healthBlock);
+    }
+
     public List<Village> getVillages() {
         return villages;
     }
