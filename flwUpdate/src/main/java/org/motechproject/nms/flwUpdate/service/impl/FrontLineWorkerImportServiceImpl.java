@@ -278,7 +278,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         FrontLineWorker existingFlwByFlwId = frontLineWorkerService.getByMctsFlwIdAndState(flwId, state);
         Map<String, Object> location = new HashMap<>();
         try {
-            location = locationService.getLocations(flw, true);
+            location = locationService.getLocations(flw, false);
 
             if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
                 action = this.flwActionFinder(convertMapToAsha(flw));
