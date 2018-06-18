@@ -134,10 +134,12 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             }
 
             try {
-                if (mctsImport) {
-                    mctsBeneficiaryImportService.createOrUpdateMctsRejections(rejectedChilds , rejectionStatus);
-                } else {
-                    mctsBeneficiaryImportService.createOrUpdateRchRejections(rejectedChilds , rejectionStatus);
+                if (!rejectedChilds.isEmpty()) {
+                    if (mctsImport) {
+                        mctsBeneficiaryImportService.createOrUpdateMctsRejections(rejectedChilds, rejectionStatus);
+                    } else {
+                        mctsBeneficiaryImportService.createOrUpdateRchRejections(rejectedChilds, rejectionStatus);
+                    }
                 }
             } catch (RuntimeException e) {
                 LOGGER.error("Error while bulk updating rejection records", e);
