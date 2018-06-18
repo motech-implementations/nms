@@ -587,22 +587,26 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         List<ChildImportRejection> updateObjects = new ArrayList<>();
         List<ChildImportRejection> createObjects = new ArrayList<>();
 
-        Map<String, Object> childRejects = childRejectionService.findChildRejectionByRchId(rchIds);
-        ChildImportRejection child;
-        for (String rchId : rchIds) {
-            child = (ChildImportRejection) rejectedRecords.get(rchId);
-            if (childRejects.get(rchId) != null) {
-                updateChildRejectionRecord(childRejects, rchId, child, updateObjects);
-                continue;
+        if (!rchIds.isEmpty()) {
+            Map<String, Object> childRejects = childRejectionService.findChildRejectionByRchId(rchIds);
+            ChildImportRejection child;
+            for (String rchId : rchIds) {
+                child = (ChildImportRejection) rejectedRecords.get(rchId);
+                if (childRejects.get(rchId) != null) {
+                    updateChildRejectionRecord(childRejects, rchId, child, updateObjects);
+                    continue;
+                }
+                if (!(Boolean) rejectionStatus.get(rchId)) {
+                    createObjects.add(child);
+                }
             }
-            if (!(Boolean) rejectionStatus.get(rchId)) {
-                createObjects.add(child);
-            }
-        }
 
-        Long createdNo = (createObjects.size() == 0) ? 0 : rchBulkInsert(createObjects);
-        Long updatedNo = (updateObjects.size() == 0) ? 0 : rchBulkUpdate(updateObjects);
-        LOGGER.debug("Inserted {} and updated {} rejection records into database", createdNo, updatedNo);
+            Long createdNo = (createObjects.size() == 0) ? 0 : rchBulkInsert(createObjects);
+            Long updatedNo = (updateObjects.size() == 0) ? 0 : rchBulkUpdate(updateObjects);
+            LOGGER.debug("Inserted {} and updated {} rejection records into database", createdNo, updatedNo);
+        } else {
+            LOGGER.debug("The set is empty!");
+        }
     }
 
     private void updateChildRejectionRecord(Map<String, Object> childRejects, String beneficiaryId, ChildImportRejection child, List<ChildImportRejection> updateObjects) {
