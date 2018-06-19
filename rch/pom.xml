@@ -150,6 +150,7 @@
                             org.motechproject.nms.rejectionhandler.service,
                             org.motechproject.nms.rejectionhandler.repository,
                             org.motechproject.nms.mcts.domain,
+                            org.motechproject.nms.flwUpdate.service,
                             javax.mail,
                             net.sf.cglib.proxy,
                             net.sf.cglib.core,

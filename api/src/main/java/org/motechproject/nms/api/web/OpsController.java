@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
@@ -82,6 +83,10 @@ public class OpsController extends BaseController {
     private RchWebServiceFacade rchWebServiceFacade;
 
     private final String contactNumber = "contactNumber";
+    private final String mother = "mother";
+    private final String child = "child";
+    private final String asha = "asha";
+
 
     //only for debugging purposes and will not be returned anywhere
     public static final String NON_ASHA_TYPE = "<MctsId: %s,Contact Number: %s, Invalid Type: %s>";
@@ -250,17 +255,41 @@ public class OpsController extends BaseController {
         log("REQUEST: /ops/locUpdate", String.format(
                 "type=%s",
                 type));
-        if ("mother".equalsIgnoreCase(type)) {
-            LOGGER.debug("mother");
+        if (mother.equalsIgnoreCase(type)) {
+            LOGGER.debug(mother);
             rchWebServiceFacade.locationUpdateInTable(stateID, RchUserType.MOTHER);
-        } else if ("child".equalsIgnoreCase(type)) {
-            LOGGER.debug("child");
+        } else if (child.equalsIgnoreCase(type)) {
+            LOGGER.debug(child);
             rchWebServiceFacade.locationUpdateInTable(stateID, RchUserType.CHILD);
-        } else if ("asha".equalsIgnoreCase(type)) {
-            LOGGER.debug("asha");
+        } else if (asha.equalsIgnoreCase(type)) {
+            LOGGER.debug(asha);
             rchWebServiceFacade.locationUpdateInTable(stateID, RchUserType.ASHA);
         } else {
             LOGGER.debug("No such type, duh");
+        }
+
+        return true;
+    }
+
+    @RequestMapping(value = "/locUpdateCsv/{stateID}/{type}",
+            method = RequestMethod.GET)
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public Boolean locationUpdateCsv(@PathVariable("stateID") Long stateID, @PathVariable("type") String type) throws IOException {
+        log("REQUEST: /ops/locUpdate", String.format(
+                "type=%s",
+                type));
+        if (mother.equalsIgnoreCase(type)) {
+            LOGGER.debug(mother);
+            rchWebServiceFacade.locationUpdateInTableFromCsv(stateID, RchUserType.MOTHER);
+        } else if (child.equalsIgnoreCase(type)) {
+            LOGGER.debug(child);
+            rchWebServiceFacade.locationUpdateInTableFromCsv(stateID, RchUserType.CHILD);
+        } else if (asha.equalsIgnoreCase(type)) {
+            LOGGER.debug(asha);
+            rchWebServiceFacade.locationUpdateInTableFromCsv(stateID, RchUserType.ASHA);
+        } else {
+            LOGGER.debug("No such type");
         }
 
         return true;

@@ -35,4 +35,6 @@ public interface MctsBeneficiaryImportService {
     Map<String, CellProcessor> getMotherProcessorMapping();
 
     Map<String, CellProcessor> getRchMotherProcessorMapping();
+
+    Map<String, CellProcessor> getRchAshaProcessorMapping();
 }

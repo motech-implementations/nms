@@ -568,6 +568,36 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         return line;
     }
 
+    @Override //NO CHECKSTYLE CyclomaticComplexity
+    public RchAnmAshaRecord convertMapToRchAsha(Map<String, Object> record) {
+        RchAnmAshaRecord rchAnmAshaRecord = new RchAnmAshaRecord();
+        rchAnmAshaRecord.setStateId(record.get(FlwConstants.STATE_ID) == null ? null : (Long) record.get(FlwConstants.STATE_ID));
+        rchAnmAshaRecord.setDistrictId(record.get(FlwConstants.DISTRICT_ID) == null ? null : (Long) record.get(FlwConstants.DISTRICT_ID));
+        rchAnmAshaRecord.setDistrictName(record.get(FlwConstants.DISTRICT_NAME) == null ? null : (String) record.get(FlwConstants.DISTRICT_NAME));
+
+        rchAnmAshaRecord.setTalukaId(record.get(FlwConstants.TALUKA_ID) == null ? null : (String) record.get(FlwConstants.TALUKA_ID));
+        rchAnmAshaRecord.setTalukaName(record.get(FlwConstants.TALUKA_NAME) == null ? null : (String) record.get(FlwConstants.TALUKA_NAME));
+
+        rchAnmAshaRecord.setHealthBlockId(record.get(FlwConstants.HEALTH_BLOCK_ID) == null ? null : (Long) record.get(FlwConstants.HEALTH_BLOCK_ID));
+        rchAnmAshaRecord.setHealthBlockName(record.get(FlwConstants.HEALTH_BLOCK_NAME) == null ? null : (String) record.get(FlwConstants.HEALTH_BLOCK_NAME));
+
+        rchAnmAshaRecord.setPhcId(record.get(FlwConstants.PHC_ID) == null ? null : (Long) record.get(FlwConstants.PHC_ID));
+        rchAnmAshaRecord.setPhcName(record.get(FlwConstants.PHC_NAME) == null ? null : (String) record.get(FlwConstants.PHC_NAME));
+
+        rchAnmAshaRecord.setSubCentreId(record.get(FlwConstants.SUB_CENTRE_ID) == null ? null : (Long) record.get(FlwConstants.SUB_CENTRE_ID));
+        rchAnmAshaRecord.setSubCentreName(record.get(FlwConstants.SUB_CENTRE_NAME) == null ? null : (String) record.get(FlwConstants.SUB_CENTRE_NAME));
+
+        rchAnmAshaRecord.setVillageId(record.get(FlwConstants.CENSUS_VILLAGE_ID) == null ? null : (Long) record.get(FlwConstants.CENSUS_VILLAGE_ID));
+        rchAnmAshaRecord.setVillageName(record.get(FlwConstants.VILLAGE_NAME) == null ? null : (String) record.get(FlwConstants.VILLAGE_NAME));
+        rchAnmAshaRecord.setGfId(record.get(FlwConstants.GF_ID) == null ? null : (Long) record.get(FlwConstants.GF_ID));
+        rchAnmAshaRecord.setMobileNo(record.get(FlwConstants.MOBILE_NO) == null ? null : (String) record.get(FlwConstants.MOBILE_NO));
+        rchAnmAshaRecord.setGfName(record.get(FlwConstants.GF_NAME) == null ? null : (String) record.get(FlwConstants.GF_NAME));
+        rchAnmAshaRecord.setGfType(record.get(FlwConstants.GF_TYPE) == null ? null : (String) record.get(FlwConstants.GF_TYPE));
+        rchAnmAshaRecord.setExecDate(record.get(FlwConstants.EXEC_DATE) == null ? null : (String) record.get(FlwConstants.EXEC_DATE));
+        rchAnmAshaRecord.setGfStatus(record.get(FlwConstants.GF_STATUS) == null ? null : (String) record.get(FlwConstants.GF_STATUS));
+        return rchAnmAshaRecord;
+    }
+
     private void getMapping(Map<String, CellProcessor> mapping) {
         mapping.put(FlwConstants.STATE_ID, new Optional(new GetLong()));
 
@@ -640,34 +670,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         return mapping;
     }
 
-    private static RchAnmAshaRecord convertMapToRchAsha(Map<String, Object> record) { //NO CHECKSTYLE CyclomaticComplexity
-        RchAnmAshaRecord rchAnmAshaRecord = new RchAnmAshaRecord();
-        rchAnmAshaRecord.setStateId(record.get(FlwConstants.STATE_ID) == null ? null : (Long) record.get(FlwConstants.STATE_ID));
-        rchAnmAshaRecord.setDistrictId(record.get(FlwConstants.DISTRICT_ID) == null ? null : (Long) record.get(FlwConstants.DISTRICT_ID));
-        rchAnmAshaRecord.setDistrictName(record.get(FlwConstants.DISTRICT_NAME) == null ? null : (String) record.get(FlwConstants.DISTRICT_NAME));
 
-        rchAnmAshaRecord.setTalukaId(record.get(FlwConstants.TALUKA_ID) == null ? null : (String) record.get(FlwConstants.TALUKA_ID));
-        rchAnmAshaRecord.setTalukaName(record.get(FlwConstants.TALUKA_NAME) == null ? null : (String) record.get(FlwConstants.TALUKA_NAME));
-
-        rchAnmAshaRecord.setHealthBlockId(record.get(FlwConstants.HEALTH_BLOCK_ID) == null ? null : (Long) record.get(FlwConstants.HEALTH_BLOCK_ID));
-        rchAnmAshaRecord.setHealthBlockName(record.get(FlwConstants.HEALTH_BLOCK_NAME) == null ? null : (String) record.get(FlwConstants.HEALTH_BLOCK_NAME));
-
-        rchAnmAshaRecord.setPhcId(record.get(FlwConstants.PHC_ID) == null ? null : (Long) record.get(FlwConstants.PHC_ID));
-        rchAnmAshaRecord.setPhcName(record.get(FlwConstants.PHC_NAME) == null ? null : (String) record.get(FlwConstants.PHC_NAME));
-
-        rchAnmAshaRecord.setSubCentreId(record.get(FlwConstants.SUB_CENTRE_ID) == null ? null : (Long) record.get(FlwConstants.SUB_CENTRE_ID));
-        rchAnmAshaRecord.setSubCentreName(record.get(FlwConstants.SUB_CENTRE_NAME) == null ? null : (String) record.get(FlwConstants.SUB_CENTRE_NAME));
-
-        rchAnmAshaRecord.setVillageId(record.get(FlwConstants.CENSUS_VILLAGE_ID) == null ? null : (Long) record.get(FlwConstants.CENSUS_VILLAGE_ID));
-        rchAnmAshaRecord.setVillageName(record.get(FlwConstants.VILLAGE_NAME) == null ? null : (String) record.get(FlwConstants.VILLAGE_NAME));
-        rchAnmAshaRecord.setGfId(record.get(FlwConstants.GF_ID) == null ? null : (Long) record.get(FlwConstants.GF_ID));
-        rchAnmAshaRecord.setMobileNo(record.get(FlwConstants.MOBILE_NO) == null ? null : (String) record.get(FlwConstants.MOBILE_NO));
-        rchAnmAshaRecord.setGfName(record.get(FlwConstants.GF_NAME) == null ? null : (String) record.get(FlwConstants.GF_NAME));
-        rchAnmAshaRecord.setGfType(record.get(FlwConstants.GF_TYPE) == null ? null : (String) record.get(FlwConstants.GF_TYPE));
-        rchAnmAshaRecord.setExecDate(record.get(FlwConstants.EXEC_DATE) == null ? null : (String) record.get(FlwConstants.EXEC_DATE));
-        rchAnmAshaRecord.setGfStatus(record.get(FlwConstants.GF_STATUS) == null ? null : (String) record.get(FlwConstants.GF_STATUS));
-        return rchAnmAshaRecord;
-    }
 
     private static AnmAshaRecord convertMapToAsha(Map<String, Object> record) { //NO CHECKSTYLE CyclomaticComplexity
         AnmAshaRecord anmAshaRecord = new AnmAshaRecord();

@@ -6,6 +6,7 @@ import org.apache.axis.description.TypeDesc;
 import org.apache.axis.encoding.SerializationContext;
 import org.apache.axis.encoding.ser.BeanSerializer;
 import org.apache.axis.server.AxisServer;
+import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.joda.time.DateTime;
@@ -29,6 +30,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService;
 import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
@@ -78,6 +80,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
+import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.xml.sax.helpers.AttributesImpl;
 
 import javax.xml.bind.JAXBException;
@@ -90,8 +95,10 @@ import java.io.FileWriter;
 import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.io.StringWriter;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.Collection;
@@ -101,6 +108,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Objects;
+import java.text.SimpleDateFormat;
 
 import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanRchMotherRecords;
 import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanRchChildRecords;
@@ -110,12 +120,14 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToRchMother;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.motherRejectionRch;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.flwRejectionRch;
+
 @Service("rchWebServiceFacade")
 public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private static final String DATE_FORMAT = "dd-MM-yyyy";
     private static final String LOCAL_RESPONSE_DIR = "rch.local_response_dir";
     private static final String REMOTE_RESPONSE_DIR = "rch.remote_response_dir";
+    private static final String REMOTE_RESPONSE_DIR_CSV = "rch.remote_response_dir_csv";
     private static final String LOC_UPDATE_DIR = "rch.loc_update_dir";
     private static final String NULL = "NULL";
 
@@ -159,6 +171,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     @Autowired
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
+
+    @Autowired
+    private MctsBeneficiaryImportReaderService mctsBeneficiaryImportReaderService;
+
 
     @Autowired
     private FlwRejectionService flwRejectionService;
@@ -1190,11 +1206,11 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     DS_DataResponseDS_DataResult result = readResponses(remoteResponseFile);
 
                     if (rchUserType == RchUserType.MOTHER) {
-                        motherLocUpdate(result, stateId);
+                        motherLocUpdate(result, stateId, rchUserType);
                     } else if (rchUserType == RchUserType.CHILD) {
-                        childLocUpdate(result, stateId);
+                        childLocUpdate(result, stateId, rchUserType);
                     } else if (rchUserType == RchUserType.ASHA) {
-                        ashaLocUpdate(result, stateId);
+                        ashaLocUpdate(result, stateId, rchUserType);
                     }
                 } else {
                     continue;
@@ -1208,7 +1224,39 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
     }
 
-    private void motherLocUpdate(DS_DataResponseDS_DataResult result, Long stateId) {
+    @Transactional
+    public void locationUpdateInTableFromCsv(Long stateId, RchUserType rchUserType) throws IOException {
+
+            List<MultipartFile> rchImportFiles = findByStateIdAndRchUserType(stateId, rchUserType);
+            for (MultipartFile rchImportFile : rchImportFiles) {
+                    try (InputStream in = rchImportFile.getInputStream()) {
+
+                        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
+                        Map<String, CellProcessor> cellProcessorMapper;
+
+                        if (rchUserType == RchUserType.MOTHER) {
+                            cellProcessorMapper = mctsBeneficiaryImportService.getRchMotherProcessorMapping();
+                            List<Map<String, Object>> recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
+                            motherLocUpdateFromCsv(recordList, stateId, rchUserType);
+                        } else if (rchUserType == RchUserType.CHILD) {
+                            cellProcessorMapper = mctsBeneficiaryImportReaderService.getRchChildProcessorMapping();
+                            List<Map<String, Object>> recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
+                            childLocUpdateFromCsv(recordList, stateId, rchUserType);
+                        } else if (rchUserType == RchUserType.ASHA) {
+                            cellProcessorMapper = mctsBeneficiaryImportService.getRchAshaProcessorMapping();
+                            List<Map<String, Object>> recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
+                            ashaLocUpdateFromCsv(recordList, stateId, rchUserType);
+                        }
+
+                    }
+            }
+    }
+
+
+
+
+
+    private void motherLocUpdate(DS_DataResponseDS_DataResult result, Long stateId, RchUserType rchUserType) {
         try {
             validMothersDataResponse(result, stateId);
             List motherResultFeed = result.get_any()[1].getChildren();
@@ -1231,7 +1279,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
             }
 
-            updateLocInMap(locArrList);
+            updateLocInMap(locArrList, stateId, rchUserType);
 
         } catch (JAXBException e) {
             throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH mother data from %d stateId.", stateId), e);
@@ -1247,7 +1295,32 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
     }
 
-    private void childLocUpdate(DS_DataResponseDS_DataResult result, Long stateId) {
+    private void motherLocUpdateFromCsv(List<Map<String, Object>> result, Long stateId, RchUserType rchUserType) {
+        try {
+            ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
+
+            for (Map<String, Object> record : result){
+                RchMotherRecord rchMotherRecord =  convertMapToRchMother(record);
+                Map<String, Object> locMap = new HashMap<>();
+                toMapLocMother(locMap, rchMotherRecord);
+                locMap.put(KilkariConstants.RCH_ID, rchMotherRecord.getRegistrationNo());
+                locArrList.add(locMap);
+            }
+            updateLocInMap(locArrList, stateId, rchUserType);
+
+        } catch (NullPointerException e) {
+            LOGGER.error("No files present e : ", e);
+        } catch (IOException e) {
+            LOGGER.error("IO exception.");
+        } catch (InvalidLocationException e) {
+            LOGGER.error("Location Invalid");
+        }
+    }
+
+
+
+
+    private void childLocUpdate(DS_DataResponseDS_DataResult result, Long stateId, RchUserType rchUserType) {
         try {
             validChildrenDataResponse(result, stateId);
             List childResultFeed = result.get_any()[1].getChildren();
@@ -1270,7 +1343,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
             }
 
-            updateLocInMap(locArrList);
+            updateLocInMap(locArrList, stateId, rchUserType);
 
         } catch (JAXBException e) {
             throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH children data from %d stateId.", stateId), e);
@@ -1286,10 +1359,36 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
     }
 
-    private void ashaLocUpdate(DS_DataResponseDS_DataResult result, Long stateId) {
+    private void childLocUpdateFromCsv(List<Map<String, Object>> result, Long stateId, RchUserType rchUserType) {
+        try {
+            ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
+
+            for (Map<String, Object> record : result){
+                RchChildRecord rchChildRecord =  convertMapToRchChild(record);
+                Map<String, Object> locMap = new HashMap<>();
+                toMapLocChild(locMap, rchChildRecord);
+                locMap.put(KilkariConstants.RCH_ID, rchChildRecord.getRegistrationNo());
+                locArrList.add(locMap);
+            }
+            updateLocInMap(locArrList, stateId, rchUserType);
+
+        } catch (NullPointerException e) {
+            LOGGER.error("No files present e : ", e);
+        } catch (IOException e) {
+            LOGGER.error("IO exception.");
+        } catch (InvalidLocationException e) {
+            LOGGER.error("Location Invalid");
+        }
+    }
+
+
+
+
+    private void ashaLocUpdate(DS_DataResponseDS_DataResult result, Long stateId, RchUserType rchUserType) {
         try {
             validAnmAshaDataResponse(result, stateId);
             List ashaResultFeed = result.get_any()[1].getChildren();
+            ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
             RchAnmAshaDataSet ashaDataSet = (ashaResultFeed == null) ?
                     null :
                     (RchAnmAshaDataSet) MarshallUtils.unmarshall(ashaResultFeed.get(0).toString(), RchAnmAshaDataSet.class);
@@ -1303,8 +1402,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     Map<String, Object> locMap = new HashMap<>();
                     toMapLoc(locMap, record);
                     locMap.put("Flw_Id", record.getGfId());
+                    locArrList.add(locMap);
                 }
             }
+            updateLocInMap(locArrList, stateId, rchUserType);
         } catch (JAXBException e) {
             throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH FLW data from %d stateId.", stateId), e);
         } catch (RchInvalidResponseStructureException e) {
@@ -1312,9 +1413,38 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.error(error, e);
         } catch (NullPointerException e) {
             LOGGER.error("No files saved g : ", e);
+        } catch (IOException e) {
+            LOGGER.error("Input output exception.");
+        } catch (InvalidLocationException e) {
+            LOGGER.error("Invalid location");
         }
 
     }
+
+    private void ashaLocUpdateFromCsv(List<Map<String, Object>> result, Long stateId, RchUserType rchUserType) {
+        try {
+            ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
+
+            for (Map<String, Object> record : result){
+                RchAnmAshaRecord rchAnmAshaRecord =  frontLineWorkerImportService.convertMapToRchAsha(record);
+                Map<String, Object> locMap = new HashMap<>();
+                toMapLoc(locMap, rchAnmAshaRecord);
+                locMap.put("Flw_Id", rchAnmAshaRecord.getGfId());
+                locArrList.add(locMap);
+            }
+            updateLocInMap(locArrList, stateId, rchUserType);
+
+        } catch (NullPointerException e) {
+            LOGGER.error("No files present e : ", e);
+        } catch (IOException e) {
+            LOGGER.error("IO exception.");
+        } catch (InvalidLocationException e) {
+            LOGGER.error("Location Invalid");
+        }
+    }
+
+
+
 
     public Map<String, Object> setLocationFields(LocationFinder locationFinder, Map<String, Object> record) throws InvalidLocationException { //NO CHECKSTYLE Cyclomatic Complexity
 
@@ -1382,7 +1512,37 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return !"0".equals(obj);
     }
 
-    private void updateLocInMap(List<Map<String, Object>> locArrList) throws InvalidLocationException, IOException {
+    private  List<MultipartFile> findByStateIdAndRchUserType(Long stateId, RchUserType rchUserType) throws IOException {
+
+        ArrayList <MultipartFile> csvFilesByStateIdAndRchUserType = new ArrayList<>();
+        String locUpdateDir = settingsFacade.getProperty(REMOTE_RESPONSE_DIR_CSV);
+        File file = new File(locUpdateDir);
+
+        File[] files = file.listFiles();
+        if (files != null) {
+            for(File f: files){
+                String[] fileNameSplitter =  f.getName().split("_");
+                if(Objects.equals(fileNameSplitter[2], stateId.toString()) && fileNameSplitter[3].equalsIgnoreCase(rchUserType.toString())){
+                    try {
+                        DiskFileItem fileItem = new DiskFileItem("file", "text/plain", false,
+                                f.getName(), (int) f.length() , f.getParentFile());
+                        fileItem.getOutputStream();
+                        MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
+                        csvFilesByStateIdAndRchUserType.add(multipartFile);
+                    }catch(IOException e) {
+                        LOGGER.debug("IO Exception", e);
+                    }
+
+                }
+            }
+        }
+
+        return csvFilesByStateIdAndRchUserType;
+    }
+
+
+
+    private void updateLocInMap(List<Map<String, Object>> locArrList, Long stateId, RchUserType rchUserType) throws InvalidLocationException, IOException {
 
         ArrayList<Map<String, Object>> updatedLocArrList = new ArrayList<>();
 
@@ -1395,14 +1555,22 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             updatedLocArrList.add(updatedMap);
         }
 
-        csvWriter(updatedLocArrList);
+        csvWriter(updatedLocArrList, stateId, rchUserType);
     }
 
-    private void csvWriter(List<Map<String, Object>> locArrList) throws IOException { //NO CHECKSTYLE Cyclomatic Complexity
+    private void csvWriter(List<Map<String, Object>> locArrList, Long stateId, RchUserType rchUserType) throws IOException { //NO CHECKSTYLE Cyclomatic Complexity
         String locUpdateDir = settingsFacade.getProperty(LOC_UPDATE_DIR);
+        String fileName = locUpdateDir + "location_update_state" + "_" + stateId + "_" + rchUserType + "_" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()) + ".csv";
+        File csvFile = new File(fileName);
+        if (!csvFile.exists()){
+            csvFile.createNewFile();
+        } else {
+            LOGGER.debug("File already exists");
+        }
+
         if (!locArrList.isEmpty()) {
             FileWriter writer;
-            writer = new FileWriter(locUpdateDir, true);
+            writer = new FileWriter(csvFile, true);
 
             for (Map<String, Object> map : locArrList
                     ) {
