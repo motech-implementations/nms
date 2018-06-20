@@ -645,6 +645,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
+    @Transactional
     public long activateHoldSubscriptions(long maxActiveSubscriptions) {
 
         LOGGER.info("Activating hold subscriptions up to {}", maxActiveSubscriptions);
@@ -729,7 +730,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                     "ss.creationDate, ss.creator, ss.modificationDate, ss.modifiedBy, ss.owner, s.dateOfBirth, s.lastMenstrualPeriod, sp.type FROM nms_subscriptions AS ss " +
                                     "JOIN nms_subscription_packs AS sp ON ss.subscriptionPack_id_OID = sp.id " +
                                     "JOIN nms_subscribers AS s ON ss.subscriber_id_OID = s.id " +
-                                    "WHERE ss.status = 'HOLD' AND origin = 'MCTS_IMPORT') AS res " + // Origin is superfluous here since IVR doesn't go on hold
+                                    "WHERE ss.status = 'HOLD' AND origin in ('MCTS_IMPORT', 'RCH_IMPORT')) AS res " + // Origin is superfluous here since IVR doesn't go on hold
                                 "ORDER BY referenceDate DESC " +
                                 "LIMIT :limit";
                 LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
