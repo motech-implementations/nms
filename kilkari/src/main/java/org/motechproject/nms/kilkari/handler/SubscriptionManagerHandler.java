@@ -77,7 +77,7 @@ public class SubscriptionManagerHandler {
         subscriptionService.completePastDueSubscriptions();
 
         Timer timer = new Timer();
-        subscriptionService.activatePendingSubscriptionsUpTo(tomorrow);
+        subscriptionService.activatePendingSubscriptionsUpTo(tomorrow, maxActiveSubscriptions);
         LOGGER.debug("Activated all pending subscriptions up to {} in {}", tomorrow, timer.time());
 
         subscriptionService.toggleMctsSubscriptionCreation(maxActiveSubscriptions);

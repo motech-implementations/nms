@@ -603,7 +603,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public void activatePendingSubscriptionsUpTo(final DateTime upToDateTime) {
+    public Boolean activatePendingSubscriptionsUpTo(final DateTime upToDateTime, long maxActiveSubscriptions) {
+
+        long currentActive = subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
+        LOGGER.info("Found {} active subscriptions", currentActive);
+
+        long openSlots = maxActiveSubscriptions - subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
+        if (openSlots < 1) {
+            LOGGER.info("No open slots found for hold subscription activation. Slots: {}", openSlots);
+            return false;
+        }
         SqlQueryExecution sqe = new SqlQueryExecution() {
 
             @Override
@@ -625,6 +634,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         };
         subscriptionDataService.executeSQLQuery(sqe);
         subscriptionDataService.evictEntityCache(true);
+        return true;
     }
 
     /**
