@@ -17,6 +17,8 @@ import org.motechproject.nms.kilkari.service.MctsChildFixService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
+import org.motechproject.nms.mcts.domain.MctsUserType;
+import org.motechproject.nms.mcts.service.MctsWebServiceFacade;
 import org.motechproject.nms.mcts.service.MctsWsImportService;
 import org.motechproject.nms.props.service.LogHelper;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
@@ -81,6 +83,10 @@ public class OpsController extends BaseController {
 
     @Autowired
     private RchWebServiceFacade rchWebServiceFacade;
+
+    @Autowired
+    private MctsWebServiceFacade mctsWebServiceFacade;
+
 
     private final String contactNumber = "contactNumber";
     private final String mother = "mother";
@@ -265,33 +271,52 @@ public class OpsController extends BaseController {
             LOGGER.debug(asha);
             rchWebServiceFacade.locationUpdateInTable(stateID, RchUserType.ASHA);
         } else {
-            LOGGER.debug("No such type, duh");
+            LOGGER.debug("No such type");
         }
 
         return true;
     }
 
-    @RequestMapping(value = "/locUpdateCsv/{stateID}/{type}",
+    @RequestMapping(value = "/locUpdateCsv/{stateID}/{type}/{origin}",
             method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public Boolean locationUpdateCsv(@PathVariable("stateID") Long stateID, @PathVariable("type") String type) throws IOException {
+    public Boolean locationUpdateCsv(@PathVariable("stateID") Long stateID, @PathVariable("type") String type, @PathVariable("origin") String origin) throws IOException {
         log("REQUEST: /ops/locUpdate", String.format(
                 "type=%s",
                 type));
-        if (mother.equalsIgnoreCase(type)) {
-            LOGGER.debug(mother);
-            rchWebServiceFacade.locationUpdateInTableFromCsv(stateID, RchUserType.MOTHER);
-        } else if (child.equalsIgnoreCase(type)) {
-            LOGGER.debug(child);
-            rchWebServiceFacade.locationUpdateInTableFromCsv(stateID, RchUserType.CHILD);
-        } else if (asha.equalsIgnoreCase(type)) {
-            LOGGER.debug(asha);
-            rchWebServiceFacade.locationUpdateInTableFromCsv(stateID, RchUserType.ASHA);
-        } else {
-            LOGGER.debug("No such type");
-        }
+        if ("rch".equalsIgnoreCase(origin)) {
+            if (mother.equalsIgnoreCase(type)) {
+                LOGGER.debug(mother);
+                rchWebServiceFacade.locationUpdateInTableFromCsv(stateID, RchUserType.MOTHER);
+            } else if (child.equalsIgnoreCase(type)) {
+                LOGGER.debug(child);
+                rchWebServiceFacade.locationUpdateInTableFromCsv(stateID, RchUserType.CHILD);
+            } else if (asha.equalsIgnoreCase(type)) {
+                LOGGER.debug(asha);
+                rchWebServiceFacade.locationUpdateInTableFromCsv(stateID, RchUserType.ASHA);
+            } else {
+                LOGGER.debug("No such type");
+            }
 
+            return true;
+        } else if ("mcts".equalsIgnoreCase(origin)) {
+            if (mother.equalsIgnoreCase(type)) {
+                LOGGER.debug(mother);
+                mctsWebServiceFacade.locationUpdateInTableFromCsv(stateID, MctsUserType.MOTHER);
+            } else if (child.equalsIgnoreCase(type)) {
+                LOGGER.debug(child);
+                mctsWebServiceFacade.locationUpdateInTableFromCsv(stateID, MctsUserType.CHILD);
+            } else if (asha.equalsIgnoreCase(type)) {
+                LOGGER.debug(asha);
+                mctsWebServiceFacade.locationUpdateInTableFromCsv(stateID, MctsUserType.ASHA);
+            } else {
+                LOGGER.debug("No such type");
+                return true;
+            }
+        } else {
+            return false;
+        }
         return true;
     }
 

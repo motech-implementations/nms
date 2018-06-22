@@ -672,7 +672,8 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
 
 
 
-    private static AnmAshaRecord convertMapToAsha(Map<String, Object> record) { //NO CHECKSTYLE CyclomaticComplexity
+    @Override //NO CHECKSTYLE CyclomaticComplexity
+    public AnmAshaRecord convertMapToAsha(Map<String, Object> record) { //NO CHECKSTYLE CyclomaticComplexity
         AnmAshaRecord anmAshaRecord = new AnmAshaRecord();
         anmAshaRecord.setStateId(record.get(FlwConstants.STATE_ID) == null ? null : (Long) record.get(FlwConstants.STATE_ID));
         anmAshaRecord.setDistrictId(record.get(FlwConstants.DISTRICT_ID) == null ? null : (Long) record.get(FlwConstants.DISTRICT_ID));
