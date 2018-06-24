@@ -128,6 +128,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String LOCAL_RESPONSE_DIR = "rch.local_response_dir";
     private static final String REMOTE_RESPONSE_DIR = "rch.remote_response_dir";
     private static final String REMOTE_RESPONSE_DIR_CSV = "rch.remote_response_dir_csv";
+    private static final String REMOTE_RESPONSE_DIR_LOCATION = "rch.remote_response_dir_locations";
     private static final String LOC_UPDATE_DIR = "rch.loc_update_dir";
     private static final String NULL = "NULL";
 
@@ -1252,8 +1253,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             }
     }
 
-
-
+    @Override
+    public String getLocationFilesDirectory() {
+        return settingsFacade.getProperty(REMOTE_RESPONSE_DIR_LOCATION);
+    }
 
 
     private void motherLocUpdate(DS_DataResponseDS_DataResult result, Long stateId, RchUserType rchUserType) {
