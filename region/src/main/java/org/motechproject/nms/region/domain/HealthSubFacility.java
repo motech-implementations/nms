@@ -43,6 +43,12 @@ public class HealthSubFacility extends MdsEntity {
     private Long code;
 
     @Field
+    @NotNull
+    @Column(allowsNull = "false")
+    @JsonBackReference
+    private Taluka taluka;
+
+    @Field
     @Column(allowsNull = "false")
     @NotNull
     @JsonBackReference
@@ -80,6 +86,14 @@ public class HealthSubFacility extends MdsEntity {
 
     public void setCode(Long code) {
         this.code = code;
+    }
+
+    public Taluka getTaluka() {
+        return taluka;
+    }
+
+    public void setTaluka(Taluka taluka) {
+        this.taluka = taluka;
     }
 
     public HealthFacility getHealthFacility() {

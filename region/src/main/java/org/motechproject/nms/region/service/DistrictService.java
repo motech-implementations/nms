@@ -4,6 +4,8 @@ import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public interface DistrictService {
@@ -51,4 +53,8 @@ public interface DistrictService {
      * @return field object in district
      */
     Object getDetachedField(District district, String fieldName);
+
+    Long createUpdateDistricts(List<Map<String, Object>> districts, Map<String, State> stateIdMap);
+
+    Map<String, District> fillDistrictIds(List<Map<String, Object>> recordList, Map<String, State> stateHashMap);
 }

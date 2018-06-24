@@ -46,6 +46,12 @@ public class HealthFacility extends MdsEntity {
     private HealthFacilityType healthFacilityType;
 
     @Field
+    @NotNull
+    @Column(allowsNull = "false")
+    @JsonBackReference
+    private Taluka taluka;
+
+    @Field
     @Column(allowsNull = "false")
     @NotNull
     @JsonBackReference
@@ -91,6 +97,14 @@ public class HealthFacility extends MdsEntity {
 
     public void setHealthFacilityType(HealthFacilityType healthFacilityType) {
         this.healthFacilityType = healthFacilityType;
+    }
+
+    public Taluka getTaluka() {
+        return taluka;
+    }
+
+    public void setTaluka(Taluka taluka) {
+        this.taluka = taluka;
     }
 
     public HealthBlock getHealthBlock() {
