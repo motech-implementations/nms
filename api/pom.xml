@@ -130,6 +130,7 @@
                             org.motechproject.nms.kilkari.utils,
                             org.motechproject.nms.rejectionhandler.service,
                             org.motechproject.nms.region.repository,
+                            org.motechproject.nms.region.service,
                             org.motechproject.nms.rch.service,
                             *
                         </Import-Package>

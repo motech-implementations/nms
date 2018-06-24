@@ -66,6 +66,18 @@ public class Taluka extends MdsEntity {
     @JsonManagedReference
     private List<Village> villages;
 
+    @Field
+    @Cascade(delete = true)
+    @Persistent(mappedBy = "taluka", defaultFetchGroup = "false")
+    @JsonManagedReference
+    private List<HealthFacility> healthFacilities;
+
+    @Field
+    @Cascade(delete = true)
+    @Persistent(mappedBy = "taluka", defaultFetchGroup = "false")
+    @JsonManagedReference
+    private List<HealthSubFacility> healthSubFacilities;
+
     public Taluka() {
         this.healthBlocks = new HashSet<>();
         this.villages = new ArrayList<>();
@@ -133,6 +145,22 @@ public class Taluka extends MdsEntity {
 
     public void setVillages(List<Village> villages) {
         this.villages = villages;
+    }
+
+    public List<HealthFacility> getHealthFacilities() {
+        return healthFacilities;
+    }
+
+    public void setHealthFacilities(List<HealthFacility> healthFacilities) {
+        this.healthFacilities = healthFacilities;
+    }
+
+    public List<HealthSubFacility> getHealthSubFacilities() {
+        return healthSubFacilities;
+    }
+
+    public void setHealthSubFacilities(List<HealthSubFacility> healthSubFacilities) {
+        this.healthSubFacilities = healthSubFacilities;
     }
 
     @Override

@@ -1,21 +1,33 @@
 package org.motechproject.nms.region.service.impl;
 
 import com.google.common.collect.Sets;
+import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.motechproject.mds.query.SqlQueryExecution;
+import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.StateService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import static org.motechproject.nms.region.utils.LocationConstants.OR_SQL_STRING;
+import static org.motechproject.nms.region.utils.LocationConstants.STATE_ID;
 
 @Service("stateService")
 public class StateServiceImpl implements StateService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(StateServiceImpl.class);
+
     @Autowired
     private StateDataService stateDataService;
 
@@ -47,5 +59,56 @@ public class StateServiceImpl implements StateService {
         }
 
         return states;
+    }
+
+
+    @Override
+    public Map<String, State> fillStateIds(List<Map<String, Object>> recordList) {
+        final Set<String> stateKeys = new HashSet<>();
+        for(Map<String, Object> record : recordList) {
+            stateKeys.add(record.get(STATE_ID).toString());
+        }
+        Map<String, State> stateHashMap = new HashMap<>();
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<State>> queryExecution = new SqlQueryExecution<List<State>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "SELECT * from nms_states where";
+                int count = stateKeys.size();
+                for (String stateString : stateKeys) {
+                    count--;
+                    query += " code = " + stateString;
+                    if (count > 0) {
+                        query += OR_SQL_STRING;
+                    }
+                }
+
+                LOGGER.debug("STATE Query: {}", query);
+                return query;
+            }
+
+            @Override
+            public List<State> execute(Query query) {
+                query.setClass(State.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                List<State> states;
+                if (fqr.isEmpty()) {
+                    return null;
+                }
+                states = (List<State>) fqr;
+                return states;
+            }
+        };
+
+        List<State> states = stateDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("STATE Query time: {}", queryTimer.time());
+        for (State state : states) {
+            stateHashMap.put(state.getCode().toString(), state);
+        }
+
+        return stateHashMap;
     }
 }

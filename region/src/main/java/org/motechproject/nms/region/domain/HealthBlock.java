@@ -59,6 +59,11 @@ public class HealthBlock extends MdsEntity {
     @JsonBackReference
     private District district;
 
+    @Field(name = "taluka_id_OID", required = true)
+    @Column(allowsNull = "false")
+    @NotNull
+    private Long talukaIdOID;
+
     @Persistent(table="nms_taluka_healthblock")
     @Join(column = "healthblock_id")
     @Element(column = "taluka_id")
@@ -114,6 +119,14 @@ public class HealthBlock extends MdsEntity {
 
     public void setCode(Long code) {
         this.code = code;
+    }
+
+    public Long getTalukaIdOID() {
+        return talukaIdOID;
+    }
+
+    public void setTalukaIdOID(Long talukaIdOID) {
+        this.talukaIdOID = talukaIdOID;
     }
 
     public Set<Taluka> getTalukas() {

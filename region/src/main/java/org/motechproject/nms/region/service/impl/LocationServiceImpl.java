@@ -1,13 +1,15 @@
 package org.motechproject.nms.region.service.impl;
 
+import org.apache.commons.io.IOUtils;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
+import org.motechproject.nms.csv.utils.CsvImporterBuilder;
+import org.motechproject.nms.csv.utils.CsvMapImporter;
+import org.motechproject.nms.csv.utils.GetLong;
+import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Taluka;
@@ -29,20 +31,56 @@ import org.motechproject.nms.region.service.HealthBlockService;
 import org.motechproject.nms.region.service.HealthFacilityService;
 import org.motechproject.nms.region.service.HealthSubFacilityService;
 import org.motechproject.nms.region.service.LocationService;
+import org.motechproject.nms.region.service.StateService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.motechproject.nms.region.service.VillageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import org.supercsv.cellprocessor.ift.CellProcessor;
+import org.supercsv.prefs.CsvPreference;
 
 import javax.jdo.Query;
-import javax.jdo.annotations.Transactional;
 import javax.validation.ConstraintViolationException;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.List;
+
+import static org.motechproject.nms.region.utils.LocationConstants.CODE_SQL_STRING;
+import static org.motechproject.nms.region.utils.LocationConstants.DISTRICT_ID;
+import static org.motechproject.nms.region.utils.LocationConstants.DISTRICT_NAME;
+import static org.motechproject.nms.region.utils.LocationConstants.HEALTHBLOCK_ID;
+import static org.motechproject.nms.region.utils.LocationConstants.HEALTHBLOCK_NAME;
+import static org.motechproject.nms.region.utils.LocationConstants.HEALTHFACILITY_ID;
+import static org.motechproject.nms.region.utils.LocationConstants.HEALTHFACILITY_NAME;
+import static org.motechproject.nms.region.utils.LocationConstants.HEALTHSUBFACILITY_ID;
+import static org.motechproject.nms.region.utils.LocationConstants.HEALTHSUBFACILITY_NAME;
+import static org.motechproject.nms.region.utils.LocationConstants.INVALID;
+import static org.motechproject.nms.region.utils.LocationConstants.LOCATION_PART_SIZE;
+import static org.motechproject.nms.region.utils.LocationConstants.NON_CENSUS_VILLAGE;
+import static org.motechproject.nms.region.utils.LocationConstants.OR_SQL_STRING;
+import static org.motechproject.nms.region.utils.LocationConstants.PHC_ID;
+import static org.motechproject.nms.region.utils.LocationConstants.PHC_NAME;
+import static org.motechproject.nms.region.utils.LocationConstants.STATE_ID;
+import static org.motechproject.nms.region.utils.LocationConstants.SUBCENTRE_ID;
+import static org.motechproject.nms.region.utils.LocationConstants.SUBCENTRE_NAME;
+import static org.motechproject.nms.region.utils.LocationConstants.TALUKA_ID;
+import static org.motechproject.nms.region.utils.LocationConstants.TALUKA_NAME;
+import static org.motechproject.nms.region.utils.LocationConstants.VILLAGE_ID;
+import static org.motechproject.nms.region.utils.LocationConstants.VILLAGE_NAME;
+
 
 /**
  * Location service impl to get location objects
@@ -52,28 +90,7 @@ public class LocationServiceImpl implements LocationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LocationServiceImpl.class);
 
-    private static final String INVALID = "<%s - %s : Invalid location>";
-    private static final String STATE_ID = "StateID";
-    private static final String DISTRICT_ID = "District_ID";
-    private static final String TALUKA_ID = "Taluka_ID";
-    private static final String TALUKA_NAME = "Taluka_Name";
-    private static final String HEALTHBLOCK_ID = "HealthBlock_ID";
-    private static final String HEALTHBLOCK_NAME = "HealthBlock_Name";
-    private static final String PHC_ID = "PHC_ID";
-    private static final String PHC_NAME = "PHC_Name";
-    private static final String SUBCENTRE_ID = "SubCentre_ID";
-    private static final String SUBCENTRE_NAME = "SubCentre_Name";
-    private static final String VILLAGE_ID = "Village_ID";
-    private static final String VILLAGE_NAME = "Village_Name";
-    private static final String NON_CENSUS_VILLAGE = "SVID";
-    private static final String OR_SQL_STRING = " OR ";
-    private static final String CODE_SQL_STRING = " (code = ";
-    private static final String OPEN_PARANTHESES_STRING = " ( ";
-    private static final String COMMA_QUOTATION_STRING = ", '";
-    private static final String QUOTATION_COMMA_STRING = "', ";
-    private static final String COMMA_STRING = " , ";
-
-    private static final String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
+    private StateService stateService;
 
     private StateDataService stateDataService;
 
@@ -101,11 +118,15 @@ public class LocationServiceImpl implements LocationService {
 
     private HealthSubFacilityDataService healthSubFacilityDataService;
 
+
+
+
     @Autowired
-    public LocationServiceImpl(StateDataService stateDataService, DistrictService districtService,
+    public LocationServiceImpl(StateService stateService, StateDataService stateDataService, DistrictService districtService,
                                TalukaService talukaService, VillageService villageService,
                                HealthBlockService healthBlockService, HealthFacilityService healthFacilityService,
                                HealthSubFacilityService healthSubFacilityService, DistrictDataService districtDataService, TalukaDataService talukaDataService, VillageDataService villageDataService, HealthBlockDataService healthBlockDataService, HealthFacilityDataService healthFacilityDataService, HealthSubFacilityDataService healthSubFacilityDataService) {
+        this.stateService = stateService;
         this.stateDataService = stateDataService;
         this.districtService = districtService;
         this.talukaService = talukaService;
@@ -574,6 +595,263 @@ public class LocationServiceImpl implements LocationService {
 
     }
 
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
+    public void createLocations(Long stateID, String locationType, String fileLocation) throws IOException {
+        MultipartFile rchImportFile = findByStateId(stateID, locationType, fileLocation);
+
+        try (InputStream in = rchImportFile.getInputStream()) {
+
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
+            Map<String, CellProcessor> cellProcessorMapper = null;
+            List<Map<String, Object>> recordList;
+            switch (locationType) {
+                case "District" : cellProcessorMapper = getDistrictMapping(); break;
+                case "Taluka" : cellProcessorMapper = getTalukaMapping(); break;
+                case "Village" : cellProcessorMapper = getVillageMapping(); break;
+                case "HealthBlock" : cellProcessorMapper = getHealthBlockMapping(); break;
+                case "TalukaHealthBlock" : cellProcessorMapper = getTalukaHealthBlockMapping(); break;
+                case "HealthFacility" : cellProcessorMapper = getHealthFacilityMapping(); break;
+                case "HealthSubFacility" : cellProcessorMapper = getHealthSubFacilityMapping(); break;
+                case "VillageHealthSubFacility" : cellProcessorMapper = getVillageHealthSubFacilityMapping();
+            }
+
+            recordList = readCsv(bufferedReader, cellProcessorMapper);
+
+            int count = 0;
+            int partNumber = 0;
+            Long totalUpdatedRecords = 0L;
+            while (count < recordList.size()) {
+                List<Map<String, Object>> recordListPart = new ArrayList<>();
+                while (recordListPart.size() < LOCATION_PART_SIZE && count < recordList.size()) {
+                    recordListPart.add(recordList.get(count));
+                    count++;
+                }
+                partNumber++;
+                totalUpdatedRecords += createLocationPart(recordListPart, locationType, rchImportFile.getName(), partNumber);
+                recordListPart.clear();
+            }
+            LOGGER.debug("File {} processed. {} records updated", rchImportFile.getName(), totalUpdatedRecords);
+        }
+    }
+
+    private Long createLocationPart(List<Map<String, Object>> recordList, String locationType, String rchImportFileName, int partNumber) { //NOPMD NcssMethodCount
+
+        Map<String, State> stateHashMap;
+        Map<String, District> districtHashMap;
+        Map<String, Taluka> talukaHashMap;
+        Map<String, Village> villageHashMap;
+        Map<String, HealthBlock> healthBlockHashMap;
+        Map<String, HealthFacility> healthFacilityHashMap;
+        Map<String, HealthSubFacility> healthSubFacilityHashMap;
+
+        Long updatedRecords = 0L;
+        switch (locationType) {
+            case "District" :
+                stateHashMap = stateService.fillStateIds(recordList);
+                updatedRecords = districtService.createUpdateDistricts(recordList, stateHashMap);
+                break;
+
+            case "Taluka" :
+                stateHashMap = stateService.fillStateIds(recordList);
+                districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
+                updatedRecords = talukaService.createUpdateTalukas(recordList, districtHashMap);
+                break;
+
+            case "Village" :
+                stateHashMap = stateService.fillStateIds(recordList);
+                districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
+                talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
+                updatedRecords = villageService.createUpdateVillages(recordList, talukaHashMap);
+                break;
+
+            case "HealthBlock" :
+                stateHashMap = stateService.fillStateIds(recordList);
+                districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
+                talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
+                updatedRecords = healthBlockService.createUpdateHealthBlocks(recordList, districtHashMap, talukaHashMap);
+                break;
+
+            case "TalukaHealthBlock" :
+                stateHashMap = stateService.fillStateIds(recordList);
+                districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
+                talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
+                healthBlockHashMap = healthBlockService.fillHealthBlockIds(recordList, districtHashMap);
+                updatedRecords = healthBlockService.createUpdateTalukaHealthBlock(recordList, healthBlockHashMap, talukaHashMap);
+                break;
+
+            case "HealthFacility" :
+                stateHashMap = stateService.fillStateIds(recordList);
+                districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
+                talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
+                healthBlockHashMap = healthBlockService.fillHealthBlockIds(recordList, districtHashMap);
+                updatedRecords = healthFacilityService.createUpdateHealthFacilities(recordList, talukaHashMap, healthBlockHashMap);
+                break;
+
+            case "HealthSubFacility" :
+                stateHashMap = stateService.fillStateIds(recordList);
+                districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
+                talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
+                healthBlockHashMap = healthBlockService.fillHealthBlockIds(recordList, districtHashMap);
+                healthFacilityHashMap = healthFacilityService.fillHealthFacilityIds(recordList, healthBlockHashMap);
+                updatedRecords = healthSubFacilityService.createUpdateHealthSubFacilities(recordList, talukaHashMap, healthFacilityHashMap);
+                break;
+
+            case "VillageHealthSubFacility" :
+                stateHashMap = stateService.fillStateIds(recordList);
+                districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
+                talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
+                healthBlockHashMap = healthBlockService.fillHealthBlockIds(recordList, districtHashMap);
+                healthFacilityHashMap = healthFacilityService.fillHealthFacilityIds(recordList, healthBlockHashMap);
+                healthSubFacilityHashMap = healthSubFacilityService.fillHealthSubFacilityIds(recordList, healthFacilityHashMap);
+                villageHashMap = villageService.fillVillageIds(recordList, talukaHashMap);
+                updatedRecords = healthSubFacilityService.createUpdateVillageHealthSubFacility(recordList, healthSubFacilityHashMap, villageHashMap);
+                break;
+
+        }
+        LOGGER.debug("File {}, Part {} processed. {} records updated", rchImportFileName, partNumber, updatedRecords);
+        return updatedRecords;
+
+    }
+
+
+    private Map<String, CellProcessor> getDistrictMapping() {
+        Map<String, CellProcessor> mapping = new HashMap<>();
+
+        mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(DISTRICT_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
+
+        return mapping;
+    }
+
+    private Map<String, CellProcessor> getTalukaMapping() {
+        Map<String, CellProcessor> mapping = new HashMap<>();
+
+        mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(TALUKA_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
+        mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+
+        return mapping;
+    }
+
+    private Map<String, CellProcessor> getVillageMapping() {
+        Map<String, CellProcessor> mapping = new HashMap<>();
+
+        mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(NON_CENSUS_VILLAGE, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(VILLAGE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(VILLAGE_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
+
+        return mapping;
+    }
+
+    private Map<String, CellProcessor> getHealthBlockMapping() {
+        Map<String, CellProcessor> mapping = new HashMap<>();
+
+        mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(HEALTHBLOCK_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(HEALTHBLOCK_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
+        mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+
+        return mapping;
+    }
+
+    private Map<String, CellProcessor> getTalukaHealthBlockMapping() {
+        Map<String, CellProcessor> mapping = new HashMap<>();
+
+        mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(HEALTHBLOCK_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(TALUKA_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
+        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+
+        return mapping;
+    }
+
+    private Map<String, CellProcessor> getHealthFacilityMapping() {
+        Map<String, CellProcessor> mapping = new HashMap<>();
+
+        mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(HEALTHFACILITY_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(HEALTHFACILITY_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
+        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(HEALTHBLOCK_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+
+        return mapping;
+    }
+
+    private Map<String, CellProcessor> getHealthSubFacilityMapping() {
+        Map<String, CellProcessor> mapping = new HashMap<>();
+
+        mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(HEALTHSUBFACILITY_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(HEALTHSUBFACILITY_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
+        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(HEALTHFACILITY_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+
+        return mapping;
+    }
+
+    private Map<String, CellProcessor> getVillageHealthSubFacilityMapping() {
+        Map<String, CellProcessor> mapping = new HashMap<>();
+
+        mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(HEALTHSUBFACILITY_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(VILLAGE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+
+        return mapping;
+    }
+
+
+    private MultipartFile findByStateId(Long stateId, String locationType, String fileLocation) throws IOException {
+
+        MultipartFile csvFilesByStateIdAndRchUserType = null;
+        File file = new File(fileLocation);
+
+        File[] files = file.listFiles();
+        if (files != null) {
+            for(File f: files){
+                String[] fileNameSplitter =  f.getName().split("_");
+                if(Objects.equals(fileNameSplitter[1], stateId.toString()) && fileNameSplitter[0].equalsIgnoreCase(locationType)){
+                    try {
+                        FileInputStream input = new FileInputStream(f);
+                        MultipartFile multipartFile = new MockMultipartFile("file",
+                                f.getName(), "text/plain", IOUtils.toByteArray(input));
+                        csvFilesByStateIdAndRchUserType = multipartFile;
+                    }catch(IOException e) {
+                        LOGGER.debug("IO Exception", e);
+                    }
+                }
+            }
+        }
+        return csvFilesByStateIdAndRchUserType;
+    }
+
+
+    private List<Map<String, Object>> readCsv(BufferedReader bufferedReader, Map<String, CellProcessor> cellProcessorMapper) throws IOException {
+        int count = 0;
+
+        CsvMapImporter csvImporter = new CsvImporterBuilder()
+                .setProcessorMapping(cellProcessorMapper)
+                .setPreferences(CsvPreference.TAB_PREFERENCE)
+                .createAndOpen(bufferedReader);
+
+        List<Map<String, Object>> recordList = new ArrayList<>();
+        Map<String, Object> record;
+        while (null != (record = csvImporter.read())) {
+            recordList.add(record);
+            count++;
+        }
+        LOGGER.debug("{} records added to object", count);
+        return recordList;
+    }
+
 
     private void fillStates(Map<String, State> stateHashMap) {
         Timer queryTimer = new Timer();
@@ -672,48 +950,6 @@ public class LocationServiceImpl implements LocationService {
     }
 
 
-    @Transactional
-    private void createUpdateTalukas(final Map<String, Taluka> talukaHashMap, final Map<String, District> districtHashMap) {
-        Timer queryTimer = new Timer();
-        final Set<String> talukaKeys = talukaHashMap.keySet();
-
-        @SuppressWarnings("unchecked")
-        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
-
-            @Override
-            public String getSqlQuery() {
-                String query = "INSERT IGNORE into nms_talukas (code, district_id_oid, name, creationDate, modificationDate) values";
-                int count = talukaKeys.size();
-                for (String talukaString : talukaKeys) {
-                    count--;
-                    String[] ids = talukaString.split("_");
-                    Long districtId = districtHashMap.get(ids[0] + "_" + ids[1]).getId();
-                    query += OPEN_PARANTHESES_STRING + ids[2] + ", " + districtId + COMMA_QUOTATION_STRING + talukaHashMap.get(talukaString).getName() +
-                            QUOTATION_COMMA_STRING;
-                    query += addDateColumns();
-                    query += " )";
-                    if (count > 0) {
-                        query += COMMA_STRING;
-                    }
-                }
-
-                LOGGER.debug("TALUKA Query: {}", query);
-                return query;
-            }
-
-            @Override
-            public Long execute(Query query) {
-                query.setClass(Taluka.class);
-                return (Long) query.execute();
-            }
-        };
-
-        Long talukaCount = talukaDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug("TALUKAs inserted : {}", talukaCount);
-        LOGGER.debug("TALUKA INSERT Query time: {}", queryTimer.time());
-    }
-
-
     private void fillTalukas(Map<String, Taluka> talukaHashMap, final Map<String, District> districtHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> talukaKeys = talukaHashMap.keySet();
@@ -766,46 +1002,6 @@ public class LocationServiceImpl implements LocationService {
         }
     }
 
-    @Transactional
-    private void createUpdateVillages(final Map<String, Village> villageHashMap, final Map<String, Taluka> talukaHashMap) {
-        Timer queryTimer = new Timer();
-        final Set<String> villageKeys = villageHashMap.keySet();
-
-        @SuppressWarnings("unchecked")
-        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
-
-            @Override
-            public String getSqlQuery() {
-                String query = "INSERT IGNORE into nms_villages (vcode, svid,  taluka_id_oid, name, creationDate, modificationDate) values";
-                int count = villageKeys.size();
-                for (String villageString : villageKeys) {
-                    count--;
-                    String[] ids = villageString.split("_");
-                    Long talukaId = talukaHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]).getId();
-                    query += OPEN_PARANTHESES_STRING + ids[3] + ", " + ids[4] + ", " + talukaId + COMMA_QUOTATION_STRING +
-                            villageHashMap.get(villageString).getName() + QUOTATION_COMMA_STRING;
-                    query += addDateColumns();
-                    query += " )";
-                    if (count > 0) {
-                        query += COMMA_STRING;
-                    }
-                }
-
-                LOGGER.debug("VILLAGE Query: {}", query);
-                return query;
-            }
-
-            @Override
-            public Long execute(Query query) {
-                query.setClass(Village.class);
-                return (Long) query.execute();
-            }
-        };
-
-        Long villageCount = villageDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug("VILLAGEs inserted : {}", villageCount);
-        LOGGER.debug("VILLAGE INSERT Query time: {}", queryTimer.time());
-    }
 
     private void fillVillages(Map<String, Village> villageHashMap, final Map<String, Taluka> talukaHashMap) {
         Timer queryTimer = new Timer();
@@ -859,86 +1055,6 @@ public class LocationServiceImpl implements LocationService {
         }
     }
 
-    @Transactional
-    private void createUpdateHealthBlocks(final Map<String, HealthBlock> healthBlockHashMap, final Map<String, District> districtHashMap) {
-        Timer queryTimer = new Timer();
-        final Set<String> healthBlockKeys = healthBlockHashMap.keySet();
-
-        @SuppressWarnings("unchecked")
-        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
-
-            @Override
-            public String getSqlQuery() {
-                String query1 = "INSERT IGNORE into nms_health_blocks (code, district_id_OID, name, creationDate, modificationDate) values";
-                int count = healthBlockKeys.size();
-                for (String healthBlockString : healthBlockKeys) {
-                    count--;
-                    String[] ids = healthBlockString.split("_");
-                    Long districtId = districtHashMap.get(ids[0] + "_" + ids[1]).getId();
-                    query1 += OPEN_PARANTHESES_STRING + ids[3] + ", " + districtId + COMMA_QUOTATION_STRING +
-                            healthBlockHashMap.get(healthBlockString).getName() + QUOTATION_COMMA_STRING;
-                    query1 += addDateColumns();
-                    query1 += " )";
-                    if (count > 0) {
-                        query1 += COMMA_STRING;
-                    }
-                }
-
-                LOGGER.debug("HEALTHBLOCK Query: {}", query1);
-                return query1;
-            }
-
-            @Override
-            public Long execute(Query query) {
-                query.setClass(HealthBlock.class);
-                return (Long) query.execute();
-            }
-        };
-
-        Long healthBlockCount = healthBlockDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug("HEALTHBLOCKs inserted : {}", healthBlockCount);
-        LOGGER.debug("HEALTHBLOCK INSERT Query time: {}", queryTimer.time());
-    }
-
-    @Transactional
-    private void createUpdateTalukaHealthBlock(final Map<String, HealthBlock> healthBlockHashMap, final Map<String, Taluka> talukaHashMap) {
-        Timer queryTimer = new Timer();
-        final Set<String> healthBlockKeys = healthBlockHashMap.keySet();
-
-        @SuppressWarnings("unchecked")
-        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
-
-            @Override
-            public String getSqlQuery() { //as of now there are no creationDate and modificationDate
-                String query1 = "INSERT IGNORE into nms_taluka_healthBlock (taluka_id_OID, healthBlock_id_OID, creationDate, modificationDate) values";
-                int count = healthBlockKeys.size();
-                for (String healthBlockString : healthBlockKeys) {
-                    count--;
-                    String[] ids = healthBlockString.split("_");
-                    Long talukaId = talukaHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]).getId();
-                    query1 += OPEN_PARANTHESES_STRING + talukaId + ", " + healthBlockHashMap.get(healthBlockString).getId() + COMMA_QUOTATION_STRING
-                            + QUOTATION_COMMA_STRING;
-                    query1 += addDateColumns();
-                    query1 += " )";
-                    if (count > 0) {
-                        query1 += COMMA_STRING;
-                    }
-                }
-
-                LOGGER.debug("Taluka_HEALTHBLOCK Query: {}", query1);
-                return query1;
-            }
-
-            @Override
-            public Long execute(Query query) {
-                return (Long) query.execute();
-            }
-        };
-
-        Long healthBlockCount = healthBlockDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug("Taluka_HEALTHBLOCKs inserted : {}", healthBlockCount);
-        LOGGER.debug("Taluka_HEALTHBLOCKs INSERT Query time: {}", queryTimer.time());
-    }
 
     private void fillHealthBlocks(Map<String, HealthBlock> healthBlockHashMap, final Map<String, Taluka> talukaHashMap) {
         Timer queryTimer = new Timer();
@@ -997,46 +1113,6 @@ public class LocationServiceImpl implements LocationService {
         }
     }
 
-    @Transactional
-    private void createUpdateHealthFacilities(final Map<String, HealthFacility> healthFacilityHashMap, final Map<String, HealthBlock> healthBlockHashMap) {
-        Timer queryTimer = new Timer();
-        final Set<String> healthFacilityKeys = healthFacilityHashMap.keySet();
-
-        @SuppressWarnings("unchecked")
-        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
-
-            @Override
-            public String getSqlQuery() {
-                String query = "INSERT IGNORE into nms_health_facilities (code,  healthBlock_id_oid, name, creationDate, modificationDate) values";
-                int count = healthFacilityKeys.size();
-                for (String healthFacilityString : healthFacilityKeys) {
-                    count--;
-                    String[] ids = healthFacilityString.split("_");
-                    Long healthBlockId = healthBlockHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2] + "_" + ids[3]).getId();
-                    query += OPEN_PARANTHESES_STRING + ids[4] + ", " + healthBlockId + COMMA_QUOTATION_STRING +
-                            healthFacilityHashMap.get(healthFacilityString).getName() + QUOTATION_COMMA_STRING;
-                    query += addDateColumns();
-                    query += " )";
-                    if (count > 0) {
-                        query += COMMA_STRING;
-                    }
-                }
-
-                LOGGER.debug("HEALTHFACILITY Query: {}", query);
-                return query;
-            }
-
-            @Override
-            public Long execute(Query query) {
-                query.setClass(HealthFacility.class);
-                return (Long) query.execute();
-            }
-        };
-
-        Long healthFacilityCount = healthFacilityDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug("HEALTHFACILITYs inserted : {}", healthFacilityCount);
-        LOGGER.debug("HEALTHFACILITY INSERT Query time: {}", queryTimer.time());
-    }
 
     private void fillHealthFacilities(Map<String, HealthFacility> healthFacilityHashMap, final Map<String, HealthBlock> healthBlockHashMap) {
         Timer queryTimer = new Timer();
@@ -1090,86 +1166,6 @@ public class LocationServiceImpl implements LocationService {
         }
     }
 
-    @Transactional
-    private void createUpdateHealthSubFacilities(final Map<String, HealthSubFacility> healthSubFacilityHashMap, final Map<String, HealthFacility> healthFacilityHashMap) {
-        Timer queryTimer = new Timer();
-        final Set<String> healthSubFacilityKeys = healthSubFacilityHashMap.keySet();
-
-        @SuppressWarnings("unchecked")
-        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
-
-            @Override
-            public String getSqlQuery() {
-                String query = "INSERT IGNORE into nms_health_sub_facilities (code,  healthFacility_id_oid, name, creationDate, modificationDate) values";
-                int count = healthSubFacilityKeys.size();
-                for (String healthSubFacilityString : healthSubFacilityKeys) {
-                    count--;
-                    String[] ids = healthSubFacilityString.split("_");
-                    Long healthFacilityId = healthFacilityHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2] + "_" + ids[3] + "_" + ids[4]).getId();
-                    query += OPEN_PARANTHESES_STRING + ids[5] + ", " + healthFacilityId + COMMA_QUOTATION_STRING +
-                            healthSubFacilityHashMap.get(healthSubFacilityString).getName() + QUOTATION_COMMA_STRING;
-                    query += addDateColumns();
-                    query += " )";
-                    if (count > 0) {
-                        query += COMMA_STRING;
-                    }
-                }
-
-                LOGGER.debug("HEALTHSUBFACILITY Query: {}", query);
-                return query;
-            }
-
-            @Override
-            public Long execute(Query query) {
-                query.setClass(HealthSubFacility.class);
-                return (Long) query.execute();
-            }
-        };
-
-        Long healthSubFacilityCount = healthSubFacilityDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug("HEALTHSUBFACILITYs inserted : {}", healthSubFacilityCount);
-        LOGGER.debug("HEALTHSUBFACILITY INSERT Query time: {}", queryTimer.time());
-    }
-
-    @Transactional
-    private void createUpdateVillageHealthsubfacility(final Map<String, HealthSubFacility> healthSubFacilityHashMap,  final Map<String, Village> villageHashMap) {
-        Timer queryTimer = new Timer();
-        final Set<String> villageKeys = villageHashMap.keySet();
-
-        @SuppressWarnings("unchecked")
-        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
-
-            @Override
-            public String getSqlQuery() { //as of now there are no creationDate and modificationDate
-                String query1 = "INSERT IGNORE into nms_village_healthsubfacility (healthSubFacility_id, village_id, creationDate, modificationDate) values";
-                int count = villageKeys.size();
-                for (String villageString : villageKeys) {
-                    count--;
-                    String[] ids = villageString.split("_");
-                    Long healthSubFacilityId = healthSubFacilityHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2] + "_" + ids[3] + "_" + ids[4] + "_" + ids[5]).getId();
-                    query1 += OPEN_PARANTHESES_STRING + healthSubFacilityId + ", " + villageHashMap.get(villageString).getId() + COMMA_QUOTATION_STRING
-                            + QUOTATION_COMMA_STRING;
-                    query1 += addDateColumns();
-                    query1 += " )";
-                    if (count > 0) {
-                        query1 += COMMA_STRING;
-                    }
-                }
-
-                LOGGER.debug("VILLAGE_HEALTHSUBFACILITY Query: {}", query1);
-                return query1;
-            }
-
-            @Override
-            public Long execute(Query query) {
-                return (Long) query.execute();
-            }
-        };
-
-        Long healthBlockCount = healthBlockDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug("VILLAGE_HEALTHSUBFACILITYs inserted : {}", healthBlockCount);
-        LOGGER.debug("VILLAGE_HEALTHSUBFACILITYs INSERT Query time: {}", queryTimer.time());
-    }
 
     private void fillHealthSubFacilities(Map<String, HealthSubFacility> healthSubFacilityHashMap, final Map<String, HealthFacility> healthFacilityHashMap) {
         Timer queryTimer = new Timer();
@@ -1221,16 +1217,6 @@ public class LocationServiceImpl implements LocationService {
                 healthSubFacilityHashMap.put(healthFacilityKey + "_" + healthSubFacility.getCode(), healthSubFacility);
             }
         }
-    }
-
-    private String addDateColumns() {
-        DateTime dateTimeNow = new DateTime();
-        DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
-        String query = "";
-        query += "'" + dateTimeFormatter.print(dateTimeNow) + "'";
-        query += ", ";
-        query += "'" + dateTimeFormatter.print(dateTimeNow) + "'";
-        return query;
     }
 
 }

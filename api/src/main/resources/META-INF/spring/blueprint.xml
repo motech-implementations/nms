@@ -53,6 +53,8 @@
 
     <osgi:reference id="languageService" interface="org.motechproject.nms.region.service.LanguageService"/>
 
+    <osgi:reference id="locationService" interface="org.motechproject.nms.region.service.LocationService"/>
+
     <osgi:reference id="circleService" interface="org.motechproject.nms.region.service.CircleService"/>
 
     <osgi:reference id="stateService" interface="org.motechproject.nms.region.service.StateService"/>
