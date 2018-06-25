@@ -2,12 +2,8 @@ package org.motechproject.nms.mcts.service;
 
 import org.joda.time.LocalDate;
 import org.motechproject.event.MotechEvent;
-import org.motechproject.nms.kilkari.contract.ChildRecord;
-import org.motechproject.nms.kilkari.contract.MotherRecord;
-
 import java.net.URL;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Service responsible for importing data from the MCTS web service.
@@ -31,7 +27,5 @@ public interface MctsWsImportService {
     void importMothersData(MotechEvent motechEvent);
     void importChildrenData(MotechEvent motechEvent);
     void importAnmAshaData(MotechEvent motechEvent);
-    void toMapLocMother(Map<String, Object> map, MotherRecord motherRecord);
-    void toMapLocChild(Map<String, Object> map, ChildRecord childRecord);
 
 }

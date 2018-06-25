@@ -676,7 +676,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
     private Map<String, Object> toMap(ChildRecord childRecord) {
         Map<String, Object> map = new HashMap<>();
 
-        toMapLocChild(map, childRecord);
+        mctsWebServiceFacade.toMapLocChild(map, childRecord);
         map.put(KilkariConstants.LAST_UPDATE_DATE, "".equals(childRecord.getLastUpdateDate()) ? null : LocalDate.parse(childRecord.getLastUpdateDate(), DateTimeFormat.forPattern("dd-MM-yyyy")));
 
         map.put(KilkariConstants.BENEFICIARY_NAME, childRecord.getName());
@@ -708,21 +708,6 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         return map;
     }
 
-    public void toMapLocChild(Map<String, Object> map, ChildRecord childRecord) {
-        map.put(KilkariConstants.STATE_ID, childRecord.getStateID());
-        map.put(KilkariConstants.DISTRICT_ID, childRecord.getDistrictId());
-        map.put(KilkariConstants.DISTRICT_NAME, childRecord.getDistrictName());
-        map.put(KilkariConstants.TALUKA_ID, childRecord.getTalukaId());
-        map.put(KilkariConstants.TALUKA_NAME, childRecord.getTalukaName());
-        map.put(KilkariConstants.HEALTH_BLOCK_ID, childRecord.getHealthBlockId());
-        map.put(KilkariConstants.HEALTH_BLOCK_NAME, childRecord.getHealthBlockName());
-        map.put(KilkariConstants.PHC_ID, childRecord.getPhcId());
-        map.put(KilkariConstants.PHC_NAME, childRecord.getPhcName());
-        map.put(KilkariConstants.SUB_CENTRE_ID, childRecord.getSubCentreId());
-        map.put(KilkariConstants.SUB_CENTRE_NAME, childRecord.getSubCentreName());
-        map.put(KilkariConstants.CENSUS_VILLAGE_ID, childRecord.getVillageId());
-        map.put(KilkariConstants.VILLAGE_NAME, childRecord.getVillageName());
-    }
 
     private Map<String, Object> addToMap(Map<String, Object> map, ChildRecord childRecord) {
         map.put(KilkariConstants.SUB_CENTRE_NAME1, childRecord.getSubCentreName1());
@@ -776,7 +761,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     private Map<String, Object> toMap(MotherRecord motherRecord) {
         Map<String, Object> map = new HashMap<>();
-        toMapLocMother(map, motherRecord);
+        mctsWebServiceFacade.toMapLocMother(map, motherRecord);
         map.put(KilkariConstants.LAST_UPDATE_DATE, "".equals(motherRecord.getLastUpdateDate()) ? null : LocalDate.parse(motherRecord.getLastUpdateDate(), DateTimeFormat.forPattern("dd-MM-yyyy")));
 
         map.put(KilkariConstants.BENEFICIARY_ID, motherRecord.getIdNo());
@@ -815,21 +800,6 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         return map;
     }
 
-    public void toMapLocMother(Map<String, Object> map, MotherRecord motherRecord) {
-        map.put(KilkariConstants.STATE_ID, motherRecord.getStateId());
-        map.put(KilkariConstants.DISTRICT_ID, motherRecord.getDistrictId());
-        map.put(KilkariConstants.DISTRICT_NAME, motherRecord.getDistrictName());
-        map.put(KilkariConstants.TALUKA_ID, motherRecord.getTalukaId());
-        map.put(KilkariConstants.TALUKA_NAME, motherRecord.getTalukaName());
-        map.put(KilkariConstants.HEALTH_BLOCK_ID, motherRecord.getHealthBlockId());
-        map.put(KilkariConstants.HEALTH_BLOCK_NAME, motherRecord.getHealthBlockName());
-        map.put(KilkariConstants.PHC_ID, motherRecord.getPhcid());
-        map.put(KilkariConstants.PHC_NAME, motherRecord.getPhcName());
-        map.put(KilkariConstants.SUB_CENTRE_ID, motherRecord.getSubCentreid());
-        map.put(KilkariConstants.SUB_CENTRE_NAME, motherRecord.getSubCentreName());
-        map.put(KilkariConstants.CENSUS_VILLAGE_ID, motherRecord.getVillageId());
-        map.put(KilkariConstants.VILLAGE_NAME, motherRecord.getVillageName());
-    }
 
     private Map<String, Object> addToMap(Map<String, Object> map, MotherRecord motherRecord) {
         map.put("IFA100_Given_Date", motherRecord.getIfA100GivenDate());
