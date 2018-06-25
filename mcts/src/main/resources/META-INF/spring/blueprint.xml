@@ -35,6 +35,10 @@
     <osgi:reference id="mctsBeneficiaryImportService"
                     interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService"/>
 
+    <osgi:reference id="mctsBeneficiaryImportReaderService"
+                    interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService"/>
+
+
     <osgi:reference id="actionFinderService"
                     interface="org.motechproject.nms.kilkari.service.ActionFinderService"/>
 

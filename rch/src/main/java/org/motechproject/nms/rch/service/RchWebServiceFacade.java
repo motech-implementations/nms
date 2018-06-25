@@ -26,5 +26,7 @@ public interface RchWebServiceFacade {
 
     void locationUpdateInTableFromCsv(Long stateId, RchUserType rchUserType) throws IOException;
 
+    String getFileLocation(String origin);
+
     String getLocationFilesDirectory();
 }

@@ -6,9 +6,10 @@ import org.apache.axis.description.TypeDesc;
 import org.apache.axis.encoding.SerializationContext;
 import org.apache.axis.encoding.ser.BeanSerializer;
 import org.apache.axis.server.AxisServer;
-import org.apache.commons.fileupload.disk.DiskFileItem;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
@@ -19,7 +20,9 @@ import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryParams;
+import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.mds.util.Order;
+import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
@@ -51,6 +54,7 @@ import org.motechproject.nms.rch.exception.RchFileManipulationException;
 import org.motechproject.nms.rch.exception.RchInvalidResponseStructureException;
 import org.motechproject.nms.rch.exception.RchWebServiceException;
 import org.motechproject.nms.rch.repository.RchImportAuditDataService;
+import org.motechproject.nms.rch.repository.RchImportFacilitatorDataService;
 import org.motechproject.nms.rch.repository.RchImportFailRecordDataService;
 import org.motechproject.nms.rch.service.RchImportFacilitatorService;
 import org.motechproject.nms.rch.service.RchWebServiceFacade;
@@ -78,19 +82,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.xml.sax.helpers.AttributesImpl;
 
+import javax.jdo.Query;
 import javax.xml.bind.JAXBException;
 import javax.xml.namespace.QName;
 import javax.xml.rpc.ServiceException;
 
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.FileReader;
 import java.io.BufferedReader;
@@ -120,6 +126,7 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToRchMother;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.motherRejectionRch;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.flwRejectionRch;
+import static org.motechproject.nms.tracking.utils.TrackChangeUtils.LOGGER;
 
 @Service("rchWebServiceFacade")
 public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
@@ -128,9 +135,17 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String LOCAL_RESPONSE_DIR = "rch.local_response_dir";
     private static final String REMOTE_RESPONSE_DIR = "rch.remote_response_dir";
     private static final String REMOTE_RESPONSE_DIR_CSV = "rch.remote_response_dir_csv";
+    private static final String LOC_UPDATE_DIR_MCTS = "mcts.loc_update_dir";
+    private static final String LOC_UPDATE_DIR_RCH = "rch.loc_update_dir";
     private static final String REMOTE_RESPONSE_DIR_LOCATION = "rch.remote_response_dir_locations";
     private static final String LOC_UPDATE_DIR = "rch.loc_update_dir";
     private static final String NULL = "NULL";
+    private static final String NEXT_LINE = "\r\n";
+    private final String mcts = "mstc";
+    private final String rch = "rch";
+
+    private static final String QUOTATION = "'";
+    private static final String SQL_QUERY_LOG = "SQL QUERY: {}";
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("dd-MM-yyyy");
     private static final String SCP_TIMEOUT_SETTING = "rch.scp_timeout";
@@ -151,6 +166,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     @Autowired
     private RchImportAuditDataService rchImportAuditDataService;
+
+    @Autowired
+    private RchImportFacilitatorDataService rchImportFacilitatorDataService;
 
     @Autowired
     private RchImportFacilitatorService rchImportFacilitatorService;
@@ -1234,18 +1252,19 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
                         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
                         Map<String, CellProcessor> cellProcessorMapper;
+                        List<Map<String, Object>> recordList;
 
                         if (rchUserType == RchUserType.MOTHER) {
                             cellProcessorMapper = mctsBeneficiaryImportService.getRchMotherProcessorMapping();
-                            List<Map<String, Object>> recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
+                            recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
                             motherLocUpdateFromCsv(recordList, stateId, rchUserType);
                         } else if (rchUserType == RchUserType.CHILD) {
                             cellProcessorMapper = mctsBeneficiaryImportReaderService.getRchChildProcessorMapping();
-                            List<Map<String, Object>> recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
+                            recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
                             childLocUpdateFromCsv(recordList, stateId, rchUserType);
                         } else if (rchUserType == RchUserType.ASHA) {
                             cellProcessorMapper = mctsBeneficiaryImportService.getRchAshaProcessorMapping();
-                            List<Map<String, Object>> recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
+                            recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
                             ashaLocUpdateFromCsv(recordList, stateId, rchUserType);
                         }
 
@@ -1259,7 +1278,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
 
-    private void motherLocUpdate(DS_DataResponseDS_DataResult result, Long stateId, RchUserType rchUserType) {
+    private void motherLocUpdate(DS_DataResponseDS_DataResult result, Long stateId, RchUserType rchUserType) { // NO CHECKSTYLE Cyclomatic Complexity
         try {
             validMothersDataResponse(result, stateId);
             List motherResultFeed = result.get_any()[1].getChildren();
@@ -1274,11 +1293,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 LOGGER.warn(warning);
             } else {
                 List<RchMotherRecord> motherRecords = mothersDataSet.getRecords();
+                List<String> existingMotherIds = getDatabaseMothers(motherRecords);
                 for (RchMotherRecord record : motherRecords) {
-                    Map<String, Object> locMap = new HashMap<>();
-                    toMapLocMother(locMap, record);
-                    locMap.put(KilkariConstants.RCH_ID, record.getRegistrationNo());
-                    locArrList.add(locMap);
+                    if(existingMotherIds.contains(record.getRegistrationNo())) {
+                        Map<String, Object> locMap = new HashMap<>();
+                        toMapLocMother(locMap, record);
+                        locMap.put(KilkariConstants.RCH_ID, record.getRegistrationNo());
+                        locArrList.add(locMap);
+                    }
                 }
             }
 
@@ -1298,16 +1320,26 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
     }
 
+
+
+
     private void motherLocUpdateFromCsv(List<Map<String, Object>> result, Long stateId, RchUserType rchUserType) {
         try {
             ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
+            List<RchMotherRecord> rchMotherRecords = new ArrayList<>();
 
-            for (Map<String, Object> record : result){
-                RchMotherRecord rchMotherRecord =  convertMapToRchMother(record);
-                Map<String, Object> locMap = new HashMap<>();
-                toMapLocMother(locMap, rchMotherRecord);
-                locMap.put(KilkariConstants.RCH_ID, rchMotherRecord.getRegistrationNo());
-                locArrList.add(locMap);
+            for (Map<String, Object> record : result) {
+                RchMotherRecord rchMotherRecord = convertMapToRchMother(record);
+                rchMotherRecords.add(rchMotherRecord);
+            }
+            List<String> existingMotherIds = getDatabaseMothers(rchMotherRecords);
+            for(RchMotherRecord rchMotherRecord : rchMotherRecords) {
+                if (existingMotherIds.contains(rchMotherRecord.getRegistrationNo())) {
+                    Map<String, Object> locMap = new HashMap<>();
+                    toMapLocMother(locMap, rchMotherRecord);
+                    locMap.put(KilkariConstants.RCH_ID, rchMotherRecord.getRegistrationNo());
+                    locArrList.add(locMap);
+                }
             }
             updateLocInMap(locArrList, stateId, rchUserType);
 
@@ -1323,7 +1355,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
 
 
-    private void childLocUpdate(DS_DataResponseDS_DataResult result, Long stateId, RchUserType rchUserType) {
+    private void childLocUpdate(DS_DataResponseDS_DataResult result, Long stateId, RchUserType rchUserType) { // NO CHECKSTYLE Cyclomatic Complexity
         try {
             validChildrenDataResponse(result, stateId);
             List childResultFeed = result.get_any()[1].getChildren();
@@ -1337,12 +1369,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 LOGGER.warn(warning);
             } else {
                 List<RchChildRecord> childRecords = childrenDataSet.getRecords();
-                for (RchChildRecord record : childRecords
-                     ) {
-                    Map<String, Object> locMap = new HashMap<>();
-                    toMapLocChild(locMap, record);
-                    locMap.put(KilkariConstants.RCH_ID, record.getRegistrationNo());
-                    locArrList.add(locMap);
+                List<String> existingChildIds = getDatabaseChild(childRecords);
+                for (RchChildRecord record : childRecords) {
+                    if(existingChildIds.contains(record.getRegistrationNo())) {
+                        Map<String, Object> locMap = new HashMap<>();
+                        toMapLocChild(locMap, record);
+                        locMap.put(KilkariConstants.RCH_ID, record.getRegistrationNo());
+                        locArrList.add(locMap);
+                    }
                 }
             }
 
@@ -1365,13 +1399,21 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private void childLocUpdateFromCsv(List<Map<String, Object>> result, Long stateId, RchUserType rchUserType) {
         try {
             ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
+            List<RchChildRecord> rchChildRecords = new ArrayList<>();
 
-            for (Map<String, Object> record : result){
-                RchChildRecord rchChildRecord =  convertMapToRchChild(record);
-                Map<String, Object> locMap = new HashMap<>();
-                toMapLocChild(locMap, rchChildRecord);
-                locMap.put(KilkariConstants.RCH_ID, rchChildRecord.getRegistrationNo());
-                locArrList.add(locMap);
+            for (Map<String, Object> record : result) {
+                RchChildRecord rchChildRecord = convertMapToRchChild(record);
+                rchChildRecords.add(rchChildRecord);
+
+            }
+            List<String> existingMotherIds = getDatabaseChild(rchChildRecords);
+            for(RchChildRecord rchChildRecord : rchChildRecords) {
+                if (existingMotherIds.contains(rchChildRecord.getRegistrationNo())) {
+                    Map<String, Object> locMap = new HashMap<>();
+                    toMapLocChild(locMap, rchChildRecord);
+                    locMap.put(KilkariConstants.RCH_ID, rchChildRecord.getRegistrationNo());
+                    locArrList.add(locMap);
+                }
             }
             updateLocInMap(locArrList, stateId, rchUserType);
 
@@ -1387,7 +1429,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
 
 
-    private void ashaLocUpdate(DS_DataResponseDS_DataResult result, Long stateId, RchUserType rchUserType) {
+    private void ashaLocUpdate(DS_DataResponseDS_DataResult result, Long stateId, RchUserType rchUserType) { // NO CHECKSTYLE Cyclomatic Complexity
         try {
             validAnmAshaDataResponse(result, stateId);
             List ashaResultFeed = result.get_any()[1].getChildren();
@@ -1400,12 +1442,15 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 LOGGER.warn(warning);
             } else {
                 List<RchAnmAshaRecord> anmAshaRecords = ashaDataSet.getRecords();
+                List<String> existingAshaIds = getDatabaseAsha(anmAshaRecords);
                 for (RchAnmAshaRecord record : anmAshaRecords
                      ) {
-                    Map<String, Object> locMap = new HashMap<>();
-                    toMapLoc(locMap, record);
-                    locMap.put("Flw_Id", record.getGfId());
-                    locArrList.add(locMap);
+                    if(existingAshaIds.contains(record.getGfId().toString())) {
+                        Map<String, Object> locMap = new HashMap<>();
+                        toMapLoc(locMap, record);
+                        locMap.put(FlwConstants.ID, record.getGfId());
+                        locArrList.add(locMap);
+                    }
                 }
             }
             updateLocInMap(locArrList, stateId, rchUserType);
@@ -1427,13 +1472,20 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private void ashaLocUpdateFromCsv(List<Map<String, Object>> result, Long stateId, RchUserType rchUserType) {
         try {
             ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
+            List<RchAnmAshaRecord> rchAshaRecords = new ArrayList<>();
+            for (Map<String, Object> record : result) {
+                RchAnmAshaRecord rchAnmAshaRecord = frontLineWorkerImportService.convertMapToRchAsha(record);
+                rchAshaRecords.add(rchAnmAshaRecord);
+            }
+            List<String> existingAshaIds = getDatabaseAsha(rchAshaRecords);
 
-            for (Map<String, Object> record : result){
-                RchAnmAshaRecord rchAnmAshaRecord =  frontLineWorkerImportService.convertMapToRchAsha(record);
-                Map<String, Object> locMap = new HashMap<>();
-                toMapLoc(locMap, rchAnmAshaRecord);
-                locMap.put("Flw_Id", rchAnmAshaRecord.getGfId());
-                locArrList.add(locMap);
+            for(RchAnmAshaRecord rchAnmAshaRecord : rchAshaRecords) {
+                if (existingAshaIds.contains(rchAnmAshaRecord.getGfId().toString())) {
+                    Map<String, Object> locMap = new HashMap<>();
+                    toMapLoc(locMap, rchAnmAshaRecord);
+                    locMap.put("Flw_Id", rchAnmAshaRecord.getGfId());
+                    locArrList.add(locMap);
+                }
             }
             updateLocInMap(locArrList, stateId, rchUserType);
 
@@ -1527,10 +1579,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 String[] fileNameSplitter =  f.getName().split("_");
                 if(Objects.equals(fileNameSplitter[2], stateId.toString()) && fileNameSplitter[3].equalsIgnoreCase(rchUserType.toString())){
                     try {
-                        DiskFileItem fileItem = new DiskFileItem("file", "text/plain", false,
-                                f.getName(), (int) f.length() , f.getParentFile());
-                        fileItem.getOutputStream();
-                        MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
+                        FileInputStream input = new FileInputStream(f);
+                        MultipartFile multipartFile = new MockMultipartFile("file",
+                                f.getName(), "text/plain", IOUtils.toByteArray(input));
                         csvFilesByStateIdAndRchUserType.add(multipartFile);
                     }catch(IOException e) {
                         LOGGER.debug("IO Exception", e);
@@ -1558,11 +1609,27 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             updatedLocArrList.add(updatedMap);
         }
 
-        csvWriter(updatedLocArrList, stateId, rchUserType);
+        if ("asha".equalsIgnoreCase(rchUserType.toString())) {
+            csvWriterAsha(updatedLocArrList, stateId, rchUserType);
+        }else {
+            csvWriterKilkari(updatedLocArrList, stateId, rchUserType);
+        }
+
     }
 
-    private void csvWriter(List<Map<String, Object>> locArrList, Long stateId, RchUserType rchUserType) throws IOException { //NO CHECKSTYLE Cyclomatic Complexity
-        String locUpdateDir = settingsFacade.getProperty(LOC_UPDATE_DIR);
+    @Override
+    public String getFileLocation(String origin) {
+        if (mcts.equalsIgnoreCase(origin)) {
+            return settingsFacade.getProperty(LOC_UPDATE_DIR_RCH);
+        } else if (rch.equalsIgnoreCase(origin)) {
+            return settingsFacade.getProperty(LOC_UPDATE_DIR_MCTS);
+        } else {
+            return "No such origin";
+        }
+    }
+
+    private File csvWriter(Long stateId, RchUserType rchUserType) throws IOException {
+        String locUpdateDir = settingsFacade.getProperty(LOC_UPDATE_DIR_RCH);
         String fileName = locUpdateDir + "location_update_state" + "_" + stateId + "_" + rchUserType + "_" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()) + ".csv";
         File csvFile = new File(fileName);
         if (!csvFile.exists()){
@@ -1570,6 +1637,13 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         } else {
             LOGGER.debug("File already exists");
         }
+        return csvFile;
+
+        }
+
+    private void csvWriterKilkari(List<Map<String, Object>> locArrList, Long stateId, RchUserType rchUserType) throws IOException { //NO CHECKSTYLE Cyclomatic Complexity //NOPMD NcssMethodCount
+
+        File csvFile = csvWriter(stateId, rchUserType);
 
         if (!locArrList.isEmpty()) {
             FileWriter writer;
@@ -1578,6 +1652,34 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             for (Map<String, Object> map : locArrList
                     ) {
 
+                writer.write(KilkariConstants.RCH_ID);
+                writer.write(",");
+                writer.write(KilkariConstants.STATE_ID);
+                writer.write(",");
+                writer.write(KilkariConstants.DISTRICT_ID);
+                writer.write(",");
+                writer.write(KilkariConstants.DISTRICT_NAME);
+                writer.write(",");
+                writer.write(KilkariConstants.TALUKA_ID);
+                writer.write(",");
+                writer.write(KilkariConstants.TALUKA_NAME);
+                writer.write(",");
+                writer.write(KilkariConstants.HEALTH_BLOCK_ID);
+                writer.write(",");
+                writer.write(KilkariConstants.HEALTH_BLOCK_NAME);
+                writer.write(",");
+                writer.write(KilkariConstants.PHC_ID);
+                writer.write(",");
+                writer.write(KilkariConstants.PHC_NAME);
+                writer.write(",");
+                writer.write(KilkariConstants.SUB_CENTRE_ID);
+                writer.write(",");
+                writer.write(KilkariConstants.SUB_CENTRE_NAME);
+                writer.write(",");
+                writer.write(KilkariConstants.CENSUS_VILLAGE_ID);
+                writer.write(",");
+                writer.write(KilkariConstants.VILLAGE_NAME);
+                writer.write(NEXT_LINE);
                 writer.write(map.get(KilkariConstants.RCH_ID).toString());
                 writer.write(",");
                 writer.write(map.get(KilkariConstants.STATE_ID).toString());
@@ -1605,10 +1707,238 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 writer.write(map.get(KilkariConstants.CENSUS_VILLAGE_ID) == null ? NULL : map.get(KilkariConstants.CENSUS_VILLAGE_ID).toString());
                 writer.write(",");
                 writer.write(map.get(KilkariConstants.VILLAGE_NAME) == null ? NULL : map.get(KilkariConstants.VILLAGE_NAME).toString());
-                writer.write("\r\n");
+                writer.write(NEXT_LINE);
             }
 
             writer.close();
         }
     }
+
+    private void csvWriterAsha(List<Map<String, Object>> locArrList, Long stateId, RchUserType rchUserType) throws IOException { //NO CHECKSTYLE Cyclomatic Complexity //NOPMD NcssMethodCount
+
+        File csvFile = csvWriter(stateId, rchUserType);
+
+        if (!locArrList.isEmpty()) {
+            FileWriter writer;
+            writer = new FileWriter(csvFile, true);
+
+            for (Map<String, Object> map : locArrList
+                    ) {
+
+                writer.write(FlwConstants.ID);
+                writer.write(",");
+                writer.write(FlwConstants.STATE_ID);
+                writer.write(",");
+                writer.write(FlwConstants.DISTRICT_ID);
+                writer.write(",");
+                writer.write(FlwConstants.DISTRICT_NAME);
+                writer.write(",");
+                writer.write(FlwConstants.TALUKA_ID);
+                writer.write(",");
+                writer.write(FlwConstants.TALUKA_NAME);
+                writer.write(",");
+                writer.write(FlwConstants.HEALTH_BLOCK_ID);
+                writer.write(",");
+                writer.write(FlwConstants.HEALTH_BLOCK_NAME);
+                writer.write(",");
+                writer.write(FlwConstants.PHC_ID);
+                writer.write(",");
+                writer.write(FlwConstants.PHC_NAME);
+                writer.write(",");
+                writer.write(FlwConstants.SUB_CENTRE_ID);
+                writer.write(",");
+                writer.write(FlwConstants.SUB_CENTRE_NAME);
+                writer.write(",");
+                writer.write(FlwConstants.CENSUS_VILLAGE_ID);
+                writer.write(",");
+                writer.write(FlwConstants.VILLAGE_NAME);
+                writer.write(NEXT_LINE);
+                writer.write(map.get(FlwConstants.ID).toString());
+                writer.write(",");
+                writer.write(map.get(FlwConstants.STATE_ID).toString());
+                writer.write(",");
+                writer.write(map.get(FlwConstants.DISTRICT_ID).toString());
+                writer.write(",");
+                writer.write(map.get(FlwConstants.DISTRICT_NAME).toString());
+                writer.write(",");
+                writer.write(map.get(FlwConstants.TALUKA_ID) == null ? NULL : map.get(FlwConstants.TALUKA_ID).toString());
+                writer.write(",");
+                writer.write(map.get(FlwConstants.TALUKA_NAME) == null ? NULL : map.get(FlwConstants.TALUKA_NAME).toString());
+                writer.write(",");
+                writer.write(map.get(FlwConstants.HEALTH_BLOCK_ID) == null ? NULL : map.get(FlwConstants.HEALTH_BLOCK_ID).toString());
+                writer.write(",");
+                writer.write(map.get(FlwConstants.HEALTH_BLOCK_NAME) == null ? NULL : map.get(FlwConstants.HEALTH_BLOCK_NAME).toString());
+                writer.write(",");
+                writer.write(map.get(FlwConstants.PHC_ID) == null ? NULL : map.get(FlwConstants.PHC_ID).toString());
+                writer.write(",");
+                writer.write(map.get(FlwConstants.PHC_NAME) == null ? NULL : map.get(FlwConstants.PHC_NAME).toString());
+                writer.write(",");
+                writer.write(map.get(FlwConstants.SUB_CENTRE_ID) == null ? NULL : map.get(FlwConstants.SUB_CENTRE_ID).toString());
+                writer.write(",");
+                writer.write(map.get(FlwConstants.SUB_CENTRE_NAME) == null ? NULL : map.get(FlwConstants.SUB_CENTRE_NAME).toString());
+                writer.write(",");
+                writer.write(map.get(FlwConstants.CENSUS_VILLAGE_ID) == null ? NULL : map.get(FlwConstants.CENSUS_VILLAGE_ID).toString());
+                writer.write(",");
+                writer.write(map.get(FlwConstants.VILLAGE_NAME) == null ? NULL : map.get(FlwConstants.VILLAGE_NAME).toString());
+                writer.write(NEXT_LINE);
+            }
+
+            writer.close();
+        }
+    }
+
+    private List<String> getDatabaseMothers(final List<RchMotherRecord> motherRecords) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<String>> queryExecution = new SqlQueryExecution<List<String>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "SELECT registrationNo FROM nms_mcts_mothers WHERE registrationNo IN " + queryIdList(motherRecords);
+                LOGGER.debug(SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public List<String> execute(Query query) {
+
+                query.setClass(MctsMother.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                List<String> result = new ArrayList<>();
+                for (String existingMotherId : (List<String>) fqr) {
+                    result.add(existingMotherId);
+                }
+                return result;
+            }
+        };
+
+        List<String> result = (List<String>) rchImportFacilitatorDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("Database mothers query time {}", queryTimer.time());
+        return result;
+
+    }
+
+    private String queryIdList(List<RchMotherRecord> motherRecords) {
+        StringBuilder stringBuilder = new StringBuilder();
+        int i = 0;
+        stringBuilder.append("(");
+        for (RchMotherRecord motherRecord: motherRecords) {
+            if (i != 0) {
+                stringBuilder.append(", ");
+            }
+            stringBuilder.append(QUOTATION + motherRecord.getRegistrationNo() + QUOTATION);
+            i++;
+        }
+        stringBuilder.append(")");
+
+        return stringBuilder.toString();
+    }
+
+
+
+    private List<String> getDatabaseChild(final List<RchChildRecord> childRecords) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<String>> queryExecution = new SqlQueryExecution<List<String>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "SELECT registrationNo FROM nms_mcts_children WHERE registrationNo IN " + queryIdListChildren(childRecords);
+                LOGGER.debug(SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public List<String> execute(Query query) {
+
+                query.setClass(MctsChild.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                List<String> result = new ArrayList<>();
+                for (String existingChildId : (List<String>) fqr) {
+                    result.add(existingChildId);
+                }
+                return result;
+            }
+        };
+
+        List<String> result = (List<String>) rchImportFacilitatorDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("Database child query time {}", queryTimer.time());
+        return result;
+
+    }
+
+    private String queryIdListChildren(List<RchChildRecord> childRecords) {
+        StringBuilder stringBuilder = new StringBuilder();
+        int i = 0;
+        stringBuilder.append("(");
+        for (RchChildRecord childRecord: childRecords) {
+            if (i != 0) {
+                stringBuilder.append(", ");
+            }
+            stringBuilder.append(QUOTATION + childRecord.getRegistrationNo() + QUOTATION);
+            i++;
+        }
+        stringBuilder.append(")");
+
+        return stringBuilder.toString();
+    }
+
+
+    private List<String> getDatabaseAsha(final List<RchAnmAshaRecord> ashaRecords) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<String>> queryExecution = new SqlQueryExecution<List<String>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "SELECT mctsFlwId FROM nms_front_line_workers WHERE mctsFlwId IN " + queryIdListAsha(ashaRecords);
+                LOGGER.debug(SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public List<String> execute(Query query) {
+
+                query.setClass(FrontLineWorker.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                List<String> result = new ArrayList<>();
+                for (String existingAshaId : (List<String>) fqr) {
+                    result.add(existingAshaId);
+                }
+                return result;
+            }
+        };
+
+        List<String> result = (List<String>) rchImportFacilitatorDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("Database asha's query time {}", queryTimer.time());
+        return result;
+
+    }
+
+    private String queryIdListAsha(List<RchAnmAshaRecord> ashaRecords) {
+        StringBuilder stringBuilder = new StringBuilder();
+        int i = 0;
+        stringBuilder.append("(");
+        for (RchAnmAshaRecord ashaRecord: ashaRecords) {
+            if (i != 0) {
+                stringBuilder.append(", ");
+            }
+            stringBuilder.append(QUOTATION + ashaRecord.getGfId() + QUOTATION);
+            i++;
+        }
+        stringBuilder.append(")");
+
+        return stringBuilder.toString();
+    }
+
+
+
+
+
 }
+
+
+

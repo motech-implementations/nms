@@ -5,6 +5,7 @@ import org.motechproject.event.listener.EventRelay;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
 import org.motechproject.nms.api.web.contract.AddRchFlwRequest;
 import org.motechproject.nms.api.web.contract.UpdateFlwLocationRequest;
+import org.motechproject.nms.api.web.service.BeneficiaryUpdateService;
 import org.motechproject.nms.api.web.service.FlwCsvService;
 import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.kilkari.utils.FlwConstants;
@@ -26,7 +27,6 @@ import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 
 import org.motechproject.nms.rch.domain.RchUserType;
 import org.motechproject.nms.rch.service.RchWebServiceFacade;
-import org.motechproject.nms.region.service.LocationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,6 +84,9 @@ public class OpsController extends BaseController {
 
     @Autowired
     private RchWebServiceFacade rchWebServiceFacade;
+
+    @Autowired
+    private BeneficiaryUpdateService beneficiaryUpdateService;
 
     @Autowired
     private MctsWebServiceFacade mctsWebServiceFacade;
@@ -339,6 +342,29 @@ public class OpsController extends BaseController {
         locationService.createLocations(stateID, "Village", rchWebServiceFacade.getLocationFilesDirectory());
         locationService.createLocations(stateID, "VillageHealthSubFacility", rchWebServiceFacade.getLocationFilesDirectory());
 
+        return true;
+    }
+
+    @RequestMapping(value = "/updateLocations/{stateID}/{type}/{origin}",
+            method = RequestMethod.GET)
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public Boolean updateLocations(@PathVariable("stateID") Long stateID, @PathVariable("type") String type, @PathVariable("origin") String origin) throws IOException {
+        log("REQUEST: /ops/locUpdate", String.format(
+                "type=%s",
+                type));
+        if (mother.equalsIgnoreCase(type)) {
+            LOGGER.debug(mother);
+            beneficiaryUpdateService.rchBulkUpdate(stateID, RchUserType.MOTHER, origin);
+        } else if (child.equalsIgnoreCase(type)) {
+            LOGGER.debug(child);
+            beneficiaryUpdateService.rchBulkUpdate(stateID, RchUserType.CHILD, origin);
+        } else if (asha.equalsIgnoreCase(type)) {
+            LOGGER.debug(asha);
+            beneficiaryUpdateService.rchBulkUpdate(stateID, RchUserType.ASHA, origin);
+        } else {
+            LOGGER.debug("No such type");
+        }
         return true;
     }
 
