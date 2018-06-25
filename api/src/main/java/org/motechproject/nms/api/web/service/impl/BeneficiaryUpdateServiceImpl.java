@@ -1,6 +1,6 @@
 package org.motechproject.nms.api.web.service.impl;
 
-import org.apache.commons.fileupload.disk.DiskFileItem;
+import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -19,23 +19,30 @@ import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService;
 import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
+import org.motechproject.nms.mcts.service.MctsWebServiceFacade;
 import org.motechproject.nms.rch.domain.RchUserType;
 import org.motechproject.nms.rch.service.RchWebServiceFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 
 import javax.jdo.Query;
 import java.io.File;
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +70,9 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
     @Autowired
     private MctsBeneficiaryImportReaderService mctsBeneficiaryImportReaderService;
 
+    @Autowired
+    private MctsWebServiceFacade mctsWebServiceFacade;
+
 
     private static final String QUOTATION = "'";
     private static final String QUOTATION_COMMA = "', ";
@@ -71,13 +81,29 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
     private static final String CHILD_LOG_STRING = "List of child rejects in {}";
     private static final String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
     private final String mcts = "mcts";
-    private static final Integer REJECTION_PART_SIZE = 10000;
+    private static final Integer PARTITION_SIZE = 10000;
     private static final Logger LOGGER = LoggerFactory.getLogger(BeneficiaryUpdateServiceImpl.class);
 
     @Transactional
     public void rchBulkUpdate(Long stateId, RchUserType rchUserType, String origin) throws IOException {
 
         List<MultipartFile> rchImportFiles = findByStateIdAndRchUserType(stateId, rchUserType, origin);
+
+        Collections.sort(rchImportFiles, new Comparator<MultipartFile>() {
+            public int compare(MultipartFile m1, MultipartFile m2) {
+                Date file1Date,file2Date;
+                int flag = 1;
+                try {
+                    file1Date = getDateFromFileName(m1.getOriginalFilename());
+                    file2Date = getDateFromFileName(m2.getOriginalFilename());
+                    flag = file1Date.compareTo(file2Date);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                return flag; //ascending order
+            }
+        });
+
         for (MultipartFile rchImportFile : rchImportFiles) {
             try (InputStream in = rchImportFile.getInputStream()) {
 
@@ -98,29 +124,43 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
         }
     }
 
+    private Date getDateFromFileName(String fileName) throws ParseException {
+        String[] names = fileName.split("_");
+        String dateString = names[5].split(".")[0];
+        Date date = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss").parse(dateString);
+        return date;
+    }
+
     private List<MultipartFile> findByStateIdAndRchUserType(Long stateId, RchUserType rchUserType, String origin) throws IOException {
 
         ArrayList<MultipartFile> csvFilesByStateIdAndRchUserType = new ArrayList<>();
-        String locUpdateDir = rchWebServiceFacade.getFileLocation(origin);
-        File file = new File(locUpdateDir);
+        String locUpdateDir;
+        if(mcts.equalsIgnoreCase(origin)){
+            locUpdateDir = mctsWebServiceFacade.getBeneficiaryLocationUpdateDirectory();
+        } else {
+            locUpdateDir = rchWebServiceFacade.getBeneficiaryLocationUpdateDirectory();
+        }
 
+
+        File file = new File(locUpdateDir);
         File[] files = file.listFiles();
         if (files != null) {
             for(File f: files){
                 String[] fileNameSplitter =  f.getName().split("_");
                 if(Objects.equals(fileNameSplitter[3], stateId.toString()) && fileNameSplitter[4].equalsIgnoreCase(rchUserType.toString())){
                     try {
-                        DiskFileItem fileItem = new DiskFileItem("file", "text/plain", false,
-                                f.getName(), (int) f.length() , f.getParentFile());
-                        fileItem.getOutputStream();
-                        MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
+                        FileInputStream input = new FileInputStream(f);
+                        MultipartFile multipartFile = new MockMultipartFile("file",
+                                f.getName(), "text/plain", IOUtils.toByteArray(input));
                         csvFilesByStateIdAndRchUserType.add(multipartFile);
                     }catch(IOException e) {
                         LOGGER.debug("IO Exception", e);
                     }
+
                 }
             }
         }
+
         return csvFilesByStateIdAndRchUserType;
     }
 
@@ -247,15 +287,15 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
             @Override
             public String getSqlQuery() {
                 String query = "INSERT INTO nms_mcts_children (rchId, state_id_OID, district_id_OID, taluka_id_OID," +
-                        " healthBlock_id_OID, primaryHealthCentre_id_OID, healthSubFacility_id_OID, village_id_OID," +
+                        " healthBlock_id_OID, primaryHealthCenter_id_OID, healthSubFacility_id_OID, village_id_OID," +
                         " modifiedBy, modificationDate)  " +
                         "values  " +
                         updateQuerySet(updateObjects, rchUserType, origin) +
                         " ON DUPLICATE KEY UPDATE " +
                         "state_id_OID = VALUES(state_id_OID), district_id_OID = VALUES(district_id_OID)," +
                         " taluka_id_OID = VALUES(taluka_id_OID), healthBlock_id_OID = VALUES(healthBlock_id_OID)," +
-                        " primaryHealthCentre_id_OID = VALUES(primaryHealthCentre_id_OID), healthSubFacility_id_OID = VALUES(healthSubFacility_id_OID)," +
-                        " villageId = VALUES(villageId), modifiedBy = VALUES(modifiedBy), modificationDate = VALUES(modificationDate)";
+                        " primaryHealthCenter_id_OID = VALUES(primaryHealthCenter_id_OID), healthSubFacility_id_OID = VALUES(healthSubFacility_id_OID)," +
+                        " village_id_OID = VALUES(village_id_OID), modifiedBy = VALUES(modifiedBy), modificationDate = VALUES(modificationDate)";
 
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
@@ -283,15 +323,15 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
             @Override
             public String getSqlQuery() {
                 String query = "INSERT INTO nms_mcts_children (beneficiaryId, state_id_OID, district_id_OID, taluka_id_OID," +
-                        " healthBlock_id_OID, primaryHealthCentre_id_OID, healthSubFacility_id_OID, village_id_OID," +
+                        " healthBlock_id_OID, primaryHealthCenter_id_OID, healthSubFacility_id_OID, village_id_OID," +
                         " modifiedBy, modificationDate)  " +
                         "values  " +
                         updateQuerySet(updateObjects, rchUserType, origin) +
                         " ON DUPLICATE KEY UPDATE " +
                         "state_id_OID = VALUES(state_id_OID), district_id_OID = VALUES(district_id_OID)," +
                         " taluka_id_OID = VALUES(taluka_id_OID), healthBlock_id_OID = VALUES(healthBlock_id_OID)," +
-                        " primaryHealthCentre_id_OID = VALUES(primaryHealthCentre_id_OID), healthSubFacility_id_OID = VALUES(healthSubFacility_id_OID)," +
-                        " villageId = VALUES(villageId), modifiedBy = VALUES(modifiedBy), modificationDate = VALUES(modificationDate)";
+                        " primaryHealthCenter_id_OID = VALUES(primaryHealthCenter_id_OID), healthSubFacility_id_OID = VALUES(healthSubFacility_id_OID)," +
+                        " village_id_OID = VALUES(village_id_OID), modifiedBy = VALUES(modifiedBy), modificationDate = VALUES(modificationDate)";
 
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
@@ -319,15 +359,15 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
             @Override
             public String getSqlQuery() {
                 String query = "INSERT INTO nms_mcts_mothers (rchId, state_id_OID, district_id_OID, taluka_id_OID," +
-                        " healthBlock_id_OID, primaryHealthCentre_id_OID, healthSubFacility_id_OID, village_id_OID," +
+                        " healthBlock_id_OID, primaryHealthCenter_id_OID, healthSubFacility_id_OID, village_id_OID," +
                         " modifiedBy, modificationDate)  " +
                         "values  " +
                         updateQuerySet(updateObjects, rchUserType, origin) +
                         " ON DUPLICATE KEY UPDATE " +
                         "state_id_OID = VALUES(state_id_OID), district_id_OID = VALUES(district_id_OID)," +
                         " taluka_id_OID = VALUES(taluka_id_OID), healthBlock_id_OID = VALUES(healthBlock_id_OID)," +
-                        " primaryHealthCentre_id_OID = VALUES(primaryHealthCentre_id_OID), healthSubFacility_id_OID = VALUES(healthSubFacility_id_OID)," +
-                        " villageId = VALUES(villageId), modifiedBy = VALUES(modifiedBy), modificationDate = VALUES(modificationDate)";
+                        " primaryHealthCenter_id_OID = VALUES(primaryHealthCenter_id_OID), healthSubFacility_id_OID = VALUES(healthSubFacility_id_OID)," +
+                        " village_id_OID = VALUES(village_id_OID), modifiedBy = VALUES(modifiedBy), modificationDate = VALUES(modificationDate)";
 
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
@@ -355,15 +395,15 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
             @Override
             public String getSqlQuery() {
                 String query = "INSERT INTO nms_mcts_mothers (beneficiaryId, state_id_OID, district_id_OID, taluka_id_OID," +
-                        " healthBlock_id_OID, primaryHealthCentre_id_OID, healthSubFacility_id_OID, village_id_OID," +
+                        " healthBlock_id_OID, primaryHealthCenter_id_OID, healthSubFacility_id_OID, village_id_OID," +
                         " modifiedBy, modificationDate)  " +
                         "values  " +
                         updateQuerySet(updateObjects, rchUserType, origin) +
                         " ON DUPLICATE KEY UPDATE " +
                         "state_id_OID = VALUES(state_id_OID), district_id_OID = VALUES(district_id_OID)," +
                         " taluka_id_OID = VALUES(taluka_id_OID), healthBlock_id_OID = VALUES(healthBlock_id_OID)," +
-                        " primaryHealthCentre_id_OID = VALUES(primaryHealthCentre_id_OID), healthSubFacility_id_OID = VALUES(healthSubFacility_id_OID)," +
-                        " villageId = VALUES(villageId), modifiedBy = VALUES(modifiedBy), modificationDate = VALUES(modificationDate)";
+                        " primaryHealthCenter_id_OID = VALUES(primaryHealthCenter_id_OID), healthSubFacility_id_OID = VALUES(healthSubFacility_id_OID)," +
+                        " village_id_OID = VALUES(village_id_OID), modifiedBy = VALUES(modifiedBy), modificationDate = VALUES(modificationDate)";
 
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
@@ -388,7 +428,7 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
         Long sqlCount = 0L;
         while (count < updateObjects.size()) {
             List<Map<String, Object>> updateObjectsPart = new ArrayList<>();
-            while (updateObjectsPart.size() < REJECTION_PART_SIZE && count < updateObjects.size()) {
+            while (updateObjectsPart.size() < PARTITION_SIZE && count < updateObjects.size()) {
                 updateObjectsPart.add(updateObjects.get(count));
                 count++;
             }

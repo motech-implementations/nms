@@ -573,7 +573,7 @@ public class LocationServiceImpl implements LocationService {
                         locationFinder.setVillageHashMap(villageHashMap);
                     }
                     if (!healthBlockHashMap.isEmpty()) {
-                        fillHealthBlocks(healthBlockHashMap, talukaHashMap);
+                        fillHealthBlocks(healthBlockHashMap, districtHashMap);
                         locationFinder.setHealthBlockHashMap(healthBlockHashMap);
 
                         if (!healthFacilityHashMap.isEmpty()) {
@@ -1056,12 +1056,12 @@ public class LocationServiceImpl implements LocationService {
     }
 
 
-    private void fillHealthBlocks(Map<String, HealthBlock> healthBlockHashMap, final Map<String, Taluka> talukaHashMap) {
+    private void fillHealthBlocks(Map<String, HealthBlock> healthBlockHashMap, final Map<String, District> districtHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> healthBlockKeys = healthBlockHashMap.keySet();
-        Map<Long, String> talukaIdMap = new HashMap<>();
-        for (String talukaKey : talukaHashMap.keySet()) {
-            talukaIdMap.put(talukaHashMap.get(talukaKey).getId(), talukaKey);
+        Map<Long, String> districtIdMap = new HashMap<>();
+        for (String districtKey : districtHashMap.keySet()) {
+            districtIdMap.put(districtHashMap.get(districtKey).getId(), districtKey);
         }
 
         @SuppressWarnings("unchecked")
@@ -1069,15 +1069,13 @@ public class LocationServiceImpl implements LocationService {
 
             @Override
             public String getSqlQuery() {
-                String query = "SELECT b.* from nms_taluka_healthblock a " +
-                        "join nms_health_blocks b on a.healthblock_id = b.id" +
-                        "join nms_talukas c on a.taluka_id = c.id where";
+                String query = "SELECT * from nms_health_blocks where";
                 int count = healthBlockKeys.size();
                 for (String healthBlockString : healthBlockKeys) {
                     count--;
                     String[] ids = healthBlockString.split("_");
-                    Long talukaId = talukaHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]).getId();
-                    query += "(b.code = " + ids[3] +  " and c.id = " + talukaId + ")";
+                    Long districtId = districtHashMap.get(ids[0] + "_" + ids[1]).getId();
+                    query += "(code = " + ids[3] +  " and district_id_OID = " + districtId + ")";
                     if (count > 0) {
                         query += OR_SQL_STRING;
                     }
@@ -1104,10 +1102,9 @@ public class LocationServiceImpl implements LocationService {
         LOGGER.debug("HEALTHBLOCK Query time: {}", queryTimer.time());
         if(healthBlocks != null && !healthBlocks.isEmpty()) {
             for (HealthBlock healthBlock : healthBlocks) {
-                for (Taluka taluka : healthBlock.getTalukas()
-                     ) {
-                    String talukaKey = talukaIdMap.get(taluka.getId());
-                    healthBlockHashMap.put(talukaKey + "_" + healthBlock.getCode(), healthBlock);
+                for (Taluka taluka : healthBlock.getTalukas()) {
+                    String districtKey = districtIdMap.get(healthBlock.getDistrict().getId());
+                    healthBlockHashMap.put(districtKey + "_" + taluka.getCode() + "_" + healthBlock.getCode(), healthBlock);
                 }
             }
         }
