@@ -27,6 +27,7 @@ import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 
 import org.motechproject.nms.rch.domain.RchUserType;
 import org.motechproject.nms.rch.service.RchWebServiceFacade;
+import org.motechproject.nms.region.service.LocationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -331,17 +332,27 @@ public class OpsController extends BaseController {
             method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public Boolean createLocations(@PathVariable("stateID") Long stateID) throws IOException {
-
-        locationService.createLocations(stateID, "District", rchWebServiceFacade.getLocationFilesDirectory());
-        locationService.createLocations(stateID, "Taluka", rchWebServiceFacade.getLocationFilesDirectory());
-        locationService.createLocations(stateID, "HealthBlock", rchWebServiceFacade.getLocationFilesDirectory());
-        locationService.createLocations(stateID, "TalukaHealthBlock", rchWebServiceFacade.getLocationFilesDirectory());
-        locationService.createLocations(stateID, "HealthFacility", rchWebServiceFacade.getLocationFilesDirectory());
-        locationService.createLocations(stateID, "HealthSubFacility", rchWebServiceFacade.getLocationFilesDirectory());
-        locationService.createLocations(stateID, "Village", rchWebServiceFacade.getLocationFilesDirectory());
-        locationService.createLocations(stateID, "VillageHealthSubFacility", rchWebServiceFacade.getLocationFilesDirectory());
-
+    public Boolean createLocations(@PathVariable("stateID") Long stateID) {
+        String locationType = "District";
+        try {
+            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationType = "Taluka";
+            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationType = "HealthBlock";
+            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationType = "TalukaHealthBlock";
+            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationType = "HealthFacility";
+            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationType = "HealthSubFacility";
+            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationType = "Village";
+            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationType = "VillageHealthSubFacility";
+            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+        } catch (IOException e) {
+            LOGGER.error("{} Location File not Found. Exception: {}", locationType, e);
+        }
         return true;
     }
 
