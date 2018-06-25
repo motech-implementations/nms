@@ -91,7 +91,8 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
 
         Collections.sort(rchImportFiles, new Comparator<MultipartFile>() {
             public int compare(MultipartFile m1, MultipartFile m2) {
-                Date file1Date,file2Date;
+                Date file1Date;
+                Date file2Date;
                 int flag = 1;
                 try {
                     file1Date = getDateFromFileName(m1.getOriginalFilename());
