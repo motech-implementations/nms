@@ -72,6 +72,11 @@
             <artifactId>rch</artifactId>
             <version>1.0.36</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <scope>compile</scope>
+        </dependency>
 
     </dependencies>
 
