@@ -51,6 +51,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.rpc.ServiceException;
 import java.net.URL;
 import java.rmi.RemoteException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.io.File;
 import java.io.FileInputStream;
@@ -59,6 +60,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -186,6 +189,23 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
     public void locationUpdateInTableFromCsv(Long stateId, MctsUserType mctsUserType) throws IOException {
 
         List<MultipartFile> mctsImportFiles = findByStateIdAndMctsUserType(stateId, mctsUserType);
+
+        Collections.sort(mctsImportFiles, new Comparator<MultipartFile>() {
+            public int compare(MultipartFile m1, MultipartFile m2) {
+                Date file1Date;
+                Date file2Date;
+                int flag = 1;
+                try {
+                    file1Date = getDateFromFileName(m1.getOriginalFilename());
+                    file2Date = getDateFromFileName(m2.getOriginalFilename());
+                    flag = file1Date.compareTo(file2Date);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                return flag; //ascending order
+            }
+        });
+
         for (MultipartFile mctsImportFile : mctsImportFiles) {
             try (InputStream in = mctsImportFile.getInputStream()) {
 
@@ -524,43 +544,42 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
 
     private void csvWriterKilkari(List<Map<String, Object>> locArrList, Long stateId, MctsUserType mctsUserType) throws IOException { //NO CHECKSTYLE Cyclomatic Complexity //NOPMD NcssMethodCount
 
-        File csvFile = csvWriter(stateId, mctsUserType);
-
         if (!locArrList.isEmpty()) {
+            File csvFile = csvWriter(stateId, mctsUserType);
             FileWriter writer;
             writer = new FileWriter(csvFile, true);
 
+            writer.write(KilkariConstants.BENEFICIARY_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.STATE_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.DISTRICT_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.DISTRICT_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.TALUKA_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.TALUKA_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.HEALTH_BLOCK_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.HEALTH_BLOCK_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.PHC_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.PHC_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.SUB_CENTRE_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.SUB_CENTRE_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.CENSUS_VILLAGE_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.VILLAGE_NAME);
+            writer.write(NEXT_LINE);
+
             for (Map<String, Object> map : locArrList
                     ) {
-
-                writer.write(KilkariConstants.BENEFICIARY_ID);
-                writer.write(TAB);
-                writer.write(KilkariConstants.STATE_ID);
-                writer.write(TAB);
-                writer.write(KilkariConstants.DISTRICT_ID);
-                writer.write(TAB);
-                writer.write(KilkariConstants.DISTRICT_NAME);
-                writer.write(TAB);
-                writer.write(KilkariConstants.TALUKA_ID);
-                writer.write(TAB);
-                writer.write(KilkariConstants.TALUKA_NAME);
-                writer.write(TAB);
-                writer.write(KilkariConstants.HEALTH_BLOCK_ID);
-                writer.write(TAB);
-                writer.write(KilkariConstants.HEALTH_BLOCK_NAME);
-                writer.write(TAB);
-                writer.write(KilkariConstants.PHC_ID);
-                writer.write(TAB);
-                writer.write(KilkariConstants.PHC_NAME);
-                writer.write(TAB);
-                writer.write(KilkariConstants.SUB_CENTRE_ID);
-                writer.write(TAB);
-                writer.write(KilkariConstants.SUB_CENTRE_NAME);
-                writer.write(TAB);
-                writer.write(KilkariConstants.CENSUS_VILLAGE_ID);
-                writer.write(TAB);
-                writer.write(KilkariConstants.VILLAGE_NAME);
-                writer.write(NEXT_LINE);
                 writer.write(map.get(KilkariConstants.BENEFICIARY_ID).toString());
                 writer.write(TAB);
                 writer.write(map.get(KilkariConstants.STATE_ID).toString());
@@ -569,25 +588,25 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                 writer.write(TAB);
                 writer.write(map.get(KilkariConstants.DISTRICT_NAME).toString());
                 writer.write(TAB);
-                writer.write(map.get(KilkariConstants.TALUKA_ID) == null ? NULL : map.get(KilkariConstants.TALUKA_ID).toString());
+                writer.write(map.get(KilkariConstants.TALUKA_ID) == null ? "" : map.get(KilkariConstants.TALUKA_ID).toString());
                 writer.write(TAB);
-                writer.write(map.get(KilkariConstants.TALUKA_NAME) == null ? NULL : map.get(KilkariConstants.TALUKA_NAME).toString());
+                writer.write(map.get(KilkariConstants.TALUKA_NAME) == null ? "" : map.get(KilkariConstants.TALUKA_NAME).toString());
                 writer.write(TAB);
-                writer.write(map.get(KilkariConstants.HEALTH_BLOCK_ID) == null ? NULL : map.get(KilkariConstants.HEALTH_BLOCK_ID).toString());
+                writer.write(map.get(KilkariConstants.HEALTH_BLOCK_ID) == null ? "" : map.get(KilkariConstants.HEALTH_BLOCK_ID).toString());
                 writer.write(TAB);
-                writer.write(map.get(KilkariConstants.HEALTH_BLOCK_NAME) == null ? NULL : map.get(KilkariConstants.HEALTH_BLOCK_NAME).toString());
+                writer.write(map.get(KilkariConstants.HEALTH_BLOCK_NAME) == null ? "" : map.get(KilkariConstants.HEALTH_BLOCK_NAME).toString());
                 writer.write(TAB);
-                writer.write(map.get(KilkariConstants.PHC_ID) == null ? NULL : map.get(KilkariConstants.PHC_ID).toString());
+                writer.write(map.get(KilkariConstants.PHC_ID) == null ? "" : map.get(KilkariConstants.PHC_ID).toString());
                 writer.write(TAB);
-                writer.write(map.get(KilkariConstants.PHC_NAME) == null ? NULL : map.get(KilkariConstants.PHC_NAME).toString());
+                writer.write(map.get(KilkariConstants.PHC_NAME) == null ? "" : map.get(KilkariConstants.PHC_NAME).toString());
                 writer.write(TAB);
-                writer.write(map.get(KilkariConstants.SUB_CENTRE_ID) == null ? NULL : map.get(KilkariConstants.SUB_CENTRE_ID).toString());
+                writer.write(map.get(KilkariConstants.SUB_CENTRE_ID) == null ? "" : map.get(KilkariConstants.SUB_CENTRE_ID).toString());
                 writer.write(TAB);
-                writer.write(map.get(KilkariConstants.SUB_CENTRE_NAME) == null ? NULL : map.get(KilkariConstants.SUB_CENTRE_NAME).toString());
+                writer.write(map.get(KilkariConstants.SUB_CENTRE_NAME) == null ? "" : map.get(KilkariConstants.SUB_CENTRE_NAME).toString());
                 writer.write(TAB);
-                writer.write(map.get(KilkariConstants.CENSUS_VILLAGE_ID) == null ? NULL : map.get(KilkariConstants.CENSUS_VILLAGE_ID).toString());
+                writer.write(map.get(KilkariConstants.CENSUS_VILLAGE_ID) == null ? "" : map.get(KilkariConstants.CENSUS_VILLAGE_ID).toString());
                 writer.write(TAB);
-                writer.write(map.get(KilkariConstants.VILLAGE_NAME) == null ? NULL : map.get(KilkariConstants.VILLAGE_NAME).toString());
+                writer.write(map.get(KilkariConstants.VILLAGE_NAME) == null ? "" : map.get(KilkariConstants.VILLAGE_NAME).toString());
                 writer.write(NEXT_LINE);
             }
 
@@ -597,43 +616,42 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
 
     private void csvWriterAsha(List<Map<String, Object>> locArrList, Long stateId, MctsUserType mctsUserType) throws IOException { //NO CHECKSTYLE Cyclomatic Complexity //NOPMD NcssMethodCount
 
-        File csvFile = csvWriter(stateId, mctsUserType);
-
         if (!locArrList.isEmpty()) {
+            File csvFile = csvWriter(stateId, mctsUserType);
             FileWriter writer;
             writer = new FileWriter(csvFile, true);
 
+            writer.write(FlwConstants.ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.STATE_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.DISTRICT_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.DISTRICT_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.TALUKA_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.TALUKA_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.HEALTH_BLOCK_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.HEALTH_BLOCK_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.PHC_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.PHC_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.SUB_CENTRE_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.SUB_CENTRE_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.CENSUS_VILLAGE_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.VILLAGE_NAME);
+            writer.write(NEXT_LINE);
+
             for (Map<String, Object> map : locArrList
                     ) {
-
-                writer.write(FlwConstants.ID);
-                writer.write(TAB);
-                writer.write(FlwConstants.STATE_ID);
-                writer.write(TAB);
-                writer.write(FlwConstants.DISTRICT_ID);
-                writer.write(TAB);
-                writer.write(FlwConstants.DISTRICT_NAME);
-                writer.write(TAB);
-                writer.write(FlwConstants.TALUKA_ID);
-                writer.write(TAB);
-                writer.write(FlwConstants.TALUKA_NAME);
-                writer.write(TAB);
-                writer.write(FlwConstants.HEALTH_BLOCK_ID);
-                writer.write(TAB);
-                writer.write(FlwConstants.HEALTH_BLOCK_NAME);
-                writer.write(TAB);
-                writer.write(FlwConstants.PHC_ID);
-                writer.write(TAB);
-                writer.write(FlwConstants.PHC_NAME);
-                writer.write(TAB);
-                writer.write(FlwConstants.SUB_CENTRE_ID);
-                writer.write(TAB);
-                writer.write(FlwConstants.SUB_CENTRE_NAME);
-                writer.write(TAB);
-                writer.write(FlwConstants.CENSUS_VILLAGE_ID);
-                writer.write(TAB);
-                writer.write(FlwConstants.VILLAGE_NAME);
-                writer.write(NEXT_LINE);
                 writer.write(map.get(FlwConstants.ID).toString());
                 writer.write(TAB);
                 writer.write(map.get(FlwConstants.STATE_ID).toString());
@@ -642,23 +660,23 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                 writer.write(TAB);
                 writer.write(map.get(FlwConstants.DISTRICT_NAME).toString());
                 writer.write(TAB);
-                writer.write(map.get(FlwConstants.TALUKA_ID) == null ? NULL : map.get(FlwConstants.TALUKA_ID).toString());
+                writer.write(map.get(FlwConstants.TALUKA_ID) == null ? "" : map.get(FlwConstants.TALUKA_ID).toString());
                 writer.write(TAB);
-                writer.write(map.get(FlwConstants.TALUKA_NAME) == null ? NULL : map.get(FlwConstants.TALUKA_NAME).toString());
+                writer.write(map.get(FlwConstants.TALUKA_NAME) == null ? "" : map.get(FlwConstants.TALUKA_NAME).toString());
                 writer.write(TAB);
-                writer.write(map.get(FlwConstants.HEALTH_BLOCK_ID) == null ? NULL : map.get(FlwConstants.HEALTH_BLOCK_ID).toString());
+                writer.write(map.get(FlwConstants.HEALTH_BLOCK_ID) == null ? "" : map.get(FlwConstants.HEALTH_BLOCK_ID).toString());
                 writer.write(TAB);
-                writer.write(map.get(FlwConstants.HEALTH_BLOCK_NAME) == null ? NULL : map.get(FlwConstants.HEALTH_BLOCK_NAME).toString());
+                writer.write(map.get(FlwConstants.HEALTH_BLOCK_NAME) == null ? "" : map.get(FlwConstants.HEALTH_BLOCK_NAME).toString());
                 writer.write(TAB);
-                writer.write(map.get(FlwConstants.PHC_ID) == null ? NULL : map.get(FlwConstants.PHC_ID).toString());
+                writer.write(map.get(FlwConstants.PHC_ID) == null ? "" : map.get(FlwConstants.PHC_ID).toString());
                 writer.write(TAB);
-                writer.write(map.get(FlwConstants.PHC_NAME) == null ? NULL : map.get(FlwConstants.PHC_NAME).toString());
+                writer.write(map.get(FlwConstants.PHC_NAME) == null ? "" : map.get(FlwConstants.PHC_NAME).toString());
                 writer.write(TAB);
-                writer.write(map.get(FlwConstants.SUB_CENTRE_ID) == null ? NULL : map.get(FlwConstants.SUB_CENTRE_ID).toString());
+                writer.write(map.get(FlwConstants.SUB_CENTRE_ID) == null ? "" : map.get(FlwConstants.SUB_CENTRE_ID).toString());
                 writer.write(TAB);
-                writer.write(map.get(FlwConstants.SUB_CENTRE_NAME) == null ? NULL : map.get(FlwConstants.SUB_CENTRE_NAME).toString());
+                writer.write(map.get(FlwConstants.SUB_CENTRE_NAME) == null ? "" : map.get(FlwConstants.SUB_CENTRE_NAME).toString());
                 writer.write(TAB);
-                writer.write(map.get(FlwConstants.CENSUS_VILLAGE_ID) == null ? NULL : map.get(FlwConstants.CENSUS_VILLAGE_ID).toString());
+                writer.write(map.get(FlwConstants.CENSUS_VILLAGE_ID) == null ? "" : map.get(FlwConstants.CENSUS_VILLAGE_ID).toString());
                 writer.write(TAB);
                 writer.write(map.get(FlwConstants.VILLAGE_NAME) == null ? NULL : map.get(FlwConstants.VILLAGE_NAME).toString());
                 writer.write(NEXT_LINE);
@@ -811,6 +829,13 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
         stringBuilder.append(")");
 
         return stringBuilder.toString();
+    }
+
+    private Date getDateFromFileName(String fileName) throws ParseException {
+        String[] names = fileName.split("_");
+        String dateString = names[5].split(".csv")[0];
+        Date date = new SimpleDateFormat(DATE_FORMAT).parse(dateString);
+        return date;
     }
 
 }

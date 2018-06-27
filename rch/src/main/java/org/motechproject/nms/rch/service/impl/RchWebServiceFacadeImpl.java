@@ -1254,6 +1254,23 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     public void locationUpdateInTableFromCsv(Long stateId, RchUserType rchUserType) throws IOException {
 
             List<MultipartFile> rchImportFiles = findByStateIdAndRchUserType(stateId, rchUserType);
+
+            Collections.sort(rchImportFiles, new Comparator<MultipartFile>() {
+                public int compare(MultipartFile m1, MultipartFile m2) {
+                    Date file1Date;
+                    Date file2Date;
+                    int flag = 1;
+                    try {
+                        file1Date = getDateFromFileName(m1.getOriginalFilename());
+                        file2Date = getDateFromFileName(m2.getOriginalFilename());
+                        flag = file1Date.compareTo(file2Date);
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    return flag; //ascending order
+                }
+            });
+
             for (MultipartFile rchImportFile : rchImportFiles) {
                     try (InputStream in = rchImportFile.getInputStream()) {
 
@@ -1490,7 +1507,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 if (existingAshaIds.contains(rchAnmAshaRecord.getGfId().toString())) {
                     Map<String, Object> locMap = new HashMap<>();
                     toMapLoc(locMap, rchAnmAshaRecord);
-                    locMap.put("Flw_Id", rchAnmAshaRecord.getGfId());
+                    locMap.put(FlwConstants.ID, rchAnmAshaRecord.getGfId());
                     locArrList.add(locMap);
                 }
             }
@@ -1612,7 +1629,11 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         for (Map<String, Object> record : locArrList
                 ) {
             Map<String, Object> updatedMap = setLocationFields(locationFinder, record);
-            updatedMap.put(KilkariConstants.RCH_ID, record.get(KilkariConstants.RCH_ID));
+            if("asha".equalsIgnoreCase(rchUserType.toString())){
+                updatedMap.put(FlwConstants.ID, record.get(FlwConstants.ID));
+            }else {
+                updatedMap.put(KilkariConstants.RCH_ID, record.get(KilkariConstants.RCH_ID));
+            }
             updatedLocArrList.add(updatedMap);
         }
 
@@ -1644,43 +1665,42 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private void csvWriterKilkari(List<Map<String, Object>> locArrList, Long stateId, RchUserType rchUserType) throws IOException { //NO CHECKSTYLE Cyclomatic Complexity //NOPMD NcssMethodCount
 
-        File csvFile = csvWriter(stateId, rchUserType);
-
         if (!locArrList.isEmpty()) {
+            File csvFile = csvWriter(stateId, rchUserType);
             FileWriter writer;
             writer = new FileWriter(csvFile, true);
 
+            writer.write(KilkariConstants.RCH_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.STATE_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.DISTRICT_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.DISTRICT_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.TALUKA_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.TALUKA_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.HEALTH_BLOCK_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.HEALTH_BLOCK_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.PHC_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.PHC_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.SUB_CENTRE_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.SUB_CENTRE_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.CENSUS_VILLAGE_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.VILLAGE_NAME);
+            writer.write(NEXT_LINE);
+
             for (Map<String, Object> map : locArrList
                     ) {
-
-                writer.write(KilkariConstants.RCH_ID);
-                writer.write(TAB);
-                writer.write(KilkariConstants.STATE_ID);
-                writer.write(TAB);
-                writer.write(KilkariConstants.DISTRICT_ID);
-                writer.write(TAB);
-                writer.write(KilkariConstants.DISTRICT_NAME);
-                writer.write(TAB);
-                writer.write(KilkariConstants.TALUKA_ID);
-                writer.write(TAB);
-                writer.write(KilkariConstants.TALUKA_NAME);
-                writer.write(TAB);
-                writer.write(KilkariConstants.HEALTH_BLOCK_ID);
-                writer.write(TAB);
-                writer.write(KilkariConstants.HEALTH_BLOCK_NAME);
-                writer.write(TAB);
-                writer.write(KilkariConstants.PHC_ID);
-                writer.write(TAB);
-                writer.write(KilkariConstants.PHC_NAME);
-                writer.write(TAB);
-                writer.write(KilkariConstants.SUB_CENTRE_ID);
-                writer.write(TAB);
-                writer.write(KilkariConstants.SUB_CENTRE_NAME);
-                writer.write(TAB);
-                writer.write(KilkariConstants.CENSUS_VILLAGE_ID);
-                writer.write(TAB);
-                writer.write(KilkariConstants.VILLAGE_NAME);
-                writer.write(NEXT_LINE);
                 writer.write(map.get(KilkariConstants.RCH_ID).toString());
                 writer.write(TAB);
                 writer.write(map.get(KilkariConstants.STATE_ID).toString());
@@ -1717,43 +1737,42 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private void csvWriterAsha(List<Map<String, Object>> locArrList, Long stateId, RchUserType rchUserType) throws IOException { //NO CHECKSTYLE Cyclomatic Complexity //NOPMD NcssMethodCount
 
-        File csvFile = csvWriter(stateId, rchUserType);
 
         if (!locArrList.isEmpty()) {
+            File csvFile = csvWriter(stateId, rchUserType);
             FileWriter writer;
             writer = new FileWriter(csvFile, true);
 
+            writer.write(FlwConstants.ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.STATE_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.DISTRICT_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.DISTRICT_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.TALUKA_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.TALUKA_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.HEALTH_BLOCK_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.HEALTH_BLOCK_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.PHC_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.PHC_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.SUB_CENTRE_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.SUB_CENTRE_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.CENSUS_VILLAGE_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.VILLAGE_NAME);
+            writer.write(NEXT_LINE);
             for (Map<String, Object> map : locArrList
                     ) {
-
-                writer.write(FlwConstants.ID);
-                writer.write(TAB);
-                writer.write(FlwConstants.STATE_ID);
-                writer.write(TAB);
-                writer.write(FlwConstants.DISTRICT_ID);
-                writer.write(TAB);
-                writer.write(FlwConstants.DISTRICT_NAME);
-                writer.write(TAB);
-                writer.write(FlwConstants.TALUKA_ID);
-                writer.write(TAB);
-                writer.write(FlwConstants.TALUKA_NAME);
-                writer.write(TAB);
-                writer.write(FlwConstants.HEALTH_BLOCK_ID);
-                writer.write(TAB);
-                writer.write(FlwConstants.HEALTH_BLOCK_NAME);
-                writer.write(TAB);
-                writer.write(FlwConstants.PHC_ID);
-                writer.write(TAB);
-                writer.write(FlwConstants.PHC_NAME);
-                writer.write(TAB);
-                writer.write(FlwConstants.SUB_CENTRE_ID);
-                writer.write(TAB);
-                writer.write(FlwConstants.SUB_CENTRE_NAME);
-                writer.write(TAB);
-                writer.write(FlwConstants.CENSUS_VILLAGE_ID);
-                writer.write(TAB);
-                writer.write(FlwConstants.VILLAGE_NAME);
-                writer.write(NEXT_LINE);
                 writer.write(map.get(FlwConstants.ID).toString());
                 writer.write(TAB);
                 writer.write(map.get(FlwConstants.STATE_ID).toString());
@@ -1934,8 +1953,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private Date getDateFromFileName(String fileName) throws ParseException {
         String[] names = fileName.split("_");
-        String dateString = names[5].split(".")[0];
-        Date date = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss").parse(dateString);
+        String dateString = names[5].split(".csv")[0];
+        Date date = new SimpleDateFormat(DATE_FORMAT).parse(dateString);
         return date;
     }
 
