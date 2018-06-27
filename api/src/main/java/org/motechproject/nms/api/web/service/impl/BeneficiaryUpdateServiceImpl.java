@@ -80,7 +80,8 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
     private static final String SQL_QUERY_LOG = "SQL QUERY: {}";
     private static final String CHILD_LOG_STRING = "List of child rejects in {}";
     private static final String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
-    private final String mcts = "mcts";
+    private static final String DATE_FORMAT_STRING_FOR_CSV_FILE = "yyyy-MM-dd HH:mm:ss.SSS";
+    private static final String MCTS = "mcts";
     private static final Integer PARTITION_SIZE = 10000;
     private static final Logger LOGGER = LoggerFactory.getLogger(BeneficiaryUpdateServiceImpl.class);
 
@@ -127,8 +128,8 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
 
     private Date getDateFromFileName(String fileName) throws ParseException {
         String[] names = fileName.split("_");
-        String dateString = names[5].split(".")[0];
-        Date date = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss").parse(dateString);
+        String dateString = names[5].split(".csv")[0];
+        Date date = new SimpleDateFormat(DATE_FORMAT_STRING_FOR_CSV_FILE).parse(dateString);
         return date;
     }
 
@@ -136,7 +137,7 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
 
         ArrayList<MultipartFile> csvFilesByStateIdAndRchUserType = new ArrayList<>();
         String locUpdateDir;
-        if(mcts.equalsIgnoreCase(origin)){
+        if(MCTS.equalsIgnoreCase(origin)){
             locUpdateDir = mctsWebServiceFacade.getBeneficiaryLocationUpdateDirectory();
         } else {
             locUpdateDir = rchWebServiceFacade.getBeneficiaryLocationUpdateDirectory();
@@ -198,7 +199,7 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
         Map<String, CellProcessor> mapping = new HashMap<>();
 
         MctsBeneficiaryUtils.getBeneficiaryLocationMapping(mapping);
-        if(mcts.equalsIgnoreCase(origin)){
+        if(MCTS.equalsIgnoreCase(origin)){
             mapping.put(KilkariConstants.BENEFICIARY_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
         } else {
             mapping.put(KilkariConstants.RCH_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
@@ -223,7 +224,7 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
                         "state_id_OID = VALUES(state_id_OID), district_id_OID = VALUES(district_id_OID)," +
                         " taluka_id_OID = VALUES(taluka_id_OID), healthBlock_id_OID = VALUES(healthBlock_id_OID)," +
                         " healthFacility_id_OID = VALUES(healthFacility_id_OID), healthSubFacility_id_OID = VALUES(healthSubFacility_id_OID)," +
-                        " villageId = VALUES(villageId), modifiedBy = VALUES(modifiedBy), modificationDate = VALUES(modificationDate)";
+                        " village_id_OID = VALUES(village_id_OID), modifiedBy = VALUES(modifiedBy), modificationDate = VALUES(modificationDate)";
 
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
@@ -259,7 +260,7 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
                         "state_id_OID = VALUES(state_id_OID), district_id_OID = VALUES(district_id_OID)," +
                         " taluka_id_OID = VALUES(taluka_id_OID), healthBlock_id_OID = VALUES(healthBlock_id_OID)," +
                         " healthFacility_id_OID = VALUES(healthFacility_id_OID), healthSubFacility_id_OID = VALUES(healthSubFacility_id_OID)," +
-                        " villageId = VALUES(villageId), modifiedBy = VALUES(modifiedBy), modificationDate = VALUES(modificationDate)";
+                        " village_id_OID = VALUES(village_id_OID), modifiedBy = VALUES(modifiedBy), modificationDate = VALUES(modificationDate)";
 
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
@@ -435,19 +436,19 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
             }
 
             if(rchUserType == RchUserType.MOTHER ){
-                if (mcts.equalsIgnoreCase(origin)){
+                if (MCTS.equalsIgnoreCase(origin)){
                     sqlCount += mctsBulkUpdateMother(updateObjects, rchUserType, origin);
                 } else {
                     sqlCount += rchBulkUpdateMother(updateObjects, rchUserType, origin);
                 }
             } else if (rchUserType == RchUserType.CHILD){
-                if (mcts.equalsIgnoreCase(origin)){
+                if (MCTS.equalsIgnoreCase(origin)){
                     sqlCount += mctsBulkUpdateChild(updateObjects, rchUserType, origin);
                 } else {
                     sqlCount += rchBulkUpdateChild(updateObjects, rchUserType, origin);
                 }
             } else{
-                if (mcts.equalsIgnoreCase(origin)){
+                if (MCTS.equalsIgnoreCase(origin)){
                     sqlCount += mctsBulkUpdateAsha(updateObjects, rchUserType, origin);
                 } else {
                     sqlCount += rchBulkUpdateAsha(updateObjects, rchUserType, origin);
@@ -498,7 +499,7 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
     private StringBuilder addLocationsKilkari(StringBuilder stringBuilder, Map<String, Object> updateObject, String origin) {
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
-        if(mcts.equalsIgnoreCase(origin)){
+        if(MCTS.equalsIgnoreCase(origin)){
             stringBuilder.append(QUOTATION + updateObject.get(KilkariConstants.BENEFICIARY_ID) + QUOTATION_COMMA);
         } else {
             stringBuilder.append(QUOTATION + updateObject.get(KilkariConstants.RCH_ID) + QUOTATION_COMMA);

@@ -913,7 +913,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         mapping.put(FlwConstants.GF_ID, new Optional(new GetLong()));
         mapping.put(FlwConstants.GF_NAME, new Optional(new GetString()));
 
-        mapping.put(FlwConstants.GF_TYPE, new Optional(new GetLong()));
+        mapping.put(FlwConstants.GF_TYPE, new Optional(new GetString()));
         mapping.put(FlwConstants.GF_STATUS, new Optional(new GetString()));
 
         return mapping;
