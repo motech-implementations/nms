@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.motechproject.nms.region.utils.LocationConstants.CSV_STATE_ID;
 import static org.motechproject.nms.region.utils.LocationConstants.OR_SQL_STRING;
-import static org.motechproject.nms.region.utils.LocationConstants.STATE_ID;
 
 @Service("stateService")
 public class StateServiceImpl implements StateService {
@@ -66,7 +66,7 @@ public class StateServiceImpl implements StateService {
     public Map<String, State> fillStateIds(List<Map<String, Object>> recordList) {
         final Set<String> stateKeys = new HashSet<>();
         for(Map<String, Object> record : recordList) {
-            stateKeys.add(record.get(STATE_ID).toString());
+            stateKeys.add(record.get(CSV_STATE_ID).toString());
         }
         Map<String, State> stateHashMap = new HashMap<>();
         Timer queryTimer = new Timer();
