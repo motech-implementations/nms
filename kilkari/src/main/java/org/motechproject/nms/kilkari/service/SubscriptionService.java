@@ -81,7 +81,7 @@ public interface SubscriptionService {
      * Activate the all pending subscriptions up to (but not including) the given date/time
      * @param upToDateTime The date/time up to which all pending subscriptions will be activated
      */
-    void activatePendingSubscriptionsUpTo(final DateTime upToDateTime);
+    Boolean activatePendingSubscriptionsUpTo(final DateTime upToDateTime, long maxActiveSubscriptions);
 
     /**
      * Based on the maxAllowed active subscriptions in the system, toggle mcts creation to true or false
