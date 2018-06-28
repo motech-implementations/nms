@@ -7,7 +7,6 @@ import org.motechproject.mds.filter.Filters;
 import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService;
-import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 import org.motechproject.nms.region.domain.State;
@@ -49,9 +48,6 @@ public class BundleIT extends BasePaxIT {
 
     @Inject
     DistrictDataService districtDataService;
-
-    @Inject
-    MctsBeneficiaryImportService mctsBeneficiaryImportService;
 
     @Inject
     MctsBeneficiaryImportReaderService mctsBeneficiaryImportReaderService;
@@ -110,7 +106,7 @@ public class BundleIT extends BasePaxIT {
         transactionManager.commit(status);
 
         timer.reset();
-        mctsBeneficiaryImportService.importMotherData(new InputStreamReader(new FileInputStream(file)), SubscriptionOrigin.MCTS_IMPORT);
+        mctsBeneficiaryImportReaderService.importMotherData(new InputStreamReader(new FileInputStream(file)), SubscriptionOrigin.MCTS_IMPORT);
         getLogger().debug("Imported {}", timer.frequency(TEST_COUNT));
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());

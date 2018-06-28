@@ -8,4 +8,6 @@ import java.io.Reader;
 public interface MctsBeneficiaryImportReaderService {
 
     int importChildData(Reader reader, SubscriptionOrigin origin) throws IOException;
+
+    int importMotherData(Reader reader, SubscriptionOrigin importOrigin) throws IOException;
 }

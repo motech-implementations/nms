@@ -20,7 +20,6 @@ import org.motechproject.nms.testing.it.imi.ImiControllerObdBundleIT;
 import org.motechproject.nms.testing.it.imi.TargetFileServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.CsrServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.MctsBeneficiaryImportServiceBundleIT;
-import org.motechproject.nms.testing.it.kilkari.MctsBeneficiaryUpdateServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.RchBeneficiaryImportServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.SubscriberServiceBundleIT;
 import org.motechproject.nms.testing.it.kilkari.SubscriptionServiceBundleIT;
@@ -82,7 +81,6 @@ import org.motechproject.nms.testing.it.tracking.TrackOneToManyChangesBundleIT;
     SubscriberServiceBundleIT.class,
     CsrServiceBundleIT.class,
     MctsBeneficiaryImportServiceBundleIT.class,
-    MctsBeneficiaryUpdateServiceBundleIT.class,
 
     /**
      * Mobile Academy
