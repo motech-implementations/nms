@@ -66,6 +66,8 @@ public final class KilkariConstants {
     public static final String EXECUTION_DATE = "Exec_date";
     public static final String MCTS_CHILD = "Mcts_Child";
     public static final String RCH_CHILD = "Rch_Child";
+    public static final String MCTS_MOTHER = "Mcts_Mother";
+    public static final String RCH_MOTHER = "Rch_Mother";
 
     public static final String CREATE = "CREATE";
     public static final String UPDATE = "UPDATE";
@@ -87,6 +89,8 @@ public final class KilkariConstants {
     public static final String MAPPER_SUBCENTRE = "SubCentre_ID";
     public static final String MAPPER_CENSUS_VILLAGE = "Village_ID";
     public static final String MAPPER_NON_CENSUS_VILLAGE = "SVID";
+
+    public static final String INVALID_LOCATION = "<%s - %s : Invalid location>";
 
     // Time format constants
     public static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.S");

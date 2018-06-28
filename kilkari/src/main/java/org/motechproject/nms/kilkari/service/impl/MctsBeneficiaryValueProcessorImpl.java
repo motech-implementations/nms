@@ -6,14 +6,20 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.DateTimeParser;
+import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
+import org.motechproject.nms.region.domain.LocationFinder;
+import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import javax.jdo.annotations.Transactional;
+import java.util.Map;
 
 @Service("mctsBeneficiaryValueProcessor")
 public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValueProcessor {
@@ -227,6 +233,61 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
             return (long) 0;
         }
         return Long.parseLong(msisdn);
+    }
+
+    @Override
+    @Transactional
+    public void setLocationFieldsCSV(LocationFinder locationFinder, Map<String, Object> record, MctsBeneficiary beneficiary) throws InvalidLocationException {
+
+        StringBuffer mapKey = new StringBuffer(record.get(KilkariConstants.STATE_ID).toString());
+        if (isValidID(record, KilkariConstants.STATE_ID) && (locationFinder.getStateHashMap().get(mapKey.toString()) != null)) {
+            beneficiary.setState(locationFinder.getStateHashMap().get(mapKey.toString()));
+            String districtCode = record.get(KilkariConstants.DISTRICT_ID).toString();
+            mapKey.append("_");
+            mapKey.append(districtCode);
+
+            if (isValidID(record, KilkariConstants.DISTRICT_ID) && (locationFinder.getDistrictHashMap().get(mapKey.toString()) != null)) {
+                beneficiary.setDistrict(locationFinder.getDistrictHashMap().get(mapKey.toString()));
+                Long talukaCode = Long.parseLong(record.get(KilkariConstants.TALUKA_ID).toString());
+                mapKey.append("_");
+                mapKey.append(talukaCode);
+                beneficiary.setTaluka(locationFinder.getTalukaHashMap().get(mapKey.toString()));
+
+                String villageSvid = record.get(KilkariConstants.NON_CENSUS_VILLAGE_ID) == null ? "0" : record.get(KilkariConstants.NON_CENSUS_VILLAGE_ID).toString();
+                String villageCode = record.get(KilkariConstants.CENSUS_VILLAGE_ID) == null ? "0" : record.get(KilkariConstants.CENSUS_VILLAGE_ID).toString();
+                String healthBlockCode = record.get(KilkariConstants.HEALTH_BLOCK_ID) == null ? "0" : record.get(KilkariConstants.HEALTH_BLOCK_ID).toString();
+                String healthFacilityCode = record.get(KilkariConstants.PHC_ID) == null ? "0" : record.get(KilkariConstants.PHC_ID).toString();
+                String healthSubFacilityCode = record.get(KilkariConstants.SUB_CENTRE_ID) == null ? "0" : record.get(KilkariConstants.SUB_CENTRE_ID).toString();
+
+                beneficiary.setVillage(locationFinder.getVillageHashMap().get(mapKey.toString() + "_" + Long.parseLong(villageCode) + "_" + Long.parseLong(villageSvid)));
+                mapKey.append("_");
+                mapKey.append(Long.parseLong(healthBlockCode));
+                beneficiary.setHealthBlock(locationFinder.getHealthBlockHashMap().get(mapKey.toString()));
+                mapKey.append("_");
+                mapKey.append(Long.parseLong(healthFacilityCode));
+                beneficiary.setHealthFacility(locationFinder.getHealthFacilityHashMap().get(mapKey.toString()));
+                mapKey.append("_");
+                mapKey.append(Long.parseLong(healthSubFacilityCode));
+                beneficiary.setHealthSubFacility(locationFinder.getHealthSubFacilityHashMap().get(mapKey.toString()));
+            } else {
+                throw new InvalidLocationException(String.format(KilkariConstants.INVALID_LOCATION, KilkariConstants.DISTRICT_ID, record.get(KilkariConstants.DISTRICT_ID)));
+            }
+        } else {
+            throw new InvalidLocationException(String.format(KilkariConstants.INVALID_LOCATION, KilkariConstants.STATE_ID, record.get(KilkariConstants.STATE_ID)));
+        }
+    }
+
+    private boolean isValidID(final Map<String, Object> map, final String key) {
+        Object obj = map.get(key);
+        if (obj == null || obj.toString().isEmpty() || "NULL".equalsIgnoreCase(obj.toString())) {
+            return false;
+        }
+
+        if (obj.getClass().equals(Long.class)) {
+            return (Long) obj > 0L;
+        }
+
+        return !"0".equals(obj);
     }
 
 }

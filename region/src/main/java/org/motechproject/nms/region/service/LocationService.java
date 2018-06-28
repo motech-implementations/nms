@@ -1,14 +1,16 @@
 package org.motechproject.nms.region.service;
 
-import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthSubFacility;
-import org.motechproject.nms.region.domain.State;
-import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -62,5 +64,7 @@ public interface LocationService {
 
     HealthSubFacility getHealthSubFacility(Long stateId, Long districtId, String talukaId, Long healthBlockId,
                                            Long healthFacilityId, Long healthSubFacilityId);
+
+    LocationFinder updateLocations(List<Map<String, Object>> recordList);
 
 }
