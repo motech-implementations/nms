@@ -215,8 +215,10 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
                 CallStage.RETRY_1, "w1_m1.wav", "w1_1",
                 rh.hindiLanguage().getCode(), rh.delhiCircle().getName(), SubscriptionOrigin.IVR, "20151119124330", 0));
 
+        long maxActiveSubscriptions = 2400000;
+
         // This is a pre-step that runs before target file generation @ 4AM every day
-        subscriptionService.activatePendingSubscriptionsUpTo(currentDate.plusDays(1).withTimeAtStartOfDay());
+        subscriptionService.activatePendingSubscriptionsUpTo(currentDate.plusDays(1).withTimeAtStartOfDay(), maxActiveSubscriptions);
 
         // generate target file
         TargetFileNotification tfn = targetFileService.generateTargetFile();
