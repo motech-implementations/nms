@@ -87,7 +87,7 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
 
             @Override
             public String getSqlQuery() {
-                String query = "INSERT into nms_health_blocks (`code`, `name`, `healthFacility_id_OID`, `taluka_id_oid`, " +
+                String query = "INSERT into nms_health_sub_facilities (`code`, `name`, `healthFacility_id_OID`, `taluka_id_oid`, " +
                         " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
                         healthSubFacilityQuerySet(healthSubFacilities, talukaHashMap, healthFacilityHashMap) +
                         " ON DUPLICATE KEY UPDATE " +
@@ -105,17 +105,17 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
             }
         };
 
-        Long createdDistricts = dataService.executeSQLQuery(queryExecution);
+        Long createdHealthSubFacilities = dataService.executeSQLQuery(queryExecution);
 
 
-        return createdDistricts;
+        return createdHealthSubFacilities;
     }
 
     @Override
     public Map<String, HealthSubFacility> fillHealthSubFacilityIds(List<Map<String, Object>> recordList, final Map<String, HealthFacility> healthFacilityHashMap) {
         final Set<String> healthSubFacilityKeys = new HashSet<>();
         for(Map<String, Object> record : recordList) {
-            healthSubFacilityKeys.add(record.get(LocationConstants.STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+            healthSubFacilityKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                     record.get(LocationConstants.TALUKA_ID).toString() + "_" + record.get(LocationConstants.HEALTHBLOCK_ID).toString() + "_" +
                     record.get(LocationConstants.HEALTHFACILITY_ID).toString() + "_" + record.get(LocationConstants.HEALTHSUBFACILITY_ID).toString());
         }
@@ -176,28 +176,32 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> healthSubFacility : healthSubFacilities) {
-            if (i != 0) {
-                stringBuilder.append(", ");
-            }
-            stringBuilder.append("(");
-            stringBuilder.append(healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_ID) + ", ");
-            stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME).toString()) + QUOTATION_COMMA);
-            stringBuilder.append(healthFacilityHashMap.get(healthSubFacility.get(LocationConstants.STATE_ID).toString() + "_" +
+            Taluka taluka = talukaHashMap.get(healthSubFacility.get(LocationConstants.CSV_STATE_ID).toString() + "_" +
+                    healthSubFacility.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+                    healthSubFacility.get(LocationConstants.TALUKA_ID).toString());
+            HealthFacility healthFacility = healthFacilityHashMap.get(healthSubFacility.get(LocationConstants.CSV_STATE_ID).toString() + "_" +
                     healthSubFacility.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                     healthSubFacility.get(LocationConstants.TALUKA_ID).toString() + "_" +
                     healthSubFacility.get(LocationConstants.HEALTHBLOCK_ID).toString() + "_" +
-                    healthSubFacility.get(LocationConstants.HEALTHFACILITY_ID).toString()).getId() + ", ");
-            stringBuilder.append(talukaHashMap.get(healthSubFacility.get(LocationConstants.STATE_ID).toString() + "_" +
-                    healthSubFacility.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    healthSubFacility.get(LocationConstants.TALUKA_ID).toString()).getId() + ", ");
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
-            stringBuilder.append(")");
+                    healthSubFacility.get(LocationConstants.HEALTHFACILITY_ID).toString());
+            if (taluka != null && healthFacility != null) {
+                if (i != 0) {
+                    stringBuilder.append(", ");
+                }
+                stringBuilder.append("(");
+                stringBuilder.append(healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_ID) + ", ");
+                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME).toString()) + QUOTATION_COMMA);
+                stringBuilder.append(healthFacility.getId() + ", ");
+                stringBuilder.append(taluka.getId() + ", ");
+                stringBuilder.append(MOTECH_STRING);
+                stringBuilder.append(MOTECH_STRING);
+                stringBuilder.append(MOTECH_STRING);
+                stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                stringBuilder.append(")");
 
-            i++;
+                i++;
+            }
         }
 
         return stringBuilder.toString();
@@ -217,14 +221,14 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
                 int count = recordList.size();
                 for (Map<String, Object> record : recordList) {
                     count--;
-                    String villageString = record.get(LocationConstants.STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+                    String villageString = record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                             record.get(LocationConstants.TALUKA_ID).toString() + "_" + record.get(LocationConstants.VILLAGE_ID).toString() + "_" + 0;
                     Village village = villageHashMap.get(villageString);
-                    String healthSubFacilityString = record.get(LocationConstants.STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+                    String healthSubFacilityString = record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                             record.get(LocationConstants.TALUKA_ID).toString() + "_" + record.get(LocationConstants.HEALTHBLOCK_ID).toString() + "_" +
                             record.get(LocationConstants.HEALTHFACILITY_ID).toString() + "_" + record.get(LocationConstants.HEALTHSUBFACILITY_ID).toString();
                     HealthSubFacility healthSubFacility = healthSubFacilityHashMap.get(healthSubFacilityString);
-                    if (village.getTaluka().getId().equals(healthSubFacility.getTaluka().getId())) {
+                    if (village != null && healthSubFacility != null && village.getTaluka().getId().equals(healthSubFacility.getTaluka().getId())) {
                         query1 += LocationConstants.OPEN_PARANTHESES_STRING + healthSubFacility.getId() + ", " + village.getId() + LocationConstants.COMMA_QUOTATION_STRING
                                 + LocationConstants.QUOTATION_COMMA_STRING;
                         query1 += addDateColumns();
