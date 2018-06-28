@@ -16,6 +16,9 @@
     <osgi:service ref="flwRejectionCsvService"
                   interface="org.motechproject.nms.api.web.service.FlwCsvService" />
 
+    <osgi:service ref="beneficiaryUpdateService"
+                  interface="org.motechproject.nms.api.web.service.BeneficiaryUpdateService" />
+
     <osgi:reference id="flwStatusUpdateAuditDataService"
                     interface="org.motechproject.nms.flw.repository.FlwStatusUpdateAuditDataService" />
 
@@ -30,6 +33,12 @@
     <osgi:reference id="subscriptionService" interface="org.motechproject.nms.kilkari.service.SubscriptionService"/>
 
     <osgi:reference id="inboxService" interface="org.motechproject.nms.kilkari.service.InboxService"/>
+
+    <osgi:reference id="mctsChildDataService" interface="org.motechproject.nms.kilkari.repository.MctsChildDataService"/>
+
+    <osgi:reference id="mctsMotherDataService" interface="org.motechproject.nms.kilkari.repository.MctsMotherDataService"/>
+
+    <osgi:reference id="mctsBeneficiaryImportReaderService" interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService"/>
 
     <osgi:reference id="frontLineWorkerService" interface="org.motechproject.nms.flw.service.FrontLineWorkerService"/>
 
@@ -53,6 +62,8 @@
 
     <osgi:reference id="languageService" interface="org.motechproject.nms.region.service.LanguageService"/>
 
+    <osgi:reference id="locationService" interface="org.motechproject.nms.region.service.LocationService"/>
+
     <osgi:reference id="circleService" interface="org.motechproject.nms.region.service.CircleService"/>
 
     <osgi:reference id="stateService" interface="org.motechproject.nms.region.service.StateService"/>
@@ -60,6 +71,8 @@
     <osgi:reference id="stateDataService" interface="org.motechproject.nms.region.repository.StateDataService"/>
 
     <osgi:reference id="flwRejectionService" interface="org.motechproject.nms.rejectionhandler.service.FlwRejectionService"/>
+
+    <osgi:reference id="rchWebServiceFacade" interface="org.motechproject.nms.rch.service.RchWebServiceFacade"/>
 
     <osgi:reference id="eventRelay" interface="org.motechproject.event.listener.EventRelay"/>
 
@@ -69,6 +82,8 @@
     <osgi:reference id="subscriptionDataService" interface="org.motechproject.nms.kilkari.repository.SubscriptionDataService" />
 
     <osgi:reference id="mctsWsImportService" interface="org.motechproject.nms.mcts.service.MctsWsImportService" />
+
+    <osgi:reference id="mctsWebServiceFacade" interface="org.motechproject.nms.mcts.service.MctsWebServiceFacade" />
 
     <osgi:reference id="mctsChildFixService"
     interface="org.motechproject.nms.kilkari.service.MctsChildFixService" />

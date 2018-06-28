@@ -2,8 +2,10 @@ package org.motechproject.nms.rch.service;
 
 import org.joda.time.LocalDate;
 import org.motechproject.event.MotechEvent;
+import org.motechproject.nms.rch.domain.RchUserType;
 import org.motechproject.nms.rch.exception.RchFileManipulationException;
 
+import java.io.IOException;
 import java.net.URL;
 
 /**
@@ -20,4 +22,11 @@ public interface RchWebServiceFacade {
 
     void readChildResponseFromFile(MotechEvent event) throws RchFileManipulationException;
 
+    void locationUpdateInTable(Long stateId, RchUserType rchUserType);
+
+    void locationUpdateInTableFromCsv(Long stateId, RchUserType rchUserType) throws IOException;
+
+    String getBeneficiaryLocationUpdateDirectory();
+
+    String getLocationFilesDirectory();
 }

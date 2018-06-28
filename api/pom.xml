@@ -67,6 +67,17 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>rch</artifactId>
+            <version>1.0.36</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
     </dependencies>
 
     <repositories>
@@ -119,11 +130,16 @@
                             net.sf.cglib.reflect,
                             org.springframework.web.multipart.commons,
                             org.springframework.transaction,
+                            org.motechproject.nms.flw.repository,
+                            org.motechproject.nms.mcts.service,
                             org.motechproject.nms.kilkari.repository,
+                            org.motechproject.nms.kilkari.service,
                             org.motechproject.nms.kilkari.domain,
                             org.motechproject.nms.kilkari.utils,
                             org.motechproject.nms.rejectionhandler.service,
                             org.motechproject.nms.region.repository,
+                            org.motechproject.nms.region.service,
+                            org.motechproject.nms.rch.service,
                             *
                         </Import-Package>
                     </instructions>

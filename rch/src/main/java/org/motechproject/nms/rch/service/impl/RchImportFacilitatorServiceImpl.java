@@ -52,5 +52,10 @@ public class RchImportFacilitatorServiceImpl implements RchImportFacilitatorServ
     public RchImportFacilitator findByImportDateStateIdAndRchUserType(Long stateId, LocalDate importDate, RchUserType rchUserType) {
         return rchImportFacilitatorDataService.getByStateIdAndImportDateAndUserType(stateId, importDate, rchUserType);
     }
+
+    @Override
+    public List<RchImportFacilitator> findByStateIdAndRchUserType(Long stateId, RchUserType rchUserType) {
+        return rchImportFacilitatorDataService.getByStateIdAndUserType(stateId, rchUserType);
+    }
 }
 

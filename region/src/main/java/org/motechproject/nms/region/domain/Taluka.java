@@ -16,7 +16,9 @@ import javax.jdo.annotations.Unique;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity(tableName = "nms_talukas")
 @Unique(name = "UNIQUE_DISTRICT_CODE", members = { "district", "code" })
@@ -54,11 +56,9 @@ public class Taluka extends MdsEntity {
     @JsonBackReference
     private District district;
 
-    @Field
-    @Cascade(delete = true)
-    @Persistent(mappedBy = "taluka", defaultFetchGroup = "false")
+    @Persistent(mappedBy = "talukas", defaultFetchGroup = "false")
     @JsonManagedReference
-    private List<HealthBlock> healthBlocks;
+    private Set<HealthBlock> healthBlocks;
 
     @Field
     @Cascade(delete = true)
@@ -66,8 +66,20 @@ public class Taluka extends MdsEntity {
     @JsonManagedReference
     private List<Village> villages;
 
+    @Field
+    @Cascade(delete = true)
+    @Persistent(mappedBy = "taluka", defaultFetchGroup = "false")
+    @JsonManagedReference
+    private List<HealthFacility> healthFacilities;
+
+    @Field
+    @Cascade(delete = true)
+    @Persistent(mappedBy = "taluka", defaultFetchGroup = "false")
+    @JsonManagedReference
+    private List<HealthSubFacility> healthSubFacilities;
+
     public Taluka() {
-        this.healthBlocks = new ArrayList<>();
+        this.healthBlocks = new HashSet<>();
         this.villages = new ArrayList<>();
     }
 
@@ -111,12 +123,20 @@ public class Taluka extends MdsEntity {
         this.district = district;
     }
 
-    public List<HealthBlock> getHealthBlocks() {
+    public Set<HealthBlock> getHealthBlocks() {
         return healthBlocks;
     }
 
-    public void setHealthBlocks(List<HealthBlock> healthBlocks) {
+    public void setHealthBlocks(Set<HealthBlock> healthBlocks) {
         this.healthBlocks = healthBlocks;
+    }
+
+    public void addHealthBlock(HealthBlock healthBlock) {
+        this.healthBlocks.add(healthBlock);
+    }
+
+    public void removeHealthBlock(HealthBlock healthBlock) {
+        this.healthBlocks.remove(healthBlock);
     }
 
     public List<Village> getVillages() {
@@ -125,6 +145,22 @@ public class Taluka extends MdsEntity {
 
     public void setVillages(List<Village> villages) {
         this.villages = villages;
+    }
+
+    public List<HealthFacility> getHealthFacilities() {
+        return healthFacilities;
+    }
+
+    public void setHealthFacilities(List<HealthFacility> healthFacilities) {
+        this.healthFacilities = healthFacilities;
+    }
+
+    public List<HealthSubFacility> getHealthSubFacilities() {
+        return healthSubFacilities;
+    }
+
+    public void setHealthSubFacilities(List<HealthSubFacility> healthSubFacilities) {
+        this.healthSubFacilities = healthSubFacilities;
     }
 
     @Override

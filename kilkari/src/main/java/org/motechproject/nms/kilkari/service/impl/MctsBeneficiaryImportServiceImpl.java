@@ -3,6 +3,7 @@ package org.motechproject.nms.kilkari.service.impl;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
+import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.kilkari.domain.DeactivatedBeneficiary;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
@@ -26,6 +27,7 @@ import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.service.ActionFinderService;
 import org.motechproject.nms.kilkari.service.DeactivatedBeneficiaryService;
+import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.motechproject.nms.kilkari.domain.RejectionReasons;
@@ -526,8 +528,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 }
             }
 
-            Long createdNo = (createObjects.size() == 0) ? 0 : rchBulkInsert(createObjects);
-            Long updatedNo = (updateObjects.size() == 0) ? 0 : rchBulkUpdate(updateObjects);
+            Long createdNo = (createObjects.size() == 0) ? 0 : rchChildBulkInsert(createObjects);
+            Long updatedNo = (updateObjects.size() == 0) ? 0 : rchChildBulkUpdate(updateObjects);
             LOGGER.debug(IMPORT_STATS_LOG, createdNo, updatedNo);
         } else {
             LOGGER.debug("The set is empty!");
@@ -878,6 +880,53 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 return mctsBeneficiaryValueProcessor.getCaseNoByString(value);
             }
         }));
+        return mapping;
+    }
+
+
+    @Override
+    public Map<String, CellProcessor> getRchAshaProcessorMapping() {
+        Map<String, CellProcessor> mapping = new HashMap<>();
+        mapping.put(FlwConstants.STATE_ID, new Optional(new GetLong()));
+
+        mapping.put(FlwConstants.DISTRICT_ID, new Optional(new GetLong()));
+        mapping.put(FlwConstants.DISTRICT_NAME, new Optional(new GetString()));
+
+        mapping.put(FlwConstants.TALUKA_ID, new Optional(new GetString()));
+        mapping.put(FlwConstants.TALUKA_NAME, new Optional(new GetString()));
+
+        mapping.put(FlwConstants.CENSUS_VILLAGE_ID, new Optional(new GetLong()));
+        mapping.put(FlwConstants.VILLAGE_NAME, new Optional(new GetString()));
+
+        mapping.put(FlwConstants.PHC_ID, new Optional(new GetLong()));
+        mapping.put(FlwConstants.PHC_NAME, new Optional(new GetString()));
+
+        mapping.put(FlwConstants.HEALTH_BLOCK_ID, new Optional(new GetLong()));
+        mapping.put(FlwConstants.HEALTH_BLOCK_NAME, new Optional(new GetString()));
+
+        mapping.put(FlwConstants.SUB_CENTRE_ID, new Optional(new GetLong()));
+        mapping.put(FlwConstants.SUB_CENTRE_NAME, new Optional(new GetString()));
+
+        mapping.put(FlwConstants.MOBILE_NO, new Optional(new GetInstanceByString<Long>() {
+            @Override
+            public Long retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getMsisdnByString(value);
+            }
+        }));
+
+        mapping.put(FlwConstants.EXEC_DATE, new Optional(new GetInstanceByString<LocalDate>() {
+            @Override
+            public LocalDate retrieve(String value) {
+                return (LocalDate) mctsBeneficiaryValueProcessor.getDateByString(value).toLocalDate();
+            }
+        }));
+
+        mapping.put(FlwConstants.GF_ID, new Optional(new GetLong()));
+        mapping.put(FlwConstants.GF_NAME, new Optional(new GetString()));
+
+        mapping.put(FlwConstants.GF_TYPE, new Optional(new GetString()));
+        mapping.put(FlwConstants.GF_STATUS, new Optional(new GetString()));
+
         return mapping;
     }
 
