@@ -84,7 +84,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             contactNumber = KilkariConstants.MOBILE_NO;
         }
 
-        List<Map<String, Object>> recordList = readCsv(bufferedReader, cellProcessorMapper);
+        List<Map<String, Object>> recordList = this.readCsv(bufferedReader, cellProcessorMapper);
 
         LocationFinder locationFinder = locationService.updateLocations(recordList);
 
@@ -130,9 +130,9 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
 
                 if (!rejectedChilds.isEmpty()) {
                     if (mctsImport) {
-                        mctsBeneficiaryImportService.createOrUpdateMctsRejections(rejectedChilds, rejectionStatus);
+                        mctsBeneficiaryImportService.createOrUpdateMctsChildRejections(rejectedChilds, rejectionStatus);
                     } else {
-                        mctsBeneficiaryImportService.createOrUpdateRchRejections(rejectedChilds, rejectionStatus);
+                        mctsBeneficiaryImportService.createOrUpdateRchChildRejections(rejectedChilds, rejectionStatus);
                     }
 
                 
@@ -182,7 +182,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             contactNumber = KilkariConstants.MOBILE_NO;
         }
 
-        List<Map<String, Object>> recordList = readCsv(bufferedReader, cellProcessorMapper);
+        List<Map<String, Object>> recordList = this.readCsv(bufferedReader, cellProcessorMapper);
 
         LocationFinder locationFinder = locationService.updateLocations(recordList);
 
@@ -269,7 +269,8 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
         return recordListArray;
     }
 
-    private List<Map<String, Object>> readCsv(BufferedReader bufferedReader, Map<String, CellProcessor> cellProcessorMapper) throws IOException {
+    @Override
+    public List<Map<String, Object>> readCsv(BufferedReader bufferedReader, Map<String, CellProcessor> cellProcessorMapper) throws IOException {
         int count = 0;
 
         CsvMapImporter csvImporter = new CsvImporterBuilder()
@@ -328,7 +329,8 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
         return mapping;
     }
 
-    private Map<String, CellProcessor> getRchChildProcessorMapping() {
+    @Override
+    public Map<String, CellProcessor> getRchChildProcessorMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
         getChildMapping(mapping);
 

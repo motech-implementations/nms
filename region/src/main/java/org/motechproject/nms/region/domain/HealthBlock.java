@@ -10,19 +10,23 @@ import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.tracking.annotation.TrackClass;
 import org.motechproject.nms.tracking.annotation.TrackFields;
 
+import javax.jdo.annotations.Unique;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Persistent;
-import javax.jdo.annotations.Unique;
+import javax.jdo.annotations.Join;
+import javax.jdo.annotations.Element;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This class Models data for HealthBlock location records
  */
 @Entity(tableName = "nms_health_blocks")
-@Unique(name = "UNIQUE_TALUKA_CODE", members = { "taluka", "code" })
+@Unique(name = "UNIQUE_DISTRICT_CODE", members = { "district", "code" })
 @TrackClass
 @TrackFields
 @InstanceLifecycleListeners
@@ -53,7 +57,18 @@ public class HealthBlock extends MdsEntity {
     @Column(allowsNull = "false")
     @NotNull
     @JsonBackReference
-    private Taluka taluka;
+    private District district;
+
+    @Field(name = "taluka_id_OID", required = true)
+    @Column(allowsNull = "false")
+    @NotNull
+    private Long talukaIdOID;
+
+    @Persistent(table="nms_taluka_healthblock")
+    @Join(column = "healthblock_id")
+    @Element(column = "taluka_id")
+    @JsonManagedReference
+    private Set<Taluka> talukas;
 
     @Field
     @Cascade(delete = true)
@@ -62,7 +77,16 @@ public class HealthBlock extends MdsEntity {
     private List<HealthFacility> healthFacilities;
 
     public HealthBlock() {
+        this.talukas = new HashSet<>();
         this.healthFacilities = new ArrayList<>();
+    }
+
+    public District getDistrict() {
+        return district;
+    }
+
+    public void setDistrict(District district) {
+        this.district = district;
     }
 
     public String getName() {
@@ -97,12 +121,28 @@ public class HealthBlock extends MdsEntity {
         this.code = code;
     }
 
-    public Taluka getTaluka() {
-        return taluka;
+    public Long getTalukaIdOID() {
+        return talukaIdOID;
     }
 
-    public void setTaluka(Taluka taluka) {
-        this.taluka = taluka;
+    public void setTalukaIdOID(Long talukaIdOID) {
+        this.talukaIdOID = talukaIdOID;
+    }
+
+    public Set<Taluka> getTalukas() {
+        return talukas;
+    }
+
+    public void setTalukas(Set<Taluka> talukas) {
+        this.talukas = talukas;
+    }
+
+    public void addTaluka(Taluka taluka) {
+        this.talukas.add(taluka);
+    }
+
+    public void removeTaluka(Taluka taluka) {
+        this.talukas.remove(taluka);
     }
 
     public List<HealthFacility> getHealthFacilities() {

@@ -86,7 +86,7 @@
                             org.motechproject.nms.mobileacademy.dto;version=${project.version},
                             org.motechproject.nms.mobileacademy.repository;version=${project.version},
                             org.motechproject.nms.mobileacademy.exception;version=${project.version},
-                            org.motechproject.nms.mobileacademy.service; version=${project.version},
+                            org.motechproject.nms.mobileacademy.service; version=${project.version}
                         </Export-Package>
                         <Import-Package>
                             org.motechproject.osgi.web,
@@ -95,6 +95,7 @@
                             org.apache.http.ssl,
                             org.json,
                             org.motechproject.mtraining.service,
+                            org.motechproject.nms.kilkari.service,
                             *
                         </Import-Package>
                     </instructions>

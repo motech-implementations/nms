@@ -2,7 +2,6 @@ package org.motechproject.nms.mcts.service;
 
 import org.joda.time.LocalDate;
 import org.motechproject.event.MotechEvent;
-
 import java.net.URL;
 import java.util.List;
 

@@ -72,7 +72,6 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
             LOGGER.debug("Started child import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
 
             MctsChild child = mctsImport ? mctsBeneficiaryValueProcessor.getOrCreateChildInstance((String) record.get(id)) : mctsBeneficiaryValueProcessor.getOrCreateRchChildInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
-            // TODO: Add this to bulk insert
             if (child == null) {
                 ChildImportRejection childImportRejection1 = childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), KilkariConstants.CREATE);
                 rejectedChilds.put(childImportRejection1.getIdNo(), childImportRejection1);

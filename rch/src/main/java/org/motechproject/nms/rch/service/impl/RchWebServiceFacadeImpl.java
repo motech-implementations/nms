@@ -6,8 +6,10 @@ import org.apache.axis.description.TypeDesc;
 import org.apache.axis.encoding.SerializationContext;
 import org.apache.axis.encoding.ser.BeanSerializer;
 import org.apache.axis.server.AxisServer;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
@@ -18,7 +20,9 @@ import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryParams;
+import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.mds.util.Order;
+import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
@@ -29,6 +33,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService;
 import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
@@ -49,6 +54,7 @@ import org.motechproject.nms.rch.exception.RchFileManipulationException;
 import org.motechproject.nms.rch.exception.RchInvalidResponseStructureException;
 import org.motechproject.nms.rch.exception.RchWebServiceException;
 import org.motechproject.nms.rch.repository.RchImportAuditDataService;
+import org.motechproject.nms.rch.repository.RchImportFacilitatorDataService;
 import org.motechproject.nms.rch.repository.RchImportFailRecordDataService;
 import org.motechproject.nms.rch.service.RchImportFacilitatorService;
 import org.motechproject.nms.rch.service.RchWebServiceFacade;
@@ -60,6 +66,11 @@ import org.motechproject.nms.rch.utils.ExecutionHelper;
 import org.motechproject.nms.rch.utils.MarshallUtils;
 import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.Taluka;
+import org.motechproject.nms.region.domain.HealthBlock;
+import org.motechproject.nms.region.domain.HealthFacility;
+import org.motechproject.nms.region.domain.HealthSubFacility;
+import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.LocationService;
@@ -71,31 +82,44 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.xml.sax.helpers.AttributesImpl;
 
+import javax.jdo.Query;
 import javax.xml.bind.JAXBException;
 import javax.xml.namespace.QName;
 import javax.xml.rpc.ServiceException;
 
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.io.StringWriter;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.rmi.RemoteException;
+import java.text.ParseException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Objects;
+import java.text.SimpleDateFormat;
 
 import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanRchMotherRecords;
 import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanRchChildRecords;
@@ -105,12 +129,23 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToRchMother;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.motherRejectionRch;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.flwRejectionRch;
+import static org.motechproject.nms.tracking.utils.TrackChangeUtils.LOGGER;
+
 @Service("rchWebServiceFacade")
 public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private static final String DATE_FORMAT = "dd-MM-yyyy";
     private static final String LOCAL_RESPONSE_DIR = "rch.local_response_dir";
     private static final String REMOTE_RESPONSE_DIR = "rch.remote_response_dir";
+    private static final String REMOTE_RESPONSE_DIR_CSV = "rch.remote_response_dir_csv";
+    private static final String LOC_UPDATE_DIR_RCH = "rch.loc_update_dir";
+    private static final String REMOTE_RESPONSE_DIR_LOCATION = "rch.remote_response_dir_locations";
+    private static final String NULL = "NULL";
+    private static final String NEXT_LINE = "\r\n";
+    private static final String TAB = "\t";
+
+    private static final String QUOTATION = "'";
+    private static final String SQL_QUERY_LOG = "SQL QUERY: {}";
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("dd-MM-yyyy");
     private static final String SCP_TIMEOUT_SETTING = "rch.scp_timeout";
@@ -133,6 +168,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private RchImportAuditDataService rchImportAuditDataService;
 
     @Autowired
+    private RchImportFacilitatorDataService rchImportFacilitatorDataService;
+
+    @Autowired
     private RchImportFacilitatorService rchImportFacilitatorService;
 
     @Autowired
@@ -152,6 +190,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     @Autowired
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
+
+    @Autowired
+    private MctsBeneficiaryImportReaderService mctsBeneficiaryImportReaderService;
+
 
     @Autowired
     private FlwRejectionService flwRejectionService;
@@ -261,7 +303,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                         rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
                         rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.MOTHER, stateId));
                     } catch (NullPointerException e) {
-                        LOGGER.error("No files saved : ", e);
+                        LOGGER.error("No files saved a : ", e);
                     }
                 }
             }
@@ -364,7 +406,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
                     rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
                 } catch (NullPointerException e) {
-                    LOGGER.error("No files saved : ", e);
+                    LOGGER.error("No files saved b : ", e);
                 }
             }
         } catch (ExecutionException e) {
@@ -467,7 +509,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, error));
                     rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
                 } catch (NullPointerException e) {
-                    LOGGER.error("No files saved : ", e);
+                    LOGGER.error("No files saved c : ", e);
                 }
             }
         } catch (ExecutionException e) {
@@ -557,7 +599,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         List<Map<String, Object>> rejectedRchMothers = rchMotherRecordsSet.get(0);
         String action = "";
         int saved = 0;
-        int rejected = motherRecords.size()-validMotherRecords.size();
+        int rejected = motherRecords.size() - validMotherRecords.size();
 
         Map<String, Object> rejectedMothers = new HashMap<>();
         Map<String, Object> rejectionStatus = new HashMap<>();
@@ -585,7 +627,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 if (hpdValidation) {
 
                     motherImportRejection = mctsBeneficiaryImportService.importMotherRecord(recordMap, SubscriptionOrigin.RCH_IMPORT, locationFinder);
-                    if(motherImportRejection != null) {
+                    if (motherImportRejection != null) {
                         rejectedMothers.put(motherImportRejection.getRegistrationNo(), motherImportRejection);
                         rejectionStatus.put(motherImportRejection.getRegistrationNo(), motherImportRejection.getAccepted());
                     }
@@ -675,7 +717,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         String action = "";
 
         int saved = 0;
-        int rejected = childRecords.size()-validChildRecords.size();
+        int rejected = childRecords.size() - validChildRecords.size();
 
         Map<String, Object> rejectedChilds = new HashMap<>();
         Map<String, Object> rejectionStatus = new HashMap<>();
@@ -863,19 +905,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private Map<String, Object> toMap(RchMotherRecord motherRecord) {
         Map<String, Object> map = new HashMap<>();
-        map.put(KilkariConstants.STATE_ID, motherRecord.getStateId());
-        map.put(KilkariConstants.DISTRICT_ID, motherRecord.getDistrictId());
-        map.put(KilkariConstants.DISTRICT_NAME, motherRecord.getDistrictName());
-        map.put(KilkariConstants.TALUKA_ID, motherRecord.getTalukaId());
-        map.put(KilkariConstants.TALUKA_NAME, motherRecord.getTalukaName());
-        map.put(KilkariConstants.HEALTH_BLOCK_ID, motherRecord.getHealthBlockId());
-        map.put(KilkariConstants.HEALTH_BLOCK_NAME, motherRecord.getHealthBlockName());
-        map.put(KilkariConstants.PHC_ID, motherRecord.getPhcId());
-        map.put(KilkariConstants.PHC_NAME, motherRecord.getPhcName());
-        map.put(KilkariConstants.SUB_CENTRE_ID, motherRecord.getSubCentreId());
-        map.put(KilkariConstants.SUB_CENTRE_NAME, motherRecord.getSubCentreName());
-        map.put(KilkariConstants.CENSUS_VILLAGE_ID, motherRecord.getVillageId());
-        map.put(KilkariConstants.VILLAGE_NAME, motherRecord.getVillageName());
+
+        toMapLocMother(map, motherRecord);
 
         map.put(KilkariConstants.MCTS_ID, motherRecord.getMctsIdNo());
         map.put(KilkariConstants.RCH_ID, motherRecord.getRegistrationNo());
@@ -892,9 +923,45 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return map;
     }
 
+    private void toMapLocMother(Map<String, Object> map, RchMotherRecord motherRecord) {
+        map.put(KilkariConstants.STATE_ID, motherRecord.getStateId());
+        map.put(KilkariConstants.DISTRICT_ID, motherRecord.getDistrictId());
+        map.put(KilkariConstants.DISTRICT_NAME, motherRecord.getDistrictName());
+        map.put(KilkariConstants.TALUKA_ID, motherRecord.getTalukaId());
+        map.put(KilkariConstants.TALUKA_NAME, motherRecord.getTalukaName());
+        map.put(KilkariConstants.HEALTH_BLOCK_ID, motherRecord.getHealthBlockId());
+        map.put(KilkariConstants.HEALTH_BLOCK_NAME, motherRecord.getHealthBlockName());
+        map.put(KilkariConstants.PHC_ID, motherRecord.getPhcId());
+        map.put(KilkariConstants.PHC_NAME, motherRecord.getPhcName());
+        map.put(KilkariConstants.SUB_CENTRE_ID, motherRecord.getSubCentreId());
+        map.put(KilkariConstants.SUB_CENTRE_NAME, motherRecord.getSubCentreName());
+        map.put(KilkariConstants.CENSUS_VILLAGE_ID, motherRecord.getVillageId());
+        map.put(KilkariConstants.VILLAGE_NAME, motherRecord.getVillageName());
+    }
+
     private Map<String, Object> toMap(RchChildRecord childRecord) {
         Map<String, Object> map = new HashMap<>();
 
+        toMapLocChild(map, childRecord);
+
+        map.put(KilkariConstants.BENEFICIARY_NAME, childRecord.getName());
+
+        map.put(KilkariConstants.MOBILE_NO, mctsBeneficiaryValueProcessor.getMsisdnByString(childRecord.getMobileNo()));
+        map.put(KilkariConstants.DOB, mctsBeneficiaryValueProcessor.getDateByString(childRecord.getBirthdate()));
+
+        map.put(KilkariConstants.MCTS_ID, childRecord.getMctsId());
+        map.put(KilkariConstants.MCTS_MOTHER_ID,
+                mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(childRecord.getMctsMotherIdNo()) == null ? null : mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(childRecord.getMctsMotherIdNo()).getBeneficiaryId());
+        map.put(KilkariConstants.RCH_ID, childRecord.getRegistrationNo());
+        map.put(KilkariConstants.RCH_MOTHER_ID, childRecord.getMotherRegistrationNo());
+        map.put(KilkariConstants.DEATH,
+                mctsBeneficiaryValueProcessor.getDeathFromString(String.valueOf(childRecord.getEntryType())));
+        map.put(KilkariConstants.EXECUTION_DATE, "".equals(childRecord.getExecDate()) ? null : mctsBeneficiaryValueProcessor.getLocalDateByString(childRecord.getExecDate()));
+
+        return map;
+    }
+
+    private void toMapLocChild(Map<String, Object> map, RchChildRecord childRecord) {
         map.put(KilkariConstants.STATE_ID, childRecord.getStateId());
         map.put(KilkariConstants.DISTRICT_ID, childRecord.getDistrictId());
         map.put(KilkariConstants.DISTRICT_NAME, childRecord.getDistrictName());
@@ -908,22 +975,22 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         map.put(KilkariConstants.SUB_CENTRE_NAME, childRecord.getSubCentreName());
         map.put(KilkariConstants.CENSUS_VILLAGE_ID, childRecord.getVillageId());
         map.put(KilkariConstants.VILLAGE_NAME, childRecord.getVillageName());
+    }
 
-        map.put(KilkariConstants.BENEFICIARY_NAME, childRecord.getName());
-
-        map.put(KilkariConstants.MOBILE_NO, mctsBeneficiaryValueProcessor.getMsisdnByString(childRecord.getMobileNo()));
-        map.put(KilkariConstants.DOB, mctsBeneficiaryValueProcessor.getDateByString(childRecord.getBirthdate()));
-
-        map.put(KilkariConstants.MCTS_ID, childRecord.getMctsId());
-        map.put(KilkariConstants.MCTS_MOTHER_ID,
-                mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(childRecord.getMctsMotherIdNo()) == null ? null : mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(childRecord.getMctsMotherIdNo()).getBeneficiaryId() );
-        map.put(KilkariConstants.RCH_ID, childRecord.getRegistrationNo());
-        map.put(KilkariConstants.RCH_MOTHER_ID, childRecord.getMotherRegistrationNo());
-        map.put(KilkariConstants.DEATH,
-                mctsBeneficiaryValueProcessor.getDeathFromString(String.valueOf(childRecord.getEntryType())));
-        map.put(KilkariConstants.EXECUTION_DATE, "".equals(childRecord.getExecDate()) ? null : mctsBeneficiaryValueProcessor.getLocalDateByString(childRecord.getExecDate()));
-
-        return map;
+    private void toMapLoc(Map<String, Object> map, RchAnmAshaRecord anmAshaRecord) {
+        map.put(KilkariConstants.STATE_ID, anmAshaRecord.getStateId());
+        map.put(KilkariConstants.DISTRICT_ID, anmAshaRecord.getDistrictId());
+        map.put(KilkariConstants.DISTRICT_NAME, anmAshaRecord.getDistrictName());
+        map.put(KilkariConstants.TALUKA_ID, anmAshaRecord.getTalukaId());
+        map.put(KilkariConstants.TALUKA_NAME, anmAshaRecord.getTalukaName());
+        map.put(KilkariConstants.HEALTH_BLOCK_ID, anmAshaRecord.getHealthBlockId());
+        map.put(KilkariConstants.HEALTH_BLOCK_NAME, anmAshaRecord.getHealthBlockName());
+        map.put(KilkariConstants.PHC_ID, anmAshaRecord.getPhcId());
+        map.put(KilkariConstants.PHC_NAME, anmAshaRecord.getPhcName());
+        map.put(KilkariConstants.SUB_CENTRE_ID, anmAshaRecord.getSubCentreId());
+        map.put(KilkariConstants.SUB_CENTRE_NAME, anmAshaRecord.getSubCentreName());
+        map.put(KilkariConstants.CENSUS_VILLAGE_ID, anmAshaRecord.getVillageId());
+        map.put(KilkariConstants.VILLAGE_NAME, anmAshaRecord.getVillageName());
     }
 
     private Map<Long, Set<Long>> getHpdFilters() {
@@ -1012,6 +1079,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         ExecutionHelper execHelper = new ExecutionHelper();
         execHelper.exec(command, getScpTimeout());
         return new File(localResponseFile(fileName));
+    }
+
+    private File fileForLocUpdate(String fileName) {
+        return new File(remoteResponseFile(fileName));
     }
 
     public String localResponseFile(String file) {
@@ -1141,4 +1212,757 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             return "UPDATE";
         }
     }
+
+    @Transactional
+    public void locationUpdateInTable(Long stateId, RchUserType rchUserType) {
+        try {
+            List<RchImportFacilitator> rchImportFiles = rchImportFacilitatorService.findByStateIdAndRchUserType(stateId, rchUserType);
+
+            Collections.sort(rchImportFiles, new Comparator<RchImportFacilitator>() {
+                public int compare(RchImportFacilitator m1, RchImportFacilitator m2) {
+                    return m1.getImportDate().compareTo(m2.getImportDate()); //ascending order
+                }
+            });
+
+            for (RchImportFacilitator rchImportFile : rchImportFiles
+                    ) {
+                File remoteResponseFile = fileForLocUpdate(rchImportFile.getFileName());
+
+                if (remoteResponseFile.exists() && !remoteResponseFile.isDirectory()) {
+                    DS_DataResponseDS_DataResult result = readResponses(remoteResponseFile);
+
+                    if (rchUserType == RchUserType.MOTHER) {
+                        motherLocUpdate(result, stateId, rchUserType);
+                    } else if (rchUserType == RchUserType.CHILD) {
+                        childLocUpdate(result, stateId, rchUserType);
+                    } else if (rchUserType == RchUserType.ASHA) {
+                        ashaLocUpdate(result, stateId, rchUserType);
+                    }
+                } else {
+                    continue;
+                }
+
+            }
+        } catch (ExecutionException e) {
+            LOGGER.error("Failed to copy file from remote server to local directory." + e);
+        } catch (RchFileManipulationException e) {
+            LOGGER.error("No files saved d : {}", e);
+        }
+    }
+
+    @Transactional
+    public void locationUpdateInTableFromCsv(Long stateId, RchUserType rchUserType) throws IOException {
+
+            List<MultipartFile> rchImportFiles = findByStateIdAndRchUserType(stateId, rchUserType);
+
+            Collections.sort(rchImportFiles, new Comparator<MultipartFile>() {
+                public int compare(MultipartFile m1, MultipartFile m2) {
+                    Date file1Date;
+                    Date file2Date;
+                    int flag = 1;
+                    try {
+                        file1Date = getDateFromFileName(m1.getOriginalFilename());
+                        file2Date = getDateFromFileName(m2.getOriginalFilename());
+                        flag = file1Date.compareTo(file2Date);
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    return flag; //ascending order
+                }
+            });
+
+            for (MultipartFile rchImportFile : rchImportFiles) {
+                    try (InputStream in = rchImportFile.getInputStream()) {
+
+                        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
+                        Map<String, CellProcessor> cellProcessorMapper;
+                        List<Map<String, Object>> recordList;
+
+                        if (rchUserType == RchUserType.MOTHER) {
+                            cellProcessorMapper = mctsBeneficiaryImportService.getRchMotherProcessorMapping();
+                            recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
+                            motherLocUpdateFromCsv(recordList, stateId, rchUserType);
+                        } else if (rchUserType == RchUserType.CHILD) {
+                            cellProcessorMapper = mctsBeneficiaryImportReaderService.getRchChildProcessorMapping();
+                            recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
+                            childLocUpdateFromCsv(recordList, stateId, rchUserType);
+                        } else if (rchUserType == RchUserType.ASHA) {
+                            cellProcessorMapper = mctsBeneficiaryImportService.getRchAshaProcessorMapping();
+                            recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
+                            ashaLocUpdateFromCsv(recordList, stateId, rchUserType);
+                        }
+
+                    }
+            }
+    }
+
+    @Override
+    public String getLocationFilesDirectory() {
+        return settingsFacade.getProperty(REMOTE_RESPONSE_DIR_LOCATION);
+    }
+
+
+    private void motherLocUpdate(DS_DataResponseDS_DataResult result, Long stateId, RchUserType rchUserType) { // NO CHECKSTYLE Cyclomatic Complexity
+        try {
+            validMothersDataResponse(result, stateId);
+            List motherResultFeed = result.get_any()[1].getChildren();
+            ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
+
+            RchMothersDataSet mothersDataSet = (motherResultFeed == null) ?
+                    null :
+                    (RchMothersDataSet) MarshallUtils.unmarshall(motherResultFeed.get(0).toString(), RchMothersDataSet.class);
+
+            if (mothersDataSet == null || mothersDataSet.getRecords() == null) {
+                String warning = String.format("No mother data set received from RCH for %d stateId", stateId);
+                LOGGER.warn(warning);
+            } else {
+                List<RchMotherRecord> motherRecords = mothersDataSet.getRecords();
+                List<String> existingMotherIds = getDatabaseMothers(motherRecords);
+                for (RchMotherRecord record : motherRecords) {
+                    if(existingMotherIds.contains(record.getRegistrationNo())) {
+                        Map<String, Object> locMap = new HashMap<>();
+                        toMapLocMother(locMap, record);
+                        locMap.put(KilkariConstants.RCH_ID, record.getRegistrationNo());
+                        locArrList.add(locMap);
+                    }
+                }
+            }
+
+            updateLocInMap(locArrList, stateId, rchUserType);
+
+        } catch (JAXBException e) {
+            throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH mother data from %d stateId.", stateId), e);
+        } catch (NullPointerException e) {
+            LOGGER.error("No files saved e : ", e);
+        } catch (RchInvalidResponseStructureException e) {
+            String error = String.format("Cannot read RCH mothers data from stateId: %d. Response Deserialization Error", stateId);
+            LOGGER.error(error, e);
+        } catch (IOException e) {
+            LOGGER.error("Input output exception.");
+        } catch (InvalidLocationException e) {
+            LOGGER.error("Invalid location");
+        }
+    }
+
+
+
+
+    private void motherLocUpdateFromCsv(List<Map<String, Object>> result, Long stateId, RchUserType rchUserType) {
+        try {
+            ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
+            List<RchMotherRecord> rchMotherRecords = new ArrayList<>();
+
+            for (Map<String, Object> record : result) {
+                RchMotherRecord rchMotherRecord = convertMapToRchMother(record);
+                rchMotherRecords.add(rchMotherRecord);
+            }
+            List<String> existingMotherIds = getDatabaseMothers(rchMotherRecords);
+            for(RchMotherRecord rchMotherRecord : rchMotherRecords) {
+                if (existingMotherIds.contains(rchMotherRecord.getRegistrationNo())) {
+                    Map<String, Object> locMap = new HashMap<>();
+                    toMapLocMother(locMap, rchMotherRecord);
+                    locMap.put(KilkariConstants.RCH_ID, rchMotherRecord.getRegistrationNo());
+                    locArrList.add(locMap);
+                }
+            }
+            updateLocInMap(locArrList, stateId, rchUserType);
+
+        } catch (NullPointerException e) {
+            LOGGER.error("No files present e : ", e);
+        } catch (IOException e) {
+            LOGGER.error("IO exception.");
+        } catch (InvalidLocationException e) {
+            LOGGER.error("Location Invalid");
+        }
+    }
+
+
+
+
+    private void childLocUpdate(DS_DataResponseDS_DataResult result, Long stateId, RchUserType rchUserType) { // NO CHECKSTYLE Cyclomatic Complexity
+        try {
+            validChildrenDataResponse(result, stateId);
+            List childResultFeed = result.get_any()[1].getChildren();
+            ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
+            RchChildrenDataSet childrenDataSet = (childResultFeed == null) ?
+                    null :
+                    (RchChildrenDataSet) MarshallUtils.unmarshall(childResultFeed.get(0).toString(), RchChildrenDataSet.class);
+
+            if (childrenDataSet == null || childrenDataSet.getRecords() == null) {
+                String warning = String.format("No child data set received from RCH for %d stateId", stateId);
+                LOGGER.warn(warning);
+            } else {
+                List<RchChildRecord> childRecords = childrenDataSet.getRecords();
+                List<String> existingChildIds = getDatabaseChild(childRecords);
+                for (RchChildRecord record : childRecords) {
+                    if(existingChildIds.contains(record.getRegistrationNo())) {
+                        Map<String, Object> locMap = new HashMap<>();
+                        toMapLocChild(locMap, record);
+                        locMap.put(KilkariConstants.RCH_ID, record.getRegistrationNo());
+                        locArrList.add(locMap);
+                    }
+                }
+            }
+
+            updateLocInMap(locArrList, stateId, rchUserType);
+
+        } catch (JAXBException e) {
+            throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH children data from %d stateId.", stateId), e);
+        } catch (NullPointerException e) {
+            LOGGER.error("No files saved f : ", e);
+        } catch (RchInvalidResponseStructureException e) {
+            String error = String.format("Cannot read RCH children data from stateId:%d. Response Deserialization Error", stateId);
+            LOGGER.error(error, e);
+        } catch (IOException e) {
+            LOGGER.error("Input output exception.");
+        } catch (InvalidLocationException e) {
+            LOGGER.error("Invalid location");
+        }
+    }
+
+    private void childLocUpdateFromCsv(List<Map<String, Object>> result, Long stateId, RchUserType rchUserType) {
+        try {
+            ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
+            List<RchChildRecord> rchChildRecords = new ArrayList<>();
+
+            for (Map<String, Object> record : result) {
+                RchChildRecord rchChildRecord = convertMapToRchChild(record);
+                rchChildRecords.add(rchChildRecord);
+
+            }
+            List<String> existingMotherIds = getDatabaseChild(rchChildRecords);
+            for(RchChildRecord rchChildRecord : rchChildRecords) {
+                if (existingMotherIds.contains(rchChildRecord.getRegistrationNo())) {
+                    Map<String, Object> locMap = new HashMap<>();
+                    toMapLocChild(locMap, rchChildRecord);
+                    locMap.put(KilkariConstants.RCH_ID, rchChildRecord.getRegistrationNo());
+                    locArrList.add(locMap);
+                }
+            }
+            updateLocInMap(locArrList, stateId, rchUserType);
+
+        } catch (NullPointerException e) {
+            LOGGER.error("No files present e : ", e);
+        } catch (IOException e) {
+            LOGGER.error("IO exception.");
+        } catch (InvalidLocationException e) {
+            LOGGER.error("Location Invalid");
+        }
+    }
+
+
+
+
+    private void ashaLocUpdate(DS_DataResponseDS_DataResult result, Long stateId, RchUserType rchUserType) { // NO CHECKSTYLE Cyclomatic Complexity
+        try {
+            validAnmAshaDataResponse(result, stateId);
+            List ashaResultFeed = result.get_any()[1].getChildren();
+            ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
+            RchAnmAshaDataSet ashaDataSet = (ashaResultFeed == null) ?
+                    null :
+                    (RchAnmAshaDataSet) MarshallUtils.unmarshall(ashaResultFeed.get(0).toString(), RchAnmAshaDataSet.class);
+            if (ashaDataSet == null || ashaDataSet.getRecords() == null) {
+                String warning = String.format("No FLW data set received from RCH for %d stateId", stateId);
+                LOGGER.warn(warning);
+            } else {
+                List<RchAnmAshaRecord> anmAshaRecords = ashaDataSet.getRecords();
+                List<String> existingAshaIds = getDatabaseAsha(anmAshaRecords);
+                for (RchAnmAshaRecord record : anmAshaRecords
+                     ) {
+                    if(existingAshaIds.contains(record.getGfId().toString())) {
+                        Map<String, Object> locMap = new HashMap<>();
+                        toMapLoc(locMap, record);
+                        locMap.put(FlwConstants.ID, record.getGfId());
+                        locArrList.add(locMap);
+                    }
+                }
+            }
+            updateLocInMap(locArrList, stateId, rchUserType);
+        } catch (JAXBException e) {
+            throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH FLW data from %d stateId.", stateId), e);
+        } catch (RchInvalidResponseStructureException e) {
+            String error = String.format("Cannot read RCH FLW data from stateId:%d. Response Deserialization Error", stateId);
+            LOGGER.error(error, e);
+        } catch (NullPointerException e) {
+            LOGGER.error("No files saved g : ", e);
+        } catch (IOException e) {
+            LOGGER.error("Input output exception.");
+        } catch (InvalidLocationException e) {
+            LOGGER.error("Invalid location");
+        }
+
+    }
+
+    private void ashaLocUpdateFromCsv(List<Map<String, Object>> result, Long stateId, RchUserType rchUserType) {
+        try {
+            ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
+            List<RchAnmAshaRecord> rchAshaRecords = new ArrayList<>();
+            for (Map<String, Object> record : result) {
+                RchAnmAshaRecord rchAnmAshaRecord = frontLineWorkerImportService.convertMapToRchAsha(record);
+                rchAshaRecords.add(rchAnmAshaRecord);
+            }
+            List<String> existingAshaIds = getDatabaseAsha(rchAshaRecords);
+
+            for(RchAnmAshaRecord rchAnmAshaRecord : rchAshaRecords) {
+                if (existingAshaIds.contains(rchAnmAshaRecord.getGfId().toString())) {
+                    Map<String, Object> locMap = new HashMap<>();
+                    toMapLoc(locMap, rchAnmAshaRecord);
+                    locMap.put(FlwConstants.ID, rchAnmAshaRecord.getGfId());
+                    locArrList.add(locMap);
+                }
+            }
+            updateLocInMap(locArrList, stateId, rchUserType);
+
+        } catch (NullPointerException e) {
+            LOGGER.error("No files present e : ", e);
+        } catch (IOException e) {
+            LOGGER.error("IO exception.");
+        } catch (InvalidLocationException e) {
+            LOGGER.error("Location Invalid");
+        }
+    }
+
+
+
+
+    public Map<String, Object> setLocationFields(LocationFinder locationFinder, Map<String, Object> record) throws InvalidLocationException { //NO CHECKSTYLE Cyclomatic Complexity
+
+        Map<String, Object> updatedLoc = new HashMap<>();
+        String mapKey = record.get(KilkariConstants.STATE_ID).toString();
+        if (isValidID(record, KilkariConstants.STATE_ID) && (locationFinder.getStateHashMap().get(mapKey) != null)) {
+            updatedLoc.put(KilkariConstants.STATE_ID, locationFinder.getStateHashMap().get(mapKey).getId());
+            String districtCode = record.get(KilkariConstants.DISTRICT_ID).toString();
+            mapKey += "_";
+            mapKey += districtCode;
+
+            if (isValidID(record, KilkariConstants.DISTRICT_ID) && (locationFinder.getDistrictHashMap().get(mapKey) != null)) {
+                updatedLoc.put(KilkariConstants.DISTRICT_ID, locationFinder.getDistrictHashMap().get(mapKey).getId());
+                updatedLoc.put(KilkariConstants.DISTRICT_NAME, locationFinder.getDistrictHashMap().get(mapKey).getName());
+                Long talukaCode = Long.parseLong(record.get(KilkariConstants.TALUKA_ID).toString());
+                mapKey += "_";
+                mapKey += talukaCode;
+                Taluka taluka = locationFinder.getTalukaHashMap().get(mapKey);
+                updatedLoc.put(KilkariConstants.TALUKA_ID, taluka == null ? null : taluka.getId());
+                updatedLoc.put(KilkariConstants.TALUKA_NAME, taluka == null ? null : taluka.getName());
+
+                String villageSvid = record.get(KilkariConstants.NON_CENSUS_VILLAGE_ID) == null ? "0" : record.get(KilkariConstants.NON_CENSUS_VILLAGE_ID).toString();
+                String villageCode = record.get(KilkariConstants.CENSUS_VILLAGE_ID) == null ? "0" : record.get(KilkariConstants.CENSUS_VILLAGE_ID).toString();
+                String healthBlockCode = record.get(KilkariConstants.HEALTH_BLOCK_ID) == null ? "0" : record.get(KilkariConstants.HEALTH_BLOCK_ID).toString();
+                String healthFacilityCode = record.get(KilkariConstants.PHC_ID) == null ? "0" : record.get(KilkariConstants.PHC_ID).toString();
+                String healthSubFacilityCode = record.get(KilkariConstants.SUB_CENTRE_ID) == null ? "0" : record.get(KilkariConstants.SUB_CENTRE_ID).toString();
+
+                Village village = locationFinder.getVillageHashMap().get(mapKey + "_" + Long.parseLong(villageCode) + "_" + Long.parseLong(villageSvid));
+                updatedLoc.put(KilkariConstants.CENSUS_VILLAGE_ID, village == null ? null : village.getId());
+                updatedLoc.put(KilkariConstants.VILLAGE_NAME, village == null ? null : village.getName());
+                mapKey += "_";
+                mapKey += Long.parseLong(healthBlockCode);
+                HealthBlock healthBlock = locationFinder.getHealthBlockHashMap().get(mapKey);
+                updatedLoc.put(KilkariConstants.HEALTH_BLOCK_ID, healthBlock == null ? null : healthBlock.getId());
+                updatedLoc.put(KilkariConstants.HEALTH_BLOCK_NAME, healthBlock == null ? null : healthBlock.getName());
+                mapKey += "_";
+                mapKey += Long.parseLong(healthFacilityCode);
+                HealthFacility healthFacility = locationFinder.getHealthFacilityHashMap().get(mapKey);
+                updatedLoc.put(KilkariConstants.PHC_ID, healthFacility == null ? null : healthFacility.getId());
+                updatedLoc.put(KilkariConstants.PHC_NAME, healthFacility == null ? null : healthFacility.getName());
+                mapKey += "_";
+                mapKey += Long.parseLong(healthSubFacilityCode);
+                HealthSubFacility healthSubFacility = locationFinder.getHealthSubFacilityHashMap().get(mapKey);
+                updatedLoc.put(KilkariConstants.SUB_CENTRE_ID, healthSubFacility == null ? null : healthSubFacility.getId());
+                updatedLoc.put(KilkariConstants.SUB_CENTRE_NAME, healthSubFacility == null ? null : healthSubFacility.getName());
+                return updatedLoc;
+            } else {
+                throw new InvalidLocationException(String.format(KilkariConstants.INVALID_LOCATION, KilkariConstants.DISTRICT_ID, record.get(KilkariConstants.DISTRICT_ID)));
+            }
+        } else {
+            throw new InvalidLocationException(String.format(KilkariConstants.INVALID_LOCATION, KilkariConstants.STATE_ID, record.get(KilkariConstants.STATE_ID)));
+        }
+    }
+
+    private boolean isValidID(final Map<String, Object> map, final String key) {
+        Object obj = map.get(key);
+        if (obj == null || obj.toString().isEmpty() || "NULL".equalsIgnoreCase(obj.toString())) {
+            return false;
+        }
+
+        if (obj.getClass().equals(Long.class)) {
+            return (Long) obj > 0L;
+        }
+
+        return !"0".equals(obj);
+    }
+
+    private  List<MultipartFile> findByStateIdAndRchUserType(Long stateId, RchUserType rchUserType) throws IOException {
+
+        ArrayList <MultipartFile> csvFilesByStateIdAndRchUserType = new ArrayList<>();
+        String locUpdateDir = settingsFacade.getProperty(REMOTE_RESPONSE_DIR_CSV);
+        File file = new File(locUpdateDir);
+
+        File[] files = file.listFiles();
+        if (files != null) {
+            for(File f: files){
+                String[] fileNameSplitter =  f.getName().split("_");
+                if(Objects.equals(fileNameSplitter[2], stateId.toString()) && fileNameSplitter[3].equalsIgnoreCase(rchUserType.toString())){
+                    try {
+                        FileInputStream input = new FileInputStream(f);
+                        MultipartFile multipartFile = new MockMultipartFile("file",
+                                f.getName(), "text/plain", IOUtils.toByteArray(input));
+                        csvFilesByStateIdAndRchUserType.add(multipartFile);
+                    }catch(IOException e) {
+                        LOGGER.debug("IO Exception", e);
+                    }
+
+                }
+            }
+        }
+
+        return csvFilesByStateIdAndRchUserType;
+    }
+
+
+
+    private void updateLocInMap(List<Map<String, Object>> locArrList, Long stateId, RchUserType rchUserType) throws InvalidLocationException, IOException {
+
+        ArrayList<Map<String, Object>> updatedLocArrList = new ArrayList<>();
+
+        LocationFinder locationFinder = locationService.updateLocations(locArrList);
+
+        for (Map<String, Object> record : locArrList
+                ) {
+            Map<String, Object> updatedMap = setLocationFields(locationFinder, record);
+            if("asha".equalsIgnoreCase(rchUserType.toString())){
+                updatedMap.put(FlwConstants.ID, record.get(FlwConstants.ID));
+            }else {
+                updatedMap.put(KilkariConstants.RCH_ID, record.get(KilkariConstants.RCH_ID));
+            }
+            updatedLocArrList.add(updatedMap);
+        }
+
+        if ("asha".equalsIgnoreCase(rchUserType.toString())) {
+            csvWriterAsha(updatedLocArrList, stateId, rchUserType);
+        }else {
+            csvWriterKilkari(updatedLocArrList, stateId, rchUserType);
+        }
+
+    }
+
+    @Override
+    public String getBeneficiaryLocationUpdateDirectory() {
+        return settingsFacade.getProperty(LOC_UPDATE_DIR_RCH);
+    }
+
+    private File csvWriter(Long stateId, RchUserType rchUserType) throws IOException {
+        String locUpdateDir = settingsFacade.getProperty(LOC_UPDATE_DIR_RCH);
+        String fileName = locUpdateDir + "location_update_state" + "_" + stateId + "_" + rchUserType + "_" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()) + ".csv";
+        File csvFile = new File(fileName);
+        if (!csvFile.exists()){
+            csvFile.createNewFile();
+        } else {
+            LOGGER.debug("File already exists");
+        }
+        return csvFile;
+
+        }
+
+    private void csvWriterKilkari(List<Map<String, Object>> locArrList, Long stateId, RchUserType rchUserType) throws IOException { //NO CHECKSTYLE Cyclomatic Complexity //NOPMD NcssMethodCount
+
+        if (!locArrList.isEmpty()) {
+            File csvFile = csvWriter(stateId, rchUserType);
+            FileWriter writer;
+            writer = new FileWriter(csvFile, true);
+
+            writer.write(KilkariConstants.RCH_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.STATE_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.DISTRICT_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.DISTRICT_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.TALUKA_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.TALUKA_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.HEALTH_BLOCK_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.HEALTH_BLOCK_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.PHC_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.PHC_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.SUB_CENTRE_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.SUB_CENTRE_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.CENSUS_VILLAGE_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.VILLAGE_NAME);
+            writer.write(NEXT_LINE);
+
+            for (Map<String, Object> map : locArrList
+                    ) {
+                writer.write(map.get(KilkariConstants.RCH_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.STATE_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.DISTRICT_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.DISTRICT_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.TALUKA_ID) == null ? "" : map.get(KilkariConstants.TALUKA_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.TALUKA_NAME) == null ? "" : map.get(KilkariConstants.TALUKA_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.HEALTH_BLOCK_ID) == null ? "" : map.get(KilkariConstants.HEALTH_BLOCK_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.HEALTH_BLOCK_NAME) == null ? "" : map.get(KilkariConstants.HEALTH_BLOCK_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.PHC_ID) == null ? "" : map.get(KilkariConstants.PHC_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.PHC_NAME) == null ? "" : map.get(KilkariConstants.PHC_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.SUB_CENTRE_ID) == null ? "" : map.get(KilkariConstants.SUB_CENTRE_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.SUB_CENTRE_NAME) == null ? "" : map.get(KilkariConstants.SUB_CENTRE_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.CENSUS_VILLAGE_ID) == null ? "" : map.get(KilkariConstants.CENSUS_VILLAGE_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.VILLAGE_NAME) == null ? "" : map.get(KilkariConstants.VILLAGE_NAME).toString());
+                writer.write(NEXT_LINE);
+            }
+
+            writer.close();
+        }
+    }
+
+    private void csvWriterAsha(List<Map<String, Object>> locArrList, Long stateId, RchUserType rchUserType) throws IOException { //NO CHECKSTYLE Cyclomatic Complexity //NOPMD NcssMethodCount
+
+
+        if (!locArrList.isEmpty()) {
+            File csvFile = csvWriter(stateId, rchUserType);
+            FileWriter writer;
+            writer = new FileWriter(csvFile, true);
+
+            writer.write(FlwConstants.ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.STATE_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.DISTRICT_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.DISTRICT_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.TALUKA_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.TALUKA_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.HEALTH_BLOCK_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.HEALTH_BLOCK_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.PHC_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.PHC_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.SUB_CENTRE_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.SUB_CENTRE_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.CENSUS_VILLAGE_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.VILLAGE_NAME);
+            writer.write(NEXT_LINE);
+            for (Map<String, Object> map : locArrList
+                    ) {
+                writer.write(map.get(FlwConstants.ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.STATE_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.DISTRICT_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.DISTRICT_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.TALUKA_ID) == null ? "" : map.get(FlwConstants.TALUKA_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.TALUKA_NAME) == null ? "" : map.get(FlwConstants.TALUKA_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.HEALTH_BLOCK_ID) == null ? "" : map.get(FlwConstants.HEALTH_BLOCK_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.HEALTH_BLOCK_NAME) == null ? "" : map.get(FlwConstants.HEALTH_BLOCK_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.PHC_ID) == null ? "" : map.get(FlwConstants.PHC_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.PHC_NAME) == null ? "" : map.get(FlwConstants.PHC_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.SUB_CENTRE_ID) == null ? "" : map.get(FlwConstants.SUB_CENTRE_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.SUB_CENTRE_NAME) == null ? "" : map.get(FlwConstants.SUB_CENTRE_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.CENSUS_VILLAGE_ID) == null ? "" : map.get(FlwConstants.CENSUS_VILLAGE_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.VILLAGE_NAME) == null ? "" : map.get(FlwConstants.VILLAGE_NAME).toString());
+                writer.write(NEXT_LINE);
+            }
+
+            writer.close();
+        }
+    }
+
+    private List<String> getDatabaseMothers(final List<RchMotherRecord> motherRecords) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<String>> queryExecution = new SqlQueryExecution<List<String>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "SELECT rchId FROM nms_mcts_mothers WHERE rchId IN " + queryIdList(motherRecords);
+                LOGGER.debug(SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public List<String> execute(Query query) {
+
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                List<String> result = new ArrayList<>();
+                for (String existingMotherId : (List<String>) fqr) {
+                    result.add(existingMotherId);
+                }
+                return result;
+            }
+        };
+
+        List<String> result = (List<String>) rchImportFacilitatorDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("Database mothers query time {}", queryTimer.time());
+        return result;
+
+    }
+
+    private String queryIdList(List<RchMotherRecord> motherRecords) {
+        StringBuilder stringBuilder = new StringBuilder();
+        int i = 0;
+        stringBuilder.append("(");
+        for (RchMotherRecord motherRecord: motherRecords) {
+            if (i != 0) {
+                stringBuilder.append(", ");
+            }
+            stringBuilder.append(QUOTATION + motherRecord.getRegistrationNo() + QUOTATION);
+            i++;
+        }
+        stringBuilder.append(")");
+
+        return stringBuilder.toString();
+    }
+
+
+
+    private List<String> getDatabaseChild(final List<RchChildRecord> childRecords) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<String>> queryExecution = new SqlQueryExecution<List<String>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "SELECT rchId FROM nms_mcts_children WHERE rchId IN " + queryIdListChildren(childRecords);
+                LOGGER.debug(SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public List<String> execute(Query query) {
+
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                List<String> result = new ArrayList<>();
+                for (String existingChildId : (List<String>) fqr) {
+                    result.add(existingChildId);
+                }
+                return result;
+            }
+        };
+
+        List<String> result = (List<String>) rchImportFacilitatorDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("Database child query time {}", queryTimer.time());
+        return result;
+
+    }
+
+    private String queryIdListChildren(List<RchChildRecord> childRecords) {
+        StringBuilder stringBuilder = new StringBuilder();
+        int i = 0;
+        stringBuilder.append("(");
+        for (RchChildRecord childRecord: childRecords) {
+            if (i != 0) {
+                stringBuilder.append(", ");
+            }
+            stringBuilder.append(QUOTATION + childRecord.getRegistrationNo() + QUOTATION);
+            i++;
+        }
+        stringBuilder.append(")");
+
+        return stringBuilder.toString();
+    }
+
+
+    private List<String> getDatabaseAsha(final List<RchAnmAshaRecord> ashaRecords) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<String>> queryExecution = new SqlQueryExecution<List<String>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "SELECT mctsFlwId FROM nms_front_line_workers WHERE mctsFlwId IN " + queryIdListAsha(ashaRecords);
+                LOGGER.debug(SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public List<String> execute(Query query) {
+
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                List<String> result = new ArrayList<>();
+                for (String existingAshaId : (List<String>) fqr) {
+                    result.add(existingAshaId);
+                }
+                return result;
+            }
+        };
+
+        List<String> result = (List<String>) rchImportFacilitatorDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("Database asha's query time {}", queryTimer.time());
+        return result;
+
+    }
+
+    private String queryIdListAsha(List<RchAnmAshaRecord> ashaRecords) {
+        StringBuilder stringBuilder = new StringBuilder();
+        int i = 0;
+        stringBuilder.append("(");
+        for (RchAnmAshaRecord ashaRecord: ashaRecords) {
+            if (i != 0) {
+                stringBuilder.append(", ");
+            }
+            stringBuilder.append(QUOTATION + ashaRecord.getGfId() + QUOTATION);
+            i++;
+        }
+        stringBuilder.append(")");
+
+        return stringBuilder.toString();
+    }
+
+    private Date getDateFromFileName(String fileName) throws ParseException {
+        String[] names = fileName.split("_");
+        String dateString = names[5].split(".csv")[0];
+        Date date = new SimpleDateFormat(DATE_FORMAT).parse(dateString);
+        return date;
+    }
+
+
+
+
+
 }
+
+
+

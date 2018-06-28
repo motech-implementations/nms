@@ -82,6 +82,11 @@
             <groupId>org.apache.servicemix.bundles</groupId>
             <artifactId>org.apache.servicemix.bundles.wsdl4j</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <repositories>
@@ -126,6 +131,7 @@
                             org.motechproject.nms.flw.exception,
                             org.motechproject.nms.flw.repository,
                             org.motechproject.nms.flw.service,
+                            org.motechproject.nms.flwUpdate.service,
                             org.motechproject.nms.flw.utils,
                             org.motechproject.nms.kilkari.domain,
                             org.motechproject.nms.kilkari.repository,
@@ -135,6 +141,7 @@
                             org.motechproject.nms.region.domain,
                             org.motechproject.nms.region.exception,
                             org.motechproject.nms.region.repository,
+                            org.motechproject.nms.region.service,
                             org.motechproject.nms.rejectionhandler.repository,
                             org.motechproject.nms.rejectionhandler.service,
                             javax.mail,

@@ -1,6 +1,8 @@
 package org.motechproject.nms.flwUpdate.service;
 
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
+import org.motechproject.nms.kilkari.contract.AnmAshaRecord;
+import org.motechproject.nms.kilkari.contract.RchAnmAshaRecord;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
@@ -23,4 +25,8 @@ public interface FrontLineWorkerImportService {
     boolean createUpdate(Map<String, Object> flwRecord, SubscriptionOrigin importOrigin);
 
     boolean updateLoc(Map<String, Object> flwRecord);
+
+    RchAnmAshaRecord convertMapToRchAsha(Map<String, Object> record);
+
+    AnmAshaRecord convertMapToAsha(Map<String, Object> record);
 }

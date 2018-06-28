@@ -72,7 +72,6 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
             LOGGER.debug("Started mother import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
 
             MctsMother mother = mctsImport ? mctsBeneficiaryValueProcessor.getOrCreateMotherInstance((String) record.get(id)) : mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
-            // TODO: Add this to bulk insert
             if (mother == null) {
                 MotherImportRejection motherImportRejection1 = motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), KilkariConstants.CREATE);
                 rejectedMothers.put(motherImportRejection1.getIdNo(), motherImportRejection1);

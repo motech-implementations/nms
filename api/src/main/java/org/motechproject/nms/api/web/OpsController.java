@@ -5,6 +5,7 @@ import org.motechproject.event.listener.EventRelay;
 import org.motechproject.nms.api.web.contract.AddFlwRequest;
 import org.motechproject.nms.api.web.contract.AddRchFlwRequest;
 import org.motechproject.nms.api.web.contract.UpdateFlwLocationRequest;
+import org.motechproject.nms.api.web.service.BeneficiaryUpdateService;
 import org.motechproject.nms.api.web.service.FlwCsvService;
 import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.kilkari.utils.FlwConstants;
@@ -17,11 +18,16 @@ import org.motechproject.nms.kilkari.service.MctsChildFixService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
+import org.motechproject.nms.mcts.domain.MctsUserType;
+import org.motechproject.nms.mcts.service.MctsWebServiceFacade;
 import org.motechproject.nms.mcts.service.MctsWsImportService;
 import org.motechproject.nms.props.service.LogHelper;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 
+import org.motechproject.nms.rch.domain.RchUserType;
+import org.motechproject.nms.rch.service.RchWebServiceFacade;
+import org.motechproject.nms.region.service.LocationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +40,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
@@ -75,7 +83,24 @@ public class OpsController extends BaseController {
     @Autowired
     private FlwCsvService flwCsvService;
 
+    @Autowired
+    private RchWebServiceFacade rchWebServiceFacade;
+
+    @Autowired
+    private BeneficiaryUpdateService beneficiaryUpdateService;
+
+    @Autowired
+    private MctsWebServiceFacade mctsWebServiceFacade;
+
+
+    @Autowired
+    private LocationService locationService;
+
     private final String contactNumber = "contactNumber";
+    private final String mother = "mother";
+    private final String child = "child";
+    private final String asha = "asha";
+
 
     //only for debugging purposes and will not be returned anywhere
     public static final String NON_ASHA_TYPE = "<MctsId: %s,Contact Number: %s, Invalid Type: %s>";
@@ -234,6 +259,124 @@ public class OpsController extends BaseController {
             throw new CsvImportException("An error occurred during CSV import", e);
         }
         LOGGER.debug("updateMotherInChild() END");
+    }
+
+    @RequestMapping(value = "/locUpdate/{stateID}/{type}",
+            method = RequestMethod.GET)
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public Boolean locationUpdate(@PathVariable("stateID") Long stateID, @PathVariable("type") String type) {
+        log("REQUEST: /ops/locUpdate", String.format(
+                "type=%s",
+                type));
+        if (mother.equalsIgnoreCase(type)) {
+            LOGGER.debug(mother);
+            rchWebServiceFacade.locationUpdateInTable(stateID, RchUserType.MOTHER);
+        } else if (child.equalsIgnoreCase(type)) {
+            LOGGER.debug(child);
+            rchWebServiceFacade.locationUpdateInTable(stateID, RchUserType.CHILD);
+        } else if (asha.equalsIgnoreCase(type)) {
+            LOGGER.debug(asha);
+            rchWebServiceFacade.locationUpdateInTable(stateID, RchUserType.ASHA);
+        } else {
+            LOGGER.debug("No such type");
+        }
+
+        return true;
+    }
+
+    @RequestMapping(value = "/locUpdateCsv/{stateID}/{type}/{origin}",
+            method = RequestMethod.GET)
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public Boolean locationUpdateCsv(@PathVariable("stateID") Long stateID, @PathVariable("type") String type, @PathVariable("origin") String origin) throws IOException {
+        log("REQUEST: /ops/locUpdate", String.format(
+                "type=%s",
+                type));
+        if ("rch".equalsIgnoreCase(origin)) {
+            if (mother.equalsIgnoreCase(type)) {
+                LOGGER.debug(mother);
+                rchWebServiceFacade.locationUpdateInTableFromCsv(stateID, RchUserType.MOTHER);
+            } else if (child.equalsIgnoreCase(type)) {
+                LOGGER.debug(child);
+                rchWebServiceFacade.locationUpdateInTableFromCsv(stateID, RchUserType.CHILD);
+            } else if (asha.equalsIgnoreCase(type)) {
+                LOGGER.debug(asha);
+                rchWebServiceFacade.locationUpdateInTableFromCsv(stateID, RchUserType.ASHA);
+            } else {
+                LOGGER.debug("No such type");
+            }
+
+            return true;
+        } else if ("mcts".equalsIgnoreCase(origin)) {
+            if (mother.equalsIgnoreCase(type)) {
+                LOGGER.debug(mother);
+                mctsWebServiceFacade.locationUpdateInTableFromCsv(stateID, MctsUserType.MOTHER);
+            } else if (child.equalsIgnoreCase(type)) {
+                LOGGER.debug(child);
+                mctsWebServiceFacade.locationUpdateInTableFromCsv(stateID, MctsUserType.CHILD);
+            } else if (asha.equalsIgnoreCase(type)) {
+                LOGGER.debug(asha);
+                mctsWebServiceFacade.locationUpdateInTableFromCsv(stateID, MctsUserType.ASHA);
+            } else {
+                LOGGER.debug("No such type");
+                return true;
+            }
+        } else {
+            return false;
+        }
+        return true;
+    }
+
+    @RequestMapping(value = "/createLocations/{stateID}",
+            method = RequestMethod.GET)
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public Boolean createLocations(@PathVariable("stateID") Long stateID) {
+        String locationType = "District";
+        try {
+            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationType = "Taluka";
+            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationType = "HealthBlock";
+            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationType = "TalukaHealthBlock";
+            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationType = "HealthFacility";
+            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationType = "HealthSubFacility";
+            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationType = "Village";
+            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationType = "VillageHealthSubFacility";
+            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+        } catch (IOException e) {
+            LOGGER.error("{} Location File not Found. Exception: {}", locationType, e);
+        }
+        return true;
+    }
+
+    @RequestMapping(value = "/updateLocations/{stateID}/{type}/{origin}",
+            method = RequestMethod.GET)
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public Boolean updateLocations(@PathVariable("stateID") Long stateID, @PathVariable("type") String type, @PathVariable("origin") String origin) throws IOException {
+        log("REQUEST: /ops/locUpdate", String.format(
+                "type=%s",
+                type));
+        if (mother.equalsIgnoreCase(type)) {
+            LOGGER.debug(mother);
+            beneficiaryUpdateService.rchBulkUpdate(stateID, RchUserType.MOTHER, origin);
+        } else if (child.equalsIgnoreCase(type)) {
+            LOGGER.debug(child);
+            beneficiaryUpdateService.rchBulkUpdate(stateID, RchUserType.CHILD, origin);
+        } else if (asha.equalsIgnoreCase(type)) {
+            LOGGER.debug(asha);
+            beneficiaryUpdateService.rchBulkUpdate(stateID, RchUserType.ASHA, origin);
+        } else {
+            LOGGER.debug("No such type");
+        }
+        return true;
     }
 
 }

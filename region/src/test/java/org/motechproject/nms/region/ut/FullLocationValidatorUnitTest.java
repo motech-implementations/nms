@@ -16,8 +16,7 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
-import java.util.Collections;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 
@@ -75,8 +74,12 @@ public class FullLocationValidatorUnitTest {
         taluka.setDistrict(district);
         taluka.getVillages().add(village);
         village.setTaluka(taluka);
-        taluka.getHealthBlocks().add(healthBlock);
-        healthBlock.setTaluka(taluka);
+
+        healthBlock.addTaluka(taluka);
+        healthBlock.setDistrict(district);
+
+        taluka.addHealthBlock(healthBlock);
+
         healthBlock.getHealthFacilities().add(healthFacility);
         healthFacility.setHealthBlock(healthBlock);
         healthFacility.getHealthSubFacilities().add(healthSubFacility);

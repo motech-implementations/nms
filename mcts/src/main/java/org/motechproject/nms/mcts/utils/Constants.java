@@ -15,6 +15,7 @@ public final class Constants {
     public static final String BASE_HPD_CONFIG = "mcts.hpd.state";
     public static final String MCTS_DID = "mcts.credentials.did";
     public static final String MCTS_PID = "mcts.credentials.pid";
+    public static final String REMOTE_RESPONSE_DIR_CSV = "mcts.remote_response_dir_csv";
 
     /**
      * Events
