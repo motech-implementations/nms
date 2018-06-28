@@ -1,5 +1,6 @@
 package org.motechproject.nms.rejectionhandler.service.impl;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -168,7 +169,12 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
             @Override
             public Long execute(Query query) {
                 query.setClass(ChildImportRejection.class);
-                return (Long) query.execute();
+                try {
+                    return (Long) query.execute();
+                } catch (Exception e) {
+                    LOGGER.debug("Error while running Child Rejection Bulk Insert", e);
+                    return 0L;
+                }
             }
         };
 
@@ -207,7 +213,12 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
             @Override
             public Long execute(Query query) {
                 query.setClass(ChildImportRejection.class);
-                return (Long) query.execute();
+                try {
+                    return (Long) query.execute();
+                } catch (Exception e) {
+                    LOGGER.debug("Error while running Child Rejection Bulk Update", e);
+                    return 0L;
+                }
             }
         };
 
@@ -288,7 +299,12 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
             public Long execute(Query query) {
 
                 query.setClass(ChildImportRejection.class);
-                return (Long) query.execute();
+                try {
+                    return (Long) query.execute();
+                } catch (Exception e) {
+                    LOGGER.debug("Error while running Child Rejection Bulk Insert", e);
+                    return 0L;
+                }
             }
         };
 
@@ -360,7 +376,12 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
             public Long execute(Query query) {
 
                 query.setClass(ChildImportRejection.class);
-                return (Long) query.execute();
+                try {
+                    return (Long) query.execute();
+                } catch (Exception e) {
+                    LOGGER.debug("Error while running Child Rejection Bulk Update", e);
+                    return 0L;
+                }
             }
         };
 
@@ -456,8 +477,8 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
         stringBuilder.append(QUOTATION + child.getgPVillage() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getAddress() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getIdNo() + QUOTATION_COMMA);
-        stringBuilder.append(QUOTATION + child.getName() + QUOTATION_COMMA);
-        stringBuilder.append(QUOTATION + child.getMotherName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(child.getName()) + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(child.getMotherName()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getMotherId() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getPhoneNumberWhom() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getMobileNo() + QUOTATION_COMMA);
@@ -466,9 +487,9 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
         stringBuilder.append(QUOTATION + child.getBloodGroup() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getCaste() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getSubcenterName1() + QUOTATION_COMMA);
-        stringBuilder.append(QUOTATION + child.getaNMName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(child.getaNMName()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getaNMPhone() + QUOTATION_COMMA);
-        stringBuilder.append(QUOTATION + child.getAshaName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(child.getAshaName()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getAshaPhone() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getbCGDt() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getoPV0Dt() + QUOTATION_COMMA);
@@ -529,7 +550,7 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
         stringBuilder.append(QUOTATION + child.getSubcentreName() + QUOTATION_COMMA);
         stringBuilder.append(child.getVillageId() + ", ");
         stringBuilder.append(QUOTATION + child.getVillageName() + QUOTATION_COMMA);
-        stringBuilder.append(QUOTATION + child.getName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(child.getName()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getMobileNo() + QUOTATION_COMMA);
         stringBuilder.append(child.getStateId() + ", ");
         stringBuilder.append(child.getDistrictId() + ", ");

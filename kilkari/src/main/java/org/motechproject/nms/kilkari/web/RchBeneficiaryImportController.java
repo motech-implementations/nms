@@ -8,7 +8,6 @@ import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.csv.service.CsvAuditService;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService;
-import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,18 +32,12 @@ public class RchBeneficiaryImportController {
 
 
     private AlertService alertService;
-    private MctsBeneficiaryImportService mctsBeneficiaryImportService;
     private CsvAuditService csvAuditService;
     private MctsBeneficiaryImportReaderService mctsBeneficiaryImportReaderService;
 
     @Autowired
     public void setAlertService(AlertService alertService) {
         this.alertService = alertService;
-    }
-
-    @Autowired
-    public void setMctsBeneficiaryImportService(MctsBeneficiaryImportService mctsBeneficiaryImportService) {
-        this.mctsBeneficiaryImportService = mctsBeneficiaryImportService;
     }
 
     @Autowired
@@ -67,7 +60,7 @@ public class RchBeneficiaryImportController {
         int count = 0;
         try {
             try (InputStream in = csvFile.getInputStream()) {
-                count = mctsBeneficiaryImportService.importMotherData(new InputStreamReader(in), SubscriptionOrigin.RCH_IMPORT);
+                count = mctsBeneficiaryImportReaderService.importMotherData(new InputStreamReader(in), SubscriptionOrigin.RCH_IMPORT);
                 LOGGER.debug("count {}", count);
                 csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/rch/mother/import");
             }

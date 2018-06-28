@@ -8,8 +8,6 @@ import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.csv.service.CsvAuditService;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService;
-import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
-import org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +32,6 @@ public class MctsBeneficiaryImportController {
 
 
     private AlertService alertService;
-    private MctsBeneficiaryImportService mctsBeneficiaryImportService;
-    private MctsBeneficiaryUpdateService mctsBeneficiaryUpdateService;
     private CsvAuditService csvAuditService;
     private MctsBeneficiaryImportReaderService mctsBeneficiaryImportReaderService;
 
@@ -48,16 +44,6 @@ public class MctsBeneficiaryImportController {
     @Autowired
     public void setMctsBeneficiaryImportReaderService(MctsBeneficiaryImportReaderService mctsBeneficiaryImportReaderService) {
         this.mctsBeneficiaryImportReaderService = mctsBeneficiaryImportReaderService;
-    }
-
-    @Autowired
-    public void setMctsBeneficiaryImportService(MctsBeneficiaryImportService mctsBeneficiaryImportService) {
-        this.mctsBeneficiaryImportService = mctsBeneficiaryImportService;
-    }
-
-    @Autowired
-    public void setMctsBeneficiaryUpdateService(MctsBeneficiaryUpdateService mctsBeneficiaryUpdateService) {
-        this.mctsBeneficiaryUpdateService = mctsBeneficiaryUpdateService;
     }
 
     @Autowired
@@ -77,7 +63,7 @@ public class MctsBeneficiaryImportController {
         int count = 0;
         try {
             try (InputStream in = csvFile.getInputStream()) {
-                count = mctsBeneficiaryImportService.importMotherData(new InputStreamReader(in), SubscriptionOrigin.MCTS_IMPORT);
+                count = mctsBeneficiaryImportReaderService.importMotherData(new InputStreamReader(in), SubscriptionOrigin.MCTS_IMPORT);
                 csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/mother/import");
             }
         } catch (CsvImportException e) {
@@ -110,25 +96,6 @@ public class MctsBeneficiaryImportController {
             throw new CsvImportException("An error occurred during CSV import", e);
         }
         LOGGER.debug("importChildData() END ({})", count > 0 ? timer.frequency(count) : timer.time());
-    }
-
-    @RequestMapping(value = "/beneficiary/update", method = RequestMethod.POST)
-    @ResponseStatus(HttpStatus.OK)
-    public void updateBeneficiaryData(@RequestParam MultipartFile csvFile) {
-
-        LOGGER.debug("updateBeneficiaryData() BEGIN");
-        try {
-            try (InputStream in = csvFile.getInputStream()) {
-                mctsBeneficiaryUpdateService.updateBeneficiaryData(new InputStreamReader(in));
-                csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/kilkari/beneficiary/update");
-            }
-        } catch (CsvImportException e) {
-            logError(csvFile.getOriginalFilename(), "/kilkari/beneficiary/update", e);
-            throw e;
-        } catch (Exception e) {
-            logError(csvFile.getOriginalFilename(), "/kilkari/beneficiary/update", e);
-            throw new CsvImportException("An error occurred during CSV import", e);
-        }
     }
 
     private void logError(String fileName, String endpoint, Exception exception) {

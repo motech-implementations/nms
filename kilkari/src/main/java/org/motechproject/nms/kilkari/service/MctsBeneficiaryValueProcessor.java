@@ -2,8 +2,13 @@ package org.motechproject.nms.kilkari.service;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
+import org.motechproject.nms.region.domain.LocationFinder;
+import org.motechproject.nms.region.exception.InvalidLocationException;
+
+import java.util.Map;
 
 
 public interface MctsBeneficiaryValueProcessor {
@@ -31,4 +36,6 @@ public interface MctsBeneficiaryValueProcessor {
     Long getMsisdnByString(String value);
 
     MctsChild getOrCreateRchChildInstance(String childId, String mctsId);
+
+    void setLocationFieldsCSV(LocationFinder locationFinder, Map<String, Object> record, MctsBeneficiary beneficiary) throws InvalidLocationException;
 }
