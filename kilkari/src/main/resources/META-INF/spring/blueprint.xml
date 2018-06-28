@@ -40,9 +40,6 @@
     <osgi:service ref="mctsChildFixService"
                   interface="org.motechproject.nms.kilkari.service.MctsChildFixService" />
 
-    <osgi:service ref="mctsBeneficiaryUpdateService"
-                  interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryUpdateService" />
-
     <osgi:service ref="mctsBeneficiaryValueProcessor"
                   interface="org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor"/>
 

@@ -6,7 +6,6 @@ import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.kilkari.domain.MctsBeneficiary;
-import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;

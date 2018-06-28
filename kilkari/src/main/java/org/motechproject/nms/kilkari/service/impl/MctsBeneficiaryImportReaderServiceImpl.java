@@ -9,17 +9,16 @@ import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetString;
-import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.MctsMother;
-import org.motechproject.nms.kilkari.domain.RejectionReasons;
+import org.motechproject.nms.kilkari.domain.ThreadProcessorObject;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
-import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
-import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
+import org.motechproject.nms.region.domain.LocationFinder;
+import org.motechproject.nms.region.service.LocationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,33 +31,40 @@ import javax.validation.ConstraintViolationException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
-
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionRch;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToRchChild;
+import java.util.HashMap;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 @Service("mctsBeneficiaryImportReaderService")
 public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryImportReaderService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportReaderServiceImpl.class);
 
+    //Number of records to be processed by each thread
+    private static final int RECORDS_PART_SIZE = 10000;
+
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
+    private LocationService locationService;
 
     @Autowired
-    private ChildRejectionService childRejectionService;
-
-
-    @Autowired
-    public MctsBeneficiaryImportReaderServiceImpl(MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor, MctsBeneficiaryImportService mctsBeneficiaryImportService) {
+    public MctsBeneficiaryImportReaderServiceImpl(MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor, MctsBeneficiaryImportService mctsBeneficiaryImportService, LocationService locationService) {
         this.mctsBeneficiaryValueProcessor = mctsBeneficiaryValueProcessor;
         this.mctsBeneficiaryImportService = mctsBeneficiaryImportService;
+        this.locationService = locationService;
     }
 
     @Override //NO CHECKSTYLE Cyclomatic Complexity
     public int  importChildData(Reader reader, SubscriptionOrigin importOrigin) throws IOException { //NOPMD NcssMethodCount
-        int count = 0;
         /**
          * Count of all the records rejected for unknown exceptions. So, doesn't include the ones saved in nms_subscription_errors.
          * This is used just for debugging purpose.
@@ -67,86 +73,77 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
 
         BufferedReader bufferedReader = new BufferedReader(reader);
         Map<String, CellProcessor> cellProcessorMapper;
-        String id;
         String contactNumber;
-        String childInstance;
-        Boolean mctsImport = importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT);
+        final Boolean mctsImport = importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT);
 
         if (mctsImport) {
             cellProcessorMapper = this.getChildProcessorMapping();
-            id = KilkariConstants.BENEFICIARY_ID;
             contactNumber = KilkariConstants.MSISDN;
-            childInstance = KilkariConstants.MCTS_CHILD;
         } else {
             cellProcessorMapper = this.getRchChildProcessorMapping();
-            id = KilkariConstants.RCH_ID;
             contactNumber = KilkariConstants.MOBILE_NO;
-            childInstance = KilkariConstants.RCH_CHILD;
         }
 
-        CsvMapImporter csvImporter = new CsvImporterBuilder()
-                .setProcessorMapping(cellProcessorMapper)
-                .setPreferences(CsvPreference.TAB_PREFERENCE)
-                .createAndOpen(bufferedReader);
+        List<Map<String, Object>> recordList = readCsv(bufferedReader, cellProcessorMapper);
+
+        LocationFinder locationFinder = locationService.updateLocations(recordList);
+
+        recordList = sortByMobileNumber(recordList, mctsImport);
 
         try {
-            Map<String, Object> record;
             Map<String, Object> rejectedChilds = new HashMap<>();
             Map<String, Object> rejectionStatus = new HashMap<>();
-            ChildImportRejection childImportRejection;
-
             Timer timer = new Timer("kid", "kids");
-            while (null != (record = csvImporter.read())) {
-                count++;
-                LOGGER.debug("Started child import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
 
-                MctsChild child = mctsImport ? mctsBeneficiaryValueProcessor.getOrCreateChildInstance((String) record.get(id)) : mctsBeneficiaryValueProcessor.getOrCreateRchChildInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
-                // TODO: Add this to bulk insert
-                if (child == null) {
-                    childRejectionService.createOrUpdateChild(childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), KilkariConstants.CREATE));
-                    LOGGER.error("RchId is empty while importing child at msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
-                    rejectedWithException++;
-                    continue;
-                }
+            List<List<Map<String, Object>>> recordListArray = splitRecords(recordList, contactNumber);
 
-                String action = (child.getId() == null) ? KilkariConstants.CREATE : KilkariConstants.UPDATE;
-                record.put(KilkariConstants.ACTION, action);
-                record.put(childInstance, child);
+            LOGGER.debug("Thread Processing Start");
+            Integer recordsProcessed = 0;
+            ExecutorService executor = Executors.newCachedThreadPool();
+            List<Future<ThreadProcessorObject>> list = new ArrayList<>();
 
-                try {
-                    childImportRejection = mctsBeneficiaryImportService.importChildRecord(record, importOrigin);
-                    if (childImportRejection != null) {
-                        if (mctsImport) {
-                            rejectedChilds.put(childImportRejection.getIdNo(), childImportRejection);
-                            rejectionStatus.put(childImportRejection.getIdNo(), childImportRejection.getAccepted());
-                        } else {
-                            rejectedChilds.put(childImportRejection.getRegistrationNo(), childImportRejection);
-                            rejectionStatus.put(childImportRejection.getRegistrationNo(), childImportRejection.getAccepted());
-                        }
-                    }
-                    if (count % KilkariConstants.PROGRESS_INTERVAL == 0) {
-                        LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
-                    }
-                } catch (RuntimeException e) {
-                    LOGGER.error("Error while importing child at msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id), e);
-                    rejectedWithException++;
-                }
+            for (int i = 0; i < recordListArray.size(); i++) {
+                Callable<ThreadProcessorObject> callable = new ChildCsvThreadProcessor(recordListArray.get(i), mctsImport, importOrigin, locationFinder,
+                        mctsBeneficiaryValueProcessor, mctsBeneficiaryImportService);
+                Future<ThreadProcessorObject> future = executor.submit(callable);
+                list.add(future);
             }
 
+            for (Future<ThreadProcessorObject> fut : list) {
+                try {
+                    ThreadProcessorObject threadProcessorObject = fut.get();
+                    rejectedChilds.putAll(threadProcessorObject.getRejectedBeneficiaries());
+                    rejectionStatus.putAll(threadProcessorObject.getRejectionStatus());
+                    recordsProcessed += threadProcessorObject.getRecordsProcessed();
+                } catch (InterruptedException | ExecutionException e) {
+                    LOGGER.error("Error while running thread", e);
+                }
+            }
+            executor.shutdown();
             try {
+                executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            } catch (InterruptedException e) {
+                LOGGER.error("Error while Terminating thread", e);
+            }
+            LOGGER.debug("Thread Processing End");
+            try {
+
                 if (!rejectedChilds.isEmpty()) {
                     if (mctsImport) {
                         mctsBeneficiaryImportService.createOrUpdateMctsRejections(rejectedChilds, rejectionStatus);
                     } else {
                         mctsBeneficiaryImportService.createOrUpdateRchRejections(rejectedChilds, rejectionStatus);
                     }
+
+                
+
                 }
             } catch (RuntimeException e) {
                 LOGGER.error("Error while bulk updating rejection records", e);
 
             }
 
-            LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
+            LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(recordsProcessed));
             LOGGER.debug(KilkariConstants.REJECTED, timer.frequency(rejectedWithException));
 
         } catch (ConstraintViolationException e) {
@@ -154,8 +151,154 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
                     ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
         }
 
-        return count;
+        return recordList.size();
     }
+
+    /**
+     * Expected file format:
+     * - any number of empty lines
+     * - header lines in the following format:  State Name : ACTUAL STATE_ID NAME
+     * - one empty line
+     * - CSV data (tab-separated)
+     */
+    @Override //NO CHECKSTYLE Cyclomatic Complexity
+    public int importMotherData(Reader reader, SubscriptionOrigin importOrigin) throws IOException { //NOPMD NcssMethodCount
+        /**
+         * Count of all the records rejected for unknown exceptions. So, doesn't include the ones saved in nms_subscription_errors.
+         * This is used just for debugging purpose.
+         */
+        int rejectedWithException = 0;
+
+        BufferedReader bufferedReader = new BufferedReader(reader);
+        Map<String, CellProcessor> cellProcessorMapper;
+        String contactNumber;
+        final Boolean mctsImport = importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT);
+
+        if (mctsImport) {
+            cellProcessorMapper = mctsBeneficiaryImportService.getMotherProcessorMapping();
+            contactNumber = KilkariConstants.MSISDN;
+        } else {
+            cellProcessorMapper = mctsBeneficiaryImportService.getRchMotherProcessorMapping();
+            contactNumber = KilkariConstants.MOBILE_NO;
+        }
+
+        List<Map<String, Object>> recordList = readCsv(bufferedReader, cellProcessorMapper);
+
+        LocationFinder locationFinder = locationService.updateLocations(recordList);
+
+        recordList = sortByMobileNumber(recordList, mctsImport);
+
+        try {
+            Map<String, Object> rejectedMothers = new HashMap<>();
+            Map<String, Object> rejectionStatus = new HashMap<>();
+            Timer timer = new Timer("mom", "moms");
+            List<List<Map<String, Object>>> recordListArray = splitRecords(recordList, contactNumber);
+
+            LOGGER.debug("Thread Processing Start");
+            Integer recordsProcessed = 0;
+            ExecutorService executor = Executors.newCachedThreadPool();
+            List<Future<ThreadProcessorObject>> list = new ArrayList<>();
+
+            for (int i = 0; i < recordListArray.size(); i++) {
+                Callable<ThreadProcessorObject> callable = new MotherCsvThreadProcessor(recordListArray.get(i), mctsImport, importOrigin, locationFinder,
+                        mctsBeneficiaryValueProcessor, mctsBeneficiaryImportService);
+                Future<ThreadProcessorObject> future = executor.submit(callable);
+                list.add(future);
+            }
+
+            for (Future<ThreadProcessorObject> fut : list) {
+                try {
+                    ThreadProcessorObject threadProcessorObject = fut.get();
+                    rejectedMothers.putAll(threadProcessorObject.getRejectedBeneficiaries());
+                    rejectionStatus.putAll(threadProcessorObject.getRejectionStatus());
+                    recordsProcessed += threadProcessorObject.getRecordsProcessed();
+                } catch (InterruptedException | ExecutionException e) {
+                    LOGGER.error("Error while running thread", e);
+                }
+            }
+            executor.shutdown();
+            try {
+                executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            } catch (InterruptedException e) {
+                LOGGER.error("Error while Terminating thread", e);
+            }
+            LOGGER.debug("Thread Processing End");
+            try {
+                if (mctsImport) {
+                    mctsBeneficiaryImportService.createOrUpdateMctsMotherRejections(rejectedMothers , rejectionStatus);
+                } else {
+                    mctsBeneficiaryImportService.createOrUpdateRchMotherRejections(rejectedMothers , rejectionStatus);
+                }
+            } catch (RuntimeException e) {
+                LOGGER.error("Error while bulk updating rejection records", e);
+
+            }
+
+            LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(recordsProcessed));
+            LOGGER.debug(KilkariConstants.REJECTED, timer.frequency(rejectedWithException));
+
+        } catch (ConstraintViolationException e) {
+            throw new CsvImportDataException(String.format("Mother import error, constraints violated: %s",
+                    ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
+        }
+
+        return recordList.size();
+    }
+
+    private List<List<Map<String, Object>>> splitRecords(List<Map<String, Object>> recordList, String contactNumber) {
+        List<List<Map<String, Object>>> recordListArray = new ArrayList<>();
+        int count = 0;
+        while (count < recordList.size()) {
+            List<Map<String, Object>> recordListPart = new ArrayList<>();
+            while (recordListPart.size() < RECORDS_PART_SIZE && count < recordList.size()) {
+                recordListPart.add(recordList.get(count));
+                count++;
+            }
+            //Add all records with same contact number to the same part
+            while (count < recordList.size() && (recordList.get(count).get(contactNumber) == null ? "0": recordList.get(count).get(contactNumber))
+                    .equals(recordListPart.get(recordListPart.size() - 1)
+                            .get(contactNumber))) {
+                recordListPart.add(recordList.get(count));
+                count++;
+            }
+            LOGGER.debug("Added records to part {}", recordListArray.size() + 1);
+            recordListArray.add(recordListPart);
+            LOGGER.debug("Added recordListPart to recordListArray");
+        }
+        LOGGER.debug("Split {} records to {} parts", recordList.size(), recordListArray.size());
+        return recordListArray;
+    }
+
+    private List<Map<String, Object>> readCsv(BufferedReader bufferedReader, Map<String, CellProcessor> cellProcessorMapper) throws IOException {
+        int count = 0;
+
+        CsvMapImporter csvImporter = new CsvImporterBuilder()
+                .setProcessorMapping(cellProcessorMapper)
+                .setPreferences(CsvPreference.TAB_PREFERENCE)
+                .createAndOpen(bufferedReader);
+
+        List<Map<String, Object>> recordList = new ArrayList<>();
+        Map<String, Object> record;
+        while (null != (record = csvImporter.read())) {
+            recordList.add(record);
+            count++;
+        }
+        LOGGER.debug("{} records added to object", count);
+        return recordList;
+    }
+
+    private List<Map<String, Object>> sortByMobileNumber(List<Map<String, Object>> recordList, final Boolean mctsImport) {
+        Collections.sort(recordList, new Comparator<Map<String, Object>>() {
+            public int compare(Map<String, Object> m1, Map<String, Object> m2) {
+                Object phoneM1 = m1.get(mctsImport ? KilkariConstants.MSISDN : KilkariConstants.MOBILE_NO);
+                Object phoneM2 = m2.get(mctsImport ? KilkariConstants.MSISDN : KilkariConstants.MOBILE_NO);
+                return ((Long) (phoneM1 == null ? 0L : phoneM1))
+                        .compareTo((Long) (phoneM2 == null ? 0L : phoneM2)); //ascending order
+            }
+        });
+        return recordList;
+    }
+
 
     private Map<String, CellProcessor> getChildProcessorMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
