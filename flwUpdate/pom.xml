@@ -7,12 +7,12 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.36</version>
+        <version>1.0.37</version>
         <relativePath>../</relativePath>
     </parent>
 
     <artifactId>flwUpdate</artifactId>
-    <version>1.0.36</version>
+    <version>1.0.37</version>
     <packaging>bundle</packaging>
     <name>FLW Update Module</name>
 
