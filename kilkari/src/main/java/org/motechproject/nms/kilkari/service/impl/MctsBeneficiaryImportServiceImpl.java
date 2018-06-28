@@ -528,8 +528,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 }
             }
 
-            Long createdNo = (createObjects.size() == 0) ? 0 : rchBulkInsert(createObjects);
-            Long updatedNo = (updateObjects.size() == 0) ? 0 : rchBulkUpdate(updateObjects);
+            Long createdNo = (createObjects.size() == 0) ? 0 : rchChildBulkInsert(createObjects);
+            Long updatedNo = (updateObjects.size() == 0) ? 0 : rchChildBulkUpdate(updateObjects);
             LOGGER.debug(IMPORT_STATS_LOG, createdNo, updatedNo);
         } else {
             LOGGER.debug("The set is empty!");
