@@ -1,5 +1,6 @@
 package org.motechproject.nms.rejectionhandler.service.impl;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -173,7 +174,12 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
             @Override
             public Long execute(Query query) {
                 query.setClass(MotherImportRejection.class);
-                return (Long) query.execute();
+                try {
+                    return (Long) query.execute();
+                } catch (Exception e) {
+                    LOGGER.debug("Error while running Mother Rejection Bulk Insert", e);
+                    return 0L;
+                }
             }
         };
 
@@ -246,7 +252,12 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
             public Long execute(Query query) {
 
                 query.setClass(MotherImportRejection.class);
-                return (Long) query.execute();
+                try {
+                    return (Long) query.execute();
+                } catch (Exception e) {
+                    LOGGER.debug("Error while running Mother Rejection Bulk Update", e);
+                    return 0L;
+                }
             }
         };
 
@@ -280,7 +291,12 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
             @Override
             public Long execute(Query query) {
                 query.setClass(MotherImportRejection.class);
-                return (Long) query.execute();
+                try {
+                    return (Long) query.execute();
+                } catch (Exception e) {
+                    LOGGER.debug("Error while running Mother Rejection Bulk Insert", e);
+                    return 0L;
+                }
             }
         };
 
@@ -327,7 +343,12 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
             public Long execute(Query query) {
 
                 query.setClass(MotherImportRejection.class);
-                return (Long) query.execute();
+                try {
+                    return (Long) query.execute();
+                } catch (Exception e) {
+                    LOGGER.debug("Error while running Mother Rejection Bulk Update", e);
+                    return 0L;
+                }
             }
         };
 
@@ -452,17 +473,17 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
         stringBuilder.append(QUOTATION + mother.getgPVillage() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getAddress() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getIdNo() + QUOTATION_COMMA);
-        stringBuilder.append(QUOTATION + mother.getName() + QUOTATION_COMMA);
-        stringBuilder.append(QUOTATION + mother.getHusbandName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(mother.getName()) + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(mother.getHusbandName()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getPhoneNumberWhom() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getMobileNo() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getBirthDate() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getjSYBeneficiary() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getCaste() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getSubcenterName1() + QUOTATION_COMMA);
-        stringBuilder.append(QUOTATION + mother.getaNMName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(mother.getaNMName()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getaNMPhone() + QUOTATION_COMMA);
-        stringBuilder.append(QUOTATION + mother.getAshaName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(mother.getAshaName()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getAshaPhone() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getDeliveryLnkFacility() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getFacilityName() + QUOTATION_COMMA);
@@ -492,19 +513,19 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
         stringBuilder.append(QUOTATION + mother.getpPCMethod() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getpNCCheckup() + QUOTATION_COMMA);
         stringBuilder.append(mother.getOutcomeNos() + ", ");
-        stringBuilder.append(QUOTATION + mother.getChild1Name() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(mother.getChild1Name()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getChild1Sex() + QUOTATION_COMMA);
         stringBuilder.append(mother.getChild1Wt() + ", ");
         stringBuilder.append(QUOTATION + mother.getChild1Brestfeeding() + QUOTATION_COMMA);
-        stringBuilder.append(QUOTATION + mother.getChild2Name() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(mother.getChild2Name()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getChild2Sex() + QUOTATION_COMMA);
         stringBuilder.append(mother.getChild2Wt() + ", ");
         stringBuilder.append(QUOTATION + mother.getChild2Brestfeeding() + QUOTATION_COMMA);
-        stringBuilder.append(QUOTATION + mother.getChild3Name() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(mother.getChild3Name()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getChild3Sex() + QUOTATION_COMMA);
         stringBuilder.append(mother.getChild3Wt() + ", ");
         stringBuilder.append(QUOTATION + mother.getChild3Brestfeeding() + QUOTATION_COMMA);
-        stringBuilder.append(QUOTATION + mother.getChild4Name() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(mother.getChild4Name()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getChild4Sex() + QUOTATION_COMMA);
         stringBuilder.append(mother.getChild4Wt() + ", ");
         stringBuilder.append(QUOTATION + mother.getChild4Brestfeeding() + QUOTATION_COMMA);
@@ -539,7 +560,7 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
         stringBuilder.append(QUOTATION + mother.getIdNo() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getRegistrationNo() + QUOTATION_COMMA);
         stringBuilder.append(mother.getCaseNo() + ", ");
-        stringBuilder.append(QUOTATION + mother.getName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(mother.getName()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getMobileNo() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getLmpDate() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getBirthDate() + QUOTATION_COMMA);
