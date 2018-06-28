@@ -130,9 +130,9 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
 
                 if (!rejectedChilds.isEmpty()) {
                     if (mctsImport) {
-                        mctsBeneficiaryImportService.createOrUpdateMctsRejections(rejectedChilds, rejectionStatus);
+                        mctsBeneficiaryImportService.createOrUpdateMctsChildRejections(rejectedChilds, rejectionStatus);
                     } else {
-                        mctsBeneficiaryImportService.createOrUpdateRchRejections(rejectedChilds, rejectionStatus);
+                        mctsBeneficiaryImportService.createOrUpdateRchChildRejections(rejectedChilds, rejectionStatus);
                     }
 
                 
