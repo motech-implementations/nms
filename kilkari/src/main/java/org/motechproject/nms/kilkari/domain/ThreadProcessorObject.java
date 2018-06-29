@@ -3,6 +3,9 @@ package org.motechproject.nms.kilkari.domain;
 import java.util.Map;
 
 /**
+ * Custom object used by each thread while processing a csv or xml.
+ * rejectedBeneficiaries is a map of RCH/MCTS id and rejected beneficiaries
+ * rejectionStatus is a map of RCH/MCTS id and rejection status of beneficiary
  * Created by beehyv on 25/4/18.
  */
 public class ThreadProcessorObject {

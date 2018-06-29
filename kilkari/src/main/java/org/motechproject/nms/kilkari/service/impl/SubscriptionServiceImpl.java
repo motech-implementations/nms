@@ -603,7 +603,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
-    public void activatePendingSubscriptionsUpTo(final DateTime upToDateTime) {
+    public Boolean activatePendingSubscriptionsUpTo(final DateTime upToDateTime, long maxActiveSubscriptions) {
+
+        long currentActive = subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
+        LOGGER.info("Found {} active subscriptions", currentActive);
+
+        long openSlots = maxActiveSubscriptions - subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
+        if (openSlots < 1) {
+            LOGGER.info("No open slots found for hold subscription activation. Slots: {}", openSlots);
+            return false;
+        }
         SqlQueryExecution sqe = new SqlQueryExecution() {
 
             @Override
@@ -625,6 +634,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         };
         subscriptionDataService.executeSQLQuery(sqe);
         subscriptionDataService.evictEntityCache(true);
+        return true;
     }
 
     /**
@@ -645,6 +655,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override
+    @Transactional
     public long activateHoldSubscriptions(long maxActiveSubscriptions) {
 
         LOGGER.info("Activating hold subscriptions up to {}", maxActiveSubscriptions);
@@ -729,7 +740,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                     "ss.creationDate, ss.creator, ss.modificationDate, ss.modifiedBy, ss.owner, s.dateOfBirth, s.lastMenstrualPeriod, sp.type FROM nms_subscriptions AS ss " +
                                     "JOIN nms_subscription_packs AS sp ON ss.subscriptionPack_id_OID = sp.id " +
                                     "JOIN nms_subscribers AS s ON ss.subscriber_id_OID = s.id " +
-                                    "WHERE ss.status = 'HOLD' AND origin = 'MCTS_IMPORT') AS res " + // Origin is superfluous here since IVR doesn't go on hold
+                                    "WHERE ss.status = 'HOLD' AND origin in ('MCTS_IMPORT', 'RCH_IMPORT')) AS res " + // Origin is superfluous here since IVR doesn't go on hold
                                 "ORDER BY referenceDate DESC " +
                                 "LIMIT :limit";
                 LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);

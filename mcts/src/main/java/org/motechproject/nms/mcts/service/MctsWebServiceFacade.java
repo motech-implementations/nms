@@ -22,6 +22,8 @@ public interface MctsWebServiceFacade {
 
     void locationUpdateInTableFromCsv(Long stateId, MctsUserType mctsUserType) throws IOException;
 
+    String getBeneficiaryLocationUpdateDirectory();
+
     void toMapLocMother(Map<String, Object> map, MotherRecord motherRecord);
 
     void toMapLocChild(Map<String, Object> map, ChildRecord childRecord);

@@ -57,7 +57,7 @@ public final class ObjectListCleaner {
         HashMap<String, Integer> motherPhoneMap = new HashMap<>();
         HashMap<String, String> motherPhoneIdMap = new HashMap<>();
         for (Map<String, Object> record : rchMotherRecords) {
-            String msisdn =  record.get(KilkariConstants.MOBILE_NO) == null ? null : record.get(KilkariConstants.MOBILE_NO).toString();
+            String msisdn = record.get(KilkariConstants.MOBILE_NO) == null ? null : record.get(KilkariConstants.MOBILE_NO).toString();
             String rchId = (String) record.get(KilkariConstants.RCH_ID);
             if (motherPhoneMap.containsKey(msisdn)) {
                 boolean identicalIdPhone = motherPhoneIdMap.get(msisdn).equals(rchId);
