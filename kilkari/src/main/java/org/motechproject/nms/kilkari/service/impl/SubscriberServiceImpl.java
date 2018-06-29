@@ -394,7 +394,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                         if (subscriberByMotherMctsId.getChild() != null) {
                             return childRejectionMcts(convertMapToChild(record), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action);
                         } else { // Update child and msisdn in same subscriber
-                            childUpdate.setDateOfBirth(dob);
                             subscriberByMotherMctsId.setChild(childUpdate);
                             subscriberByMotherMctsId.setDateOfBirth(dob);
                             subscriptionService.deleteBlockedMsisdn(childUpdate.getMother().getId(), subscriberByMotherMctsId.getCallingNumber(), msisdn);
@@ -428,7 +427,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                     } else { // Mother and child both are null. So must be an anonymous user. Check for IVR mother
                         Subscription motherSubscription = subscriptionService.getIVRSubscription(subscriber.getAllSubscriptions(), SubscriptionPackType.PREGNANCY);
                         if (motherSubscription == null) { // Update the Child anonymous user
-                            childUpdate.setDateOfBirth(dob);
                             subscriber.setDateOfBirth(dob);
                             subscriber.setChild(childUpdate);
                             subscriber.setMother(childUpdate.getMother());
@@ -444,7 +442,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                 }
 
                 if (subscriberByMctsId != null) {
-                    childUpdate.setDateOfBirth(dob);
                     subscriberByMctsId.setDateOfBirth(dob);
                     subscriberByMctsId.setChild(childUpdate);
                     finalSubscription = subscriptionService.createSubscription(subscriberByMctsId, msisdn, language, circle, pack, SubscriptionOrigin.MCTS_IMPORT);
@@ -463,7 +460,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                     subscriberByMctsId.setMother(childUpdate.getMother());
                 }
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
-                childUpdate.setDateOfBirth(dob);
                 subscriberByMctsId.setDateOfBirth(dob);
                 finalSubscription = updateOrCreateSubscription(subscriberByMctsId, subscription, dob, pack, language, circle, SubscriptionOrigin.MCTS_IMPORT, false);
             } else {    // we have a subscriber by phone# and also one with the MCTS id
@@ -471,7 +467,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                 for (Subscriber subscriber : subscriberByMsisdns) {
                     if (subscriberByMctsId.getId().equals(subscriber.getId())) {
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
-                        childUpdate.setDateOfBirth(dob);
                         subscriberByMctsId.setDateOfBirth(dob);
                         if (subscriberByMctsId.getMother() == null) {
                             subscriberByMctsId.setMother(childUpdate.getMother());
@@ -489,6 +484,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         }
 
         liveBirthChildDeathCheck(finalSubscription, record);
+        mctsChildDataService.update(childUpdate);
 
         return childRejectionMcts(convertMapToChild(record), true, null, action);
 
@@ -530,7 +526,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                     subscriberByRchId.setMother(childUpdate.getMother());
                 }
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
-                childUpdate.setDateOfBirth(dob);
                 subscriberByRchId.setDateOfBirth(dob);
                 finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
             } else {
@@ -542,8 +537,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                         if (subscriberByRchId.getMother() == null) {
                             subscriberByRchId.setMother(childUpdate.getMother());
                         }
-                        childUpdate.setDateOfBirth(dob);
-                        LOGGER.debug("ChildNameFinal: {}", childUpdate.getName());
                         subscriberByRchId.setDateOfBirth(dob);
                         finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
                     } else {
@@ -561,7 +554,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                 if (subscriberByRchMotherId == null) { // no subscriber exists with RCH mother id either
                     //create subscriber, beneficiary, subscription and return
                     Subscriber subscriber = new Subscriber(msisdn, language);
-                    childUpdate.setDateOfBirth(dob);
                     subscriber.setDateOfBirth(dob);
                     subscriber.setMother(childUpdate.getMother());
                     subscriber.setChild(childUpdate);
@@ -580,7 +572,7 @@ public class SubscriberServiceImpl implements SubscriberService {
             } else { //subscriber exists with provided msisdn
                 if (subscribersByMsisdn.size() == 1 && childUpdate.getMother() != null && subscribersByMsisdn.get(0).getMother() != null && subscribersByMsisdn.get(0).getChild() == null) {
                     //update subscriber with child
-                    if (subscribersByMsisdn.get(0).getMother().equals(childUpdate.getMother())) {
+                    if (subscribersByMsisdn.get(0).getMother().getRchId().equals(childUpdate.getMother().getRchId())) {
                         Subscriber subscriber = subscribersByMsisdn.get(0);
                         subscriber.setDateOfBirth(dob);
                         subscriber.setChild(childUpdate);
@@ -592,7 +584,6 @@ public class SubscriberServiceImpl implements SubscriberService {
 
                 } else if (subscribersByMsisdn.size() == 0 && childUpdate.getMother() == null) {
                     Subscriber subscriber = new Subscriber(msisdn, language);
-                    childUpdate.setDateOfBirth(dob);
                     subscriber.setDateOfBirth(dob);
                     subscriber.setMother(childUpdate.getMother());
                     subscriber.setChild(childUpdate);

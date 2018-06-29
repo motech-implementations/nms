@@ -81,6 +81,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private MctsChildDataService mctsChildDataService;
     private DeactivatedBeneficiaryService deactivatedBeneficiaryService;
 
+    // Number of rejected mother/children in a single query for bulk insert/update
     private static final Integer REJECTION_PART_SIZE = 5000;
     private static final String SUBSCRIPTION_COMPLETED = "Subscription completed";
     private static final String USER_DEACTIVATED = "User deactivated";
@@ -292,7 +293,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             if (record.get(KilkariConstants.RCH_MOTHER_ID) != null || record.get(KilkariConstants.MCTS_MOTHER_ID) != null) {
                 String motherRchId = record.get(KilkariConstants.RCH_MOTHER_ID) == null || "".equals(record.get(KilkariConstants.RCH_MOTHER_ID)) || "0".equalsIgnoreCase(record.get(KilkariConstants.RCH_MOTHER_ID).toString()) ? null : record.get(KilkariConstants.RCH_MOTHER_ID).toString();
                 String motherMctsId = record.get(KilkariConstants.MCTS_MOTHER_ID) == null || "".equals(record.get(KilkariConstants.MCTS_MOTHER_ID)) || "0".equalsIgnoreCase(record.get(KilkariConstants.MCTS_MOTHER_ID).toString()) ? null : record.get(KilkariConstants.MCTS_MOTHER_ID).toString();
-                if (motherRchId == null && motherMctsId != null) {
+                if ((motherRchId == null) && motherMctsId != null) {
                     mother = mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherMctsId);
                 } else if (motherRchId != null) {
                     mother = mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance(motherRchId, motherMctsId);
@@ -353,7 +354,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
 
         child.setName(name);
-        child.setMother(mother);
+        if (child.getId() != null && mother == null) {
+            LOGGER.debug("Not updating the child with null mother.");
+        } else {
+            child.setMother(mother);
+        }
+        child.setDateOfBirth(dob);
         child.setUpdatedDateNic(lastUpdateDateNic);
 
         List<DeactivatedBeneficiary> deactivatedUsers = null;
@@ -508,22 +514,27 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         List<ChildImportRejection> updateObjects = new ArrayList<>();
         List<ChildImportRejection> createObjects = new ArrayList<>();
 
-        Map<String, Object> childRejects = childRejectionService.findChildRejectionByRchId(rchIds);
-        ChildImportRejection child;
-        for (String rchId : rchIds) {
-            child = (ChildImportRejection) rejectedRecords.get(rchId);
-            if (childRejects.get(rchId) != null) {
-                updateChildRejectionRecord(childRejects, rchId, child, updateObjects);
-                continue;
+        if (!rchIds.isEmpty()) {
+            Map<String, Object> childRejects = childRejectionService.findChildRejectionByRchId(rchIds);
+            ChildImportRejection child;
+            for (String rchId : rchIds) {
+                child = (ChildImportRejection) rejectedRecords.get(rchId);
+                if (childRejects.get(rchId) != null) {
+                    updateChildRejectionRecord(childRejects, rchId, child, updateObjects);
+                    continue;
+                }
+                if (!(Boolean) rejectionStatus.get(rchId)) {
+                    createObjects.add(child);
+                }
             }
-            if (!(Boolean) rejectionStatus.get(rchId)) {
-                createObjects.add(child);
-            }
+
+            Long createdNo = (createObjects.size() == 0) ? 0 : rchChildBulkInsert(createObjects);
+            Long updatedNo = (updateObjects.size() == 0) ? 0 : rchChildBulkUpdate(updateObjects);
+            LOGGER.debug(IMPORT_STATS_LOG, createdNo, updatedNo);
+        } else {
+            LOGGER.debug("The set is empty!");
         }
 
-        Long createdNo = (createObjects.size() == 0) ? 0 : rchChildBulkInsert(createObjects);
-        Long updatedNo = (updateObjects.size() == 0) ? 0 : rchChildBulkUpdate(updateObjects);
-        LOGGER.debug(IMPORT_STATS_LOG, createdNo, updatedNo);
     }
 
     private void updateChildRejectionRecord(Map<String, Object> childRejects, String beneficiaryId, ChildImportRejection child, List<ChildImportRejection> updateObjects) {
@@ -913,7 +924,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         mapping.put(FlwConstants.GF_ID, new Optional(new GetLong()));
         mapping.put(FlwConstants.GF_NAME, new Optional(new GetString()));
 
-        mapping.put(FlwConstants.GF_TYPE, new Optional(new GetLong()));
+        mapping.put(FlwConstants.GF_TYPE, new Optional(new GetString()));
         mapping.put(FlwConstants.GF_STATUS, new Optional(new GetString()));
 
         return mapping;

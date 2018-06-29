@@ -48,6 +48,8 @@ import java.util.concurrent.TimeUnit;
 public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryImportReaderService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportReaderServiceImpl.class);
+
+    //Number of records to be processed by each thread
     private static final int RECORDS_PART_SIZE = 10000;
 
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
@@ -125,10 +127,16 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             }
             LOGGER.debug("Thread Processing End");
             try {
-                if (mctsImport) {
-                    mctsBeneficiaryImportService.createOrUpdateMctsChildRejections(rejectedChilds , rejectionStatus);
-                } else {
-                    mctsBeneficiaryImportService.createOrUpdateRchChildRejections(rejectedChilds , rejectionStatus);
+
+                if (!rejectedChilds.isEmpty()) {
+                    if (mctsImport) {
+                        mctsBeneficiaryImportService.createOrUpdateMctsChildRejections(rejectedChilds, rejectionStatus);
+                    } else {
+                        mctsBeneficiaryImportService.createOrUpdateRchChildRejections(rejectedChilds, rejectionStatus);
+                    }
+
+                
+
                 }
             } catch (RuntimeException e) {
                 LOGGER.error("Error while bulk updating rejection records", e);

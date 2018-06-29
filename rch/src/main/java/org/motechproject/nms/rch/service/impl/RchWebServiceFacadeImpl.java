@@ -107,7 +107,10 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.rmi.RemoteException;
+import java.text.ParseException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -135,14 +138,11 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String LOCAL_RESPONSE_DIR = "rch.local_response_dir";
     private static final String REMOTE_RESPONSE_DIR = "rch.remote_response_dir";
     private static final String REMOTE_RESPONSE_DIR_CSV = "rch.remote_response_dir_csv";
-    private static final String LOC_UPDATE_DIR_MCTS = "mcts.loc_update_dir";
     private static final String LOC_UPDATE_DIR_RCH = "rch.loc_update_dir";
     private static final String REMOTE_RESPONSE_DIR_LOCATION = "rch.remote_response_dir_locations";
-    private static final String LOC_UPDATE_DIR = "rch.loc_update_dir";
     private static final String NULL = "NULL";
     private static final String NEXT_LINE = "\r\n";
-    private final String mcts = "mstc";
-    private final String rch = "rch";
+    private static final String TAB = "\t";
 
     private static final String QUOTATION = "'";
     private static final String SQL_QUERY_LOG = "SQL QUERY: {}";
@@ -1217,6 +1217,13 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     public void locationUpdateInTable(Long stateId, RchUserType rchUserType) {
         try {
             List<RchImportFacilitator> rchImportFiles = rchImportFacilitatorService.findByStateIdAndRchUserType(stateId, rchUserType);
+
+            Collections.sort(rchImportFiles, new Comparator<RchImportFacilitator>() {
+                public int compare(RchImportFacilitator m1, RchImportFacilitator m2) {
+                    return m1.getImportDate().compareTo(m2.getImportDate()); //ascending order
+                }
+            });
+
             for (RchImportFacilitator rchImportFile : rchImportFiles
                     ) {
                 File remoteResponseFile = fileForLocUpdate(rchImportFile.getFileName());
@@ -1247,6 +1254,23 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     public void locationUpdateInTableFromCsv(Long stateId, RchUserType rchUserType) throws IOException {
 
             List<MultipartFile> rchImportFiles = findByStateIdAndRchUserType(stateId, rchUserType);
+
+            Collections.sort(rchImportFiles, new Comparator<MultipartFile>() {
+                public int compare(MultipartFile m1, MultipartFile m2) {
+                    Date file1Date;
+                    Date file2Date;
+                    int flag = 1;
+                    try {
+                        file1Date = getDateFromFileName(m1.getOriginalFilename());
+                        file2Date = getDateFromFileName(m2.getOriginalFilename());
+                        flag = file1Date.compareTo(file2Date);
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    return flag; //ascending order
+                }
+            });
+
             for (MultipartFile rchImportFile : rchImportFiles) {
                     try (InputStream in = rchImportFile.getInputStream()) {
 
@@ -1483,7 +1507,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 if (existingAshaIds.contains(rchAnmAshaRecord.getGfId().toString())) {
                     Map<String, Object> locMap = new HashMap<>();
                     toMapLoc(locMap, rchAnmAshaRecord);
-                    locMap.put("Flw_Id", rchAnmAshaRecord.getGfId());
+                    locMap.put(FlwConstants.ID, rchAnmAshaRecord.getGfId());
                     locArrList.add(locMap);
                 }
             }
@@ -1605,7 +1629,11 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         for (Map<String, Object> record : locArrList
                 ) {
             Map<String, Object> updatedMap = setLocationFields(locationFinder, record);
-            updatedMap.put(KilkariConstants.RCH_ID, record.get(KilkariConstants.RCH_ID));
+            if("asha".equalsIgnoreCase(rchUserType.toString())){
+                updatedMap.put(FlwConstants.ID, record.get(FlwConstants.ID));
+            }else {
+                updatedMap.put(KilkariConstants.RCH_ID, record.get(KilkariConstants.RCH_ID));
+            }
             updatedLocArrList.add(updatedMap);
         }
 
@@ -1618,14 +1646,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
     @Override
-    public String getFileLocation(String origin) {
-        if (mcts.equalsIgnoreCase(origin)) {
-            return settingsFacade.getProperty(LOC_UPDATE_DIR_RCH);
-        } else if (rch.equalsIgnoreCase(origin)) {
-            return settingsFacade.getProperty(LOC_UPDATE_DIR_MCTS);
-        } else {
-            return "No such origin";
-        }
+    public String getBeneficiaryLocationUpdateDirectory() {
+        return settingsFacade.getProperty(LOC_UPDATE_DIR_RCH);
     }
 
     private File csvWriter(Long stateId, RchUserType rchUserType) throws IOException {
@@ -1643,70 +1665,69 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private void csvWriterKilkari(List<Map<String, Object>> locArrList, Long stateId, RchUserType rchUserType) throws IOException { //NO CHECKSTYLE Cyclomatic Complexity //NOPMD NcssMethodCount
 
-        File csvFile = csvWriter(stateId, rchUserType);
-
         if (!locArrList.isEmpty()) {
+            File csvFile = csvWriter(stateId, rchUserType);
             FileWriter writer;
             writer = new FileWriter(csvFile, true);
 
+            writer.write(KilkariConstants.RCH_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.STATE_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.DISTRICT_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.DISTRICT_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.TALUKA_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.TALUKA_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.HEALTH_BLOCK_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.HEALTH_BLOCK_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.PHC_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.PHC_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.SUB_CENTRE_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.SUB_CENTRE_NAME);
+            writer.write(TAB);
+            writer.write(KilkariConstants.CENSUS_VILLAGE_ID);
+            writer.write(TAB);
+            writer.write(KilkariConstants.VILLAGE_NAME);
+            writer.write(NEXT_LINE);
+
             for (Map<String, Object> map : locArrList
                     ) {
-
-                writer.write(KilkariConstants.RCH_ID);
-                writer.write(",");
-                writer.write(KilkariConstants.STATE_ID);
-                writer.write(",");
-                writer.write(KilkariConstants.DISTRICT_ID);
-                writer.write(",");
-                writer.write(KilkariConstants.DISTRICT_NAME);
-                writer.write(",");
-                writer.write(KilkariConstants.TALUKA_ID);
-                writer.write(",");
-                writer.write(KilkariConstants.TALUKA_NAME);
-                writer.write(",");
-                writer.write(KilkariConstants.HEALTH_BLOCK_ID);
-                writer.write(",");
-                writer.write(KilkariConstants.HEALTH_BLOCK_NAME);
-                writer.write(",");
-                writer.write(KilkariConstants.PHC_ID);
-                writer.write(",");
-                writer.write(KilkariConstants.PHC_NAME);
-                writer.write(",");
-                writer.write(KilkariConstants.SUB_CENTRE_ID);
-                writer.write(",");
-                writer.write(KilkariConstants.SUB_CENTRE_NAME);
-                writer.write(",");
-                writer.write(KilkariConstants.CENSUS_VILLAGE_ID);
-                writer.write(",");
-                writer.write(KilkariConstants.VILLAGE_NAME);
-                writer.write(NEXT_LINE);
                 writer.write(map.get(KilkariConstants.RCH_ID).toString());
-                writer.write(",");
+                writer.write(TAB);
                 writer.write(map.get(KilkariConstants.STATE_ID).toString());
-                writer.write(",");
+                writer.write(TAB);
                 writer.write(map.get(KilkariConstants.DISTRICT_ID).toString());
-                writer.write(",");
+                writer.write(TAB);
                 writer.write(map.get(KilkariConstants.DISTRICT_NAME).toString());
-                writer.write(",");
-                writer.write(map.get(KilkariConstants.TALUKA_ID) == null ? NULL : map.get(KilkariConstants.TALUKA_ID).toString());
-                writer.write(",");
-                writer.write(map.get(KilkariConstants.TALUKA_NAME) == null ? NULL : map.get(KilkariConstants.TALUKA_NAME).toString());
-                writer.write(",");
-                writer.write(map.get(KilkariConstants.HEALTH_BLOCK_ID) == null ? NULL : map.get(KilkariConstants.HEALTH_BLOCK_ID).toString());
-                writer.write(",");
-                writer.write(map.get(KilkariConstants.HEALTH_BLOCK_NAME) == null ? NULL : map.get(KilkariConstants.HEALTH_BLOCK_NAME).toString());
-                writer.write(",");
-                writer.write(map.get(KilkariConstants.PHC_ID) == null ? NULL : map.get(KilkariConstants.PHC_ID).toString());
-                writer.write(",");
-                writer.write(map.get(KilkariConstants.PHC_NAME) == null ? NULL : map.get(KilkariConstants.PHC_NAME).toString());
-                writer.write(",");
-                writer.write(map.get(KilkariConstants.SUB_CENTRE_ID) == null ? NULL : map.get(KilkariConstants.SUB_CENTRE_ID).toString());
-                writer.write(",");
-                writer.write(map.get(KilkariConstants.SUB_CENTRE_NAME) == null ? NULL : map.get(KilkariConstants.SUB_CENTRE_NAME).toString());
-                writer.write(",");
-                writer.write(map.get(KilkariConstants.CENSUS_VILLAGE_ID) == null ? NULL : map.get(KilkariConstants.CENSUS_VILLAGE_ID).toString());
-                writer.write(",");
-                writer.write(map.get(KilkariConstants.VILLAGE_NAME) == null ? NULL : map.get(KilkariConstants.VILLAGE_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.TALUKA_ID) == null ? "" : map.get(KilkariConstants.TALUKA_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.TALUKA_NAME) == null ? "" : map.get(KilkariConstants.TALUKA_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.HEALTH_BLOCK_ID) == null ? "" : map.get(KilkariConstants.HEALTH_BLOCK_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.HEALTH_BLOCK_NAME) == null ? "" : map.get(KilkariConstants.HEALTH_BLOCK_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.PHC_ID) == null ? "" : map.get(KilkariConstants.PHC_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.PHC_NAME) == null ? "" : map.get(KilkariConstants.PHC_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.SUB_CENTRE_ID) == null ? "" : map.get(KilkariConstants.SUB_CENTRE_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.SUB_CENTRE_NAME) == null ? "" : map.get(KilkariConstants.SUB_CENTRE_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.CENSUS_VILLAGE_ID) == null ? "" : map.get(KilkariConstants.CENSUS_VILLAGE_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(KilkariConstants.VILLAGE_NAME) == null ? "" : map.get(KilkariConstants.VILLAGE_NAME).toString());
                 writer.write(NEXT_LINE);
             }
 
@@ -1716,70 +1737,69 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private void csvWriterAsha(List<Map<String, Object>> locArrList, Long stateId, RchUserType rchUserType) throws IOException { //NO CHECKSTYLE Cyclomatic Complexity //NOPMD NcssMethodCount
 
-        File csvFile = csvWriter(stateId, rchUserType);
 
         if (!locArrList.isEmpty()) {
+            File csvFile = csvWriter(stateId, rchUserType);
             FileWriter writer;
             writer = new FileWriter(csvFile, true);
 
+            writer.write(FlwConstants.ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.STATE_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.DISTRICT_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.DISTRICT_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.TALUKA_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.TALUKA_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.HEALTH_BLOCK_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.HEALTH_BLOCK_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.PHC_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.PHC_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.SUB_CENTRE_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.SUB_CENTRE_NAME);
+            writer.write(TAB);
+            writer.write(FlwConstants.CENSUS_VILLAGE_ID);
+            writer.write(TAB);
+            writer.write(FlwConstants.VILLAGE_NAME);
+            writer.write(NEXT_LINE);
             for (Map<String, Object> map : locArrList
                     ) {
-
-                writer.write(FlwConstants.ID);
-                writer.write(",");
-                writer.write(FlwConstants.STATE_ID);
-                writer.write(",");
-                writer.write(FlwConstants.DISTRICT_ID);
-                writer.write(",");
-                writer.write(FlwConstants.DISTRICT_NAME);
-                writer.write(",");
-                writer.write(FlwConstants.TALUKA_ID);
-                writer.write(",");
-                writer.write(FlwConstants.TALUKA_NAME);
-                writer.write(",");
-                writer.write(FlwConstants.HEALTH_BLOCK_ID);
-                writer.write(",");
-                writer.write(FlwConstants.HEALTH_BLOCK_NAME);
-                writer.write(",");
-                writer.write(FlwConstants.PHC_ID);
-                writer.write(",");
-                writer.write(FlwConstants.PHC_NAME);
-                writer.write(",");
-                writer.write(FlwConstants.SUB_CENTRE_ID);
-                writer.write(",");
-                writer.write(FlwConstants.SUB_CENTRE_NAME);
-                writer.write(",");
-                writer.write(FlwConstants.CENSUS_VILLAGE_ID);
-                writer.write(",");
-                writer.write(FlwConstants.VILLAGE_NAME);
-                writer.write(NEXT_LINE);
                 writer.write(map.get(FlwConstants.ID).toString());
-                writer.write(",");
+                writer.write(TAB);
                 writer.write(map.get(FlwConstants.STATE_ID).toString());
-                writer.write(",");
+                writer.write(TAB);
                 writer.write(map.get(FlwConstants.DISTRICT_ID).toString());
-                writer.write(",");
+                writer.write(TAB);
                 writer.write(map.get(FlwConstants.DISTRICT_NAME).toString());
-                writer.write(",");
-                writer.write(map.get(FlwConstants.TALUKA_ID) == null ? NULL : map.get(FlwConstants.TALUKA_ID).toString());
-                writer.write(",");
-                writer.write(map.get(FlwConstants.TALUKA_NAME) == null ? NULL : map.get(FlwConstants.TALUKA_NAME).toString());
-                writer.write(",");
-                writer.write(map.get(FlwConstants.HEALTH_BLOCK_ID) == null ? NULL : map.get(FlwConstants.HEALTH_BLOCK_ID).toString());
-                writer.write(",");
-                writer.write(map.get(FlwConstants.HEALTH_BLOCK_NAME) == null ? NULL : map.get(FlwConstants.HEALTH_BLOCK_NAME).toString());
-                writer.write(",");
-                writer.write(map.get(FlwConstants.PHC_ID) == null ? NULL : map.get(FlwConstants.PHC_ID).toString());
-                writer.write(",");
-                writer.write(map.get(FlwConstants.PHC_NAME) == null ? NULL : map.get(FlwConstants.PHC_NAME).toString());
-                writer.write(",");
-                writer.write(map.get(FlwConstants.SUB_CENTRE_ID) == null ? NULL : map.get(FlwConstants.SUB_CENTRE_ID).toString());
-                writer.write(",");
-                writer.write(map.get(FlwConstants.SUB_CENTRE_NAME) == null ? NULL : map.get(FlwConstants.SUB_CENTRE_NAME).toString());
-                writer.write(",");
-                writer.write(map.get(FlwConstants.CENSUS_VILLAGE_ID) == null ? NULL : map.get(FlwConstants.CENSUS_VILLAGE_ID).toString());
-                writer.write(",");
-                writer.write(map.get(FlwConstants.VILLAGE_NAME) == null ? NULL : map.get(FlwConstants.VILLAGE_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.TALUKA_ID) == null ? "" : map.get(FlwConstants.TALUKA_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.TALUKA_NAME) == null ? "" : map.get(FlwConstants.TALUKA_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.HEALTH_BLOCK_ID) == null ? "" : map.get(FlwConstants.HEALTH_BLOCK_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.HEALTH_BLOCK_NAME) == null ? "" : map.get(FlwConstants.HEALTH_BLOCK_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.PHC_ID) == null ? "" : map.get(FlwConstants.PHC_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.PHC_NAME) == null ? "" : map.get(FlwConstants.PHC_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.SUB_CENTRE_ID) == null ? "" : map.get(FlwConstants.SUB_CENTRE_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.SUB_CENTRE_NAME) == null ? "" : map.get(FlwConstants.SUB_CENTRE_NAME).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.CENSUS_VILLAGE_ID) == null ? "" : map.get(FlwConstants.CENSUS_VILLAGE_ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.VILLAGE_NAME) == null ? "" : map.get(FlwConstants.VILLAGE_NAME).toString());
                 writer.write(NEXT_LINE);
             }
 
@@ -1795,7 +1815,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
             @Override
             public String getSqlQuery() {
-                String query = "SELECT registrationNo FROM nms_mcts_mothers WHERE registrationNo IN " + queryIdList(motherRecords);
+                String query = "SELECT rchId FROM nms_mcts_mothers WHERE rchId IN " + queryIdList(motherRecords);
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
@@ -1803,7 +1823,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             @Override
             public List<String> execute(Query query) {
 
-                query.setClass(MctsMother.class);
                 ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
                 List<String> result = new ArrayList<>();
                 for (String existingMotherId : (List<String>) fqr) {
@@ -1845,7 +1864,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
             @Override
             public String getSqlQuery() {
-                String query = "SELECT registrationNo FROM nms_mcts_children WHERE registrationNo IN " + queryIdListChildren(childRecords);
+                String query = "SELECT rchId FROM nms_mcts_children WHERE rchId IN " + queryIdListChildren(childRecords);
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
@@ -1853,7 +1872,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             @Override
             public List<String> execute(Query query) {
 
-                query.setClass(MctsChild.class);
                 ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
                 List<String> result = new ArrayList<>();
                 for (String existingChildId : (List<String>) fqr) {
@@ -1902,7 +1920,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             @Override
             public List<String> execute(Query query) {
 
-                query.setClass(FrontLineWorker.class);
                 ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
                 List<String> result = new ArrayList<>();
                 for (String existingAshaId : (List<String>) fqr) {
@@ -1932,6 +1949,13 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         stringBuilder.append(")");
 
         return stringBuilder.toString();
+    }
+
+    private Date getDateFromFileName(String fileName) throws ParseException {
+        String[] names = fileName.split("_");
+        String dateString = names[5].split(".csv")[0];
+        Date date = new SimpleDateFormat(DATE_FORMAT).parse(dateString);
+        return date;
     }
 
 
