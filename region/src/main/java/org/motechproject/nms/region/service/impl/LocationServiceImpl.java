@@ -1074,7 +1074,7 @@ public class LocationServiceImpl implements LocationService {
     /**
      * Fills healthBlockHashMap with HealthBlock objects from database
      * @param healthBlockHashMap contains (stateCode_districtCode_talukaCode_healthBlockCode, HealthBlock) with dummy HealthBlock objects
-     * @param talukaHashMap contains (stateCode_districtCode_talukaCode, Taluka) with original Taluka objects from database
+     * @param districtHashMap contains (stateCode_districtCode, District) with original District objects from database
      */
     private void fillHealthBlocks(Map<String, HealthBlock> healthBlockHashMap, final Map<String, District> districtHashMap) {
         Timer queryTimer = new Timer();
