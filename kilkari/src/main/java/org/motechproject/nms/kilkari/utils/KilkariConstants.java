@@ -89,6 +89,10 @@ public final class KilkariConstants {
     public static final String MAPPER_SUBCENTRE = "SubCentre_ID";
     public static final String MAPPER_CENSUS_VILLAGE = "Village_ID";
     public static final String MAPPER_NON_CENSUS_VILLAGE = "SVID";
+    public static final String STATE_CODE = "State_Code";
+    public static final String DISTRICT_CODE = "District_Code";
+    public static final String TALUKA_CODE = "Taluka_Code";
+    public static final String HEALTH_BLOCK_CODE = "HealthBlock_Code";
 
     public static final String INVALID_LOCATION = "<%s - %s : Invalid location>";
 

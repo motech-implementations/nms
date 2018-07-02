@@ -64,6 +64,8 @@ public class RchImportJobHandler {
         initMotherReadJob();
         initChildReadJob();
         initAshaReadJob();
+        initTalukaReadJob();
+        initHealthBlockReadJob();
     }
 
     public void initMotherReadJob() {
@@ -80,6 +82,38 @@ public class RchImportJobHandler {
         LOGGER.info("Created RCH Mother Read Event");
         CronSchedulableJob rchMotherRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT), cronExpression);
         motechSchedulerService.safeScheduleJob(rchMotherRead);
+    }
+
+    public void initTalukaReadJob() {
+        String cronExpression = settingsFacade.getProperty(Constants.RCH_TALUKA_READ_CRON);
+        if (StringUtils.isBlank(cronExpression)) {
+            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            return;
+        }
+
+        if (!CronExpression.isValidExpression(cronExpression)) {
+            throw new RchImportConfigurationException("Cron expression for taluka read is invalid: " + cronExpression);
+        }
+
+        LOGGER.info("Created RCH Taluka Read Event");
+        CronSchedulableJob rchTalukaRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_TALUKA_READ_SUBJECT), cronExpression);
+        motechSchedulerService.safeScheduleJob(rchTalukaRead);
+    }
+
+    public void initHealthBlockReadJob() {
+        String cronExpression = settingsFacade.getProperty(Constants.RCH_HEALTHBLOCK_READ_CRON);
+        if (StringUtils.isBlank(cronExpression)) {
+            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            return;
+        }
+
+        if (!CronExpression.isValidExpression(cronExpression)) {
+            throw new RchImportConfigurationException("Cron expression for healthBlock read is invalid: " + cronExpression);
+        }
+
+        LOGGER.info("Created RCH healthBlock Read Event");
+        CronSchedulableJob rchHealthBlockRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_HEALTHBLOCK_READ_SUBJECT), cronExpression);
+        motechSchedulerService.safeScheduleJob(rchHealthBlockRead);
     }
 
     public void initChildReadJob() {
