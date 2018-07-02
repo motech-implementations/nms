@@ -79,6 +79,8 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             sendImportEventForAUserType(stateId, RchUserType.MOTHER, referenceDate, endpoint, Constants.RCH_MOTHER_IMPORT_SUBJECT);
             sendImportEventForAUserType(stateId, RchUserType.CHILD, referenceDate, endpoint, Constants.RCH_CHILD_IMPORT_SUBJECT);
             sendImportEventForAUserType(stateId, RchUserType.ASHA, referenceDate, endpoint, Constants.RCH_ASHA_IMPORT_SUBJECT);
+            sendImportEventForAUserType(stateId, RchUserType.TALUKA, referenceDate, endpoint, Constants.RCH_TALUKA_IMPORT_SUBJECT);
+            sendImportEventForAUserType(stateId, RchUserType.HEALTHBLOCK, referenceDate, endpoint, Constants.RCH_HEALTHBLOCK_IMPORT_SUBJECT);
         }
 
         LOGGER.info("Initiated import workflow from RCH for mothers and children");
@@ -114,6 +116,70 @@ public class RchWsImportServiceImpl implements RchWsImportService {
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.MOTHER, stateId));
+        }
+    }
+
+    @MotechListener(subjects = { Constants.RCH_TALUKA_IMPORT_SUBJECT })
+    @Transactional
+    @Override
+    public void importRchTalukaData(MotechEvent motechEvent) {
+        Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
+        LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
+        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
+
+        State state = stateDataService.findByCode(stateId);
+        if (state == null) {
+            String error = String.format("State with code %s doesn't exist in database. Skipping Taluka import for this state", stateId);
+            LOGGER.error(error);
+            return;
+        }
+
+        String stateName = state.getName();
+        Long stateCode = state.getCode();
+        try {
+            if (rchWebServiceFacade.getTalukasData(startDate, endDate, endpoint, stateId)) {
+                LOGGER.info("RCH Responses for state id {} recorded to file successfully.", stateId);
+            }
+        } catch (RchWebServiceException e) {
+            String error = String.format("Cannot read RCH taluka data from %s state with state id: %d", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service Taluka Import", e
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
+        }
+    }
+
+    @MotechListener(subjects = { Constants.RCH_HEALTHBLOCK_IMPORT_SUBJECT})
+    @Transactional
+    @Override
+    public void importRchHealthBlockData(MotechEvent motechEvent) {
+        Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
+        LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
+        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
+
+        State state = stateDataService.findByCode(stateId);
+        if (state == null) {
+            String error = String.format("State with code %s doesn't exist in database. Skipping HealthBlock import for this state", stateId);
+            LOGGER.error(error);
+            return;
+        }
+
+        String stateName = state.getName();
+        Long stateCode = state.getCode();
+        try {
+            if (rchWebServiceFacade.getTalukasData(startDate, endDate, endpoint, stateId)) {
+                LOGGER.info("RCH Responses for state id {} recorded to file successfully.", stateId);
+            }
+        } catch (RchWebServiceException e) {
+            String error = String.format("Cannot read RCH healthblock data from %s state with state id: %d", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service Taluka Import", e
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
         }
     }
 
