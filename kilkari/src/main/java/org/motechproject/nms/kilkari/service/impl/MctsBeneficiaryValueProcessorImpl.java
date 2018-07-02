@@ -235,7 +235,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
         return Long.parseLong(msisdn);
     }
 
-    @Override
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void setLocationFieldsCSV(LocationFinder locationFinder, Map<String, Object> record, MctsBeneficiary beneficiary) throws InvalidLocationException {
 
