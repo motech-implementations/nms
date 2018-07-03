@@ -21,6 +21,7 @@ public final class LocationConstants {
     public static final String VILLAGE_NAME = "Village_Name";
     public static final String NON_CENSUS_VILLAGE = "SVID";
 
+    public static final String CSV_STATE_ID = "State_ID";
     public static final String HEALTHFACILITY_ID = "HealthFacility_ID";
     public static final String HEALTHFACILITY_NAME = "HealthFacility_Name";
     public static final String HEALTHSUBFACILITY_ID = "HealthSubFacility_ID";

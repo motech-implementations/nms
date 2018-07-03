@@ -178,21 +178,24 @@ public class DistrictServiceImpl implements DistrictService {
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> district : districts) {
-            if (i != 0) {
-                stringBuilder.append(", ");
-            }
-            stringBuilder.append("(");
-            stringBuilder.append(district.get(LocationConstants.DISTRICT_ID) + ", ");
-            stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(district.get(LocationConstants.DISTRICT_NAME).toString()) + QUOTATION_COMMA);
-            stringBuilder.append(stateHashMap.get(district.get(LocationConstants.STATE_ID)).getId() + ", ");
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
-            stringBuilder.append(")");
+            State state = stateHashMap.get(district.get(LocationConstants.CSV_STATE_ID).toString());
+            if (state != null) {
+                if (i != 0) {
+                    stringBuilder.append(", ");
+                }
+                stringBuilder.append("(");
+                stringBuilder.append(district.get(LocationConstants.DISTRICT_ID) + ", ");
+                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(district.get(LocationConstants.DISTRICT_NAME).toString()) + QUOTATION_COMMA);
+                stringBuilder.append(state.getId() + ", ");
+                stringBuilder.append(MOTECH_STRING);
+                stringBuilder.append(MOTECH_STRING);
+                stringBuilder.append(MOTECH_STRING);
+                stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                stringBuilder.append(")");
 
-            i++;
+                i++;
+            }
         }
 
         return stringBuilder.toString();
@@ -202,7 +205,7 @@ public class DistrictServiceImpl implements DistrictService {
     public Map<String, District> fillDistrictIds(List<Map<String, Object>> recordList, final Map<String, State> stateHashMap) {
         final Set<String> districtKeys = new HashSet<>();
         for(Map<String, Object> record : recordList) {
-            districtKeys.add(record.get(LocationConstants.STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString());
+            districtKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString());
         }
         Map<String, District> districtHashMap = new HashMap<>();
 
