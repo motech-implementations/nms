@@ -224,6 +224,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ACTIVE_CHILD_PRESENT, false);
                 }
                 subscription = subscriberService.updateMotherSubscriber(msisdn, mother, lmp, record, action);
+                if (subscription == null) {
+                    return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED, false);
+                }
             } else {
                 Long caseNo = (Long) record.get(KilkariConstants.CASE_NO);
                 // validate caseNo
@@ -231,6 +234,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     return motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.INVALID_CASE_NO.toString(), action);
                 }
                 subscription = subscriberService.updateRchMotherSubscriber(msisdn, mother, lmp, caseNo, deactivate, record, action);
+                if (subscription == null) {
+                    return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED, false);
+                }
             }
             // We rejected the update/create for the subscriber
 

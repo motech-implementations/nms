@@ -596,8 +596,8 @@ public class LocationServiceImpl implements LocationService {
     public void createLocations(Long stateID, String locationType, String fileLocation) throws IOException {
         MultipartFile rchImportFile = findByStateId(stateID, locationType, fileLocation);
 
-        try (InputStream in = rchImportFile.getInputStream()) {
-
+        try {
+            InputStream in = rchImportFile.getInputStream();
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
             Map<String, CellProcessor> cellProcessorMapper = null;
             List<Map<String, Object>> recordList;
@@ -624,10 +624,12 @@ public class LocationServiceImpl implements LocationService {
                     count++;
                 }
                 partNumber++;
-                totalUpdatedRecords += createLocationPart(recordListPart, locationType, rchImportFile.getName(), partNumber);
+                totalUpdatedRecords += createLocationPart(recordListPart, locationType, rchImportFile.getOriginalFilename(), partNumber);
                 recordListPart.clear();
             }
-            LOGGER.debug("File {} processed. {} records updated", rchImportFile.getName(), totalUpdatedRecords);
+            LOGGER.debug("File {} processed. {} records updated", rchImportFile.getOriginalFilename(), totalUpdatedRecords);
+        } catch(NullPointerException e) {
+            LOGGER.error("{} File Error", locationType, e);
         }
     }
 
@@ -1074,7 +1076,7 @@ public class LocationServiceImpl implements LocationService {
     /**
      * Fills healthBlockHashMap with HealthBlock objects from database
      * @param healthBlockHashMap contains (stateCode_districtCode_talukaCode_healthBlockCode, HealthBlock) with dummy HealthBlock objects
-     * @param talukaHashMap contains (stateCode_districtCode_talukaCode, Taluka) with original Taluka objects from database
+     * @param districtHashMap contains (stateCode_districtCode, District) with original District objects from database
      */
     private void fillHealthBlocks(Map<String, HealthBlock> healthBlockHashMap, final Map<String, District> districtHashMap) {
         Timer queryTimer = new Timer();
