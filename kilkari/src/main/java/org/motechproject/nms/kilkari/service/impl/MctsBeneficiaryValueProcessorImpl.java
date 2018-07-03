@@ -235,7 +235,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
         return Long.parseLong(msisdn);
     }
 
-    @Override
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void setLocationFieldsCSV(LocationFinder locationFinder, Map<String, Object> record, MctsBeneficiary beneficiary) throws InvalidLocationException {
 
@@ -248,7 +248,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
             if (isValidID(record, KilkariConstants.DISTRICT_ID) && (locationFinder.getDistrictHashMap().get(mapKey.toString()) != null)) {
                 beneficiary.setDistrict(locationFinder.getDistrictHashMap().get(mapKey.toString()));
-                Long talukaCode = Long.parseLong(record.get(KilkariConstants.TALUKA_ID).toString());
+                Long talukaCode = Long.parseLong(record.get(KilkariConstants.TALUKA_ID) == null ? "0" : record.get(KilkariConstants.TALUKA_ID).toString());
                 mapKey.append("_");
                 mapKey.append(talukaCode);
                 beneficiary.setTaluka(locationFinder.getTalukaHashMap().get(mapKey.toString()));
