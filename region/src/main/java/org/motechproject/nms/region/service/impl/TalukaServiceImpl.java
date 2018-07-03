@@ -100,17 +100,17 @@ public class TalukaServiceImpl implements TalukaService {
             }
         };
 
-        Long createdDistricts = dataService.executeSQLQuery(queryExecution);
+        Long createdTalukas = dataService.executeSQLQuery(queryExecution);
 
 
-        return createdDistricts;
+        return createdTalukas;
     }
 
     @Override
     public Map<String, Taluka> fillTalukaIds(List<Map<String, Object>> recordList, final Map<String, District> districtHashMap) {
         final Set<String> talukaKeys = new HashSet<>();
         for(Map<String, Object> record : recordList) {
-            talukaKeys.add(record.get(LocationConstants.STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+            talukaKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                     record.get(LocationConstants.TALUKA_ID).toString());
         }
         Map<String, Taluka> talukaHashMap = new HashMap<>();
@@ -175,21 +175,24 @@ public class TalukaServiceImpl implements TalukaService {
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> taluka : talukas) {
-            if (i != 0) {
-                stringBuilder.append(", ");
-            }
-            stringBuilder.append("(");
-            stringBuilder.append(taluka.get(LocationConstants.TALUKA_ID) + ", ");
-            stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(taluka.get(LocationConstants.TALUKA_NAME).toString()) + QUOTATION_COMMA);
-            stringBuilder.append(districtHashMap.get(taluka.get(LocationConstants.STATE_ID).toString() + "_" + taluka.get(LocationConstants.DISTRICT_ID).toString()).getId() + ", ");
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
-            stringBuilder.append(")");
+            District district = districtHashMap.get(taluka.get(LocationConstants.CSV_STATE_ID).toString() + "_" + taluka.get(LocationConstants.DISTRICT_ID).toString());
+            if (district != null) {
+                if (i != 0) {
+                    stringBuilder.append(", ");
+                }
+                stringBuilder.append("(");
+                stringBuilder.append(taluka.get(LocationConstants.TALUKA_ID) + ", ");
+                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(taluka.get(LocationConstants.TALUKA_NAME).toString()) + QUOTATION_COMMA);
+                stringBuilder.append(district.getId() + ", ");
+                stringBuilder.append(MOTECH_STRING);
+                stringBuilder.append(MOTECH_STRING);
+                stringBuilder.append(MOTECH_STRING);
+                stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                stringBuilder.append(")");
 
-            i++;
+                i++;
+            }
         }
 
         return stringBuilder.toString();
