@@ -101,17 +101,17 @@ public class VillageServiceImpl implements VillageService {
             }
         };
 
-        Long createdDistricts = dataService.executeSQLQuery(queryExecution);
+        Long createdVillages = dataService.executeSQLQuery(queryExecution);
 
 
-        return createdDistricts;
+        return createdVillages;
     }
 
     @Override
     public Map<String, Village> fillVillageIds(List<Map<String, Object>> villages, final Map<String, Taluka> talukaHashMap) {
         final Set<String> villageKeys = new HashSet<>();
         for(Map<String, Object> village : villages) {
-            villageKeys.add(village.get(LocationConstants.STATE_ID).toString() + "_" + village.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+            villageKeys.add(village.get(LocationConstants.CSV_STATE_ID).toString() + "_" + village.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                     village.get(LocationConstants.TALUKA_ID).toString() + "_" + village.get(LocationConstants.VILLAGE_ID).toString() + "_" + 0);
         }
         Map<String, Village> villageHashMap = new HashMap<>();
@@ -178,7 +178,7 @@ public class VillageServiceImpl implements VillageService {
             stringBuilder.append(village.get(LocationConstants.VILLAGE_ID) + ", ");
             stringBuilder.append(0 + ", ");
             stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(village.get(LocationConstants.VILLAGE_NAME).toString()) + QUOTATION_COMMA);
-            stringBuilder.append(talukaHashMap.get(village.get(LocationConstants.STATE_ID).toString() + "_" + village.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+            stringBuilder.append(talukaHashMap.get(village.get(LocationConstants.CSV_STATE_ID).toString() + "_" + village.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                     village.get(LocationConstants.TALUKA_ID).toString()).getId() + ", ");
             stringBuilder.append(MOTECH_STRING);
             stringBuilder.append(MOTECH_STRING);
