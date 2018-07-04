@@ -10,6 +10,7 @@ import org.motechproject.nms.csv.utils.CsvImporterBuilder;
 import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
+import org.motechproject.nms.region.domain.LocationEnum;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Taluka;
@@ -593,8 +594,8 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    public void createLocations(Long stateID, String locationType, String fileLocation) throws IOException {
-        MultipartFile rchImportFile = findByStateId(stateID, locationType, fileLocation);
+    public void createLocations(Long stateID, LocationEnum locationType, String fileLocation) throws IOException {
+        MultipartFile rchImportFile = findByStateId(stateID, locationType.toString(), fileLocation);
 
         try {
             InputStream in = rchImportFile.getInputStream();
@@ -602,14 +603,14 @@ public class LocationServiceImpl implements LocationService {
             Map<String, CellProcessor> cellProcessorMapper = null;
             List<Map<String, Object>> recordList;
             switch (locationType) {
-                case "District" : cellProcessorMapper = getDistrictMapping(); break;
-                case "Taluka" : cellProcessorMapper = getTalukaMapping(); break;
-                case "Village" : cellProcessorMapper = getVillageMapping(); break;
-                case "HealthBlock" : cellProcessorMapper = getHealthBlockMapping(); break;
-                case "TalukaHealthBlock" : cellProcessorMapper = getTalukaHealthBlockMapping(); break;
-                case "HealthFacility" : cellProcessorMapper = getHealthFacilityMapping(); break;
-                case "HealthSubFacility" : cellProcessorMapper = getHealthSubFacilityMapping(); break;
-                case "VillageHealthSubFacility" : cellProcessorMapper = getVillageHealthSubFacilityMapping();
+                case DISTRICT : cellProcessorMapper = getDistrictMapping(); break;
+                case TALUKA : cellProcessorMapper = getTalukaMapping(); break;
+                case VILLAGE : cellProcessorMapper = getVillageMapping(); break;
+                case HEALTHBLOCK : cellProcessorMapper = getHealthBlockMapping(); break;
+                case TALUKAHEALTHBLOCK : cellProcessorMapper = getTalukaHealthBlockMapping(); break;
+                case HEALTHFACILITY : cellProcessorMapper = getHealthFacilityMapping(); break;
+                case HEALTHSUBFACILITY : cellProcessorMapper = getHealthSubFacilityMapping(); break;
+                case VILLAGEHEALTHSUBFACILTY : cellProcessorMapper = getVillageHealthSubFacilityMapping();
             }
 
             recordList = readCsv(bufferedReader, cellProcessorMapper);
@@ -633,7 +634,7 @@ public class LocationServiceImpl implements LocationService {
         }
     }
 
-    private Long createLocationPart(List<Map<String, Object>> recordList, String locationType, String rchImportFileName, int partNumber) { //NOPMD NcssMethodCount
+    private Long createLocationPart(List<Map<String, Object>> recordList, LocationEnum locationType, String rchImportFileName, int partNumber) { //NOPMD NcssMethodCount
 
         Map<String, State> stateHashMap;
         Map<String, District> districtHashMap;
@@ -645,32 +646,32 @@ public class LocationServiceImpl implements LocationService {
 
         Long updatedRecords = 0L;
         switch (locationType) {
-            case "District" :
+            case DISTRICT :
                 stateHashMap = stateService.fillStateIds(recordList);
                 updatedRecords = districtService.createUpdateDistricts(recordList, stateHashMap);
                 break;
 
-            case "Taluka" :
+            case TALUKA:
                 stateHashMap = stateService.fillStateIds(recordList);
                 districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
                 updatedRecords = talukaService.createUpdateTalukas(recordList, districtHashMap);
                 break;
 
-            case "Village" :
+            case VILLAGE:
                 stateHashMap = stateService.fillStateIds(recordList);
                 districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
                 talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
                 updatedRecords = villageService.createUpdateVillages(recordList, talukaHashMap);
                 break;
 
-            case "HealthBlock" :
+            case HEALTHBLOCK:
                 stateHashMap = stateService.fillStateIds(recordList);
                 districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
                 talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
                 updatedRecords = healthBlockService.createUpdateHealthBlocks(recordList, districtHashMap, talukaHashMap);
                 break;
 
-            case "TalukaHealthBlock" :
+            case TALUKAHEALTHBLOCK:
                 stateHashMap = stateService.fillStateIds(recordList);
                 districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
                 talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
@@ -678,7 +679,7 @@ public class LocationServiceImpl implements LocationService {
                 updatedRecords = healthBlockService.createUpdateTalukaHealthBlock(recordList, healthBlockHashMap, talukaHashMap);
                 break;
 
-            case "HealthFacility" :
+            case HEALTHFACILITY:
                 stateHashMap = stateService.fillStateIds(recordList);
                 districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
                 talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
@@ -686,7 +687,7 @@ public class LocationServiceImpl implements LocationService {
                 updatedRecords = healthFacilityService.createUpdateHealthFacilities(recordList, talukaHashMap, healthBlockHashMap);
                 break;
 
-            case "HealthSubFacility" :
+            case HEALTHSUBFACILITY:
                 stateHashMap = stateService.fillStateIds(recordList);
                 districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
                 talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
@@ -695,7 +696,7 @@ public class LocationServiceImpl implements LocationService {
                 updatedRecords = healthSubFacilityService.createUpdateHealthSubFacilities(recordList, talukaHashMap, healthFacilityHashMap);
                 break;
 
-            case "VillageHealthSubFacility" :
+            case VILLAGEHEALTHSUBFACILTY:
                 stateHashMap = stateService.fillStateIds(recordList);
                 districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
                 talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
