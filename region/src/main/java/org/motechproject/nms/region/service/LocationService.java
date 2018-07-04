@@ -1,5 +1,6 @@
 package org.motechproject.nms.region.service;
 
+import org.motechproject.nms.region.domain.LocationEnum;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
@@ -68,5 +69,5 @@ public interface LocationService {
 
     LocationFinder updateLocations(List<Map<String, Object>> recordList);
 
-    void createLocations(Long stateID, String locationType, String fileLocation) throws IOException;
+    void createLocations(Long stateID, LocationEnum locationType, String fileLocation) throws IOException;
 }
