@@ -1230,7 +1230,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
                 if (remoteResponseFile.exists() && !remoteResponseFile.isDirectory()) {
                     DS_DataResponseDS_DataResult result = readResponses(remoteResponseFile);
-
+                    LOGGER.debug("Started reading file {}.", rchImportFile.getFileName());
                     if (rchUserType == RchUserType.MOTHER) {
                         motherLocUpdate(result, stateId, rchUserType);
                     } else if (rchUserType == RchUserType.CHILD) {
@@ -1277,7 +1277,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
                         Map<String, CellProcessor> cellProcessorMapper;
                         List<Map<String, Object>> recordList;
-
+                        LOGGER.debug("Started reading file {}.", rchImportFile.getOriginalFilename());
                         if (rchUserType == RchUserType.MOTHER) {
                             cellProcessorMapper = mctsBeneficiaryImportService.getRchMotherProcessorMapping();
                             recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
@@ -1327,8 +1327,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     }
                 }
             }
-
-            updateLocInMap(locArrList, stateId, rchUserType);
+            if (!locArrList.isEmpty()) {
+                updateLocInMap(locArrList, stateId, rchUserType);
+            }
 
         } catch (JAXBException e) {
             throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH mother data from %d stateId.", stateId), e);
@@ -1365,7 +1366,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     locArrList.add(locMap);
                 }
             }
-            updateLocInMap(locArrList, stateId, rchUserType);
+            if (!locArrList.isEmpty()) {
+                updateLocInMap(locArrList, stateId, rchUserType);
+            }
 
         } catch (NullPointerException e) {
             LOGGER.error("No files present e : ", e);
@@ -1403,8 +1406,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     }
                 }
             }
-
-            updateLocInMap(locArrList, stateId, rchUserType);
+            if (!locArrList.isEmpty()) {
+                updateLocInMap(locArrList, stateId, rchUserType);
+            }
 
         } catch (JAXBException e) {
             throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH children data from %d stateId.", stateId), e);
@@ -1439,7 +1443,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     locArrList.add(locMap);
                 }
             }
-            updateLocInMap(locArrList, stateId, rchUserType);
+            if (!locArrList.isEmpty()) {
+                updateLocInMap(locArrList, stateId, rchUserType);
+            }
 
         } catch (NullPointerException e) {
             LOGGER.error("No files present e : ", e);
@@ -1477,7 +1483,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     }
                 }
             }
-            updateLocInMap(locArrList, stateId, rchUserType);
+            if (!locArrList.isEmpty()) {
+                updateLocInMap(locArrList, stateId, rchUserType);
+            }
         } catch (JAXBException e) {
             throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH FLW data from %d stateId.", stateId), e);
         } catch (RchInvalidResponseStructureException e) {
@@ -1511,7 +1519,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     locArrList.add(locMap);
                 }
             }
-            updateLocInMap(locArrList, stateId, rchUserType);
+            if (!locArrList.isEmpty()) {
+                updateLocInMap(locArrList, stateId, rchUserType);
+            }
 
         } catch (NullPointerException e) {
             LOGGER.error("No files present e : ", e);

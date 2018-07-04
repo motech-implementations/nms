@@ -212,7 +212,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
                 Map<String, CellProcessor> cellProcessorMapper;
                 List<Map<String, Object>> recordList;
-
+                LOGGER.debug("Started reading file {}.", mctsImportFile.getOriginalFilename());
                 if (mctsUserType == MctsUserType.MOTHER) {
                     cellProcessorMapper = mctsBeneficiaryImportService.getMotherProcessorMapping();
                     recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
@@ -324,7 +324,9 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                     locArrList.add(locMap);
                 }
             }
-            updateLocInMap(locArrList, stateId, mctsUserType);
+            if (!locArrList.isEmpty()) {
+                updateLocInMap(locArrList, stateId, mctsUserType);
+            }
 
         } catch (NullPointerException e) {
             LOGGER.error("No files present e : ", e);
@@ -387,7 +389,9 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                     locArrList.add(locMap);
                 }
             }
-            updateLocInMap(locArrList, stateId, mctsUserType);
+            if (!locArrList.isEmpty()) {
+                updateLocInMap(locArrList, stateId, mctsUserType);
+            }
 
         } catch (NullPointerException e) {
             LOGGER.error("No files present e : ", e);
@@ -416,7 +420,9 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                     locArrList.add(locMap);
                 }
             }
-            updateLocInMap(locArrList, stateId, mctsUserType);
+            if (!locArrList.isEmpty()) {
+                updateLocInMap(locArrList, stateId, mctsUserType);
+            }
 
         } catch (NullPointerException e) {
             LOGGER.error("No files present e : ", e);
