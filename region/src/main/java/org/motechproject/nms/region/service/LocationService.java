@@ -70,4 +70,6 @@ public interface LocationService {
     LocationFinder updateLocations(List<Map<String, Object>> recordList);
 
     void createLocations(Long stateID, LocationEnum locationType, String fileLocation) throws IOException;
+
+    Long createLocationPart(List<Map<String, Object>> recordList, LocationEnum locationType, String rchImportFileName, int partNumber);
 }

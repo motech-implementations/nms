@@ -634,7 +634,7 @@ public class LocationServiceImpl implements LocationService {
         }
     }
 
-    private Long createLocationPart(List<Map<String, Object>> recordList, LocationEnum locationType, String rchImportFileName, int partNumber) { //NOPMD NcssMethodCount
+    public Long createLocationPart(List<Map<String, Object>> recordList, LocationEnum locationType, String rchImportFileName, int partNumber) { //NOPMD NcssMethodCount
 
         Map<String, State> stateHashMap;
         Map<String, District> districtHashMap;
