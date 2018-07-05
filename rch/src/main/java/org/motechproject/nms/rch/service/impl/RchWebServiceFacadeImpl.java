@@ -6,6 +6,7 @@ import org.apache.axis.description.TypeDesc;
 import org.apache.axis.encoding.SerializationContext;
 import org.apache.axis.encoding.ser.BeanSerializer;
 import org.apache.axis.server.AxisServer;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -1123,6 +1124,21 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
     }
 
+    private String readResponsesFromXml(File file) throws RchFileManipulationException {
+        try {
+            String string = FileUtils.readFileToString(file);
+            String xmlString;
+            xmlString = "<NewDataSet" + string.split("NewDataSet")[3] + "NewDataSet>";
+            LOGGER.debug("before regex");
+            xmlString = xmlString.replaceAll("\\n", " ");
+            xmlString = xmlString.replaceAll("<Records diffgr:id=\"Records[0-9]+\" msdata:rowOrder=\"[0-9]+\">", "<Records >");
+            LOGGER.debug("after regex");
+            return xmlString;
+        } catch (Exception e) {
+            throw new RchFileManipulationException("Failed to read response file."); //NOPMD
+        }
+    }
+
 
     private String serializeAxisObject(Object obj) throws IOException {
         try {
@@ -1229,10 +1245,17 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 File remoteResponseFile = fileForLocUpdate(rchImportFile.getFileName());
 
                 if (remoteResponseFile.exists() && !remoteResponseFile.isDirectory()) {
-                    DS_DataResponseDS_DataResult result = readResponses(remoteResponseFile);
+
+                    LOGGER.debug("Reading Responses");
+                    String result = readResponsesFromXml(remoteResponseFile);
+                    LOGGER.debug("Completed Reading Responses");
+
                     LOGGER.debug("Started reading file {}.", rchImportFile.getFileName());
+
                     if (rchUserType == RchUserType.MOTHER) {
+                        LOGGER.debug("Entering mother location Update");
                         motherLocUpdate(result, stateId, rchUserType);
+                        LOGGER.debug("Completed mother location Update");
                     } else if (rchUserType == RchUserType.CHILD) {
                         childLocUpdate(result, stateId, rchUserType);
                     } else if (rchUserType == RchUserType.ASHA) {
@@ -1302,21 +1325,24 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
 
-    private void motherLocUpdate(DS_DataResponseDS_DataResult result, Long stateId, RchUserType rchUserType) { // NO CHECKSTYLE Cyclomatic Complexity
+    private void motherLocUpdate(String result, Long stateId, RchUserType rchUserType) { // NO CHECKSTYLE Cyclomatic Complexity
         try {
-            validMothersDataResponse(result, stateId);
-            List motherResultFeed = result.get_any()[1].getChildren();
             ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
 
-            RchMothersDataSet mothersDataSet = (motherResultFeed == null) ?
+            LOGGER.debug("Unmarshall Begins");
+            RchMothersDataSet mothersDataSet = (result == null) ?
                     null :
-                    (RchMothersDataSet) MarshallUtils.unmarshall(motherResultFeed.get(0).toString(), RchMothersDataSet.class);
+                    (RchMothersDataSet) MarshallUtils.unmarshall(result, RchMothersDataSet.class);
 
+            LOGGER.debug("Unmarshall End");
             if (mothersDataSet == null || mothersDataSet.getRecords() == null) {
                 String warning = String.format("No mother data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
             } else {
+                LOGGER.debug("Getting mother records");
                 List<RchMotherRecord> motherRecords = mothersDataSet.getRecords();
+                LOGGER.debug("Records read {}", motherRecords.size());
+                LOGGER.debug("Completed Getting mother records");
                 List<String> existingMotherIds = getDatabaseMothers(motherRecords);
                 for (RchMotherRecord record : motherRecords) {
                     if(existingMotherIds.contains(record.getRegistrationNo())) {
@@ -1382,14 +1408,12 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
 
 
-    private void childLocUpdate(DS_DataResponseDS_DataResult result, Long stateId, RchUserType rchUserType) { // NO CHECKSTYLE Cyclomatic Complexity
+    private void childLocUpdate(String result, Long stateId, RchUserType rchUserType) { // NO CHECKSTYLE Cyclomatic Complexity
         try {
-            validChildrenDataResponse(result, stateId);
-            List childResultFeed = result.get_any()[1].getChildren();
             ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
-            RchChildrenDataSet childrenDataSet = (childResultFeed == null) ?
+            RchChildrenDataSet childrenDataSet = (result == null) ?
                     null :
-                    (RchChildrenDataSet) MarshallUtils.unmarshall(childResultFeed.get(0).toString(), RchChildrenDataSet.class);
+                    (RchChildrenDataSet) MarshallUtils.unmarshall(result, RchChildrenDataSet.class);
 
             if (childrenDataSet == null || childrenDataSet.getRecords() == null) {
                 String warning = String.format("No child data set received from RCH for %d stateId", stateId);
@@ -1459,14 +1483,12 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
 
 
-    private void ashaLocUpdate(DS_DataResponseDS_DataResult result, Long stateId, RchUserType rchUserType) { // NO CHECKSTYLE Cyclomatic Complexity
+    private void ashaLocUpdate(String result, Long stateId, RchUserType rchUserType) { // NO CHECKSTYLE Cyclomatic Complexity
         try {
-            validAnmAshaDataResponse(result, stateId);
-            List ashaResultFeed = result.get_any()[1].getChildren();
             ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
-            RchAnmAshaDataSet ashaDataSet = (ashaResultFeed == null) ?
+            RchAnmAshaDataSet ashaDataSet = (result == null) ?
                     null :
-                    (RchAnmAshaDataSet) MarshallUtils.unmarshall(ashaResultFeed.get(0).toString(), RchAnmAshaDataSet.class);
+                    (RchAnmAshaDataSet) MarshallUtils.unmarshall(result, RchAnmAshaDataSet.class);
             if (ashaDataSet == null || ashaDataSet.getRecords() == null) {
                 String warning = String.format("No FLW data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
