@@ -728,7 +728,7 @@ public class LocationServiceImpl implements LocationService {
         Map<String, CellProcessor> mapping = new HashMap<>();
 
         mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
-        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(TALUKA_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
 
@@ -740,7 +740,7 @@ public class LocationServiceImpl implements LocationService {
 
         mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
-        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(NON_CENSUS_VILLAGE, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(VILLAGE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(VILLAGE_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
@@ -755,7 +755,7 @@ public class LocationServiceImpl implements LocationService {
         mapping.put(HEALTHBLOCK_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(HEALTHBLOCK_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
-        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
 
         return mapping;
     }
@@ -766,7 +766,7 @@ public class LocationServiceImpl implements LocationService {
         mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(HEALTHBLOCK_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(TALUKA_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
-        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
 
         return mapping;
     }
@@ -777,7 +777,7 @@ public class LocationServiceImpl implements LocationService {
         mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(HEALTHFACILITY_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(HEALTHFACILITY_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
-        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(HEALTHBLOCK_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
 
@@ -790,7 +790,7 @@ public class LocationServiceImpl implements LocationService {
         mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(HEALTHSUBFACILITY_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(HEALTHSUBFACILITY_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
-        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(HEALTHFACILITY_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
 
@@ -821,10 +821,9 @@ public class LocationServiceImpl implements LocationService {
                 if(Objects.equals(fileNameSplitter[1], stateId.toString()) && fileNameSplitter[0].equalsIgnoreCase(locationType)){
                     try {
                         FileInputStream input = new FileInputStream(f);
-                        MultipartFile multipartFile = new MockMultipartFile("file",
+                        csvFilesByStateIdAndRchUserType = new MockMultipartFile("file",
                                 f.getName(), "text/plain", IOUtils.toByteArray(input));
-                        csvFilesByStateIdAndRchUserType = multipartFile;
-                    }catch(IOException e) {
+                    } catch (IOException e) {
                         LOGGER.debug("IO Exception", e);
                     }
                 }
