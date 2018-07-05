@@ -66,6 +66,7 @@ public class RchImportJobHandler {
         initAshaReadJob();
         initTalukaReadJob();
         initHealthBlockReadJob();
+        initTalukaHealthBlockReadJob();
     }
 
     public void initMotherReadJob() {
@@ -114,6 +115,22 @@ public class RchImportJobHandler {
         LOGGER.info("Created RCH healthBlock Read Event");
         CronSchedulableJob rchHealthBlockRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_HEALTHBLOCK_READ_SUBJECT), cronExpression);
         motechSchedulerService.safeScheduleJob(rchHealthBlockRead);
+    }
+
+    public void initTalukaHealthBlockReadJob() {
+        String cronExpression = settingsFacade.getProperty(Constants.RCH_TALUKA_HEALTHBLOCK_READ_CRON);
+        if (StringUtils.isBlank(cronExpression)) {
+            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            return;
+        }
+
+        if (!CronExpression.isValidExpression(cronExpression)) {
+            throw new RchImportConfigurationException("Cron expression for taluka healthBlock read is invalid: " + cronExpression);
+        }
+
+        LOGGER.info("Created RCH taluka healthBlock Read Event");
+        CronSchedulableJob rchTalukaHealthBlockRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_TALUKA_HEALTHBLOCK_READ_SUBJECT), cronExpression);
+        motechSchedulerService.safeScheduleJob(rchTalukaHealthBlockRead);
     }
 
     public void initChildReadJob() {

@@ -8,5 +8,6 @@ public enum RchUserType {
     MOTHER,
     CHILD,
     TALUKA,
-    HEALTHBLOCK
+    HEALTHBLOCK,
+    TALUKAHEALTHBLOCK
 }
