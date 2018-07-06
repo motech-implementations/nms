@@ -344,22 +344,23 @@ public class OpsController extends BaseController {
     @ResponseBody
     public Boolean createLocations(@PathVariable("stateID") Long stateID) {
         LocationEnum locationType = DISTRICT;
+        String fileLocation = rchWebServiceFacade.getLocationFilesDirectory();
         try {
-            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationService.createLocations(stateID, locationType, fileLocation);
             locationType = TALUKA;
-            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationService.createLocations(stateID, locationType, fileLocation);
             locationType = HEALTHBLOCK;
-            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationService.createLocations(stateID, locationType, fileLocation);
             locationType = TALUKAHEALTHBLOCK;
-            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationService.createLocations(stateID, locationType, fileLocation);
             locationType = HEALTHFACILITY;
-            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationService.createLocations(stateID, locationType, fileLocation);
             locationType = HEALTHSUBFACILITY;
-            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationService.createLocations(stateID, locationType, fileLocation);
             locationType = VILLAGE;
-            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationService.createLocations(stateID, locationType, fileLocation);
             locationType = VILLAGEHEALTHSUBFACILTY;
-            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationService.createLocations(stateID, locationType, fileLocation);
         } catch (IOException e) {
             LOGGER.error("{} Location File not Found. Exception: {}", locationType, e);
         }
