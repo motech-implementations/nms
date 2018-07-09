@@ -260,6 +260,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                 String healthSubFacilityCode = record.get(KilkariConstants.SUB_CENTRE_ID) == null ? "0" : record.get(KilkariConstants.SUB_CENTRE_ID).toString();
 
                 beneficiary.setVillage(locationFinder.getVillageHashMap().get(mapKey.toString() + "_" + Long.parseLong(villageCode) + "_" + Long.parseLong(villageSvid)));
+                mapKey = new StringBuffer(record.get(KilkariConstants.STATE_ID).toString() + "_" + districtCode);
                 mapKey.append("_");
                 mapKey.append(Long.parseLong(healthBlockCode));
                 beneficiary.setHealthBlock(locationFinder.getHealthBlockHashMap().get(mapKey.toString()));
