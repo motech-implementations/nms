@@ -144,6 +144,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String NULL = "NULL";
     private static final String NEXT_LINE = "\r\n";
     private static final String TAB = "\t";
+    private static final String RECORDS = "Records";
 
     private static final String QUOTATION = "'";
     private static final String SQL_QUERY_LOG = "SQL QUERY: {}";
@@ -1126,13 +1127,11 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private String readResponsesFromXml(File file) throws RchFileManipulationException {
         try {
-            String string = FileUtils.readFileToString(file);
             String xmlString;
+            String string = FileUtils.readFileToString(file);
             xmlString = "<NewDataSet" + string.split("NewDataSet")[3] + "NewDataSet>";
-            LOGGER.debug("before regex");
             xmlString = xmlString.replaceAll("\\n", " ");
             xmlString = xmlString.replaceAll("<Records diffgr:id=\"Records[0-9]+\" msdata:rowOrder=\"[0-9]+\">", "<Records >");
-            LOGGER.debug("after regex");
             return xmlString;
         } catch (Exception e) {
             throw new RchFileManipulationException("Failed to read response file."); //NOPMD
@@ -1246,21 +1245,22 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
                 if (remoteResponseFile.exists() && !remoteResponseFile.isDirectory()) {
 
-                    LOGGER.debug("Reading Responses");
+                    LOGGER.debug("Started reading file {}.", rchImportFile.getFileName());
                     String result = readResponsesFromXml(remoteResponseFile);
                     LOGGER.debug("Completed Reading Responses");
-
-                    LOGGER.debug("Started reading file {}.", rchImportFile.getFileName());
-
-                    if (rchUserType == RchUserType.MOTHER) {
-                        LOGGER.debug("Entering mother location Update");
-                        motherLocUpdate(result, stateId, rchUserType);
-                        LOGGER.debug("Completed mother location Update");
-                    } else if (rchUserType == RchUserType.CHILD) {
-                        childLocUpdate(result, stateId, rchUserType);
-                    } else if (rchUserType == RchUserType.ASHA) {
-                        ashaLocUpdate(result, stateId, rchUserType);
+                    if (result.contains(RECORDS)) {
+                        if (rchUserType == RchUserType.MOTHER) {
+                            motherLocUpdate(result, stateId, rchUserType);
+                        } else if (rchUserType == RchUserType.CHILD) {
+                            childLocUpdate(result, stateId, rchUserType);
+                        } else if (rchUserType == RchUserType.ASHA) {
+                            ashaLocUpdate(result, stateId, rchUserType);
+                        }
+                    } else {
+                        String warning = String.format("No mother data set received from RCH for %d stateId", stateId);
+                        LOGGER.warn(warning);
                     }
+
                 } else {
                     continue;
                 }
@@ -1329,20 +1329,17 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
             ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
 
-            LOGGER.debug("Unmarshall Begins");
             RchMothersDataSet mothersDataSet = (result == null) ?
                     null :
                     (RchMothersDataSet) MarshallUtils.unmarshall(result, RchMothersDataSet.class);
 
-            LOGGER.debug("Unmarshall End");
+            LOGGER.debug("Unmarshall Completed");
             if (mothersDataSet == null || mothersDataSet.getRecords() == null) {
                 String warning = String.format("No mother data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
             } else {
-                LOGGER.debug("Getting mother records");
                 List<RchMotherRecord> motherRecords = mothersDataSet.getRecords();
                 LOGGER.debug("Records read {}", motherRecords.size());
-                LOGGER.debug("Completed Getting mother records");
                 List<String> existingMotherIds = getDatabaseMothers(motherRecords);
                 for (RchMotherRecord record : motherRecords) {
                     if(existingMotherIds.contains(record.getRegistrationNo())) {
@@ -1356,11 +1353,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             if (!locArrList.isEmpty()) {
                 updateLocInMap(locArrList, stateId, rchUserType);
             }
-
         } catch (JAXBException e) {
             throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH mother data from %d stateId.", stateId), e);
-        } catch (NullPointerException e) {
-            LOGGER.error("No files saved e : ", e);
         } catch (RchInvalidResponseStructureException e) {
             String error = String.format("Cannot read RCH mothers data from stateId: %d. Response Deserialization Error", stateId);
             LOGGER.error(error, e);
@@ -1396,9 +1390,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 updateLocInMap(locArrList, stateId, rchUserType);
             }
 
-        } catch (NullPointerException e) {
-            LOGGER.error("No files present e : ", e);
-        } catch (IOException e) {
+        }  catch (IOException e) {
             LOGGER.error("IO exception.");
         } catch (InvalidLocationException e) {
             LOGGER.error("Location Invalid");
@@ -1420,6 +1412,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 LOGGER.warn(warning);
             } else {
                 List<RchChildRecord> childRecords = childrenDataSet.getRecords();
+                LOGGER.debug("Records read {}", childRecords.size());
                 List<String> existingChildIds = getDatabaseChild(childRecords);
                 for (RchChildRecord record : childRecords) {
                     if(existingChildIds.contains(record.getRegistrationNo())) {
@@ -1436,8 +1429,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
         } catch (JAXBException e) {
             throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH children data from %d stateId.", stateId), e);
-        } catch (NullPointerException e) {
-            LOGGER.error("No files saved f : ", e);
         } catch (RchInvalidResponseStructureException e) {
             String error = String.format("Cannot read RCH children data from stateId:%d. Response Deserialization Error", stateId);
             LOGGER.error(error, e);
@@ -1471,8 +1462,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 updateLocInMap(locArrList, stateId, rchUserType);
             }
 
-        } catch (NullPointerException e) {
-            LOGGER.error("No files present e : ", e);
         } catch (IOException e) {
             LOGGER.error("IO exception.");
         } catch (InvalidLocationException e) {
@@ -1494,6 +1483,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 LOGGER.warn(warning);
             } else {
                 List<RchAnmAshaRecord> anmAshaRecords = ashaDataSet.getRecords();
+                LOGGER.debug("Records read {}", anmAshaRecords.size());
                 List<String> existingAshaIds = getDatabaseAsha(anmAshaRecords);
                 for (RchAnmAshaRecord record : anmAshaRecords
                      ) {
@@ -1513,8 +1503,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         } catch (RchInvalidResponseStructureException e) {
             String error = String.format("Cannot read RCH FLW data from stateId:%d. Response Deserialization Error", stateId);
             LOGGER.error(error, e);
-        } catch (NullPointerException e) {
-            LOGGER.error("No files saved g : ", e);
         } catch (IOException e) {
             LOGGER.error("Input output exception.");
         } catch (InvalidLocationException e) {
@@ -1545,8 +1533,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 updateLocInMap(locArrList, stateId, rchUserType);
             }
 
-        } catch (NullPointerException e) {
-            LOGGER.error("No files present e : ", e);
         } catch (IOException e) {
             LOGGER.error("IO exception.");
         } catch (InvalidLocationException e) {

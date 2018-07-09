@@ -328,8 +328,6 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                 updateLocInMap(locArrList, stateId, mctsUserType);
             }
 
-        } catch (NullPointerException e) {
-            LOGGER.error("No files present e : ", e);
         } catch (IOException e) {
             LOGGER.error("IO exception.");
         } catch (InvalidLocationException e) {
@@ -393,8 +391,6 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                 updateLocInMap(locArrList, stateId, mctsUserType);
             }
 
-        } catch (NullPointerException e) {
-            LOGGER.error("No files present e : ", e);
         } catch (IOException e) {
             LOGGER.error("IO exception.");
         } catch (InvalidLocationException e) {
@@ -424,8 +420,6 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                 updateLocInMap(locArrList, stateId, mctsUserType);
             }
 
-        } catch (NullPointerException e) {
-            LOGGER.error("No files present e : ", e);
         } catch (IOException e) {
             LOGGER.error("IO exception.");
         } catch (InvalidLocationException e) {
