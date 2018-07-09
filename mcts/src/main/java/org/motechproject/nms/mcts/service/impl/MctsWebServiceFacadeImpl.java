@@ -476,6 +476,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                 Village village = locationFinder.getVillageHashMap().get(mapKey + "_" + Long.parseLong(villageCode) + "_" + Long.parseLong(villageSvid));
                 updatedLoc.put(KilkariConstants.CENSUS_VILLAGE_ID, village == null ? null : village.getId());
                 updatedLoc.put(KilkariConstants.VILLAGE_NAME, village == null ? null : village.getName());
+                mapKey = record.get(KilkariConstants.STATE_ID).toString() + "_" + districtCode;
                 mapKey += "_";
                 mapKey += Long.parseLong(healthBlockCode);
                 HealthBlock healthBlock = locationFinder.getHealthBlockHashMap().get(mapKey);
