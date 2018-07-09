@@ -1008,7 +1008,7 @@ public class LocationServiceImpl implements LocationService {
         if(talukas != null && !talukas.isEmpty()) {
             for (Taluka taluka : talukas) {
                 String districtKey = districtIdMap.get(taluka.getDistrict().getId());
-                talukaHashMap.put(districtKey + "_" + taluka.getCode(), taluka);
+                talukaHashMap.put(districtKey + "_" + Long.parseLong(taluka.getCode()), taluka);
             }
         }
     }
@@ -1124,7 +1124,7 @@ public class LocationServiceImpl implements LocationService {
             for (HealthBlock healthBlock : healthBlocks) {
                 for (Taluka taluka : healthBlock.getTalukas()) {
                     String districtKey = districtIdMap.get(healthBlock.getDistrict().getId());
-                    healthBlockHashMap.put(districtKey + "_" + taluka.getCode() + "_" + healthBlock.getCode(), healthBlock);
+                    healthBlockHashMap.put(districtKey + "_" + Long.parseLong(taluka.getCode()) + "_" + healthBlock.getCode(), healthBlock);
                 }
             }
         }
