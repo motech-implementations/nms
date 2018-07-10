@@ -212,7 +212,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
                 Map<String, CellProcessor> cellProcessorMapper;
                 List<Map<String, Object>> recordList;
-
+                LOGGER.debug("Started reading file {}.", mctsImportFile.getOriginalFilename());
                 if (mctsUserType == MctsUserType.MOTHER) {
                     cellProcessorMapper = mctsBeneficiaryImportService.getMotherProcessorMapping();
                     recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
@@ -324,10 +324,10 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                     locArrList.add(locMap);
                 }
             }
-            updateLocInMap(locArrList, stateId, mctsUserType);
+            if (!locArrList.isEmpty()) {
+                updateLocInMap(locArrList, stateId, mctsUserType);
+            }
 
-        } catch (NullPointerException e) {
-            LOGGER.error("No files present e : ", e);
         } catch (IOException e) {
             LOGGER.error("IO exception.");
         } catch (InvalidLocationException e) {
@@ -387,10 +387,10 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                     locArrList.add(locMap);
                 }
             }
-            updateLocInMap(locArrList, stateId, mctsUserType);
+            if (!locArrList.isEmpty()) {
+                updateLocInMap(locArrList, stateId, mctsUserType);
+            }
 
-        } catch (NullPointerException e) {
-            LOGGER.error("No files present e : ", e);
         } catch (IOException e) {
             LOGGER.error("IO exception.");
         } catch (InvalidLocationException e) {
@@ -416,10 +416,10 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                     locArrList.add(locMap);
                 }
             }
-            updateLocInMap(locArrList, stateId, mctsUserType);
+            if (!locArrList.isEmpty()) {
+                updateLocInMap(locArrList, stateId, mctsUserType);
+            }
 
-        } catch (NullPointerException e) {
-            LOGGER.error("No files present e : ", e);
         } catch (IOException e) {
             LOGGER.error("IO exception.");
         } catch (InvalidLocationException e) {
@@ -476,6 +476,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                 Village village = locationFinder.getVillageHashMap().get(mapKey + "_" + Long.parseLong(villageCode) + "_" + Long.parseLong(villageSvid));
                 updatedLoc.put(KilkariConstants.CENSUS_VILLAGE_ID, village == null ? null : village.getId());
                 updatedLoc.put(KilkariConstants.VILLAGE_NAME, village == null ? null : village.getName());
+                mapKey = record.get(KilkariConstants.STATE_ID).toString() + "_" + districtCode;
                 mapKey += "_";
                 mapKey += Long.parseLong(healthBlockCode);
                 HealthBlock healthBlock = locationFinder.getHealthBlockHashMap().get(mapKey);
