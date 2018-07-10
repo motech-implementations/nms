@@ -190,7 +190,7 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
                 }
                 stringBuilder.append("(");
                 stringBuilder.append(healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_ID) + ", ");
-                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME).toString()) + QUOTATION_COMMA);
+                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME) == null ? "" : healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME).toString()) + QUOTATION_COMMA);
                 stringBuilder.append(healthFacility.getId() + ", ");
                 stringBuilder.append(taluka.getId() + ", ");
                 stringBuilder.append(MOTECH_STRING);

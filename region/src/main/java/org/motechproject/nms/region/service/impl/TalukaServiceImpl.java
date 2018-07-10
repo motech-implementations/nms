@@ -181,7 +181,7 @@ public class TalukaServiceImpl implements TalukaService {
                     stringBuilder.append(", ");
                 }
                 stringBuilder.append("(");
-                stringBuilder.append(taluka.get(LocationConstants.TALUKA_ID) + ", ");
+                stringBuilder.append(QUOTATION + taluka.get(LocationConstants.TALUKA_ID) + QUOTATION_COMMA);
                 stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(taluka.get(LocationConstants.TALUKA_NAME).toString()) + QUOTATION_COMMA);
                 stringBuilder.append(district.getId() + ", ");
                 stringBuilder.append(MOTECH_STRING);

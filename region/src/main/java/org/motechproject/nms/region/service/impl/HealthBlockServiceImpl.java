@@ -176,8 +176,8 @@ public class HealthBlockServiceImpl implements HealthBlockService {
         LOGGER.debug("HEALTHBLOCK Query time: {}", queryTimer.time());
         if(healthBlocks != null && !healthBlocks.isEmpty()) {
             for (HealthBlock healthBlock : healthBlocks) {
-                    String talukaKey = districtIdMap.get(healthBlock.getDistrict().getId());
-                    healthBlockHashMap.put(talukaKey + "_" + healthBlock.getCode(), healthBlock);
+                    String districtKey = districtIdMap.get(healthBlock.getDistrict().getId());
+                    healthBlockHashMap.put(districtKey + "_" + healthBlock.getCode(), healthBlock);
             }
         }
         return healthBlockHashMap;
