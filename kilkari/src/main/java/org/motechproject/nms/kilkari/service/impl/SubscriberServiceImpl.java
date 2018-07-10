@@ -593,7 +593,7 @@ public class SubscriberServiceImpl implements SubscriberService {
 
     public Subscription updateOrCreateSubscription(Subscriber subscriber, Subscription subscription, DateTime dateTime, SubscriptionPack pack, Language language, Circle circle, SubscriptionOrigin origin, Boolean greaterCaseNo) { // NO CHECKSTYLE Cyclomatic Complexity
         Subscription deactivatedSubscripion = subscriptionService.getLatestDeactivatedSubscription(subscriber, pack.getType());
-        if (subscription != null && (SubscriptionStatus.ACTIVE == subscription.getStatus() || SubscriptionStatus.PENDING_ACTIVATION == subscription.getStatus())) {
+        if (subscription != null && (SubscriptionStatus.ACTIVE == subscription.getStatus() || SubscriptionStatus.PENDING_ACTIVATION == subscription.getStatus() || SubscriptionStatus.HOLD == subscription.getStatus())) {
             subscriptionService.updateStartDate(subscription, dateTime);
             return subscription;
         } else if (subscription == null && deactivatedSubscripion != null && pack.getType() == SubscriptionPackType.CHILD) {
@@ -671,6 +671,7 @@ public class SubscriberServiceImpl implements SubscriberService {
 
     public void deleteAllowed(Subscriber subscriber) {
         for (Subscription subscription : subscriber.getSubscriptions()) {
+            LOGGER.debug("Here3");
             subscriptionService.deletePreconditionCheck(subscription);
         }
     }
