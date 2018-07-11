@@ -55,7 +55,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.List;
 
@@ -821,7 +820,7 @@ public class LocationServiceImpl implements LocationService {
         if (files != null) {
             for(File f: files){
                 String[] fileNameSplitter =  f.getName().split("_");
-                if(Objects.equals(fileNameSplitter[1], stateId.toString()) && fileNameSplitter[0].equalsIgnoreCase(locationType)){
+                if(fileNameSplitter[1].equalsIgnoreCase(stateId.toString()) && fileNameSplitter[0].equalsIgnoreCase(locationType)){
                     try {
                         FileInputStream input = new FileInputStream(f);
                         csvFilesByStateIdAndRchUserType = new MockMultipartFile("file",
