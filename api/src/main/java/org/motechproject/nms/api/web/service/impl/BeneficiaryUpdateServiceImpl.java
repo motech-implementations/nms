@@ -78,7 +78,9 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
     private static final String QUOTATION_COMMA = "', ";
     private static final String MOTECH_STRING = "'motech', ";
     private static final String SQL_QUERY_LOG = "SQL QUERY: {}";
-    private static final String CHILD_LOG_STRING = "List of child rejects in {}";
+    private static final String CHILD_LOG_STRING = "List of child records in {}";
+    private static final String MOTHER_LOG_STRING = "List of mother records in {}";
+    private static final String ASHA_LOG_STRING = "List of asha records in {}";
     private static final String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
     private static final String DATE_FORMAT_STRING_FOR_CSV_FILE = "yyyy-MM-dd HH:mm:ss.SSS";
     private static final String MCTS = "mcts";
@@ -120,7 +122,7 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
                 }
                 recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
                 Long updatedRecords = bulkUpdate(recordList, rchUserType, origin);
-                LOGGER.debug("File {} processed. {} records updated", rchImportFile.getName(), updatedRecords/2);
+                LOGGER.debug("File {} processed. {} records updated", rchImportFile.getOriginalFilename(), updatedRecords/2);
 
             }
         }
@@ -239,7 +241,7 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
         };
 
         Long updatedNo = frontLineWorkerDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
+        LOGGER.debug(ASHA_LOG_STRING, queryTimer.time());
         return updatedNo;
     }
 
@@ -275,7 +277,7 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
         };
 
         Long updatedNo = frontLineWorkerDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
+        LOGGER.debug(ASHA_LOG_STRING, queryTimer.time());
         return updatedNo;
     }
 
@@ -384,7 +386,7 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
         };
 
         Long updatedNo = mctsMotherDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
+        LOGGER.debug(MOTHER_LOG_STRING, queryTimer.time());
         return updatedNo;
     }
 
@@ -420,7 +422,7 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
         };
 
         Long updatedNo = mctsMotherDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
+        LOGGER.debug(MOTHER_LOG_STRING, queryTimer.time());
         return updatedNo;
     }
 
@@ -428,33 +430,35 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
     private Long bulkUpdate(List<Map<String, Object>> updateObjects, RchUserType rchUserType, String origin) {
         int count = 0;
         Long sqlCount = 0L;
+        int partNumber = 0;
         while (count < updateObjects.size()) {
             List<Map<String, Object>> updateObjectsPart = new ArrayList<>();
             while (updateObjectsPart.size() < PARTITION_SIZE && count < updateObjects.size()) {
                 updateObjectsPart.add(updateObjects.get(count));
                 count++;
             }
+            partNumber++;
 
             if(rchUserType == RchUserType.MOTHER ){
                 if (MCTS.equalsIgnoreCase(origin)){
-                    sqlCount += mctsBulkUpdateMother(updateObjects, rchUserType, origin);
+                    sqlCount += mctsBulkUpdateMother(updateObjectsPart, rchUserType, origin);
                 } else {
-                    sqlCount += rchBulkUpdateMother(updateObjects, rchUserType, origin);
+                    sqlCount += rchBulkUpdateMother(updateObjectsPart, rchUserType, origin);
                 }
             } else if (rchUserType == RchUserType.CHILD){
                 if (MCTS.equalsIgnoreCase(origin)){
-                    sqlCount += mctsBulkUpdateChild(updateObjects, rchUserType, origin);
+                    sqlCount += mctsBulkUpdateChild(updateObjectsPart, rchUserType, origin);
                 } else {
-                    sqlCount += rchBulkUpdateChild(updateObjects, rchUserType, origin);
+                    sqlCount += rchBulkUpdateChild(updateObjectsPart, rchUserType, origin);
                 }
             } else{
                 if (MCTS.equalsIgnoreCase(origin)){
-                    sqlCount += mctsBulkUpdateAsha(updateObjects, rchUserType, origin);
+                    sqlCount += mctsBulkUpdateAsha(updateObjectsPart, rchUserType, origin);
                 } else {
-                    sqlCount += rchBulkUpdateAsha(updateObjects, rchUserType, origin);
+                    sqlCount += rchBulkUpdateAsha(updateObjectsPart, rchUserType, origin);
                 }
             }
-
+            LOGGER.debug("Part {} processed. {} records updated", partNumber, sqlCount/2);
             updateObjectsPart.clear();
         }
         return sqlCount;

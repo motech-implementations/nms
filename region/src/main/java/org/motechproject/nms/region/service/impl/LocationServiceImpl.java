@@ -520,6 +520,9 @@ public class LocationServiceImpl implements LocationService {
                                         svid.toString(), village);
                             }
 
+                            mapKey = new StringBuffer(record.get(STATE_ID).toString() + "_" +
+                                    record.get(DISTRICT_ID).toString());
+
                             if (isValidID(record, HEALTHBLOCK_ID)) {
                                 HealthBlock healthBlock = new HealthBlock();
                                 healthBlock.setCode((Long) record.get(HEALTHBLOCK_ID));
@@ -1010,7 +1013,7 @@ public class LocationServiceImpl implements LocationService {
         if(talukas != null && !talukas.isEmpty()) {
             for (Taluka taluka : talukas) {
                 String districtKey = districtIdMap.get(taluka.getDistrict().getId());
-                talukaHashMap.put(districtKey + "_" + taluka.getCode(), taluka);
+                talukaHashMap.put(districtKey + "_" + Long.parseLong(taluka.getCode()), taluka);
             }
         }
     }
@@ -1075,7 +1078,7 @@ public class LocationServiceImpl implements LocationService {
 
     /**
      * Fills healthBlockHashMap with HealthBlock objects from database
-     * @param healthBlockHashMap contains (stateCode_districtCode_talukaCode_healthBlockCode, HealthBlock) with dummy HealthBlock objects
+     * @param healthBlockHashMap contains (stateCode_districtCode_healthBlockCode, HealthBlock) with dummy HealthBlock objects
      * @param districtHashMap contains (stateCode_districtCode, District) with original District objects from database
      */
     private void fillHealthBlocks(Map<String, HealthBlock> healthBlockHashMap, final Map<String, District> districtHashMap) {
@@ -1097,7 +1100,7 @@ public class LocationServiceImpl implements LocationService {
                     count--;
                     String[] ids = healthBlockString.split("_");
                     Long districtId = districtHashMap.get(ids[0] + "_" + ids[1]).getId();
-                    query += "(code = " + ids[3] +  " and district_id_OID = " + districtId + ")";
+                    query += "(code = " + ids[2] +  " and district_id_OID = " + districtId + ")";
                     if (count > 0) {
                         query += OR_SQL_STRING;
                     }
@@ -1124,10 +1127,8 @@ public class LocationServiceImpl implements LocationService {
         LOGGER.debug("HEALTHBLOCK Query time: {}", queryTimer.time());
         if(healthBlocks != null && !healthBlocks.isEmpty()) {
             for (HealthBlock healthBlock : healthBlocks) {
-                for (Taluka taluka : healthBlock.getTalukas()) {
                     String districtKey = districtIdMap.get(healthBlock.getDistrict().getId());
-                    healthBlockHashMap.put(districtKey + "_" + taluka.getCode() + "_" + healthBlock.getCode(), healthBlock);
-                }
+                    healthBlockHashMap.put(districtKey + "_" + healthBlock.getCode(), healthBlock);
             }
         }
     }
@@ -1135,9 +1136,9 @@ public class LocationServiceImpl implements LocationService {
 
     /**
      * Fills healthFacilityHashMap with HealthFacility objects from the database
-     * @param healthFacilityHashMap contains (stateCode_districtCode_talukaCode_healthBlockCode_healthFacilityCode, HealthFacility)
+     * @param healthFacilityHashMap contains (stateCode_districtCode_healthBlockCode_healthFacilityCode, HealthFacility)
      *                              with dummy HealthFacility objects
-     * @param healthBlockHashMap contains (stateCode_districtCode_talukaCode_healthBlockCode, HealthBlock)
+     * @param healthBlockHashMap contains (stateCode_districtCode_healthBlockCode, HealthBlock)
      *                           with original HealthBlock objects from database
      */
     private void fillHealthFacilities(Map<String, HealthFacility> healthFacilityHashMap, final Map<String, HealthBlock> healthBlockHashMap) {
@@ -1158,8 +1159,8 @@ public class LocationServiceImpl implements LocationService {
                 for (String healthFacilityString : healthFacilityKeys) {
                     count--;
                     String[] ids = healthFacilityString.split("_");
-                    Long healthBlockId = healthBlockHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2] + "_" + ids[3]).getId();
-                    query += CODE_SQL_STRING + ids[4] +  " and healthBlock_id_oid = " + healthBlockId + ")";
+                    Long healthBlockId = healthBlockHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]).getId();
+                    query += CODE_SQL_STRING + ids[3] +  " and healthBlock_id_oid = " + healthBlockId + ")";
                     if (count > 0) {
                         query += OR_SQL_STRING;
                     }
@@ -1195,9 +1196,9 @@ public class LocationServiceImpl implements LocationService {
 
     /**
      * Fills healthSubFacilityHashMap with HealthSubFacility objects from the database
-     * @param healthSubFacilityHashMap contains (stateCode_districtCode_talukaCode_healthBlockCode_healthFacilityCode_healthSubFacilityCode, HealthSubFacility)
+     * @param healthSubFacilityHashMap contains (stateCode_districtCode_healthBlockCode_healthFacilityCode_healthSubFacilityCode, HealthSubFacility)
      *                              with dummy HealthSubFacility objects
-     * @param healthFacilityHashMap contains (stateCode_districtCode_talukaCode_healthBlockCode_healthFacilityCode, HealthFacility)
+     * @param healthFacilityHashMap contains (stateCode_districtCode_healthBlockCode_healthFacilityCode, HealthFacility)
      *                           with original HealthFacility objects from database
      */
     private void fillHealthSubFacilities(Map<String, HealthSubFacility> healthSubFacilityHashMap, final Map<String, HealthFacility> healthFacilityHashMap) {
@@ -1218,8 +1219,8 @@ public class LocationServiceImpl implements LocationService {
                 for (String healthFacilityString : healthSubFacilityKeys) {
                     count--;
                     String[] ids = healthFacilityString.split("_");
-                    Long healthFacilityId = healthFacilityHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2] + "_" + ids[3] + "_" + ids[4]).getId();
-                    query += CODE_SQL_STRING + ids[5] +  " and healthFacility_id_oid = " + healthFacilityId + ")";
+                    Long healthFacilityId = healthFacilityHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2] + "_" + ids[3]).getId();
+                    query += CODE_SQL_STRING + ids[4] +  " and healthFacility_id_oid = " + healthFacilityId + ")";
                     if (count > 0) {
                         query += OR_SQL_STRING;
                     }
