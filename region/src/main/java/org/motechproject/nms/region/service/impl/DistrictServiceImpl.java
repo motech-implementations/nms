@@ -260,4 +260,61 @@ public class DistrictServiceImpl implements DistrictService {
 
         return districtHashMap;
     }
+
+    @Override
+    public Map<String, District> fillAllDistricts(List<Map<String, Object>> recordList, final Map<String, State> stateHashMap) {
+
+        Map<String, District> districtHashMap = new HashMap<>();
+
+        Map<Long, String> stateIdMap = new HashMap<>();
+        for (String stateKey : stateHashMap.keySet()) {
+            stateIdMap.put(stateHashMap.get(stateKey).getId(), stateKey);
+        }
+
+        Timer queryTimer = new Timer();
+
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<District>> queryExecution = new SqlQueryExecution<List<District>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "SELECT * from nms_districts where ";
+                int count = stateHashMap.size();
+                Set<String> stateKeys = stateHashMap.keySet();
+                for (String stateKey : stateKeys) {
+                    count--;
+                    Long stateId = stateHashMap.get(stateKey).getId();
+                    query += " state_id_oid = " + stateId;
+                    if (count > 0) {
+                        query += LocationConstants.OR_SQL_STRING;
+                    }
+                }
+
+                LOGGER.debug("DISTRICT Query: {}", query);
+                return query;
+            }
+
+            @Override
+            public List<District> execute(Query query) {
+                query.setClass(District.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                List<District> districts;
+                if (fqr.isEmpty()) {
+                    return null;
+                }
+                districts = (List<District>) fqr;
+                return districts;
+            }
+        };
+
+        List<District> districts = districtDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("DISTRICT Query time: {}", queryTimer.time());
+        for (District district : districts) {
+            String stateKey = stateIdMap.get(district.getState().getId());
+            districtHashMap.put(stateKey + "_" + district.getCode(), district);
+        }
+
+        return districtHashMap;
+    }
 }

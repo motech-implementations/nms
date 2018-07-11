@@ -673,7 +673,7 @@ public class LocationServiceImpl implements LocationService {
 
             case TALUKAHEALTHBLOCK:
                 stateHashMap = stateService.fillStateIds(recordList);
-                districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
+                districtHashMap = districtService.fillAllDistricts(recordList, stateHashMap);
                 talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
                 healthBlockHashMap = healthBlockService.fillHealthBlockIds(recordList, districtHashMap);
                 updatedRecords = healthBlockService.createUpdateTalukaHealthBlock(recordList, healthBlockHashMap, talukaHashMap);
@@ -691,8 +691,8 @@ public class LocationServiceImpl implements LocationService {
                 stateHashMap = stateService.fillStateIds(recordList);
                 districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
                 talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
-                healthBlockHashMap = healthBlockService.fillHealthBlockIds(recordList, districtHashMap);
-                healthFacilityHashMap = healthFacilityService.fillHealthFacilityIds(recordList, healthBlockHashMap);
+                //Adding Health Facilities using Talukas as HealthBlock code is not given
+                healthFacilityHashMap = healthFacilityService.fillHealthFacilitiesFromTalukas(recordList, talukaHashMap);
                 updatedRecords = healthSubFacilityService.createUpdateHealthSubFacilities(recordList, talukaHashMap, healthFacilityHashMap);
                 break;
 
