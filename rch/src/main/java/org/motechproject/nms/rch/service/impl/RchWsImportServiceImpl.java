@@ -171,7 +171,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         String stateName = state.getName();
         Long stateCode = state.getCode();
         try {
-            if (rchWebServiceFacade.getTalukasData(startDate, endDate, endpoint, stateId)) {
+            if (rchWebServiceFacade.getHealthBlockData(startDate, endDate, endpoint, stateId)) {
                 LOGGER.info("RCH Responses for state id {} recorded to file successfully.", stateId);
             }
         } catch (RchWebServiceException e) {
