@@ -83,7 +83,7 @@ public class VillageServiceImpl implements VillageService {
 
             @Override
             public String getSqlQuery() {
-                String query = "INSERT into nms_health_blocks (`vcode`, `svid`, `name`, `taluka_id_OID`, " +
+                String query = "INSERT into nms_villages (`vcode`, `svid`, `name`, `taluka_id_OID`, " +
                         " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
                         villageQuerySet(villages, talukaHashMap) +
                         " ON DUPLICATE KEY UPDATE " +
@@ -96,7 +96,6 @@ public class VillageServiceImpl implements VillageService {
 
             @Override
             public Long execute(Query query) {
-                query.setClass(Village.class);
                 return (Long) query.execute();
             }
         };
@@ -130,10 +129,12 @@ public class VillageServiceImpl implements VillageService {
                 for (String villageString : villageKeys) {
                     count--;
                     String[] ids = villageString.split("_");
-                    Long talukaId = talukaHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]).getId();
-                    query += " (vcode = " + ids[3] + " and svid = " + ids[4] + " and taluka_id_oid = " + talukaId + ")";
-                    if (count > 0) {
-                        query += LocationConstants.OR_SQL_STRING;
+                    Taluka taluka = talukaHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]);
+                    if (taluka != null && taluka.getId() != null) {
+                        query += " (vcode = " + ids[3] + " and svid = " + ids[4] + " and taluka_id_oid = " + taluka.getId() + ")";
+                        if (count > 0) {
+                            query += LocationConstants.OR_SQL_STRING;
+                        }
                     }
                 }
 
@@ -171,23 +172,27 @@ public class VillageServiceImpl implements VillageService {
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> village : villages) {
-            if (i != 0) {
-                stringBuilder.append(", ");
-            }
-            stringBuilder.append("(");
-            stringBuilder.append(village.get(LocationConstants.VILLAGE_ID) + ", ");
-            stringBuilder.append(0 + ", ");
-            stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(village.get(LocationConstants.VILLAGE_NAME).toString()) + QUOTATION_COMMA);
-            stringBuilder.append(talukaHashMap.get(village.get(LocationConstants.CSV_STATE_ID).toString() + "_" + village.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    village.get(LocationConstants.TALUKA_ID).toString()).getId() + ", ");
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
-            stringBuilder.append(")");
+            Taluka taluka = talukaHashMap.get(village.get(LocationConstants.CSV_STATE_ID).toString() + "_" +
+                    village.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+                    village.get(LocationConstants.TALUKA_ID).toString());
+            if (taluka != null && taluka.getId() != null) {
+                if (i != 0) {
+                    stringBuilder.append(", ");
+                }
+                stringBuilder.append("(");
+                stringBuilder.append(village.get(LocationConstants.VILLAGE_ID) + ", ");
+                stringBuilder.append(0 + ", ");
+                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(village.get(LocationConstants.VILLAGE_NAME).toString()) + QUOTATION_COMMA);
+                stringBuilder.append(taluka.getId() + ", ");
+                stringBuilder.append(MOTECH_STRING);
+                stringBuilder.append(MOTECH_STRING);
+                stringBuilder.append(MOTECH_STRING);
+                stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                stringBuilder.append(")");
 
-            i++;
+                i++;
+            }
         }
 
         return stringBuilder.toString();

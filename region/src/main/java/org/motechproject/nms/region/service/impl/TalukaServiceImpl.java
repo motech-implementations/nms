@@ -133,10 +133,12 @@ public class TalukaServiceImpl implements TalukaService {
                 for (String talukaString : talukaKeys) {
                     count--;
                     String[] ids = talukaString.split("_");
-                    Long districtId = districtHashMap.get(ids[0] + "_" + ids[1]).getId();
-                    query += LocationConstants.CODE_SQL_STRING + ids[2] + " and district_id_oid = " + districtId + ")";
-                    if (count > 0) {
-                        query += LocationConstants.OR_SQL_STRING;
+                    District district = districtHashMap.get(ids[0] + "_" + ids[1]);
+                    if (district != null && district.getId() != null) {
+                        query += LocationConstants.CODE_SQL_STRING + ids[2] + " and district_id_oid = " + district.getId() + ")";
+                        if (count > 0) {
+                            query += LocationConstants.OR_SQL_STRING;
+                        }
                     }
                 }
 
