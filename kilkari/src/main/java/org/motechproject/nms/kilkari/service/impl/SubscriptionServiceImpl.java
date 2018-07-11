@@ -468,19 +468,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
         } else { // SubscriptionPackType.PREGNANCY
 
-            LOGGER.debug("LMP: {}", subscriber.getLastMenstrualPeriod());
             if (subscriber.getLastMenstrualPeriod() == null) {
                 return false;
             }
 
-            LOGGER.debug("has Completed for startDate: {}", Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(KilkariConstants.THREE_MONTHS),
-                    DateUtil.now(), pack));
             if (Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(KilkariConstants.THREE_MONTHS),
                     DateUtil.now(), pack)) {
                 return false;
             }
 
-            LOGGER.debug("Active Subscription : {}", getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY));
             if (getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY) != null) {
                 // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(), (importOrigin == SubscriptionOrigin.MCTS_IMPORT) ? subscriber.getMother().getBeneficiaryId() : subscriber.getMother().getRchId(),
@@ -691,16 +687,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private boolean activateHoldSubscription(Subscription currentSubscription) {
 
         Subscriber currentSubscriber = currentSubscription.getSubscriber();
-        LOGGER.debug("Subscriber: {}", currentSubscriber.toString());
         SubscriptionPack currentPack = currentSubscription.getSubscriptionPack();
-        LOGGER.debug("currentPack: {}", currentPack.getName());
 
         if (enrollmentPreconditionCheck(currentSubscriber, currentPack, currentSubscription.getOrigin())) { // Don't need a full check but it doesn't hurt
-            LOGGER.debug("here1");
             currentSubscription.setStatus(SubscriptionStatus.ACTIVE);
             subscriptionDataService.update(currentSubscription);
             return true;
         }
+        LOGGER.debug("We will not be activating this Hold subscription : {}", currentSubscription.getSubscriptionId());
         return false;
     }
 
