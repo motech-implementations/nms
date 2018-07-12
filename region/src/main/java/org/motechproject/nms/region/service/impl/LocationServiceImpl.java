@@ -58,6 +58,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.List;
 
+import static org.motechproject.nms.region.domain.LocationEnum.VILLAGEHEALTHSUBFACILITY;
 import static org.motechproject.nms.region.utils.LocationConstants.CODE_SQL_STRING;
 import static org.motechproject.nms.region.utils.LocationConstants.CSV_STATE_ID;
 import static org.motechproject.nms.region.utils.LocationConstants.DISTRICT_ID;
@@ -74,6 +75,7 @@ import static org.motechproject.nms.region.utils.LocationConstants.NON_CENSUS_VI
 import static org.motechproject.nms.region.utils.LocationConstants.OR_SQL_STRING;
 import static org.motechproject.nms.region.utils.LocationConstants.PHC_ID;
 import static org.motechproject.nms.region.utils.LocationConstants.PHC_NAME;
+import static org.motechproject.nms.region.utils.LocationConstants.SMALL_LOCATION_PART_SIZE;
 import static org.motechproject.nms.region.utils.LocationConstants.STATE_ID;
 import static org.motechproject.nms.region.utils.LocationConstants.SUBCENTRE_ID;
 import static org.motechproject.nms.region.utils.LocationConstants.SUBCENTRE_NAME;
@@ -613,17 +615,22 @@ public class LocationServiceImpl implements LocationService {
                 case TALUKAHEALTHBLOCK : cellProcessorMapper = getTalukaHealthBlockMapping(); break;
                 case HEALTHFACILITY : cellProcessorMapper = getHealthFacilityMapping(); break;
                 case HEALTHSUBFACILITY : cellProcessorMapper = getHealthSubFacilityMapping(); break;
-                case VILLAGEHEALTHSUBFACILTY : cellProcessorMapper = getVillageHealthSubFacilityMapping();
+                case VILLAGEHEALTHSUBFACILITY: cellProcessorMapper = getVillageHealthSubFacilityMapping();
             }
 
             recordList = readCsv(bufferedReader, cellProcessorMapper);
+
+            Long partitionSize = LOCATION_PART_SIZE;
+            if (locationType.equals(VILLAGEHEALTHSUBFACILITY)) {
+                partitionSize = SMALL_LOCATION_PART_SIZE;
+            }
 
             int count = 0;
             int partNumber = 0;
             Long totalUpdatedRecords = 0L;
             while (count < recordList.size()) {
                 List<Map<String, Object>> recordListPart = new ArrayList<>();
-                while (recordListPart.size() < LOCATION_PART_SIZE && count < recordList.size()) {
+                while (recordListPart.size() < partitionSize && count < recordList.size()) {
                     recordListPart.add(recordList.get(count));
                     count++;
                 }
@@ -675,11 +682,7 @@ public class LocationServiceImpl implements LocationService {
                 break;
 
             case TALUKAHEALTHBLOCK:
-                stateHashMap = stateService.fillStateIds(recordList);
-                districtHashMap = districtService.fillAllDistricts(recordList, stateHashMap);
-                talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
-                healthBlockHashMap = healthBlockService.fillHealthBlockIds(recordList, districtHashMap);
-                updatedRecords = healthBlockService.createUpdateTalukaHealthBlock(recordList, healthBlockHashMap, talukaHashMap);
+                updatedRecords = healthBlockService.createUpdateTalukaHealthBlock(recordList);
                 break;
 
             case HEALTHFACILITY:
@@ -699,15 +702,8 @@ public class LocationServiceImpl implements LocationService {
                 updatedRecords = healthSubFacilityService.createUpdateHealthSubFacilities(recordList, talukaHashMap, healthFacilityHashMap);
                 break;
 
-            case VILLAGEHEALTHSUBFACILTY:
-                stateHashMap = stateService.fillStateIds(recordList);
-                districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
-                talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
-                healthBlockHashMap = healthBlockService.fillHealthBlockIds(recordList, districtHashMap);
-                healthFacilityHashMap = healthFacilityService.fillHealthFacilityIds(recordList, healthBlockHashMap);
-                healthSubFacilityHashMap = healthSubFacilityService.fillHealthSubFacilityIds(recordList, healthFacilityHashMap);
-                villageHashMap = villageService.fillVillageIds(recordList, talukaHashMap);
-                updatedRecords = healthSubFacilityService.createUpdateVillageHealthSubFacility(recordList, healthSubFacilityHashMap, villageHashMap);
+            case VILLAGEHEALTHSUBFACILITY:
+                updatedRecords = healthSubFacilityService.createUpdateVillageHealthSubFacility(recordList);
                 break;
 
         }

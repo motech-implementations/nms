@@ -18,5 +18,5 @@ public interface HealthBlockService {
     Long createUpdateHealthBlocks(List<Map<String, Object>> recordList, Map<String, District> districtHashMap, Map<String, Taluka> talukaHashMap);
 
     @Transactional
-    Long createUpdateTalukaHealthBlock(List<Map<String, Object>> recordList, Map<String, HealthBlock> healthBlockHashMap, Map<String, Taluka> talukaHashMap);
+    Long createUpdateTalukaHealthBlock(List<Map<String, Object>> recordList);
 }
