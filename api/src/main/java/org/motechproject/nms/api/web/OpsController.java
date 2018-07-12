@@ -55,7 +55,7 @@ import static org.motechproject.nms.region.domain.LocationEnum.HEALTHSUBFACILITY
 import static org.motechproject.nms.region.domain.LocationEnum.TALUKA;
 import static org.motechproject.nms.region.domain.LocationEnum.TALUKAHEALTHBLOCK;
 import static org.motechproject.nms.region.domain.LocationEnum.VILLAGE;
-import static org.motechproject.nms.region.domain.LocationEnum.VILLAGEHEALTHSUBFACILTY;
+import static org.motechproject.nms.region.domain.LocationEnum.VILLAGEHEALTHSUBFACILITY;
 
 /**
  * Controller to expose methods for OPS personnel
@@ -359,7 +359,7 @@ public class OpsController extends BaseController {
             locationService.createLocations(stateID, locationType, fileLocation);
             locationType = VILLAGE;
             locationService.createLocations(stateID, locationType, fileLocation);
-            locationType = VILLAGEHEALTHSUBFACILTY;
+            locationType = VILLAGEHEALTHSUBFACILITY;
             locationService.createLocations(stateID, locationType, fileLocation);
         } catch (IOException e) {
             LOGGER.error("{} Location File not Found. Exception: {}", locationType, e);

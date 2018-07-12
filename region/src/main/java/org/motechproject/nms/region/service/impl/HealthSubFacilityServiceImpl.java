@@ -10,7 +10,6 @@ import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.domain.Taluka;
-import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
 import org.motechproject.nms.region.service.HealthSubFacilityService;
 import org.motechproject.nms.region.utils.LocationConstants;
@@ -210,7 +209,7 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
 
     @Override
     @Transactional
-    public Long createUpdateVillageHealthSubFacility(final List<Map<String, Object>> recordList, final Map<String, HealthSubFacility> healthSubFacilityHashMap, final Map<String, Village> villageHashMap) {
+    public Long createUpdateVillageHealthSubFacility(final List<Map<String, Object>> recordList) {
         Timer queryTimer = new Timer();
 
         @SuppressWarnings("unchecked")
@@ -218,24 +217,24 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
 
             @Override
             public String getSqlQuery() { //as of now there are no creationDate and modificationDate
-                String query1 = "INSERT IGNORE into nms_village_healthsubfacility (healthSubFacility_id, village_id, creationDate, modificationDate) values";
+                String query1 = "INSERT IGNORE into nms_village_healthsubfacility (village_id, healthSubFacility_id, creationDate, modificationDate) ";
                 int count = recordList.size();
                 for (Map<String, Object> record : recordList) {
                     count--;
-                    String villageString = record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                            record.get(LocationConstants.TALUKA_ID).toString() + "_" + record.get(LocationConstants.VILLAGE_ID).toString() + "_" + 0;
-                    Village village = villageHashMap.get(villageString);
-                    String healthSubFacilityString = record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                            record.get(LocationConstants.TALUKA_ID).toString() + "_" + record.get(LocationConstants.HEALTHBLOCK_ID).toString() + "_" +
-                            record.get(LocationConstants.HEALTHFACILITY_ID).toString() + "_" + record.get(LocationConstants.HEALTHSUBFACILITY_ID).toString();
-                    HealthSubFacility healthSubFacility = healthSubFacilityHashMap.get(healthSubFacilityString);
-                    if (village != null && healthSubFacility != null && village.getTaluka().getId().equals(healthSubFacility.getTaluka().getId())) {
-                        query1 += LocationConstants.OPEN_PARANTHESES_STRING + healthSubFacility.getId() + ", " + village.getId() + LocationConstants.COMMA_QUOTATION_STRING
-                                + LocationConstants.QUOTATION_COMMA_STRING;
-                        query1 += addDateColumns();
-                        query1 += " )";
+                    if (record.get(LocationConstants.DISTRICT_ID) != null && record.get(LocationConstants.CSV_STATE_ID) != null
+                            && record.get(LocationConstants.HEALTHSUBFACILITY_ID) != null && record.get(LocationConstants.VILLAGE_ID) != null) {
+                        query1 += " select v.id as village_Id, hsf.id as healthSubFacility_Id, now(), now() from nms_states s " +
+                                " JOIN nms_districts d on s.id=d.state_id_oid and d.code = " +
+                                record.get(LocationConstants.DISTRICT_ID).toString() +
+                                " JOIN nms_talukas t on t.district_id_oid = d.id " +
+                                " JOIN nms_villages v on v.taluka_id_oid = t.id and v.vcode = " +
+                                record.get(LocationConstants.VILLAGE_ID).toString() +
+                                " and v.svid = 0 " +
+                                " JOIN nms_health_sub_facilities hsf on hsf.taluka_id_oid = v.taluka_id_oid and hsf.code =  " +
+                                record.get(LocationConstants.HEALTHSUBFACILITY_ID).toString() +
+                                " where s.code = " + record.get(LocationConstants.CSV_STATE_ID).toString();
                         if (count > 0) {
-                            query1 += LocationConstants.COMMA_STRING;
+                            query1 += " UNION ";
                         }
                     }
                 }
@@ -256,13 +255,4 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
         return villageHealthSubFacilityCount;
     }
 
-    private String addDateColumns() {
-        DateTime dateTimeNow = new DateTime();
-        DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(LocationConstants.DATE_FORMAT_STRING);
-        String query = "";
-        query += "'" + dateTimeFormatter.print(dateTimeNow) + "'";
-        query += ", ";
-        query += "'" + dateTimeFormatter.print(dateTimeNow) + "'";
-        return query;
-    }
 }

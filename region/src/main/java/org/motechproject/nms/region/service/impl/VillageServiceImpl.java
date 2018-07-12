@@ -182,7 +182,7 @@ public class VillageServiceImpl implements VillageService {
                 stringBuilder.append("(");
                 stringBuilder.append(village.get(LocationConstants.VILLAGE_ID) + ", ");
                 stringBuilder.append(0 + ", ");
-                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(village.get(LocationConstants.VILLAGE_NAME).toString()) + QUOTATION_COMMA);
+                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(village.get(LocationConstants.VILLAGE_NAME).toString().replaceAll(":", "")) + QUOTATION_COMMA);
                 stringBuilder.append(taluka.getId() + ", ");
                 stringBuilder.append(MOTECH_STRING);
                 stringBuilder.append(MOTECH_STRING);

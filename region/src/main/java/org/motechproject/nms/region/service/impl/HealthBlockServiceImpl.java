@@ -219,30 +219,28 @@ public class HealthBlockServiceImpl implements HealthBlockService {
 
     @Override
     @Transactional
-    public Long createUpdateTalukaHealthBlock(final List<Map<String, Object>> recordList, final Map<String, HealthBlock> healthBlockHashMap, final Map<String, Taluka> talukaHashMap) {
+    public Long createUpdateTalukaHealthBlock(final List<Map<String, Object>> recordList) {
         Timer queryTimer = new Timer();
         @SuppressWarnings("unchecked")
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
             public String getSqlQuery() { //as of now there are no creationDate and modificationDate
-                String query1 = "INSERT IGNORE into nms_taluka_healthBlock (taluka_id_OID, healthBlock_id_OID, creationDate, modificationDate) values";
+                String query1 = "INSERT IGNORE into nms_taluka_healthblock (taluka_id, healthBlock_id, creationDate, modificationDate) ";
                 int count = recordList.size();
                 for (Map<String, Object> record : recordList) {
                     count--;
-                    String talukaString = record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                            record.get(LocationConstants.TALUKA_ID).toString();
-                    Taluka taluka = talukaHashMap.get(talukaString);
-                    String healthBlockString = record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                            record.get(LocationConstants.HEALTHBLOCK_ID).toString();
-                    HealthBlock healthBlock = healthBlockHashMap.get(healthBlockString);
-                    if (taluka != null && healthBlock != null && taluka.getDistrict().getId().equals(healthBlock.getDistrict().getId())) {
-                        query1 += LocationConstants.OPEN_PARANTHESES_STRING + taluka.getId() + ", " + healthBlock.getId() + LocationConstants.COMMA_QUOTATION_STRING
-                                + LocationConstants.QUOTATION_COMMA_STRING;
-                        query1 += addDateColumns();
-                        query1 += " )";
+                    if (record.get(LocationConstants.TALUKA_ID) != null && record.get(LocationConstants.CSV_STATE_ID) != null
+                            && record.get(LocationConstants.HEALTHBLOCK_ID) != null) {
+                        query1 += " select t.id, h.id, now(), now() from nms_states s " +
+                                " join nms_districts d on  d.state_id_OID = s.id " +
+                                " join nms_talukas t on t.district_id_OID = d.id and t.code = " +
+                                record.get(LocationConstants.TALUKA_ID).toString() +
+                                " join nms_health_blocks h on h.district_id_OID = t.district_id_OID and h.code = " +
+                                record.get(LocationConstants.HEALTHBLOCK_ID).toString() +
+                                " where s.code = " + record.get(LocationConstants.CSV_STATE_ID).toString();
                         if (count > 0) {
-                            query1 += LocationConstants.COMMA_STRING;
+                            query1 += " UNION ";
                         }
                     }
                 }
@@ -261,15 +259,5 @@ public class HealthBlockServiceImpl implements HealthBlockService {
         LOGGER.debug("Taluka_HEALTHBLOCKs inserted : {}", healthBlockTalukaCount);
         LOGGER.debug("Taluka_HEALTHBLOCKs INSERT Query time: {}", queryTimer.time());
         return healthBlockTalukaCount;
-    }
-
-    private String addDateColumns() {
-        DateTime dateTimeNow = new DateTime();
-        DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(LocationConstants.DATE_FORMAT_STRING);
-        String query = "";
-        query += "'" + dateTimeFormatter.print(dateTimeNow) + "'";
-        query += ", ";
-        query += "'" + dateTimeFormatter.print(dateTimeNow) + "'";
-        return query;
     }
 }
