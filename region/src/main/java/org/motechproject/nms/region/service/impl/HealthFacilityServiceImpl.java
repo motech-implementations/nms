@@ -171,6 +171,70 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
         return healthFacilityHashMap;
     }
 
+    @Override
+    public Map<String, HealthFacility> fillHealthFacilitiesFromTalukas(List<Map<String, Object>> recordList, final Map<String, Taluka> talukaHashMap) {
+        final Set<String> healthFacilityKeys = new HashSet<>();
+        for(Map<String, Object> record : recordList) {
+            healthFacilityKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+                    record.get(LocationConstants.TALUKA_ID).toString() + "_" +
+                    record.get(LocationConstants.HEALTHFACILITY_ID).toString());
+        }
+        Map<String, HealthFacility> healthFacilityHashMap = new HashMap<>();
+
+        Map<Long, String> talukaIdMap = new HashMap<>();
+        for (String talukaKey : talukaHashMap.keySet()) {
+            talukaIdMap.put(talukaHashMap.get(talukaKey).getId(), talukaKey);
+        }
+
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<HealthFacility>> queryExecution = new SqlQueryExecution<List<HealthFacility>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "SELECT * from nms_health_facilities where";
+                int count = healthFacilityKeys.size();
+                for (String healthFacilityString : healthFacilityKeys) {
+                    count--;
+                    String[] ids = healthFacilityString.split("_");
+                    Taluka taluka = talukaHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]);
+                    if (taluka != null && taluka.getId() != null) {
+                        query += LocationConstants.CODE_SQL_STRING + ids[3] + " and taluka_id_oid = " + taluka.getId() + ")";
+                        if (count > 0) {
+                            query += LocationConstants.OR_SQL_STRING;
+                        }
+                    }
+                }
+
+                LOGGER.debug("HEALTHFACILITY Query: {}", query);
+                return query;
+            }
+
+            @Override
+            public List<HealthFacility> execute(Query query) {
+                query.setClass(HealthFacility.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                List<HealthFacility> healthFacilities;
+                if (fqr.isEmpty()) {
+                    return null;
+                }
+                healthFacilities = (List<HealthFacility>) fqr;
+                return healthFacilities;
+            }
+        };
+
+        List<HealthFacility> healthFacilities = dataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("HEALTHFACILITY Query time: {}", queryTimer.time());
+        if(healthFacilities != null && !healthFacilities.isEmpty()) {
+            for (HealthFacility healthFacility : healthFacilities) {
+                String talukaKey = talukaIdMap.get(healthFacility.getTaluka().getId());
+                healthFacilityHashMap.put(talukaKey + "_" + healthFacility.getCode(), healthFacility);
+            }
+        }
+        return healthFacilityHashMap;
+    }
+
     private String healthFacilityQuerySet(List<Map<String, Object>> healthFacilities, Map<String, Taluka> talukaHashMap, Map<String, HealthBlock> healthBlockHashMap) {
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
@@ -189,7 +253,9 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
                 }
                 stringBuilder.append("(");
                 stringBuilder.append(healthFacility.get(LocationConstants.HEALTHFACILITY_ID) + ", ");
-                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthFacility.get(LocationConstants.HEALTHFACILITY_NAME).toString()) + QUOTATION_COMMA);
+                stringBuilder.append(QUOTATION +
+                        StringEscapeUtils.escapeSql(healthFacility.get(LocationConstants.HEALTHFACILITY_NAME) == null ?
+                                "" : healthFacility.get(LocationConstants.HEALTHFACILITY_NAME).toString()) + QUOTATION_COMMA);
                 stringBuilder.append(healthBlock.getId() + ", ");
                 stringBuilder.append(taluka.getId() + ", ");
                 stringBuilder.append(MOTECH_STRING);
