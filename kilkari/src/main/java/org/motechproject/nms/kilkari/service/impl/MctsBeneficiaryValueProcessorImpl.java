@@ -13,7 +13,12 @@ import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
+import org.motechproject.nms.region.domain.HealthBlock;
+import org.motechproject.nms.region.domain.HealthFacility;
+import org.motechproject.nms.region.domain.HealthSubFacility;
 import org.motechproject.nms.region.domain.LocationFinder;
+import org.motechproject.nms.region.domain.Taluka;
+import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -251,7 +256,10 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                 Long talukaCode = Long.parseLong(record.get(KilkariConstants.TALUKA_ID) == null ? "0" : record.get(KilkariConstants.TALUKA_ID).toString());
                 mapKey.append("_");
                 mapKey.append(talukaCode);
-                beneficiary.setTaluka(locationFinder.getTalukaHashMap().get(mapKey.toString()));
+                Taluka taluka = locationFinder.getTalukaHashMap().get(mapKey.toString());
+                if (taluka != null && taluka.getId() != null) {
+                    beneficiary.setTaluka(taluka);
+                }
 
                 String villageSvid = record.get(KilkariConstants.NON_CENSUS_VILLAGE_ID) == null ? "0" : record.get(KilkariConstants.NON_CENSUS_VILLAGE_ID).toString();
                 String villageCode = record.get(KilkariConstants.CENSUS_VILLAGE_ID) == null ? "0" : record.get(KilkariConstants.CENSUS_VILLAGE_ID).toString();
@@ -259,16 +267,29 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                 String healthFacilityCode = record.get(KilkariConstants.PHC_ID) == null ? "0" : record.get(KilkariConstants.PHC_ID).toString();
                 String healthSubFacilityCode = record.get(KilkariConstants.SUB_CENTRE_ID) == null ? "0" : record.get(KilkariConstants.SUB_CENTRE_ID).toString();
 
-                beneficiary.setVillage(locationFinder.getVillageHashMap().get(mapKey.toString() + "_" + Long.parseLong(villageCode) + "_" + Long.parseLong(villageSvid)));
+                Village village = locationFinder.getVillageHashMap().get(mapKey.toString() + "_" + Long.parseLong(villageCode) + "_" + Long.parseLong(villageSvid));
+                if (village != null && village.getId() != null) {
+                    beneficiary.setVillage(village);
+                }
+                mapKey = new StringBuffer(record.get(KilkariConstants.STATE_ID).toString() + "_" + districtCode);
                 mapKey.append("_");
                 mapKey.append(Long.parseLong(healthBlockCode));
-                beneficiary.setHealthBlock(locationFinder.getHealthBlockHashMap().get(mapKey.toString()));
+                HealthBlock healthBlock = locationFinder.getHealthBlockHashMap().get(mapKey.toString());
+                if (healthBlock != null && healthBlock.getId() != null) {
+                    beneficiary.setHealthBlock(healthBlock);
+                }
                 mapKey.append("_");
                 mapKey.append(Long.parseLong(healthFacilityCode));
-                beneficiary.setHealthFacility(locationFinder.getHealthFacilityHashMap().get(mapKey.toString()));
+                HealthFacility healthFacility = locationFinder.getHealthFacilityHashMap().get(mapKey.toString());
+                if (healthFacility != null && healthFacility.getId() != null) {
+                    beneficiary.setHealthFacility(healthFacility);
+                }
                 mapKey.append("_");
                 mapKey.append(Long.parseLong(healthSubFacilityCode));
-                beneficiary.setHealthSubFacility(locationFinder.getHealthSubFacilityHashMap().get(mapKey.toString()));
+                HealthSubFacility healthSubFacility = locationFinder.getHealthSubFacilityHashMap().get(mapKey.toString());
+                if (healthSubFacility != null && healthSubFacility.getId() != null) {
+                    beneficiary.setHealthSubFacility(healthSubFacility);
+                }
             } else {
                 throw new InvalidLocationException(String.format(KilkariConstants.INVALID_LOCATION, KilkariConstants.DISTRICT_ID, record.get(KilkariConstants.DISTRICT_ID)));
             }
