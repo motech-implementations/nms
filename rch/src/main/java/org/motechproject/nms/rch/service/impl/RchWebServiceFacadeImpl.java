@@ -1993,7 +1993,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             if (isValidID(record, KilkariConstants.DISTRICT_ID) && (locationFinder.getDistrictHashMap().get(mapKey) != null)) {
                 updatedLoc.put(KilkariConstants.DISTRICT_ID, locationFinder.getDistrictHashMap().get(mapKey).getId());
                 updatedLoc.put(KilkariConstants.DISTRICT_NAME, locationFinder.getDistrictHashMap().get(mapKey).getName());
-                Long talukaCode = Long.parseLong(record.get(KilkariConstants.TALUKA_ID).toString());
+                Long talukaCode = Long.parseLong(record.get(KilkariConstants.TALUKA_ID) == null ? "0" : record.get(KilkariConstants.TALUKA_ID).toString().trim());
                 mapKey += "_";
                 mapKey += talukaCode;
                 Taluka taluka = locationFinder.getTalukaHashMap().get(mapKey);
