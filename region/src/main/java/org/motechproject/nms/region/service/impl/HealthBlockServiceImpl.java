@@ -148,10 +148,12 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                 for (String healthBlockString : healthBlockKeys) {
                     count--;
                     String[] ids = healthBlockString.split("_");
-                    Long districtId = districtHashMap.get(ids[0] + "_" + ids[1]).getId();
-                    query += "(code = " + ids[2] +  " and district_id_OID = " + districtId + ")";
-                    if (count > 0) {
-                        query += LocationConstants.OR_SQL_STRING;
+                    District district = districtHashMap.get(ids[0] + "_" + ids[1]);
+                    if (district != null && district.getId() != null) {
+                        query += "(code = " + ids[2] + " and district_id_OID = " + district.getId() + ")";
+                        if (count > 0) {
+                            query += LocationConstants.OR_SQL_STRING;
+                        }
                     }
                 }
 
@@ -176,8 +178,8 @@ public class HealthBlockServiceImpl implements HealthBlockService {
         LOGGER.debug("HEALTHBLOCK Query time: {}", queryTimer.time());
         if(healthBlocks != null && !healthBlocks.isEmpty()) {
             for (HealthBlock healthBlock : healthBlocks) {
-                    String talukaKey = districtIdMap.get(healthBlock.getDistrict().getId());
-                    healthBlockHashMap.put(talukaKey + "_" + healthBlock.getCode(), healthBlock);
+                    String districtKey = districtIdMap.get(healthBlock.getDistrict().getId());
+                    healthBlockHashMap.put(districtKey + "_" + healthBlock.getCode(), healthBlock);
             }
         }
         return healthBlockHashMap;

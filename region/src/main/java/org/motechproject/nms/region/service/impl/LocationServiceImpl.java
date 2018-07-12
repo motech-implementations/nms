@@ -59,6 +59,7 @@ import java.util.Set;
 import java.util.List;
 
 import static org.motechproject.nms.region.utils.LocationConstants.CODE_SQL_STRING;
+import static org.motechproject.nms.region.utils.LocationConstants.CSV_STATE_ID;
 import static org.motechproject.nms.region.utils.LocationConstants.DISTRICT_ID;
 import static org.motechproject.nms.region.utils.LocationConstants.DISTRICT_NAME;
 import static org.motechproject.nms.region.utils.LocationConstants.HEALTHBLOCK_ID;
@@ -675,7 +676,7 @@ public class LocationServiceImpl implements LocationService {
 
             case TALUKAHEALTHBLOCK:
                 stateHashMap = stateService.fillStateIds(recordList);
-                districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
+                districtHashMap = districtService.fillAllDistricts(recordList, stateHashMap);
                 talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
                 healthBlockHashMap = healthBlockService.fillHealthBlockIds(recordList, districtHashMap);
                 updatedRecords = healthBlockService.createUpdateTalukaHealthBlock(recordList, healthBlockHashMap, talukaHashMap);
@@ -693,8 +694,8 @@ public class LocationServiceImpl implements LocationService {
                 stateHashMap = stateService.fillStateIds(recordList);
                 districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
                 talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
-                healthBlockHashMap = healthBlockService.fillHealthBlockIds(recordList, districtHashMap);
-                healthFacilityHashMap = healthFacilityService.fillHealthFacilityIds(recordList, healthBlockHashMap);
+                //Adding Health Facilities using Talukas as HealthBlock code is not given
+                healthFacilityHashMap = healthFacilityService.fillHealthFacilitiesFromTalukas(recordList, talukaHashMap);
                 updatedRecords = healthSubFacilityService.createUpdateHealthSubFacilities(recordList, talukaHashMap, healthFacilityHashMap);
                 break;
 
@@ -719,7 +720,7 @@ public class LocationServiceImpl implements LocationService {
     private Map<String, CellProcessor> getDistrictMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
 
-        mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(CSV_STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(DISTRICT_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
 
@@ -729,7 +730,7 @@ public class LocationServiceImpl implements LocationService {
     private Map<String, CellProcessor> getTalukaMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
 
-        mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(CSV_STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(TALUKA_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
@@ -740,7 +741,7 @@ public class LocationServiceImpl implements LocationService {
     private Map<String, CellProcessor> getVillageMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
 
-        mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(CSV_STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(NON_CENSUS_VILLAGE, new org.supercsv.cellprocessor.Optional(new GetLong()));
@@ -753,7 +754,7 @@ public class LocationServiceImpl implements LocationService {
     private Map<String, CellProcessor> getHealthBlockMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
 
-        mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(CSV_STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(HEALTHBLOCK_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(HEALTHBLOCK_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
@@ -765,7 +766,7 @@ public class LocationServiceImpl implements LocationService {
     private Map<String, CellProcessor> getTalukaHealthBlockMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
 
-        mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(CSV_STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(HEALTHBLOCK_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(TALUKA_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
@@ -776,7 +777,7 @@ public class LocationServiceImpl implements LocationService {
     private Map<String, CellProcessor> getHealthFacilityMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
 
-        mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(CSV_STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(HEALTHFACILITY_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(HEALTHFACILITY_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
@@ -789,7 +790,7 @@ public class LocationServiceImpl implements LocationService {
     private Map<String, CellProcessor> getHealthSubFacilityMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
 
-        mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(CSV_STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(HEALTHSUBFACILITY_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(HEALTHSUBFACILITY_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
@@ -802,7 +803,7 @@ public class LocationServiceImpl implements LocationService {
     private Map<String, CellProcessor> getVillageHealthSubFacilityMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
 
-        mapping.put(STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(CSV_STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(HEALTHSUBFACILITY_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(VILLAGE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));

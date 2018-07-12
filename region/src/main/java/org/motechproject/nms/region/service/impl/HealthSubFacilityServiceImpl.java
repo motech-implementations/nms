@@ -135,10 +135,12 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
                 for (String healthFacilityString : healthSubFacilityKeys) {
                     count--;
                     String[] ids = healthFacilityString.split("_");
-                    Long healthFacilityId = healthFacilityHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2] + "_" + ids[3] + "_" + ids[4]).getId();
-                    query += LocationConstants.CODE_SQL_STRING + ids[5] +  " and healthFacility_id_oid = " + healthFacilityId + ")";
-                    if (count > 0) {
-                        query += LocationConstants.OR_SQL_STRING;
+                    HealthFacility healthFacility = healthFacilityHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2] + "_" + ids[3] + "_" + ids[4]);
+                    if (healthFacility != null && healthFacility.getId() != null) {
+                        query += LocationConstants.CODE_SQL_STRING + ids[5] + " and healthFacility_id_oid = " + healthFacility.getId() + ")";
+                        if (count > 0) {
+                            query += LocationConstants.OR_SQL_STRING;
+                        }
                     }
                 }
 
@@ -182,7 +184,6 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
             HealthFacility healthFacility = healthFacilityHashMap.get(healthSubFacility.get(LocationConstants.CSV_STATE_ID).toString() + "_" +
                     healthSubFacility.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                     healthSubFacility.get(LocationConstants.TALUKA_ID).toString() + "_" +
-                    healthSubFacility.get(LocationConstants.HEALTHBLOCK_ID).toString() + "_" +
                     healthSubFacility.get(LocationConstants.HEALTHFACILITY_ID).toString());
             if (taluka != null && healthFacility != null) {
                 if (i != 0) {
@@ -190,7 +191,7 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
                 }
                 stringBuilder.append("(");
                 stringBuilder.append(healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_ID) + ", ");
-                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME).toString()) + QUOTATION_COMMA);
+                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME) == null ? "" : healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME).toString()) + QUOTATION_COMMA);
                 stringBuilder.append(healthFacility.getId() + ", ");
                 stringBuilder.append(taluka.getId() + ", ");
                 stringBuilder.append(MOTECH_STRING);
