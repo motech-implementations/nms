@@ -505,7 +505,7 @@ public class LocationServiceImpl implements LocationService {
                             taluka.setCode((String) record.get(TALUKA_ID));
                             taluka.setName((String) record.get(TALUKA_NAME));
                             mapKey.append("_");
-                            mapKey.append(Long.parseLong(record.get(TALUKA_ID).toString()));
+                            mapKey.append(Long.parseLong(record.get(TALUKA_ID).toString().trim()));
                             talukaHashMap.put(mapKey.toString(), taluka);
 
                             Long svid = record.get(NON_CENSUS_VILLAGE) == null ? 0 : (Long) record.get(NON_CENSUS_VILLAGE);
