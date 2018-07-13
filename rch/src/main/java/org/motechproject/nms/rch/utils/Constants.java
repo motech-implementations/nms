@@ -13,7 +13,9 @@ public final class Constants {
     public static final String RCH_SYNC_CRON = "rch.sync.cron";
     public static final String RCH_MOTHER_READ_CRON = "rch.mother.sync.cron";
     public static final String RCH_TALUKA_READ_CRON = "rch.taluka.sync.cron";
+    public static final String RCH_DISTRICT_READ_CRON = "rch.district.sync.cron";
     public static final String RCH_HEALTHBLOCK_READ_CRON = "rch.healthblock.sync.cron";
+    public static final String RCH_HEALTHFACILITY_READ_CRON = "rch.healthfacility.sync.cron";
     public static final String RCH_TALUKA_HEALTHBLOCK_READ_CRON = "rch.talukaHealthBlock.sync.cron";
     public static final String RCH_CHILD_READ_CRON = "rch.child.sync.cron";
     public static final String RCH_ASHA_READ_CRON = "rch.asha.sync.cron";
@@ -43,11 +45,15 @@ public final class Constants {
     public static final String RCH_MOTHER_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".mother.import";
     public static final String RCH_ASHA_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".asha.import";
     public static final String RCH_TALUKA_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".taluka.import";
+    public static final String RCH_DISTRICT_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".district.import";
     public static final String RCH_HEALTHBLOCK_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".healthBlock.import";
     public static final String RCH_TALUKA_HEALTHBLOCK_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".talukaHealthBlock.import";
+    public static final String RCH_HEALTHFACILITY_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".healthFacility.import";
     public static final String RCH_MOTHER_READ_SUBJECT = BASE_RCH_SUBJECT + ".mother.read";
     public static final String RCH_TALUKA_READ_SUBJECT = BASE_RCH_SUBJECT + ".taluka.read";
+    public static final String RCH_DISTRICT_READ_SUBJECT = BASE_RCH_SUBJECT + ".district.read";
     public static final String RCH_HEALTHBLOCK_READ_SUBJECT = BASE_RCH_SUBJECT + ".healthBlock.read";
+    public static final String RCH_HEALTHFACILITY_READ_SUBJECT = BASE_RCH_SUBJECT + ".healthFacility.read";
     public static final String RCH_TALUKA_HEALTHBLOCK_READ_SUBJECT = BASE_RCH_SUBJECT + ".talukaHealthBlock.read";
     public static final String RCH_CHILD_READ_SUBJECT = BASE_RCH_SUBJECT + ".child.read";
     public static final String RCH_ASHA_READ_SUBJECT = BASE_RCH_SUBJECT + ".asha.read";

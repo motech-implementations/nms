@@ -64,9 +64,11 @@ public class RchImportJobHandler {
         initMotherReadJob();
         initChildReadJob();
         initAshaReadJob();
+        initDistrictReadJob();
         initTalukaReadJob();
         initHealthBlockReadJob();
         initTalukaHealthBlockReadJob();
+        initHealthFacilityReadJob();
     }
 
     public void initMotherReadJob() {
@@ -83,6 +85,22 @@ public class RchImportJobHandler {
         LOGGER.info("Created RCH Mother Read Event");
         CronSchedulableJob rchMotherRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT), cronExpression);
         motechSchedulerService.safeScheduleJob(rchMotherRead);
+    }
+
+    public void initDistrictReadJob() {
+        String cronExpression = settingsFacade.getProperty(Constants.RCH_DISTRICT_READ_CRON);
+        if (StringUtils.isBlank(cronExpression)) {
+            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            return;
+        }
+
+        if (!CronExpression.isValidExpression(cronExpression)) {
+            throw new RchImportConfigurationException("Cron expression for district read is invalid: " + cronExpression);
+        }
+
+        LOGGER.info("Created RCH District Read Event");
+        CronSchedulableJob rchDistrictRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_DISTRICT_READ_SUBJECT), cronExpression);
+        motechSchedulerService.safeScheduleJob(rchDistrictRead);
     }
 
     public void initTalukaReadJob() {
@@ -131,6 +149,22 @@ public class RchImportJobHandler {
         LOGGER.info("Created RCH taluka healthBlock Read Event");
         CronSchedulableJob rchTalukaHealthBlockRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_TALUKA_HEALTHBLOCK_READ_SUBJECT), cronExpression);
         motechSchedulerService.safeScheduleJob(rchTalukaHealthBlockRead);
+    }
+
+    public void initHealthFacilityReadJob() {
+        String cronExpression = settingsFacade.getProperty(Constants.RCH_HEALTHFACILITY_READ_CRON);
+        if (StringUtils.isBlank(cronExpression)) {
+            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            return;
+        }
+
+        if (!CronExpression.isValidExpression(cronExpression)) {
+            throw new RchImportConfigurationException("Cron expression for healthFacility read is invalid: " + cronExpression);
+        }
+
+        LOGGER.info("Created RCH healthFacility Read Event");
+        CronSchedulableJob rchHealthFacilityRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_HEALTHFACILITY_READ_SUBJECT), cronExpression);
+        motechSchedulerService.safeScheduleJob(rchHealthFacilityRead);
     }
 
     public void initChildReadJob() {

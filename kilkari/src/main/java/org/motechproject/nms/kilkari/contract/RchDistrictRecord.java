@@ -8,33 +8,32 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 /**
- * Created by vishnu on 3/7/18.
+ * Created by vishnu on 13/7/18.
  */
-
 @XmlType
 @XmlAccessorType(XmlAccessType.NONE)
-public class RchTalukaHealthBlockRecord {
+public class RchDistrictRecord {
 
-    private String talukaCode;
-    private Long healthBlockCode;
+    private Long districtCode;
+    private String districtName;
     private DateTime execDate;
 
-    public String getTalukaCode() {
-        return talukaCode;
+    public Long getDistrictCode() {
+        return districtCode;
     }
 
-    @XmlElement(name = "Taluka_ID")
-    public void setTalukaCode(String talukaCode) {
-        this.talukaCode = talukaCode;
+    @XmlElement(name = "District_ID")
+    public void setDistrictCode(Long districtCode) {
+        this.districtCode = districtCode;
     }
 
-    public Long getHealthBlockCode() {
-        return healthBlockCode;
+    public String getDistrictName() {
+        return districtName;
     }
 
-    @XmlElement(name = "HealthBlock_ID")
-    public void setHealthBlockCode(Long healthBlockCode) {
-        this.healthBlockCode = healthBlockCode;
+    @XmlElement(name = "District_Name")
+    public void setDistrictName(String districtName) {
+        this.districtName = districtName;
     }
 
     public DateTime getExecDate() {
