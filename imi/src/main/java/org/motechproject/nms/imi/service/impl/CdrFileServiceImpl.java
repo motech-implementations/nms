@@ -134,6 +134,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String QUOTATION = "'";
     private static final String QUOTATION_COMMA = "', ";
     private static final String MOTECH_STRING = "'motech', ";
+    private static final String MOTECH = "'motech'";
     private static final String CDR_LOG_STRING = "List of CDR's in {}";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
@@ -335,13 +336,11 @@ public class CdrFileServiceImpl implements CdrFileService {
 
                     CallDetailRecord cdr = CdrHelper.csvLineToCdr(line);
 
-                    // Save a copy of the CDR into CallDetailRecord for reporting - but no dupes
-                    if (callDetailRecordDataService.findByRequestIdAndCallId(cdr.getRequestId(), cdr.getCallId()).size() == 0) {
-                        callDetailRecords.add(cdr);
-                    }
+                    callDetailRecords.add(cdr);
+
             }
             Long updatedRecords = bulkUpdateCdr(callDetailRecords);
-            LOGGER.debug("{} records updated",updatedRecords/2);
+            LOGGER.debug("{} records updated in time : {}", updatedRecords, timer.time());
 
         } catch (IOException e) {
             String error = INVALID_CDR_P4 + String.format(UNABLE_TO_READ, fileName, e.getMessage());
@@ -383,7 +382,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
             @Override
             public String getSqlQuery() {
-                String query = "INSERT INTO nms_imi_cdrs (requestId, msisdn, callId, attemptNo, callStartTime," +
+                String query = "INSERT IGNORE INTO nms_imi_cdrs (requestId, msisdn, callId, attemptNo, callStartTime," +
                         "callAnswerTime, callEndTime, callDurationInPulse, callStatus, languageLocationId, contentFile," +
                         " msgPlayStartTime, msgPlayEndTime, circleId,operatorId, priority, callDisconnectReason, weekId," +
                         " creationDate, modificationDate, modifiedBy, owner, creator)  " +
@@ -438,11 +437,11 @@ public class CdrFileServiceImpl implements CdrFileService {
             stringBuilder.append(QUOTATION + callDetailRecord.getPriority()+ QUOTATION_COMMA);
             stringBuilder.append(QUOTATION + callDetailRecord.getCallDisconnectReason()+ QUOTATION_COMMA);
             stringBuilder.append(QUOTATION + callDetailRecord.getWeekId()+ QUOTATION_COMMA);
-            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
-            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
             stringBuilder.append(MOTECH_STRING);
             stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(MOTECH_STRING);
+            stringBuilder.append(MOTECH);
             stringBuilder.append(")");
             i++;
         }
