@@ -13,7 +13,7 @@ public final class Constants {
     public static final String RCH_SYNC_CRON = "rch.sync.cron";
     public static final String RCH_MOTHER_READ_CRON = "rch.mother.sync.cron";
     public static final String RCH_TALUKA_READ_CRON = "rch.taluka.sync.cron";
-    public static final String RCH_HEALTHBLOCK_READ_CRON = "rch.healthBlock.sync.cron";
+    public static final String RCH_HEALTHBLOCK_READ_CRON = "rch.healthblock.sync.cron";
     public static final String RCH_TALUKA_HEALTHBLOCK_READ_CRON = "rch.talukaHealthBlock.sync.cron";
     public static final String RCH_CHILD_READ_CRON = "rch.child.sync.cron";
     public static final String RCH_ASHA_READ_CRON = "rch.asha.sync.cron";
