@@ -19,10 +19,12 @@ public final class KilkariConstants {
     public static final String STILLBIRTH = "Outcome_Nos";
     public static final String DEATH = "Entry_Type";
     public static final String STATE_ID = "StateID";
+    public static final String CSV_STATE_ID = "State_ID";
     public static final String DISTRICT_ID = "District_ID";
     public static final String DISTRICT_NAME = "District_Name";
     public static final String TALUKA_ID = "Taluka_ID";
     public static final String TALUKA_NAME = "Taluka_Name";
+    public static final String EXEC_DATE = "Exec_Date";
     public static final String HEALTH_BLOCK_ID = "HealthBlock_ID";
     public static final String HEALTH_BLOCK_NAME = "HealthBlock_Name";
     public static final String PHC_ID = "PHC_ID";
@@ -90,9 +92,9 @@ public final class KilkariConstants {
     public static final String MAPPER_CENSUS_VILLAGE = "Village_ID";
     public static final String MAPPER_NON_CENSUS_VILLAGE = "SVID";
     public static final String STATE_CODE = "State_Code";
-    public static final String DISTRICT_CODE = "District_Code";
-    public static final String TALUKA_CODE = "Taluka_Code";
-    public static final String HEALTH_BLOCK_CODE = "HealthBlock_Code";
+    public static final String DISTRICT_CODE = "District_ID";
+    public static final String TALUKA_CODE = "Taluka_ID";
+    public static final String HEALTH_BLOCK_CODE = "HealthBlock_ID";
 
     public static final String INVALID_LOCATION = "<%s - %s : Invalid location>";
 
