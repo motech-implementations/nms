@@ -26,7 +26,7 @@ public class DeactivatedBeneficiaryServiceImpl implements DeactivatedBeneficiary
         if (deactivatedBeneficiaries != null && deactivatedBeneficiaries.size() != 0) {
             for (DeactivatedBeneficiary deactivatedBeneficiary : deactivatedBeneficiaries
                     ) {
-                if (!deactivatedBeneficiary.isCompletedSubscription() && !DeactivationReason.LOW_LISTENERSHIP.equals(deactivatedBeneficiary.getDeactivationReason()) && !DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED.equals(deactivatedBeneficiary.getDeactivationReason())) {
+                if (!DeactivationReason.LOW_LISTENERSHIP.equals(deactivatedBeneficiary.getDeactivationReason()) && !DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED.equals(deactivatedBeneficiary.getDeactivationReason())) {
                     deactivatedBeneficiaryWithSelectDeactivationReasons.add(deactivatedBeneficiary);
                 }
             }
