@@ -16,7 +16,7 @@ import javax.xml.bind.annotation.XmlType;
 public class RchHealthBlockRecord {
 
     private Long districtCode;
-    private Long talukaCode;
+    private String talukaCode;
     private Long healthBlockCode;
     private String healthBlockName;
     private DateTime execDate;
@@ -48,12 +48,12 @@ public class RchHealthBlockRecord {
         this.districtCode = districtCode;
     }
 
-    public Long getTalukaCode() {
+    public String getTalukaCode() {
         return talukaCode;
     }
 
     @XmlElement(name = "Taluka_ID")
-    public void setTalukaCode(Long talukaCode) {
+    public void setTalukaCode(String talukaCode) {
         this.talukaCode = talukaCode;
     }
 
