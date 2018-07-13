@@ -14,7 +14,7 @@ public class RchTalukaRecord {
 
     private Long stateCode;
     private Long districtCode;
-    private Long talukaCode;
+    private String talukaCode;
     private String talukaName;
 
     public Long getStateCode() {
@@ -35,12 +35,12 @@ public class RchTalukaRecord {
         this.districtCode = districtCode;
     }
 
-    public Long getTalukaCode() {
+    public String getTalukaCode() {
         return talukaCode;
     }
 
     @XmlElement(name = "Taluka_Code")
-    public void setTalukaCode(Long talukaCode) {
+    public void setTalukaCode(String talukaCode) {
         this.talukaCode = talukaCode;
     }
 
