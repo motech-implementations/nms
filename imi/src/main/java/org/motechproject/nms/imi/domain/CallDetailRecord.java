@@ -4,11 +4,13 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
 import javax.jdo.annotations.Index;
+import javax.jdo.annotations.Unique;
 
 /**
  * See NMS API - 4.4.3 CDR Detail File Format
  */
 @Entity(tableName = "nms_imi_cdrs")
+@Unique(name = "unique_requestId_callId", members = { "requestId", "callId" })
 @Index(name = "requestId_callId_composite_idx", members = { "requestId", "callId" })
 public class CallDetailRecord {
 
