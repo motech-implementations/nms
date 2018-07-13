@@ -31,12 +31,6 @@ public final class LocationConstants {
 
     public static final String OR_SQL_STRING = " OR ";
     public static final String CODE_SQL_STRING = " (code = ";
-    public static final String OPEN_PARANTHESES_STRING = " ( ";
-    public static final String COMMA_QUOTATION_STRING = ", '";
-    public static final String QUOTATION_COMMA_STRING = "', ";
-    public static final String COMMA_STRING = " , ";
-
-    public static final String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
 
     public static final Long LOCATION_PART_SIZE = 5000L;
     public static final Long SMALL_LOCATION_PART_SIZE = 2000L;

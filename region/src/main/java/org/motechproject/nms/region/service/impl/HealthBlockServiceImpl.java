@@ -98,11 +98,14 @@ public class HealthBlockServiceImpl implements HealthBlockService {
 
             @Override
             public String getSqlQuery() {
-                String query = "INSERT into nms_health_blocks (`code`, `name`, `district_id_OID`, `taluka_id_OID`, " +
-                        " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
-                        healthBlockQuerySet(healthBlocks, districtHashMap, talukaHashMap) +
-                        " ON DUPLICATE KEY UPDATE " +
-                        "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                String healthBlockValues = healthBlockQuerySet(healthBlocks, districtHashMap, talukaHashMap);
+                String query = "";
+                if(!healthBlockValues.isEmpty()) {
+                    query = "INSERT into nms_health_blocks (`code`, `name`, `district_id_OID`, `taluka_id_OID`, " +
+                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                            healthBlockValues + " ON DUPLICATE KEY UPDATE " +
+                            "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                }
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
@@ -116,8 +119,10 @@ public class HealthBlockServiceImpl implements HealthBlockService {
             }
         };
 
-        Long createdHealthBlocks = healthBlockDataService.executeSQLQuery(queryExecution);
-
+        Long createdHealthBlocks = 0L;
+        if (!districtHashMap.isEmpty() && !talukaHashMap.isEmpty()) {
+            createdHealthBlocks = healthBlockDataService.executeSQLQuery(queryExecution);
+        }
 
         return createdHealthBlocks;
     }
@@ -174,7 +179,10 @@ public class HealthBlockServiceImpl implements HealthBlockService {
             }
         };
 
-        List<HealthBlock> healthBlocks = healthBlockDataService.executeSQLQuery(queryExecution);
+        List<HealthBlock> healthBlocks = null;
+        if (!districtHashMap.isEmpty()) {
+            healthBlocks = healthBlockDataService.executeSQLQuery(queryExecution);
+        }
         LOGGER.debug("HEALTHBLOCK Query time: {}", queryTimer.time());
         if(healthBlocks != null && !healthBlocks.isEmpty()) {
             for (HealthBlock healthBlock : healthBlocks) {

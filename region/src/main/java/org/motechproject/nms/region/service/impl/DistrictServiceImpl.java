@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
+import javax.jdo.annotations.Transactional;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -143,6 +144,7 @@ public class DistrictServiceImpl implements DistrictService {
     }
 
     @Override
+    @Transactional
     public Long createUpdateDistricts(final List<Map<String, Object>> districts, final Map<String, State> stateHashMap) {
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
@@ -166,8 +168,10 @@ public class DistrictServiceImpl implements DistrictService {
             }
         };
 
-        Long createdDistricts = districtDataService.executeSQLQuery(queryExecution);
-
+        Long createdDistricts = 0L;
+        if (!stateHashMap.isEmpty()) {
+            createdDistricts = districtDataService.executeSQLQuery(queryExecution);
+        }
 
         return createdDistricts;
     }
@@ -251,68 +255,16 @@ public class DistrictServiceImpl implements DistrictService {
             }
         };
 
-        List<District> districts = districtDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug("DISTRICT Query time: {}", queryTimer.time());
-        for (District district : districts) {
-            String stateKey = stateIdMap.get(district.getState().getId());
-            districtHashMap.put(stateKey + "_" + district.getCode(), district);
+        List<District> districts = null;
+        if (!stateHashMap.isEmpty()) {
+            districts = districtDataService.executeSQLQuery(queryExecution);
         }
-
-        return districtHashMap;
-    }
-
-    @Override
-    public Map<String, District> fillAllDistricts(List<Map<String, Object>> recordList, final Map<String, State> stateHashMap) {
-
-        Map<String, District> districtHashMap = new HashMap<>();
-
-        Map<Long, String> stateIdMap = new HashMap<>();
-        for (String stateKey : stateHashMap.keySet()) {
-            stateIdMap.put(stateHashMap.get(stateKey).getId(), stateKey);
-        }
-
-        Timer queryTimer = new Timer();
-
-
-        @SuppressWarnings("unchecked")
-        SqlQueryExecution<List<District>> queryExecution = new SqlQueryExecution<List<District>>() {
-
-            @Override
-            public String getSqlQuery() {
-                String query = "SELECT * from nms_districts where ";
-                int count = stateHashMap.size();
-                Set<String> stateKeys = stateHashMap.keySet();
-                for (String stateKey : stateKeys) {
-                    count--;
-                    Long stateId = stateHashMap.get(stateKey).getId();
-                    query += " state_id_oid = " + stateId;
-                    if (count > 0) {
-                        query += LocationConstants.OR_SQL_STRING;
-                    }
-                }
-
-                LOGGER.debug("DISTRICT Query: {}", query);
-                return query;
-            }
-
-            @Override
-            public List<District> execute(Query query) {
-                query.setClass(District.class);
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
-                List<District> districts;
-                if (fqr.isEmpty()) {
-                    return null;
-                }
-                districts = (List<District>) fqr;
-                return districts;
-            }
-        };
-
-        List<District> districts = districtDataService.executeSQLQuery(queryExecution);
         LOGGER.debug("DISTRICT Query time: {}", queryTimer.time());
-        for (District district : districts) {
-            String stateKey = stateIdMap.get(district.getState().getId());
-            districtHashMap.put(stateKey + "_" + district.getCode(), district);
+        if (districts != null && !districts.isEmpty()) {
+            for (District district : districts) {
+                String stateKey = stateIdMap.get(district.getState().getId());
+                districtHashMap.put(stateKey + "_" + district.getCode(), district);
+            }
         }
 
         return districtHashMap;

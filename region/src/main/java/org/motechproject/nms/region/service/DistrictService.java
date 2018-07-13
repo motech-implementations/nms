@@ -57,6 +57,4 @@ public interface DistrictService {
     Long createUpdateDistricts(List<Map<String, Object>> districts, Map<String, State> stateIdMap);
 
     Map<String, District> fillDistrictIds(List<Map<String, Object>> recordList, Map<String, State> stateHashMap);
-
-    Map<String, District> fillAllDistricts(List<Map<String, Object>> recordList, Map<String, State> stateHashMap);
 }

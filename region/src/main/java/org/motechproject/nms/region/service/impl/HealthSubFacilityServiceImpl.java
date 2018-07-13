@@ -20,11 +20,8 @@ import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
 import javax.jdo.annotations.Transactional;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 
 @Service("healthSubFacilityService")
@@ -81,16 +78,21 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
     }
 
     @Override
+    @Transactional
     public Long createUpdateHealthSubFacilities(final List<Map<String, Object>> healthSubFacilities, final Map<String, Taluka> talukaHashMap, final Map<String, HealthFacility> healthFacilityHashMap) {
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
             public String getSqlQuery() {
-                String query = "INSERT into nms_health_sub_facilities (`code`, `name`, `healthFacility_id_OID`, `taluka_id_oid`, " +
-                        " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
-                        healthSubFacilityQuerySet(healthSubFacilities, talukaHashMap, healthFacilityHashMap) +
-                        " ON DUPLICATE KEY UPDATE " +
-                        "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                String healthSubFacilityValues = healthSubFacilityQuerySet(healthSubFacilities, talukaHashMap, healthFacilityHashMap);
+                String query = "";
+                if (!healthSubFacilityValues.isEmpty()) {
+                    query = "INSERT into nms_health_sub_facilities (`code`, `name`, `healthFacility_id_OID`, `taluka_id_oid`, " +
+                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                            healthSubFacilityValues +
+                            " ON DUPLICATE KEY UPDATE " +
+                            "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                }
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
@@ -104,71 +106,12 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
             }
         };
 
-        Long createdHealthSubFacilities = dataService.executeSQLQuery(queryExecution);
-
+        Long createdHealthSubFacilities = 0L;
+        if (!healthFacilityHashMap.isEmpty() && !talukaHashMap.isEmpty()) {
+            createdHealthSubFacilities = dataService.executeSQLQuery(queryExecution);
+        }
 
         return createdHealthSubFacilities;
-    }
-
-    @Override
-    public Map<String, HealthSubFacility> fillHealthSubFacilityIds(List<Map<String, Object>> recordList, final Map<String, HealthFacility> healthFacilityHashMap) {
-        final Set<String> healthSubFacilityKeys = new HashSet<>();
-        for(Map<String, Object> record : recordList) {
-            healthSubFacilityKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    record.get(LocationConstants.TALUKA_ID).toString() + "_" + record.get(LocationConstants.HEALTHBLOCK_ID).toString() + "_" +
-                    record.get(LocationConstants.HEALTHFACILITY_ID).toString() + "_" + record.get(LocationConstants.HEALTHSUBFACILITY_ID).toString());
-        }
-        Map<String, HealthSubFacility> healthSubFacilityHashMap = new HashMap<>();
-        Map<Long, String> healthFacilityIdMap = new HashMap<>();
-        for (String healthFacilityKey : healthFacilityHashMap.keySet()) {
-            healthFacilityIdMap.put(healthFacilityHashMap.get(healthFacilityKey).getId(), healthFacilityKey);
-        }
-        Timer queryTimer = new Timer();
-        @SuppressWarnings("unchecked")
-        SqlQueryExecution<List<HealthSubFacility>> queryExecution = new SqlQueryExecution<List<HealthSubFacility>>() {
-
-            @Override
-            public String getSqlQuery() {
-                String query = "SELECT * from nms_health_sub_facilities where";
-                int count = healthSubFacilityKeys.size();
-                for (String healthFacilityString : healthSubFacilityKeys) {
-                    count--;
-                    String[] ids = healthFacilityString.split("_");
-                    HealthFacility healthFacility = healthFacilityHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2] + "_" + ids[3] + "_" + ids[4]);
-                    if (healthFacility != null && healthFacility.getId() != null) {
-                        query += LocationConstants.CODE_SQL_STRING + ids[5] + " and healthFacility_id_oid = " + healthFacility.getId() + ")";
-                        if (count > 0) {
-                            query += LocationConstants.OR_SQL_STRING;
-                        }
-                    }
-                }
-
-                LOGGER.debug("HEALTHSUBFACILITY Query: {}", query);
-                return query;
-            }
-
-            @Override
-            public List<HealthSubFacility> execute(Query query) {
-                query.setClass(HealthSubFacility.class);
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
-                List<HealthSubFacility> healthSubFacilities;
-                if (fqr.isEmpty()) {
-                    return null;
-                }
-                healthSubFacilities = (List<HealthSubFacility>) fqr;
-                return healthSubFacilities;
-            }
-        };
-
-        List<HealthSubFacility> healthSubFacilities = dataService.executeSQLQuery(queryExecution);
-        LOGGER.debug("HEALTHSUBFACILITY Query time: {}", queryTimer.time());
-        if(healthSubFacilities != null && !healthSubFacilities.isEmpty()) {
-            for (HealthSubFacility healthSubFacility : healthSubFacilities) {
-                String healthFacilityKey = healthFacilityIdMap.get(healthSubFacility.getHealthFacility().getId());
-                healthSubFacilityHashMap.put(healthFacilityKey + "_" + healthSubFacility.getCode(), healthSubFacility);
-            }
-        }
-        return healthSubFacilityHashMap;
     }
 
     private String healthSubFacilityQuerySet(List<Map<String, Object>> healthSubFacilities, Map<String, Taluka> talukaHashMap, Map<String, HealthFacility> healthFacilityHashMap) {
@@ -217,13 +160,13 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
 
             @Override
             public String getSqlQuery() { //as of now there are no creationDate and modificationDate
-                String query1 = "INSERT IGNORE into nms_village_healthsubfacility (village_id, healthSubFacility_id, creationDate, modificationDate) ";
+                String query = "INSERT IGNORE into nms_village_healthsubfacility (village_id, healthSubFacility_id, creationDate, modificationDate) ";
                 int count = recordList.size();
                 for (Map<String, Object> record : recordList) {
                     count--;
                     if (record.get(LocationConstants.DISTRICT_ID) != null && record.get(LocationConstants.CSV_STATE_ID) != null
                             && record.get(LocationConstants.HEALTHSUBFACILITY_ID) != null && record.get(LocationConstants.VILLAGE_ID) != null) {
-                        query1 += " select v.id as village_Id, hsf.id as healthSubFacility_Id, now(), now() from nms_states s " +
+                        query += " select v.id as village_Id, hsf.id as healthSubFacility_Id, now(), now() from nms_states s " +
                                 " JOIN nms_districts d on s.id=d.state_id_oid and d.code = " +
                                 record.get(LocationConstants.DISTRICT_ID).toString() +
                                 " JOIN nms_talukas t on t.district_id_oid = d.id " +
@@ -234,13 +177,13 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
                                 record.get(LocationConstants.HEALTHSUBFACILITY_ID).toString() +
                                 " where s.code = " + record.get(LocationConstants.CSV_STATE_ID).toString();
                         if (count > 0) {
-                            query1 += " UNION ";
+                            query += " UNION ";
                         }
                     }
                 }
 
-                LOGGER.debug("VILLAGE_HEALTHSUBFACILITY Query: {}", query1);
-                return query1;
+                LOGGER.debug("VILLAGE_HEALTHSUBFACILITY Query: {}", query);
+                return query;
             }
 
             @Override
