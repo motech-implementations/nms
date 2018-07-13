@@ -1,5 +1,7 @@
 package org.motechproject.nms.kilkari.contract;
 
+import org.joda.time.DateTime;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -13,11 +15,11 @@ import javax.xml.bind.annotation.XmlType;
 @XmlAccessorType(XmlAccessType.NONE)
 public class RchHealthBlockRecord {
 
-    private Long stateCode;
     private Long districtCode;
     private Long talukaCode;
     private Long healthBlockCode;
     private String healthBlockName;
+    private DateTime execDate;
 
     public String getHealthBlockName() {
         return healthBlockName;
@@ -28,20 +30,20 @@ public class RchHealthBlockRecord {
         this.healthBlockName = healthBlockName;
     }
 
-    public Long getStateCode() {
-        return stateCode;
-    }
-
-    @XmlElement(name = "State_Code")
-    public void setStateCode(Long stateCode) {
-        this.stateCode = stateCode;
-    }
-
     public Long getDistrictCode() {
         return districtCode;
     }
 
-    @XmlElement(name = "District_Code")
+    public DateTime getExecDate() {
+        return execDate;
+    }
+
+    @XmlElement(name = "Exec_Date")
+    public void setExecDate(DateTime execDate) {
+        this.execDate = execDate;
+    }
+
+    @XmlElement(name = "District_ID")
     public void setDistrictCode(Long districtCode) {
         this.districtCode = districtCode;
     }
@@ -50,7 +52,7 @@ public class RchHealthBlockRecord {
         return talukaCode;
     }
 
-    @XmlElement(name = "Taluka_Code")
+    @XmlElement(name = "Taluka_ID")
     public void setTalukaCode(Long talukaCode) {
         this.talukaCode = talukaCode;
     }
@@ -59,7 +61,7 @@ public class RchHealthBlockRecord {
         return healthBlockCode;
     }
 
-    @XmlElement(name = "HealthBlock_Code")
+    @XmlElement(name = "HealthBlock_ID")
     public void setHealthBlockCode(Long healthBlockCode) {
         this.healthBlockCode = healthBlockCode;
     }

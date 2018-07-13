@@ -712,10 +712,12 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     LOGGER.info("RCH healthblock response file successfully copied from remote server to local directory.");
                     String result = readResponsesFromXml(localResponseFile);
                     Long stateId = rchImportFacilitatorsHealthBlock.getStateId();
+                    LOGGER.debug("stateId={}", stateId);
                     State state = stateDataService.findByCode(stateId);
 
                     String stateName = state.getName() != null ? state.getName() : " ";
                     Long stateCode = state.getCode() != null ? state.getCode() : 1L;
+                    LOGGER.debug("stateCode={}", stateCode);
 
                     LocalDate startDate = rchImportFacilitatorsHealthBlock.getStartDate();
                     LocalDate endDate = rchImportFacilitatorsHealthBlock.getEndDate();
@@ -738,7 +740,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                                 List<RchHealthBlockRecord> rchHealthBlockRecords = healthBlockDataSet.getRecords();
                                 for (RchHealthBlockRecord record : rchHealthBlockRecords) {
                                     Map<String, Object> locMap = new HashMap<>();
-                                    toMapHealthBlock(locMap, record);
+                                    toMapHealthBlock(locMap, record, stateCode);
                                     healthBlockArrList.add(locMap);
 
                                 }
@@ -981,8 +983,16 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             return String.format("RCH_StateID_%d_Mother_Response_%s.xml", stateId, timeStamp);
         } else if (userType.equals(RchUserType.CHILD)) {
             return String.format("RCH_StateID_%d_Child_Response_%s.xml", stateId, timeStamp);
-        } else {
+        } else if (userType.equals(RchUserType.ASHA)){
             return String.format("RCH_StateID_%d_Asha_Response_%s.xml", stateId, timeStamp);
+        } else if (userType.equals(RchUserType.TALUKA)){
+            return String.format("RCH_StateID_%d_Taluka_Response_%s.xml", stateId, timeStamp);
+        } else if (userType.equals(RchUserType.HEALTHBLOCK)){
+            return String.format("RCH_StateID_%d_HealthBlock_Response_%s.xml", stateId, timeStamp);
+        } else if (userType.equals(RchUserType.TALUKAHEALTHBLOCK)){
+            return String.format("RCH_StateID_%d_Taluka_HealthBlock_Response_%s.xml", stateId, timeStamp);
+        } else {
+            return String.format("RCH_StateID_%d_Taluka_HealthBlock_Response_%s.xml", stateId, timeStamp);
         }
     }
 
@@ -1363,12 +1373,13 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         map.put(KilkariConstants.TALUKA_NAME, talukaRecord.getTalukaName());
     }
 
-    private void toMapHealthBlock(Map<String, Object> map, RchHealthBlockRecord healthBlockRecord) {
-        map.put(KilkariConstants.STATE_CODE, healthBlockRecord.getStateCode());
+    private void toMapHealthBlock(Map<String, Object> map, RchHealthBlockRecord healthBlockRecord, Long stateCode) {
+        map.put(KilkariConstants.CSV_STATE_ID, stateCode);
         map.put(KilkariConstants.DISTRICT_CODE, healthBlockRecord.getDistrictCode());
         map.put(KilkariConstants.TALUKA_CODE, healthBlockRecord.getTalukaCode());
         map.put(KilkariConstants.HEALTH_BLOCK_CODE, healthBlockRecord.getHealthBlockCode());
         map.put(KilkariConstants.HEALTH_BLOCK_NAME, healthBlockRecord.getHealthBlockName());
+        map.put(KilkariConstants.EXEC_DATE, healthBlockRecord.getExecDate());
     }
 
     private void toMapTalukaHealthBlock(Map<String, Object> map, RchTalukaHealthBlockRecord talukaHealthBlockRecord) {

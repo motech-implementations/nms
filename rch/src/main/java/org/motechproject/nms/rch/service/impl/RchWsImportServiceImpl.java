@@ -157,6 +157,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
     @Override
     public void importRchHealthBlockData(MotechEvent motechEvent) {
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
+        LOGGER.debug("stateId = {}", stateId);
         LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
         LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
         URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
