@@ -12,8 +12,6 @@ public interface HealthFacilityService {
     HealthFacility create(HealthFacility healthFacility);
     HealthFacility update(HealthFacility healthFacility);
 
-    Map<String, HealthFacility> fillHealthFacilityIds(List<Map<String, Object>> recordList, Map<String, HealthBlock> healthBlockHashMap);
-
     Long createUpdateHealthFacilities(List<Map<String, Object>> recordList, Map<String, Taluka> talukaHashMap, Map<String, HealthBlock> healthBlockHashMap);
 
     Map<String, HealthFacility> fillHealthFacilitiesFromTalukas(List<Map<String, Object>> recordList, Map<String, Taluka> talukaHashMap);

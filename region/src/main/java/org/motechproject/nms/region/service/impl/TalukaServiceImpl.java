@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
+import javax.jdo.annotations.Transactional;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -77,16 +78,21 @@ public class TalukaServiceImpl implements TalukaService {
     }
 
     @Override
+    @Transactional
     public Long createUpdateTalukas(final List<Map<String, Object>> talukas, final Map<String, District> districtHashMap) {
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
             public String getSqlQuery() {
-                String query = "INSERT into nms_talukas (`code`, `name`, `district_id_OID`, " +
-                        " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
-                        talukaQuerySet(talukas, districtHashMap) +
-                        " ON DUPLICATE KEY UPDATE " +
-                        "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                String talukaValues = talukaQuerySet(talukas, districtHashMap);
+                String query = "";
+                if (!talukaValues.isEmpty()) {
+                    query = "INSERT into nms_talukas (`code`, `name`, `district_id_OID`, " +
+                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                            talukaValues +
+                            " ON DUPLICATE KEY UPDATE " +
+                            "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                }
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
@@ -100,8 +106,10 @@ public class TalukaServiceImpl implements TalukaService {
             }
         };
 
-        Long createdTalukas = dataService.executeSQLQuery(queryExecution);
-
+        Long createdTalukas = 0L;
+        if (!districtHashMap.isEmpty()) {
+            createdTalukas = dataService.executeSQLQuery(queryExecution);
+        }
 
         return createdTalukas;
     }
@@ -159,9 +167,12 @@ public class TalukaServiceImpl implements TalukaService {
             }
         };
 
-        List<Taluka> talukas = dataService.executeSQLQuery(queryExecution);
+        List<Taluka> talukas = null;
+        if (!districtHashMap.isEmpty()) {
+            talukas = dataService.executeSQLQuery(queryExecution);
+        }
         LOGGER.debug("TALUKA Query time: {}", queryTimer.time());
-        if(talukas != null && !talukas.isEmpty()) {
+        if (talukas != null && !talukas.isEmpty()) {
             for (Taluka taluka : talukas) {
                 String districtKey = districtIdMap.get(taluka.getDistrict().getId());
                 talukaHashMap.put(districtKey + "_" + taluka.getCode(), taluka);

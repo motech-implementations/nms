@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
+import javax.jdo.annotations.Transactional;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -80,16 +81,21 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
     }
 
     @Override
+    @Transactional
     public Long createUpdateHealthFacilities(final List<Map<String, Object>> healthFacilities, final Map<String, Taluka> talukaHashMap, final Map<String, HealthBlock> healthBlockHashMap) {
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
             public String getSqlQuery() {
-                String query = "INSERT into nms_health_facilities (`code`, `name`, `healthBlock_id_OID`, `taluka_id_oid`, " +
-                        " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
-                        healthFacilityQuerySet(healthFacilities, talukaHashMap, healthBlockHashMap) +
-                        " ON DUPLICATE KEY UPDATE " +
-                        "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                String healthFacilityValues = healthFacilityQuerySet(healthFacilities, talukaHashMap, healthBlockHashMap);
+                String query = "";
+                if (!healthFacilityValues.isEmpty()) {
+                    query = "INSERT into nms_health_facilities (`code`, `name`, `healthBlock_id_OID`, `taluka_id_oid`, " +
+                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                            healthFacilityValues +
+                            " ON DUPLICATE KEY UPDATE " +
+                            "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                }
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
@@ -103,73 +109,14 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
             }
         };
 
-        Long createdHealthFacilities = dataService.executeSQLQuery(queryExecution);
-
+        Long createdHealthFacilities = 0L;
+        if (!talukaHashMap.isEmpty() && !healthBlockHashMap.isEmpty()) {
+            createdHealthFacilities = dataService.executeSQLQuery(queryExecution);
+        }
 
         return createdHealthFacilities;
     }
 
-    @Override
-    public Map<String, HealthFacility> fillHealthFacilityIds(List<Map<String, Object>> recordList, final Map<String, HealthBlock> healthBlockHashMap) {
-        final Set<String> healthFacilityKeys = new HashSet<>();
-        for(Map<String, Object> record : recordList) {
-            healthFacilityKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    record.get(LocationConstants.TALUKA_ID).toString() + "_" + record.get(LocationConstants.HEALTHBLOCK_ID).toString() + "_" +
-                    record.get(LocationConstants.HEALTHFACILITY_ID).toString());
-        }
-        Map<String, HealthFacility> healthFacilityHashMap = new HashMap<>();
-
-        Map<Long, String> healthBlockIdMap = new HashMap<>();
-        for (String healthBlockKey : healthBlockHashMap.keySet()) {
-            healthBlockIdMap.put(healthBlockHashMap.get(healthBlockKey).getId(), healthBlockKey);
-        }
-
-        Timer queryTimer = new Timer();
-
-        @SuppressWarnings("unchecked")
-        SqlQueryExecution<List<HealthFacility>> queryExecution = new SqlQueryExecution<List<HealthFacility>>() {
-
-            @Override
-            public String getSqlQuery() {
-                String query = "SELECT * from nms_health_facilities where";
-                int count = healthFacilityKeys.size();
-                for (String healthFacilityString : healthFacilityKeys) {
-                    count--;
-                    String[] ids = healthFacilityString.split("_");
-                    Long healthBlockId = healthBlockHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[3]).getId();
-                    query += LocationConstants.CODE_SQL_STRING + ids[4] +  " and healthBlock_id_oid = " + healthBlockId + ")";
-                    if (count > 0) {
-                        query += LocationConstants.OR_SQL_STRING;
-                    }
-                }
-
-                LOGGER.debug("HEALTHFACILITY Query: {}", query);
-                return query;
-            }
-
-            @Override
-            public List<HealthFacility> execute(Query query) {
-                query.setClass(HealthFacility.class);
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
-                List<HealthFacility> healthFacilities;
-                if (fqr.isEmpty()) {
-                    return null;
-                }
-                healthFacilities = (List<HealthFacility>) fqr;
-                return healthFacilities;
-            }
-        };
-
-        List<HealthFacility> healthFacilities = dataService.executeSQLQuery(queryExecution);
-        LOGGER.debug("HEALTHFACILITY Query time: {}", queryTimer.time());
-        if(healthFacilities != null && !healthFacilities.isEmpty()) {
-            for (HealthFacility healthFacility : healthFacilities) {
-                String healthBlockKey = healthBlockIdMap.get(healthFacility.getHealthBlock().getId());
-                healthFacilityHashMap.put(healthBlockKey + "_" + healthFacility.getCode(), healthFacility);
-            }
-        }
-        return healthFacilityHashMap;
-    }
 
     @Override
     public Map<String, HealthFacility> fillHealthFacilitiesFromTalukas(List<Map<String, Object>> recordList, final Map<String, Taluka> talukaHashMap) {
@@ -224,7 +171,10 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
             }
         };
 
-        List<HealthFacility> healthFacilities = dataService.executeSQLQuery(queryExecution);
+        List<HealthFacility> healthFacilities = null;
+        if (!talukaHashMap.isEmpty()) {
+            healthFacilities = dataService.executeSQLQuery(queryExecution);
+        }
         LOGGER.debug("HEALTHFACILITY Query time: {}", queryTimer.time());
         if(healthFacilities != null && !healthFacilities.isEmpty()) {
             for (HealthFacility healthFacility : healthFacilities) {

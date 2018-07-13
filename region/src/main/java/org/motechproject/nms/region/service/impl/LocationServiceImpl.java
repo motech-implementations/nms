@@ -649,10 +649,8 @@ public class LocationServiceImpl implements LocationService {
         Map<String, State> stateHashMap;
         Map<String, District> districtHashMap;
         Map<String, Taluka> talukaHashMap;
-        Map<String, Village> villageHashMap;
         Map<String, HealthBlock> healthBlockHashMap;
         Map<String, HealthFacility> healthFacilityHashMap;
-        Map<String, HealthSubFacility> healthSubFacilityHashMap;
 
         Long updatedRecords = 0L;
         switch (locationType) {

@@ -11,7 +11,5 @@ public interface VillageService {
     Village create(Village village);
     Village update(Village village);
 
-    Map<String, Village> fillVillageIds(List<Map<String, Object>> recordList, Map<String, Taluka> talukaHashMap);
-
     Long createUpdateVillages(List<Map<String, Object>> recordList, Map<String, Taluka> talukaHashMap);
 }
