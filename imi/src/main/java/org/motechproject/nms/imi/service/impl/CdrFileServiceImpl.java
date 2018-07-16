@@ -10,6 +10,8 @@ import org.codehaus.jackson.type.TypeReference;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
 import org.motechproject.alerts.contract.AlertService;
@@ -68,6 +70,8 @@ import java.util.List;
 import java.util.Map;
 
 import static java.lang.Math.min;
+import static org.motechproject.nms.kilkari.utils.KilkariConstants.SQL_QUERY_LOG;
+import static org.motechproject.nms.region.utils.LocationConstants.DATE_FORMAT_STRING;
 
 
 /**
@@ -112,6 +116,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String UNABLE_TO_READ = "Unable to read %s: %s";
     private static final String UNABLE_TO_READ_HEADER = "Unable to read  header %s: %s";
     private static final int CDR_PROGRESS_REPORT_CHUNK = 10000;
+    private static final int PARTITION_SIZE = 50000;
     private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
     private static final String CSR_TABLE_NAME = "motech_data_services.nms_imi_csrs";
     private static final int MAX_CDR_ERROR_COUNT_DEFAULT = 100;
@@ -126,6 +131,11 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String ENTIRE_LINE_FMT = "%s [%s]";
     private static final String MOTECH_BUG = "!!!MOTECH BUG!!! Unexpected Exception in %s: %s";
     private static final String CSR_VERIFIER_CACHE_EVICT_MESSAGE = "nms.kk.cache.evict.csv_verifier";
+    private static final String QUOTATION = "'";
+    private static final String QUOTATION_COMMA = "', ";
+    private static final String MOTECH_STRING = "'motech', ";
+    private static final String MOTECH = "'motech'";
+    private static final String CDR_LOG_STRING = "List of CDR's in {}";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
     public static final double HALF = 0.5;
@@ -302,6 +312,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         int lineNumber = 1;
         int saveCount = 0;
         String fileName = file.getName();
+        List<CallDetailRecord> callDetailRecords = new ArrayList<>();
 
         LOGGER.info("saveDetailRecords({})", fileName);
 
@@ -322,30 +333,14 @@ public class CdrFileServiceImpl implements CdrFileService {
 
             Timer timer = new Timer("cdr", "cdrs");
             while ((line = reader.readLine()) != null) {
-                try {
 
                     CallDetailRecord cdr = CdrHelper.csvLineToCdr(line);
 
-                    // Save a copy of the CDR into CallDetailRecord for reporting - but no dupes
-                    if (callDetailRecordDataService.findByRequestIdAndCallId(cdr.getRequestId(), cdr.getCallId()).size() == 0) {
-                        callDetailRecordDataService.create(cdr);
-                        saveCount++;
-                    }
+                    callDetailRecords.add(cdr);
 
-                } catch (InvalidCallRecordDataException | IllegalArgumentException e) {
-                    //errors here should have been reported in Phase 2, let's just ignore them
-                    //todo remove following line to not over confuse ops?
-                    LOGGER.debug(String.format(IGNORING_CDR_ROW, fileName, lineNumber, e.getMessage()));
-                }
-
-                if (lineNumber % CDR_PROGRESS_REPORT_CHUNK == 0) {
-                    LOGGER.debug("Saved {}", timer.frequency(lineNumber));
-                }
-                lineNumber++;
             }
-
-            LOGGER.info("Read {}", timer.frequency(lineNumber - 1));
-            LOGGER.info("Actually saved {}", saveCount);
+            Long updatedRecords = bulkUpdateCdr(callDetailRecords);
+            LOGGER.debug("{} records updated in time : {}", updatedRecords, timer.time());
 
         } catch (IOException e) {
             String error = INVALID_CDR_P4 + String.format(UNABLE_TO_READ, fileName, e.getMessage());
@@ -360,6 +355,99 @@ public class CdrFileServiceImpl implements CdrFileService {
         }
     }
 
+
+    private Long bulkUpdateCdr(List<CallDetailRecord> callDetailRecords){
+
+        int count = 0;
+        Long sqlCount = 0L;
+        while (count < callDetailRecords.size()) {
+            List<CallDetailRecord> updateObjectsPart = new ArrayList<>();
+            while (updateObjectsPart.size() < PARTITION_SIZE && count < callDetailRecords.size()) {
+                updateObjectsPart.add(callDetailRecords.get(count));
+                count++;
+            }
+
+            sqlCount += cdrBulkInsert(updateObjectsPart);
+            updateObjectsPart.clear();
+        }
+        return sqlCount;
+
+    }
+
+    private Long cdrBulkInsert(final List<CallDetailRecord> updateObjects) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "INSERT IGNORE INTO nms_imi_cdrs (requestId, msisdn, callId, attemptNo, callStartTime," +
+                        "callAnswerTime, callEndTime, callDurationInPulse, callStatus, languageLocationId, contentFile," +
+                        " msgPlayStartTime, msgPlayEndTime, circleId,operatorId, priority, callDisconnectReason, weekId," +
+                        " creationDate, modificationDate, modifiedBy, owner, creator)  " +
+                        "values  " +
+                        insertQuerySet(updateObjects);
+
+                LOGGER.debug(SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public Long execute(Query query) {
+                query.setClass(CallDetailRecord.class);
+                return (Long) query.execute();
+            }
+        };
+
+        Long updatedNo = callDetailRecordDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug(CDR_LOG_STRING, queryTimer.time());
+        return updatedNo;
+    }
+
+
+    private String insertQuerySet(List<CallDetailRecord> callDetailRecords){
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
+        DateTime dateTimeNow = new DateTime();
+
+        int i = 0;
+        for (CallDetailRecord callDetailRecord: callDetailRecords) {
+            if (i != 0) {
+                stringBuilder.append(", ");
+            }
+            stringBuilder.append("(");
+            stringBuilder.append(QUOTATION + callDetailRecord.getRequestId()+ QUOTATION_COMMA);
+            stringBuilder.append(callDetailRecord.getMsisdn()+ ", ");
+            stringBuilder.append(QUOTATION + callDetailRecord.getCallId()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callDetailRecord.getAttemptNo()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callDetailRecord.getCallStartTime()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callDetailRecord.getCallAnswerTime()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callDetailRecord.getCallEndTime()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callDetailRecord.getCallDurationInPulse()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callDetailRecord.getCallStatus()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callDetailRecord.getLanguageLocationId()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callDetailRecord.getContentFile()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callDetailRecord.getMsgPlayStartTime()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callDetailRecord.getMsgPlayEndTime()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callDetailRecord.getCircleId()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callDetailRecord.getOperatorId()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callDetailRecord.getPriority()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callDetailRecord.getCallDisconnectReason()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callDetailRecord.getWeekId()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+            stringBuilder.append(MOTECH_STRING);
+            stringBuilder.append(MOTECH_STRING);
+            stringBuilder.append(MOTECH);
+            stringBuilder.append(")");
+            i++;
+        }
+        return stringBuilder.toString();
+
+    }
 
     private boolean shouldDistributeCsrProcessing() {
         try {
