@@ -29,7 +29,17 @@ import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.kilkari.contract.*;
+import org.motechproject.nms.kilkari.contract.RchAnmAshaRecord;
+import org.motechproject.nms.kilkari.contract.RchChildRecord;
+import org.motechproject.nms.kilkari.contract.RchDistrictRecord;
+import org.motechproject.nms.kilkari.contract.RchHealthBlockRecord;
+import org.motechproject.nms.kilkari.contract.RchHealthFacilityRecord;
+import org.motechproject.nms.kilkari.contract.RchHealthSubFacilityRecord;
+import org.motechproject.nms.kilkari.contract.RchMotherRecord;
+import org.motechproject.nms.kilkari.contract.RchTalukaHealthBlockRecord;
+import org.motechproject.nms.kilkari.contract.RchTalukaRecord;
+import org.motechproject.nms.kilkari.contract.RchVillageHealthSubFacilityRecord;
+import org.motechproject.nms.kilkari.contract.RchVillageRecord;
 import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.MctsMother;
@@ -41,7 +51,17 @@ import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
-import org.motechproject.nms.rch.contract.*;
+import org.motechproject.nms.rch.contract.RchAnmAshaDataSet;
+import org.motechproject.nms.rch.contract.RchChildrenDataSet;
+import org.motechproject.nms.rch.contract.RchDistrictDataSet;
+import org.motechproject.nms.rch.contract.RchHealthBlockDataSet;
+import org.motechproject.nms.rch.contract.RchHealthFacilityDataSet;
+import org.motechproject.nms.rch.contract.RchHealthSubFacilityDataSet;
+import org.motechproject.nms.rch.contract.RchMothersDataSet;
+import org.motechproject.nms.rch.contract.RchTalukaDataSet;
+import org.motechproject.nms.rch.contract.RchTalukaHealthBlockDataSet;
+import org.motechproject.nms.rch.contract.RchVillageDataSet;
+import org.motechproject.nms.rch.contract.RchVillageHealthSubFacilityDataSet;
 import org.motechproject.nms.rch.domain.RchImportAudit;
 import org.motechproject.nms.rch.domain.RchImportFacilitator;
 import org.motechproject.nms.rch.domain.RchImportFailRecord;
@@ -317,6 +337,44 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return status;
     }
 
+    @Override
+    public boolean getVillagesData(LocalDate from, LocalDate to, URL endpoint, Long stateId) {
+        DS_DataResponseDS_DataResult result;
+        Irchwebservices dataService = getService(endpoint);
+        boolean status = false;
+        LOGGER.info("fromdate {}", from);
+
+        try {
+            result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
+                    settingsFacade.getProperty(Constants.RCH_PASSWORD), from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString(),
+                    settingsFacade.getProperty(Constants.RCH_LOCATION_VILLAGE), settingsFacade.getProperty(Constants.RCH_DTID));
+        } catch (RemoteException e) {
+            throw new RchWebServiceException("Remote Server Error. Could Not Read RCH Village Data.", e);
+        }
+
+        LOGGER.debug("writing RCH Village response to file");
+        File responseFile = generateResponseFile(result, RchUserType.VILLAGE, stateId);
+        if (responseFile != null) {
+            LOGGER.info("RCH Village response successfully written to file. Copying to remote directory.");
+            try {
+                scpResponseToRemote(responseFile.getName());
+                LOGGER.info("RCH Village response file successfully copied to remote server");
+
+                RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.VILLAGE, LocalDate.now());
+                rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
+                status = true;
+
+            } catch (ExecutionException e) {
+                LOGGER.error("error copying file to remote server.");
+            } catch (RchFileManipulationException e) {
+                LOGGER.error("invalid file name");
+            }
+        } else {
+            LOGGER.error("Error writing response to file.");
+        }
+        return status;
+    }
+
     @MotechListener(subjects = Constants.RCH_DISTRICT_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void readDistrictResponseFromFile(MotechEvent event) throws RchFileManipulationException {
@@ -481,6 +539,93 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                                 .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
                         rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, error));
                         rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
+                    } catch (NullPointerException e) {
+                        LOGGER.error("No files saved a : ", e);
+                    }
+                }
+            }
+        } catch (ExecutionException e) {
+            LOGGER.error("Failed to copy file from remote server to local directory." + e);
+        }
+    }
+
+    @MotechListener(subjects = Constants.RCH_VILLAGE_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
+    @Transactional
+    public void readVillageResponseFromFile(MotechEvent event) throws RchFileManipulationException {
+        LOGGER.info("Copying RCH village response file from remote server to local directory.");
+        try {
+            List<RchImportFacilitator> rchImportFacilitatorsVillages = rchImportFacilitatorService.findByImportDateAndRchUserType(LocalDate.now(), RchUserType.VILLAGE);
+            LOGGER.info("Files imported today for village= " + rchImportFacilitatorsVillages.size());
+            ArrayList<Map<String, Object>> villageArrList = new ArrayList<>();
+            for (RchImportFacilitator rchImportFacilitatorsVillage : rchImportFacilitatorsVillages
+                    ) {
+                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsVillage.getFileName());
+                if (localResponseFile != null) {
+                    LOGGER.info("RCH village response file successfully copied from remote server to local directory.");
+                    String result = readResponsesFromXml(localResponseFile);
+                    Long stateId = rchImportFacilitatorsVillage.getStateId();
+                    State state = stateDataService.findByCode(stateId);
+
+                    String stateName = state.getName() != null ? state.getName() : " ";
+                    Long stateCode = state.getCode() != null ? state.getCode() : 1L;
+
+                    LocalDate startDate = rchImportFacilitatorsVillage.getStartDate();
+                    LocalDate endDate = rchImportFacilitatorsVillage.getEndDate();
+
+                    try {
+
+                        if (result.contains(RECORDS)) {
+                            RchVillageDataSet villageDataSet = (result == null) ?
+                                    null :
+                                    (RchVillageDataSet) MarshallUtils.unmarshall(result, RchVillageDataSet.class);
+
+                            LOGGER.info("Starting RCH village import");
+                            StopWatch stopWatch = new StopWatch();
+                            stopWatch.start();
+
+                            if (villageDataSet == null || villageDataSet.getRecords() == null) {
+                                String warning = String.format("No village data set received from RCH for %s state", stateName);
+                                LOGGER.warn(warning);
+                                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, warning));
+                            } else {
+                                List<RchVillageRecord> villageRecords = villageDataSet.getRecords();
+                                for (RchVillageRecord record : villageRecords) {
+                                    Map<String, Object> locMap = new HashMap<>();
+                                    toMapVillage(locMap, record, stateCode);
+                                    villageArrList.add(locMap);
+
+                                }
+                            }
+                            int count = 0;
+                            int partNumber = 0;
+                            Long totalUpdatedRecords = 0L;
+                            while (count < villageArrList.size()) {
+                                List<Map<String, Object>> recordListPart = new ArrayList<>();
+                                while (recordListPart.size() < LOCATION_PART_SIZE && count < villageArrList.size()) {
+                                    recordListPart.add(villageArrList.get(count));
+                                    count++;
+                                }
+                                partNumber++;
+                                totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.VILLAGE, rchImportFacilitatorsVillage.getFileName(), partNumber);
+                                recordListPart.clear();
+                            }
+
+                            LOGGER.debug("File {} processed. {} records updated", rchImportFacilitatorsVillage.getFileName(), totalUpdatedRecords);
+
+                        }  else {
+                            String warning = String.format("No Village data set received from RCH for %d stateId", stateId);
+                            LOGGER.warn(warning);
+                        }
+
+                    } catch (JAXBException e) {
+                        throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH Village data from %s location.", stateId), e);
+                    } catch (RchInvalidResponseStructureException e) {
+                        String error = String.format("Cannot read RCH Village data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
+                        LOGGER.error(error, e);
+                        alertService.create(RCH_WEB_SERVICE, "RCH Web Service Village Import", e
+                                .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+                        rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, error));
+                        rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGE, stateId));
                     } catch (NullPointerException e) {
                         LOGGER.error("No files saved a : ", e);
                     }
@@ -1059,6 +1204,82 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return status;
     }
 
+    @Override
+    public boolean getHealthSubFacilityData(LocalDate from, LocalDate to, URL endpoint, Long stateId) {
+        DS_DataResponseDS_DataResult result;
+        Irchwebservices dataService = getService(endpoint);
+        boolean status = false;
+        LOGGER.info("fromdate {}", from);
+
+        try {
+            result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
+                    settingsFacade.getProperty(Constants.RCH_PASSWORD), from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString(),
+                    settingsFacade.getProperty(Constants.RCH_LOCATION_HEALTHSUBFACILITY), settingsFacade.getProperty(Constants.RCH_DTID));
+        } catch (RemoteException e) {
+            throw new RchWebServiceException("Remote Server Error. Could Not Read RCH healthsubfacility Data.", e);
+        }
+
+        LOGGER.debug("writing RCH healthsubfacility response to file");
+        File responseFile = generateResponseFile(result, RchUserType.HEALTHSUBFACILITY, stateId);
+        if (responseFile != null) {
+            LOGGER.info("RCH healthsubfacility response successfully written to file. Copying to remote directory.");
+            try {
+                scpResponseToRemote(responseFile.getName());
+                LOGGER.info("RCH healthsubfacility response file successfully copied to remote server");
+
+                RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.HEALTHSUBFACILITY, LocalDate.now());
+                rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
+                status = true;
+
+            } catch (ExecutionException e) {
+                LOGGER.error("error copying file to remote server.");
+            } catch (RchFileManipulationException e) {
+                LOGGER.error("invalid file name");
+            }
+        } else {
+            LOGGER.error("Error writing response to file.");
+        }
+        return status;
+    }
+
+    @Override
+    public boolean getVillageHealthSubFacilityData(LocalDate from, LocalDate to, URL endpoint, Long stateId) {
+        DS_DataResponseDS_DataResult result;
+        Irchwebservices dataService = getService(endpoint);
+        boolean status = false;
+        LOGGER.info("fromdate {}", from);
+
+        try {
+            result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
+                    settingsFacade.getProperty(Constants.RCH_PASSWORD), from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString(),
+                    settingsFacade.getProperty(Constants.RCH_LOCATION_VILLAGE_HEALTHSUBFACILITY), settingsFacade.getProperty(Constants.RCH_DTID));
+        } catch (RemoteException e) {
+            throw new RchWebServiceException("Remote Server Error. Could Not Read RCH villagehealthfacility Data.", e);
+        }
+
+        LOGGER.debug("writing RCH villagehealthfacility response to file");
+        File responseFile = generateResponseFile(result, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId);
+        if (responseFile != null) {
+            LOGGER.info("RCH villagehealthfacility response successfully written to file. Copying to remote directory.");
+            try {
+                scpResponseToRemote(responseFile.getName());
+                LOGGER.info("RCH villagehealthfacility response file successfully copied to remote server");
+
+                RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.VILLAGEHEALTHSUBFACILITY, LocalDate.now());
+                rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
+                status = true;
+
+            } catch (ExecutionException e) {
+                LOGGER.error("error copying file to remote server.");
+            } catch (RchFileManipulationException e) {
+                LOGGER.error("invalid file name");
+            }
+        } else {
+            LOGGER.error("Error writing response to file.");
+        }
+        return status;
+    }
+
     @MotechListener(subjects = Constants.RCH_HEALTHFACILITY_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void readHealthFacilityResponseFromFile(MotechEvent event) throws RchFileManipulationException {
@@ -1135,6 +1356,178 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                                 .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
                         rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, error));
                         rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHFACILITY, stateId));
+                    } catch (NullPointerException e) {
+                        LOGGER.error("No files saved a : ", e);
+                    }
+                }
+            }
+        } catch (ExecutionException e) {
+            LOGGER.error("Failed to copy file from remote server to local directory." + e);
+        }
+    }
+
+    @MotechListener(subjects = Constants.RCH_HEALTHSUBFACILITY_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
+    @Transactional
+    public void readHealthSubFacilityResponseFromFile(MotechEvent event) throws RchFileManipulationException {
+        LOGGER.info("Copying RCH healthsubfacility response file from remote server to local directory.");
+        try {
+            List<RchImportFacilitator> rchImportFacilitatorsHealthSubFacilities = rchImportFacilitatorService.findByImportDateAndRchUserType(LocalDate.now(), RchUserType.HEALTHSUBFACILITY);
+            LOGGER.info("Files imported today for healthsubfacilities= " + rchImportFacilitatorsHealthSubFacilities.size());
+            ArrayList<Map<String, Object>> healthSubFacilityArrList = new ArrayList<>();
+            for (RchImportFacilitator rchImportFacilitatorsHealthSubFacility : rchImportFacilitatorsHealthSubFacilities
+                    ) {
+                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsHealthSubFacility.getFileName());
+                if (localResponseFile != null) {
+                    LOGGER.info("RCH healthsubfacility response file successfully copied from remote server to local directory.");
+                    String result = readResponsesFromXml(localResponseFile);
+                    Long stateId = rchImportFacilitatorsHealthSubFacility.getStateId();
+                    LOGGER.debug("stateId={}", stateId);
+                    State state = stateDataService.findByCode(stateId);
+
+                    String stateName = state.getName() != null ? state.getName() : " ";
+                    Long stateCode = state.getCode() != null ? state.getCode() : 1L;
+                    LOGGER.debug("stateCode={}", stateCode);
+
+                    LocalDate startDate = rchImportFacilitatorsHealthSubFacility.getStartDate();
+                    LocalDate endDate = rchImportFacilitatorsHealthSubFacility.getEndDate();
+
+                    try {
+                        if (result.contains(RECORDS)) {
+                            RchHealthSubFacilityDataSet healthSubFacilityDataSet = (result == null) ?
+                                    null :
+                                    (RchHealthSubFacilityDataSet) MarshallUtils.unmarshall(result, RchHealthSubFacilityDataSet.class);
+
+                            LOGGER.info("Starting RCH healthsubfacility import");
+                            StopWatch stopWatch = new StopWatch();
+                            stopWatch.start();
+
+                            if (healthSubFacilityDataSet == null || healthSubFacilityDataSet.getRecords() == null) {
+                                String warning = String.format("No healthsubfacility data set received from RCH for %s state", stateName);
+                                LOGGER.warn(warning);
+                                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHSUBFACILITY, stateCode, stateName, 0, 0, warning));
+                            } else {
+                                List<RchHealthSubFacilityRecord> rchHealthFacilityRecords = healthSubFacilityDataSet.getRecords();
+                                for (RchHealthSubFacilityRecord record : rchHealthFacilityRecords) {
+                                    Map<String, Object> locMap = new HashMap<>();
+                                    toMapHealthSubFacility(locMap, record, stateCode);
+                                    healthSubFacilityArrList.add(locMap);
+
+                                }
+                            }
+                            int count = 0;
+                            int partNumber = 0;
+                            Long totalUpdatedRecords = 0L;
+                            while (count < healthSubFacilityArrList.size()) {
+                                List<Map<String, Object>> recordListPart = new ArrayList<>();
+                                while (recordListPart.size() < LOCATION_PART_SIZE && count < healthSubFacilityArrList.size()) {
+                                    recordListPart.add(healthSubFacilityArrList.get(count));
+                                    count++;
+                                }
+                                partNumber++;
+                                totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.HEALTHSUBFACILITY, rchImportFacilitatorsHealthSubFacility.getFileName(), partNumber);
+                                recordListPart.clear();
+                            }
+                            LOGGER.debug("File {} processed. {} records updated", rchImportFacilitatorsHealthSubFacility.getFileName(), totalUpdatedRecords);
+                        } else {
+                            String warning = String.format("No healthsubfacility data set received from RCH for %d stateId", stateId);
+                            LOGGER.warn(warning);
+                        }
+
+                    } catch (JAXBException e) {
+                        throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH healthsubfacility data from %s location.", stateId), e);
+                    } catch (RchInvalidResponseStructureException e) {
+                        String error = String.format("Cannot read RCH healthsubfacility data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
+                        LOGGER.error(error, e);
+                        alertService.create(RCH_WEB_SERVICE, "RCH Web Service healthsubfacility Import", e
+                                .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+                        rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHSUBFACILITY, stateCode, stateName, 0, 0, error));
+                        rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHSUBFACILITY, stateId));
+                    } catch (NullPointerException e) {
+                        LOGGER.error("No files saved a : ", e);
+                    }
+                }
+            }
+        } catch (ExecutionException e) {
+            LOGGER.error("Failed to copy file from remote server to local directory." + e);
+        }
+    }
+
+    @MotechListener(subjects = Constants.RCH_VILLAGEHEALTHSUBFACILITY_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
+    @Transactional
+    public void readVillageHealthSubFacilityResponseFromFile(MotechEvent event) throws RchFileManipulationException {
+        LOGGER.info("Copying RCH villageHealthsubfacility response file from remote server to local directory.");
+        try {
+            List<RchImportFacilitator> rchImportFacilitatorsVillageHealthSubFacilities = rchImportFacilitatorService.findByImportDateAndRchUserType(LocalDate.now(), RchUserType.VILLAGEHEALTHSUBFACILITY);
+            LOGGER.info("Files imported today for villageHealthsubfacilities= " + rchImportFacilitatorsVillageHealthSubFacilities.size());
+            ArrayList<Map<String, Object>> villageHealthSubFacilityArrList = new ArrayList<>();
+            for (RchImportFacilitator rchImportFacilitatorsVillageHealthSubFacility : rchImportFacilitatorsVillageHealthSubFacilities
+                    ) {
+                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsVillageHealthSubFacility.getFileName());
+                if (localResponseFile != null) {
+                    LOGGER.info("RCH villageHealthsubfacility response file successfully copied from remote server to local directory.");
+                    String result = readResponsesFromXml(localResponseFile);
+                    Long stateId = rchImportFacilitatorsVillageHealthSubFacility.getStateId();
+                    LOGGER.debug("stateId={}", stateId);
+                    State state = stateDataService.findByCode(stateId);
+
+                    String stateName = state.getName() != null ? state.getName() : " ";
+                    Long stateCode = state.getCode() != null ? state.getCode() : 1L;
+                    LOGGER.debug("stateCode={}", stateCode);
+
+                    LocalDate startDate = rchImportFacilitatorsVillageHealthSubFacility.getStartDate();
+                    LocalDate endDate = rchImportFacilitatorsVillageHealthSubFacility.getEndDate();
+
+                    try {
+                        if (result.contains(RECORDS)) {
+                            RchVillageHealthSubFacilityDataSet villageHealthSubFacilityDataSet = (result == null) ?
+                                    null :
+                                    (RchVillageHealthSubFacilityDataSet) MarshallUtils.unmarshall(result, RchVillageHealthSubFacilityDataSet.class);
+
+                            LOGGER.info("Starting RCH villageHealthsubfacility import");
+                            StopWatch stopWatch = new StopWatch();
+                            stopWatch.start();
+
+                            if (villageHealthSubFacilityDataSet == null || villageHealthSubFacilityDataSet.getRecords() == null) {
+                                String warning = String.format("No villageHealthsubfacility data set received from RCH for %s state", stateName);
+                                LOGGER.warn(warning);
+                                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, warning));
+                            } else {
+                                List<RchVillageHealthSubFacilityRecord> rchVillageHealthFacilityRecords = villageHealthSubFacilityDataSet.getRecords();
+                                for (RchVillageHealthSubFacilityRecord record : rchVillageHealthFacilityRecords) {
+                                    Map<String, Object> locMap = new HashMap<>();
+                                    toMapVillageHealthSubFacility(locMap, record, stateCode);
+                                    villageHealthSubFacilityArrList.add(locMap);
+
+                                }
+                            }
+                            int count = 0;
+                            int partNumber = 0;
+                            Long totalUpdatedRecords = 0L;
+                            while (count < villageHealthSubFacilityArrList.size()) {
+                                List<Map<String, Object>> recordListPart = new ArrayList<>();
+                                while (recordListPart.size() < LOCATION_PART_SIZE && count < villageHealthSubFacilityArrList.size()) {
+                                    recordListPart.add(villageHealthSubFacilityArrList.get(count));
+                                    count++;
+                                }
+                                partNumber++;
+                                totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.VILLAGEHEALTHSUBFACILITY, rchImportFacilitatorsVillageHealthSubFacility.getFileName(), partNumber);
+                                recordListPart.clear();
+                            }
+                            LOGGER.debug("File {} processed. {} records updated", rchImportFacilitatorsVillageHealthSubFacility.getFileName(), totalUpdatedRecords);
+                        } else {
+                            String warning = String.format("No villageHealthsubfacility data set received from RCH for %d stateId", stateId);
+                            LOGGER.warn(warning);
+                        }
+
+                    } catch (JAXBException e) {
+                        throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH villageHealthsubfacility data from %s location.", stateId), e);
+                    } catch (RchInvalidResponseStructureException e) {
+                        String error = String.format("Cannot read RCH villageHealthsubfacility data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
+                        LOGGER.error(error, e);
+                        alertService.create(RCH_WEB_SERVICE, "RCH Web Service villageHealthsubfacility Import", e
+                                .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+                        rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, error));
+                        rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId));
                     } catch (NullPointerException e) {
                         LOGGER.error("No files saved a : ", e);
                     }
@@ -1607,43 +2000,70 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private void toMapDistrict(Map<String, Object> map, RchDistrictRecord districtRecord, Long stateCode) {
         map.put(KilkariConstants.CSV_STATE_ID, stateCode);
-        map.put(KilkariConstants.DISTRICT_CODE, districtRecord.getDistrictCode());
+        map.put(KilkariConstants.DISTRICT_ID, districtRecord.getDistrictCode());
         map.put(KilkariConstants.DISTRICT_NAME, districtRecord.getDistrictName());
         map.put(KilkariConstants.EXEC_DATE, districtRecord.getExecDate());
     }
 
     private void toMapTaluka(Map<String, Object> map, RchTalukaRecord talukaRecord, Long stateCode) {
         map.put(KilkariConstants.CSV_STATE_ID, stateCode);
-        map.put(KilkariConstants.DISTRICT_CODE, talukaRecord.getDistrictCode());
-        map.put(KilkariConstants.TALUKA_CODE, talukaRecord.getTalukaCode());
+        map.put(KilkariConstants.DISTRICT_ID, talukaRecord.getDistrictCode());
+        map.put(KilkariConstants.TALUKA_ID, talukaRecord.getTalukaCode());
         map.put(KilkariConstants.TALUKA_NAME, talukaRecord.getTalukaName());
         map.put(KilkariConstants.EXEC_DATE, talukaRecord.getExecDate());
     }
 
+    private void toMapVillage(Map<String, Object> map, RchVillageRecord villageRecord, Long stateCode) {
+        map.put(KilkariConstants.CSV_STATE_ID, stateCode);
+        map.put(KilkariConstants.DISTRICT_ID, villageRecord.getDistrictCode());
+        map.put(KilkariConstants.TALUKA_ID, villageRecord.getTalukaCode());
+        map.put(KilkariConstants.CENSUS_VILLAGE_ID, villageRecord.getVillageCode());
+        map.put(KilkariConstants.VILLAGE_NAME, villageRecord.getVillageName());
+        map.put(KilkariConstants.EXEC_DATE, villageRecord.getExecDate());
+    }
+
     private void toMapHealthBlock(Map<String, Object> map, RchHealthBlockRecord healthBlockRecord, Long stateCode) {
         map.put(KilkariConstants.CSV_STATE_ID, stateCode);
-        map.put(KilkariConstants.DISTRICT_CODE, healthBlockRecord.getDistrictCode());
-        map.put(KilkariConstants.TALUKA_CODE, healthBlockRecord.getTalukaCode());
-        map.put(KilkariConstants.HEALTH_BLOCK_CODE, healthBlockRecord.getHealthBlockCode());
+        map.put(KilkariConstants.DISTRICT_ID, healthBlockRecord.getDistrictCode());
+        map.put(KilkariConstants.TALUKA_ID, healthBlockRecord.getTalukaCode());
+        map.put(KilkariConstants.HEALTH_BLOCK_ID, healthBlockRecord.getHealthBlockCode());
         map.put(KilkariConstants.HEALTH_BLOCK_NAME, healthBlockRecord.getHealthBlockName());
         map.put(KilkariConstants.EXEC_DATE, healthBlockRecord.getExecDate());
     }
 
     private void toMapTalukaHealthBlock(Map<String, Object> map, RchTalukaHealthBlockRecord talukaHealthBlockRecord, Long stateCode) {
         map.put(KilkariConstants.CSV_STATE_ID, stateCode);
-        map.put(KilkariConstants.TALUKA_CODE, talukaHealthBlockRecord.getTalukaCode());
-        map.put(KilkariConstants.HEALTH_BLOCK_CODE, talukaHealthBlockRecord.getHealthBlockCode());
+        map.put(KilkariConstants.TALUKA_ID, talukaHealthBlockRecord.getTalukaCode());
+        map.put(KilkariConstants.HEALTH_BLOCK_ID, talukaHealthBlockRecord.getHealthBlockCode());
         map.put(KilkariConstants.EXEC_DATE, talukaHealthBlockRecord.getExecDate());
     }
 
     private void toMapHealthFacility(Map<String, Object> map, RchHealthFacilityRecord healthFacilityRecord, Long stateCode) {
         map.put(KilkariConstants.CSV_STATE_ID, stateCode);
-        map.put(KilkariConstants.DISTRICT_CODE, healthFacilityRecord.getDistrictCode());
-        map.put(KilkariConstants.TALUKA_CODE, healthFacilityRecord.getTalukaCode());
-        map.put(KilkariConstants.HEALTH_BLOCK_CODE, healthFacilityRecord.getHealthBlockCode());
-        map.put(KilkariConstants.PHC_ID, healthFacilityRecord.getHealthFacilityCode());
-        map.put(KilkariConstants.PHC_NAME, healthFacilityRecord.getHealthFacilityName());
+        map.put(KilkariConstants.DISTRICT_ID, healthFacilityRecord.getDistrictCode());
+        map.put(KilkariConstants.TALUKA_ID, healthFacilityRecord.getTalukaCode());
+        map.put(KilkariConstants.HEALTH_BLOCK_ID, healthFacilityRecord.getHealthBlockCode());
+        map.put(KilkariConstants.HEALTH_FACILITY_ID, healthFacilityRecord.getHealthFacilityCode());
+        map.put(KilkariConstants.HEALTH_FACILITY_NAME, healthFacilityRecord.getHealthFacilityName());
         map.put(KilkariConstants.EXEC_DATE, healthFacilityRecord.getExecDate());
+    }
+
+    private void toMapHealthSubFacility(Map<String, Object> map, RchHealthSubFacilityRecord healthSubFacilityRecord, Long stateCode) {
+        map.put(KilkariConstants.CSV_STATE_ID, stateCode);
+        map.put(KilkariConstants.DISTRICT_ID, healthSubFacilityRecord.getDistrictCode());
+        map.put(KilkariConstants.TALUKA_ID, healthSubFacilityRecord.getTalukaCode());
+        map.put(KilkariConstants.HEALTH_FACILITY_ID, healthSubFacilityRecord.getHealthFacilityCode());
+        map.put(KilkariConstants.HEALTH_SUB_FACILITY_ID, healthSubFacilityRecord.getHealthSubFacilityCode());
+        map.put(KilkariConstants.HEALTH_SUB_FACILITY_NAME, healthSubFacilityRecord.getHealthSubFacilityName());
+        map.put(KilkariConstants.EXEC_DATE, healthSubFacilityRecord.getExecDate());
+    }
+
+    private void toMapVillageHealthSubFacility(Map<String, Object> map, RchVillageHealthSubFacilityRecord villageHealthSubFacilityRecord, Long stateCode) {
+        map.put(KilkariConstants.CSV_STATE_ID, stateCode);
+        map.put(KilkariConstants.DISTRICT_ID, villageHealthSubFacilityRecord.getDistrictCode());
+        map.put(KilkariConstants.CENSUS_VILLAGE_ID, villageHealthSubFacilityRecord.getVillageCode());
+        map.put(KilkariConstants.HEALTH_SUB_FACILITY_ID, villageHealthSubFacilityRecord.getHealthSubFacilityCode());
+        map.put(KilkariConstants.EXEC_DATE, villageHealthSubFacilityRecord.getExecDate());
     }
 
     private Map<String, Object> toMap(RchChildRecord childRecord) {

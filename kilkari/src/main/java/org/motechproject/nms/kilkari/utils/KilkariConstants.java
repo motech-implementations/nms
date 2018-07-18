@@ -29,8 +29,12 @@ public final class KilkariConstants {
     public static final String HEALTH_BLOCK_NAME = "HealthBlock_Name";
     public static final String PHC_ID = "PHC_ID";
     public static final String PHC_NAME = "PHC_Name";
+    public static final String HEALTH_FACILITY_ID = "HealthFacility_ID";
+    public static final String HEALTH_FACILITY_NAME = "HealthFacility_Name";
     public static final String SUB_CENTRE_ID = "SubCentre_ID";
     public static final String SUB_CENTRE_NAME = "SubCentre_Name";
+    public static final String HEALTH_SUB_FACILITY_ID = "HealthSubFacility_ID";
+    public static final String HEALTH_SUB_FACILITY_NAME = "HealthSubFacility_Name";
     public static final String CENSUS_VILLAGE_ID = "Village_ID";
     public static final String VILLAGE_NAME = "Village_Name";
     public static final String NON_CENSUS_VILLAGE_ID = "SVID";
@@ -83,18 +87,6 @@ public final class KilkariConstants {
     public static final String UPDATE_LMP = "Beneficiary New LMP change";
     public static final String UPDATE_MSISDN = "Beneficiary New Mobile no change";
 
-    public static final String MAPPER_STATE = "StateID";
-    public static final String MAPPER_DISTRICT = "District_ID";
-    public static final String MAPPER_TALUKA = "Taluka_ID";
-    public static final String MAPPER_HEALTH_BLOCK = "HealthBlock_ID";
-    public static final String MAPPER_PHC = "PHC_ID";
-    public static final String MAPPER_SUBCENTRE = "SubCentre_ID";
-    public static final String MAPPER_CENSUS_VILLAGE = "Village_ID";
-    public static final String MAPPER_NON_CENSUS_VILLAGE = "SVID";
-    public static final String STATE_CODE = "State_Code";
-    public static final String DISTRICT_CODE = "District_ID";
-    public static final String TALUKA_CODE = "Taluka_ID";
-    public static final String HEALTH_BLOCK_CODE = "HealthBlock_ID";
 
     public static final String INVALID_LOCATION = "<%s - %s : Invalid location>";
 
