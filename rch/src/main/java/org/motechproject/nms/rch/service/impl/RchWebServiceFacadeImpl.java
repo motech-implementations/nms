@@ -157,7 +157,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String REMOTE_RESPONSE_DIR_CSV = "rch.remote_response_dir_csv";
     private static final String LOC_UPDATE_DIR_RCH = "rch.loc_update_dir";
     private static final String REMOTE_RESPONSE_DIR_LOCATION = "rch.remote_response_dir_locations";
-    private static final String NULL = "NULL";
     private static final String NEXT_LINE = "\r\n";
     private static final String TAB = "\t";
     private static final Integer LOCATION_PART_SIZE = 5000;
@@ -165,6 +164,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private static final String QUOTATION = "'";
     private static final String SQL_QUERY_LOG = "SQL QUERY: {}";
+    private static final String FROM_DATE_LOG = "fromdate {}";
+    private static final String SCP_ERROR = "error copying file to remote server.";
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("dd-MM-yyyy");
     private static final String SCP_TIMEOUT_SETTING = "rch.scp_timeout";
@@ -228,7 +229,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         DS_DataResponseDS_DataResult result;
         Irchwebservices dataService = getService(endpoint);
         boolean status = false;
-        LOGGER.info("fromdate {}", from);
+        LOGGER.info(FROM_DATE_LOG, from);
 
         try {
             result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
@@ -251,7 +252,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error("error copying file to remote server.");
+                LOGGER.error(SCP_ERROR);
             } catch (RchFileManipulationException e) {
                 LOGGER.error("invalid file name");
             }
@@ -266,7 +267,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         DS_DataResponseDS_DataResult result;
         Irchwebservices dataService = getService(endpoint);
         boolean status = false;
-        LOGGER.info("fromdate {}", from);
+        LOGGER.info(FROM_DATE_LOG, from);
 
         try {
             result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
@@ -289,7 +290,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error("error copying file to remote server.");
+                LOGGER.error(SCP_ERROR);
             } catch (RchFileManipulationException e) {
                 LOGGER.error("invalid file name");
             }
@@ -304,7 +305,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         DS_DataResponseDS_DataResult result;
         Irchwebservices dataService = getService(endpoint);
         boolean status = false;
-        LOGGER.info("fromdate {}", from);
+        LOGGER.info(FROM_DATE_LOG, from);
 
         try {
             result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
@@ -327,7 +328,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error("error copying file to remote server.");
+                LOGGER.error(SCP_ERROR);
             } catch (RchFileManipulationException e) {
                 LOGGER.error("invalid file name");
             }
@@ -342,7 +343,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         DS_DataResponseDS_DataResult result;
         Irchwebservices dataService = getService(endpoint);
         boolean status = false;
-        LOGGER.info("fromdate {}", from);
+        LOGGER.info(FROM_DATE_LOG, from);
 
         try {
             result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
@@ -365,7 +366,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error("error copying file to remote server.");
+                LOGGER.error(SCP_ERROR);
             } catch (RchFileManipulationException e) {
                 LOGGER.error("invalid file name");
             }
@@ -734,7 +735,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
                 status = true;
             } catch (ExecutionException e) {
-                LOGGER.error("error copying file to remote server.");
+                LOGGER.error(SCP_ERROR);
             } catch (RchFileManipulationException e) {
                 LOGGER.error("invalid file error");
             }
@@ -839,7 +840,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
                 status = true;
             } catch (ExecutionException e) {
-                LOGGER.error("error copying file to remote server.");
+                LOGGER.error(SCP_ERROR);
             } catch (RchFileManipulationException e) {
                 LOGGER.error("invalid file error");
             }
@@ -924,7 +925,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         DS_DataResponseDS_DataResult result;
         Irchwebservices dataService = getService(endpoint);
         boolean status = false;
-        LOGGER.info("fromdate {}", from);
+        LOGGER.info(FROM_DATE_LOG, from);
 
         try {
             result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
@@ -947,7 +948,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error("error copying file to remote server.");
+                LOGGER.error(SCP_ERROR);
             } catch (RchFileManipulationException e) {
                 LOGGER.error("invalid file name");
             }
@@ -1048,7 +1049,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         DS_DataResponseDS_DataResult result;
         Irchwebservices dataService = getService(endpoint);
         boolean status = false;
-        LOGGER.info("fromdate {}", from);
+        LOGGER.info(FROM_DATE_LOG, from);
 
         try {
             result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
@@ -1071,7 +1072,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error("error copying file to remote server.");
+                LOGGER.error(SCP_ERROR);
             } catch (RchFileManipulationException e) {
                 LOGGER.error("invalid file name");
             }
@@ -1171,7 +1172,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         DS_DataResponseDS_DataResult result;
         Irchwebservices dataService = getService(endpoint);
         boolean status = false;
-        LOGGER.info("fromdate {}", from);
+        LOGGER.info(FROM_DATE_LOG, from);
 
         try {
             result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
@@ -1194,7 +1195,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error("error copying file to remote server.");
+                LOGGER.error(SCP_ERROR);
             } catch (RchFileManipulationException e) {
                 LOGGER.error("invalid file name");
             }
@@ -1209,7 +1210,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         DS_DataResponseDS_DataResult result;
         Irchwebservices dataService = getService(endpoint);
         boolean status = false;
-        LOGGER.info("fromdate {}", from);
+        LOGGER.info(FROM_DATE_LOG, from);
 
         try {
             result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
@@ -1232,7 +1233,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error("error copying file to remote server.");
+                LOGGER.error(SCP_ERROR);
             } catch (RchFileManipulationException e) {
                 LOGGER.error("invalid file name");
             }
@@ -1247,7 +1248,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         DS_DataResponseDS_DataResult result;
         Irchwebservices dataService = getService(endpoint);
         boolean status = false;
-        LOGGER.info("fromdate {}", from);
+        LOGGER.info(FROM_DATE_LOG, from);
 
         try {
             result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
@@ -1270,7 +1271,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error("error copying file to remote server.");
+                LOGGER.error(SCP_ERROR);
             } catch (RchFileManipulationException e) {
                 LOGGER.error("invalid file name");
             }
