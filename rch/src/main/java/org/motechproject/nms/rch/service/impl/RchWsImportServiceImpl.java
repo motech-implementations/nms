@@ -37,6 +37,8 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RchWsImportServiceImpl.class);
     private static final String RCH_WEB_SERVICE = "RCH Web Service";
+    private static final String FILE_RECORD_SUCCESS = "RCH Responses for state id {} recorded to file successfully.";
+    private static final String LOG_STATEID = "stateId = {}";
 
     @Autowired
     private StateDataService stateDataService;
@@ -113,7 +115,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         Long stateCode = state.getCode();
         try {
             if (rchWebServiceFacade.getMothersData(startDate, endDate, endpoint, stateId)) {
-                LOGGER.info("RCH Responses for state id {} recorded to file successfully.", stateId);
+                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
             }
         } catch (RchWebServiceException e) {
             String error = String.format("Cannot read RCH mothers data from %s state with state id: %d", stateName, stateId);
@@ -145,7 +147,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         Long stateCode = state.getCode();
         try {
             if (rchWebServiceFacade.getDistrictData(startDate, endDate, endpoint, stateId)) {
-                LOGGER.info("RCH Responses for state id {} recorded to file successfully.", stateId);
+                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
             }
         } catch (RchWebServiceException e) {
             String error = String.format("Cannot read RCH district data from %s state with state id: %d", stateName, stateId);
@@ -177,7 +179,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         Long stateCode = state.getCode();
         try {
             if (rchWebServiceFacade.getTalukasData(startDate, endDate, endpoint, stateId)) {
-                LOGGER.info("RCH Responses for state id {} recorded to file successfully.", stateId);
+                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
             }
         } catch (RchWebServiceException e) {
             String error = String.format("Cannot read RCH taluka data from %s state with state id: %d", stateName, stateId);
@@ -209,7 +211,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         Long stateCode = state.getCode();
         try {
             if (rchWebServiceFacade.getVillagesData(startDate, endDate, endpoint, stateId)) {
-                LOGGER.info("RCH Responses for state id {} recorded to file successfully.", stateId);
+                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
             }
         } catch (RchWebServiceException e) {
             String error = String.format("Cannot read RCH Village data from %s state with state id: %d", stateName, stateId);
@@ -226,7 +228,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
     @Override
     public void importRchHealthBlockData(MotechEvent motechEvent) {
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
-        LOGGER.debug("stateId = {}", stateId);
+        LOGGER.debug(LOG_STATEID, stateId);
         LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
         LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
         URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
@@ -242,7 +244,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         Long stateCode = state.getCode();
         try {
             if (rchWebServiceFacade.getHealthBlockData(startDate, endDate, endpoint, stateId)) {
-                LOGGER.info("RCH Responses for state id {} recorded to file successfully.", stateId);
+                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
             }
         } catch (RchWebServiceException e) {
             String error = String.format("Cannot read RCH healthblock data from %s state with state id: %d", stateName, stateId);
@@ -274,7 +276,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         Long stateCode = state.getCode();
         try {
             if (rchWebServiceFacade.getTalukaHealthBlockData(startDate, endDate, endpoint, stateId)) {
-                LOGGER.info("RCH Responses for state id {} recorded to file successfully.", stateId);
+                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
             }
         } catch (RchWebServiceException e) {
             String error = String.format("Cannot read RCH taluka-healthblock data from %s state with state id: %d", stateName, stateId);
@@ -291,7 +293,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
     @Override
     public void importRchHealthFacilityData(MotechEvent motechEvent) {
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
-        LOGGER.debug("stateId = {}", stateId);
+        LOGGER.debug(LOG_STATEID, stateId);
         LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
         LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
         URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
@@ -307,7 +309,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         Long stateCode = state.getCode();
         try {
             if (rchWebServiceFacade.getHealthFacilityData(startDate, endDate, endpoint, stateId)) {
-                LOGGER.info("RCH Responses for state id {} recorded to file successfully.", stateId);
+                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
             }
         } catch (RchWebServiceException e) {
             String error = String.format("Cannot read RCH HealthFacility data from %s state with state id: %d", stateName, stateId);
@@ -324,7 +326,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
     @Override
     public void importRchHealthSubFacilityData(MotechEvent motechEvent) {
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
-        LOGGER.debug("stateId = {}", stateId);
+        LOGGER.debug(LOG_STATEID, stateId);
         LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
         LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
         URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
@@ -340,7 +342,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         Long stateCode = state.getCode();
         try {
             if (rchWebServiceFacade.getHealthSubFacilityData(startDate, endDate, endpoint, stateId)) {
-                LOGGER.info("RCH Responses for state id {} recorded to file successfully.", stateId);
+                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
             }
         } catch (RchWebServiceException e) {
             String error = String.format("Cannot read RCH HealthSubFacility data from %s state with state id: %d", stateName, stateId);
@@ -357,7 +359,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
     @Override
     public void importRchVillageHealthSubFacilityData(MotechEvent motechEvent) {
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
-        LOGGER.debug("stateId = {}", stateId);
+        LOGGER.debug(LOG_STATEID, stateId);
         LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
         LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
         URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
@@ -373,7 +375,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         Long stateCode = state.getCode();
         try {
             if (rchWebServiceFacade.getVillageHealthSubFacilityData(startDate, endDate, endpoint, stateId)) {
-                LOGGER.info("RCH Responses for state id {} recorded to file successfully.", stateId);
+                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
             }
         } catch (RchWebServiceException e) {
             String error = String.format("Cannot read RCH VillageHealthSubFacility data from %s state with state id: %d", stateName, stateId);

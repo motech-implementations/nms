@@ -75,6 +75,18 @@ public class StateServiceImpl implements StateService {
         SqlQueryExecution<List<State>> queryExecution = new SqlQueryExecution<List<State>>() {
 
             @Override
+            public List<State> execute(Query query) {
+                query.setClass(State.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                List<State> states;
+                if (fqr.isEmpty()) {
+                    return null;
+                }
+                states = (List<State>) fqr;
+                return states;
+            }
+
+            @Override
             public String getSqlQuery() {
                 String query = "SELECT * from nms_states where";
                 int count = stateKeys.size();
@@ -90,17 +102,7 @@ public class StateServiceImpl implements StateService {
                 return query;
             }
 
-            @Override
-            public List<State> execute(Query query) {
-                query.setClass(State.class);
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
-                List<State> states;
-                if (fqr.isEmpty()) {
-                    return null;
-                }
-                states = (List<State>) fqr;
-                return states;
-            }
+
         };
 
         List<State> states = stateDataService.executeSQLQuery(queryExecution);

@@ -34,6 +34,7 @@ import java.util.List;
 public class RchImportJobHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RchWsImportServiceImpl.class);
+    private static final String NO_CRON_CONFIGURED = "No cron expression configured for RCH data read, no import will be performed";
 
     @Autowired
     @Qualifier("rchSettings")
@@ -77,7 +78,7 @@ public class RchImportJobHandler {
     public void initMotherReadJob() {
         String cronExpression = settingsFacade.getProperty(Constants.RCH_MOTHER_READ_CRON);
         if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            LOGGER.warn(NO_CRON_CONFIGURED);
             return;
         }
 
@@ -93,7 +94,7 @@ public class RchImportJobHandler {
     public void initDistrictReadJob() {
         String cronExpression = settingsFacade.getProperty(Constants.RCH_DISTRICT_READ_CRON);
         if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            LOGGER.warn(NO_CRON_CONFIGURED);
             return;
         }
 
@@ -109,7 +110,7 @@ public class RchImportJobHandler {
     public void initTalukaReadJob() {
         String cronExpression = settingsFacade.getProperty(Constants.RCH_TALUKA_READ_CRON);
         if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            LOGGER.warn(NO_CRON_CONFIGURED);
             return;
         }
 
@@ -125,7 +126,7 @@ public class RchImportJobHandler {
     public void initVillageReadJob() {
         String cronExpression = settingsFacade.getProperty(Constants.RCH_VILLAGE_READ_CRON);
         if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            LOGGER.warn(NO_CRON_CONFIGURED);
             return;
         }
 
@@ -142,7 +143,7 @@ public class RchImportJobHandler {
     public void initHealthBlockReadJob() {
         String cronExpression = settingsFacade.getProperty(Constants.RCH_HEALTHBLOCK_READ_CRON);
         if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            LOGGER.warn(NO_CRON_CONFIGURED);
             return;
         }
 
@@ -158,7 +159,7 @@ public class RchImportJobHandler {
     public void initTalukaHealthBlockReadJob() {
         String cronExpression = settingsFacade.getProperty(Constants.RCH_TALUKA_HEALTHBLOCK_READ_CRON);
         if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            LOGGER.warn(NO_CRON_CONFIGURED);
             return;
         }
 
@@ -174,7 +175,7 @@ public class RchImportJobHandler {
     public void initHealthFacilityReadJob() {
         String cronExpression = settingsFacade.getProperty(Constants.RCH_HEALTHFACILITY_READ_CRON);
         if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            LOGGER.warn(NO_CRON_CONFIGURED);
             return;
         }
 
@@ -190,7 +191,7 @@ public class RchImportJobHandler {
     public void initHealthSubFacilityReadJob() {
         String cronExpression = settingsFacade.getProperty(Constants.RCH_HEALTHSUBFACILITY_READ_CRON);
         if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            LOGGER.warn(NO_CRON_CONFIGURED);
             return;
         }
 
@@ -206,7 +207,7 @@ public class RchImportJobHandler {
     public void initVillageHealthSubFacilityReadJob() {
         String cronExpression = settingsFacade.getProperty(Constants.RCH_VILLAGEHEALTHSUBFACILITY_READ_CRON);
         if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            LOGGER.warn(NO_CRON_CONFIGURED);
             return;
         }
 
@@ -222,7 +223,7 @@ public class RchImportJobHandler {
     public void initChildReadJob() {
         String cronExpression = settingsFacade.getProperty(Constants.RCH_CHILD_READ_CRON);
         if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            LOGGER.warn(NO_CRON_CONFIGURED);
             return;
         }
 
@@ -238,7 +239,7 @@ public class RchImportJobHandler {
     public void initAshaReadJob() {
         String cronExpression = settingsFacade.getProperty(Constants.RCH_ASHA_READ_CRON);
         if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            LOGGER.warn(NO_CRON_CONFIGURED);
             return;
         }
 

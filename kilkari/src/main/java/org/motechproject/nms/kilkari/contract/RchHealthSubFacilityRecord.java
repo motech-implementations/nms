@@ -30,6 +30,33 @@ public class RchHealthSubFacilityRecord {
         this.districtCode = districtCode;
     }
 
+    public String getHealthSubFacilityName() {
+        return healthSubFacilityName;
+    }
+
+    @XmlElement(name = "HealthSubFacility_Name")
+    public void setHealthSubFacilityName(String healthSubFacilityName) {
+        this.healthSubFacilityName = healthSubFacilityName;
+    }
+
+    public Long getHealthSubFacilityCode() {
+        return healthSubFacilityCode;
+    }
+
+    @XmlElement(name = "HealthSubFacility_ID")
+    public void setHealthSubFacilityCode(Long healthSubFacilityCode) {
+        this.healthSubFacilityCode = healthSubFacilityCode;
+    }
+
+    public DateTime getExecDate() {
+        return execDate;
+    }
+
+    @XmlElement(name = "Exec_Date")
+    public void setExecDate(DateTime execDate) {
+        this.execDate = execDate;
+    }
+
     public String getTalukaCode() {
         return talukaCode;
     }
@@ -48,30 +75,6 @@ public class RchHealthSubFacilityRecord {
         this.healthFacilityCode = healthFacilityCode;
     }
 
-    public Long getHealthSubFacilityCode() {
-        return healthSubFacilityCode;
-    }
 
-    @XmlElement(name = "HealthSubFacility_ID")
-    public void setHealthSubFacilityCode(Long healthSubFacilityCode) {
-        this.healthSubFacilityCode = healthSubFacilityCode;
-    }
 
-    public String getHealthSubFacilityName() {
-        return healthSubFacilityName;
-    }
-
-    @XmlElement(name = "HealthSubFacility_Name")
-    public void setHealthSubFacilityName(String healthSubFacilityName) {
-        this.healthSubFacilityName = healthSubFacilityName;
-    }
-
-    public DateTime getExecDate() {
-        return execDate;
-    }
-
-    @XmlElement(name = "Exec_Date")
-    public void setExecDate(DateTime execDate) {
-        this.execDate = execDate;
-    }
 }
