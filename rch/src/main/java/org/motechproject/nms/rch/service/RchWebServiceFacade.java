@@ -18,11 +18,17 @@ public interface RchWebServiceFacade {
 
     boolean getTalukasData(LocalDate from, LocalDate to, URL endpoint, Long stateId);
 
+    boolean getVillagesData(LocalDate from, LocalDate to, URL endpoint, Long stateId);
+
     boolean getHealthBlockData(LocalDate from, LocalDate to, URL endpoint, Long stateId);
 
     boolean getTalukaHealthBlockData(LocalDate from, LocalDate to, URL endpoint, Long stateId);
 
     boolean getHealthFacilityData(LocalDate from, LocalDate to, URL endpoint, Long stateId);
+
+    boolean getHealthSubFacilityData(LocalDate from, LocalDate to, URL endpoint, Long stateId);
+
+    boolean getVillageHealthSubFacilityData(LocalDate from, LocalDate to, URL endpoint, Long stateId);
 
     boolean getChildrenData(LocalDate from, LocalDate to, URL endpoint, Long stateId);
 
@@ -34,11 +40,17 @@ public interface RchWebServiceFacade {
 
     void readTalukaResponseFromFile(MotechEvent event) throws RchFileManipulationException;
 
+    void readVillageResponseFromFile(MotechEvent event) throws RchFileManipulationException;
+
     void readHealthBlockResponseFromFile(MotechEvent event) throws RchFileManipulationException;
 
     void readTalukaHealthBlockResponseFromFile(MotechEvent event) throws RchFileManipulationException;
 
     void readHealthFacilityResponseFromFile(MotechEvent event) throws RchFileManipulationException;
+
+    void readHealthSubFacilityResponseFromFile(MotechEvent event) throws RchFileManipulationException;
+
+    void readVillageHealthSubFacilityResponseFromFile(MotechEvent event) throws RchFileManipulationException;
 
     void readChildResponseFromFile(MotechEvent event) throws RchFileManipulationException;
 
