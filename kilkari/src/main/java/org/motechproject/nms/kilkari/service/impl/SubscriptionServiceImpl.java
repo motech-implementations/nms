@@ -256,7 +256,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    public Boolean activeSubscriptionByMsisdn(Long msisdn, SubscriptionPackType packType, String motherBeneficiaryId, String childBeneficiaryId) {
+    public Boolean activeSubscriptionByMsisdnMcts(Long msisdn, SubscriptionPackType packType, String motherBeneficiaryId, String childBeneficiaryId) {
         List<Subscriber> subscribers = subscriberDataService.findByNumber(msisdn);
         int subscriptionsSize = 0;
         if (packType == SubscriptionPackType.PREGNANCY) {
@@ -297,6 +297,58 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                             }
                         } else {
                             return ((subscriber.getChild() != null && !subscriber.getChild().getBeneficiaryId().equals(childBeneficiaryId)) || (subscriber.getMother() != null && !subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId)));
+                        }
+                    }
+                }
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
+    public Boolean activeSubscriptionByMsisdnRch(Long msisdn, SubscriptionPackType packType, String motherRchId, String childRchId) {
+        List<Subscriber> subscribers = subscriberDataService.findByNumber(msisdn);
+        int subscriptionsSize = 0;
+        if (packType == SubscriptionPackType.PREGNANCY) {
+            if (subscribers.size() != 0) {
+                for (Subscriber subscriber : subscribers
+                        ) {
+                    List<Subscription> subscriptions = getActiveSubscriptionBySubscriber(subscriber);
+                    subscriptionsSize = subscriptions.size();
+                    if (subscriptionsSize != 0) {
+                        if (subscriptionsSize == 1) {
+                            if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.CHILD)) {
+                                return true;
+                            } else {
+                                return (subscriber.getMother() != null && subscriber.getMother().getRchId() != null && !subscriber.getMother().getRchId().equals(motherRchId));
+                            }
+                        } else {
+                            return (subscriber.getMother() != null && !subscriber.getMother().getRchId().equals(motherRchId));
+                        }
+                    }
+                }
+            } else {
+                return false;
+            }
+        } else {
+            if (subscribers.size() != 0) {
+                for (Subscriber subscriber : subscribers
+                        ) {
+                    List<Subscription> subscriptions = getActiveSubscriptionBySubscriber(subscriber);
+                    subscriptionsSize = subscriptions.size();
+                    if (subscriptionsSize != 0) {
+                        if (subscriptionsSize == 1) {
+                            if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.PREGNANCY) && subscriber.getMother() != null && !motherRchId.equals(subscriber.getMother().getRchId())) {
+                                return true;
+                            } else if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.PREGNANCY) && subscriber.getMother() != null && subscriber.getMother().getRchId().equals(motherRchId)) {
+                                return false;
+                            } else {
+                                return (subscriber.getChild() != null && !subscriber.getChild().getRchId().equals(childRchId));
+                            }
+                        } else {
+                            return ((subscriber.getChild() != null && !subscriber.getChild().getRchId().equals(childRchId)) || (subscriber.getMother() != null && !subscriber.getMother().getRchId().equals(motherRchId)));
                         }
                     }
                 }
@@ -511,6 +563,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         return existingSubscription;
                     }
                     if (type == SubscriptionPackType.CHILD && (existingSubscription.getStatus() == SubscriptionStatus.ACTIVE ||
+                            existingSubscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION ||
                             existingSubscription.getStatus() == SubscriptionStatus.HOLD)) {
                         return existingSubscription;
                     }

@@ -22,14 +22,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.domain.AuditStatus;
 import org.motechproject.nms.kilkari.domain.ReactivatedBeneficiaryAudit;
 import org.motechproject.nms.kilkari.exception.MultipleSubscriberException;
-import org.motechproject.nms.kilkari.repository.SubscriberDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
-import org.motechproject.nms.kilkari.repository.BlockedMsisdnRecordDataService;
-import org.motechproject.nms.kilkari.repository.DeactivationSubscriptionAuditRecordDataService;
-import org.motechproject.nms.kilkari.repository.ReactivatedBeneficiaryAuditDataService;
-import org.motechproject.nms.kilkari.repository.MctsChildDataService;
+import org.motechproject.nms.kilkari.repository.*;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
@@ -75,6 +68,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     private MotherRejectionService motherRejectionService;
     private ReactivatedBeneficiaryAuditDataService reactivatedBeneficiaryAuditDataService;
     private MctsChildDataService mctsChildDataService;
+    private MctsMotherDataService mctsMotherDataService;
 
     @Autowired
     public SubscriberServiceImpl(SubscriberDataService subscriberDataService, SubscriptionService subscriptionService,
@@ -229,7 +223,6 @@ public class SubscriberServiceImpl implements SubscriberService {
         Language language = district.getLanguage();
         SubscriptionPack pack = subscriptionPackDataService.byType(SubscriptionPackType.PREGNANCY);
         String motherBeneficiaryId = motherUpdate.getBeneficiaryId();
-        String childBeneficiaryId = null;
         List<Subscriber> subscriberByMsisdns = getSubscriber(msisdn);
         Subscriber subscriberByMctsId = getSubscriberByBeneficiary(motherUpdate);
 
@@ -239,7 +232,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 return createSubscriber(msisdn, motherUpdate, lmp, pack, language, circle);
             } else { // subscriber (number) is already in use
                 for (Subscriber subscriber : subscriberByMsisdns) {
-                    if (subscriptionService.activeSubscriptionByMsisdn(msisdn, pack.getType(), motherBeneficiaryId, childBeneficiaryId)) {
+                    if (subscriptionService.activeSubscriptionByMsisdnMcts(msisdn, pack.getType(), motherBeneficiaryId, null)) {
                         LOGGER.error("An active subscription is already present for this phone number.");
                         subscriptionErrorDataService.create(new SubscriptionError(msisdn, motherUpdate.getBeneficiaryId(), SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED, pack.getType(), "Msisdn already has an active Subscription", SubscriptionOrigin.MCTS_IMPORT));
                         return null;
@@ -252,18 +245,20 @@ public class SubscriberServiceImpl implements SubscriberService {
                             Subscription childSubscription = subscriptionService.getIVRSubscription(subscriptions, SubscriptionPackType.CHILD);
                             if (childSubscription == null) {
                                 //update the anonymous mother with MCTS details
-                                motherUpdate.setLastMenstrualPeriod(lmp);
                                 subscriber.setLastMenstrualPeriod(lmp);
                                 subscriber.setMother(motherUpdate);
+                                subscriber.getMother().setModificationDate(DateTime.now());
+                                subscriber.setModificationDate(DateTime.now());
                                 return updateOrCreateSubscription(subscriber, motherSubscription, lmp, pack, language, circle, SubscriptionOrigin.MCTS_IMPORT, false);
                             } else {
                                 // Both IVR mother and child exists. Create a new subscriber record for mother and set the same in existing motherSubscription
                                 subscriberByMctsId = new Subscriber(msisdn, language);
-                                motherUpdate.setLastMenstrualPeriod(lmp);
                                 subscriberByMctsId.setLastMenstrualPeriod(lmp);
                                 subscriberByMctsId.setMother(motherUpdate);
                                 subscriberByMctsId = create(subscriberByMctsId);
                                 motherSubscription.setSubscriber(subscriberByMctsId);
+                                subscriberByMctsId.getMother().setModificationDate(DateTime.now());
+                                subscriberByMctsId.setModificationDate(DateTime.now());
                                 return updateOrCreateSubscription(subscriberByMctsId, motherSubscription, lmp, pack, language, circle, SubscriptionOrigin.MCTS_IMPORT, false);
                             }
                         }
@@ -277,15 +272,17 @@ public class SubscriberServiceImpl implements SubscriberService {
                 subscriptionService.deleteBlockedMsisdn(motherUpdate.getId(), subscriberByMctsId.getCallingNumber(), msisdn);
                 subscriberByMctsId.setCallingNumber(msisdn);
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
-                motherUpdate.setLastMenstrualPeriod(lmp);
                 subscriberByMctsId.setLastMenstrualPeriod(lmp);
+                subscriberByMctsId.getMother().setModificationDate(DateTime.now());
+                subscriberByMctsId.setModificationDate(DateTime.now());
                 return updateOrCreateSubscription(subscriberByMctsId, subscription, lmp, pack, language, circle, SubscriptionOrigin.MCTS_IMPORT, false);
             } else {    // we have a subscriber by phone# and also one with the MCTS id
                 for (Subscriber subscriber : subscriberByMsisdns) {
                     if (subscriberByMctsId.getId().equals(subscriber.getId())) {
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
-                        motherUpdate.setLastMenstrualPeriod(lmp);
                         subscriberByMctsId.setLastMenstrualPeriod(lmp);
+                        subscriberByMctsId.getMother().setModificationDate(DateTime.now());
+                        subscriberByMctsId.setModificationDate(DateTime.now());
                         return updateOrCreateSubscription(subscriberByMctsId, subscription, lmp, pack, language, circle, SubscriptionOrigin.MCTS_IMPORT, false);
                     }
                 }
@@ -313,7 +310,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                 }
                 // create subscriber, beneficiary, subscription and return
                 Subscriber subscriberByMsisdn = new Subscriber(msisdn, language);
-                motherUpdate.setLastMenstrualPeriod(lmp);
                 subscriberByMsisdn.setLastMenstrualPeriod(lmp);
                 subscriberByMsisdn.setMother(motherUpdate);
                 subscriberByMsisdn.setCaseNo(caseNo);
@@ -321,8 +317,18 @@ public class SubscriberServiceImpl implements SubscriberService {
                 create(subscriberByMsisdn);
                 return subscriptionService.createSubscription(subscriberByMsisdn, msisdn, language, circle, pack, SubscriptionOrigin.RCH_IMPORT);
             } else {  // subscriber (number) is already in use
-                subscriptionErrorDataService.create(new SubscriptionError(msisdn, motherUpdate.getRchId(), SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED, pack.getType(), "Subscriber exists with this Msisdn", SubscriptionOrigin.RCH_IMPORT));
-                return null;
+                if (subscriptionService.activeSubscriptionByMsisdnRch(msisdn, SubscriptionPackType.PREGNANCY, motherUpdate.getRchId(), null)) {
+                    subscriptionErrorDataService.create(new SubscriptionError(msisdn, motherUpdate.getRchId(), SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED, pack.getType(), "Subscriber exists with this Msisdn", SubscriptionOrigin.RCH_IMPORT));
+                    return null;
+                } else {
+                    Subscriber subscriberByMsisdn = new Subscriber(msisdn, language);
+                    subscriberByMsisdn.setLastMenstrualPeriod(lmp);
+                    subscriberByMsisdn.setMother(motherUpdate);
+                    subscriberByMsisdn.setCaseNo(caseNo);
+                    motherUpdate.setMaxCaseNo(caseNo);
+                    create(subscriberByMsisdn);
+                    return subscriptionService.createSubscription(subscriberByMsisdn, msisdn, language, circle, pack, SubscriptionOrigin.RCH_IMPORT);
+                }
             }
         } else { // subscriberByBeneficiary != null aka. RCH mother exists in motech
             if (subscribersByMsisdn.isEmpty()) {  //no subscriber attached to the new number
@@ -338,26 +344,36 @@ public class SubscriberServiceImpl implements SubscriberService {
                 subscriberByRchId.setCallingNumber(msisdn);
                 subscriberByRchId.setModificationDate(DateTime.now());
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
-                motherUpdate.setLastMenstrualPeriod(lmp);
                 subscriberByRchId.setLastMenstrualPeriod(lmp);
+                subscriberByRchId.getMother().setModificationDate(DateTime.now());
                 return updateOrCreateSubscription(subscriberByRchId, subscription, lmp, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
             } else {  // we have a subscriber by phone# and also one with the RCH id
                 for (Subscriber subscriber : subscribersByMsisdn) {
                     if ((subscriberByRchId.getId().equals(subscriber.getId())) && (subscriberByRchId.getCaseNo() == null || subscriberByRchId.getCaseNo() <= caseNo)) {
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                         motherUpdate.setMaxCaseNo(caseNo);
-                        motherUpdate.setLastMenstrualPeriod(lmp);
                         subscriberByRchId.setLastMenstrualPeriod(lmp);
                         Boolean greaterCaseNo = false;
                         if (subscriberByRchId.getCaseNo() != null && caseNo > subscriberByRchId.getCaseNo()) {
                             greaterCaseNo = true;
                         }
                         subscriberByRchId.setCaseNo(caseNo);
+                        subscriberByRchId.getMother().setModificationDate(DateTime.now());
+                        subscriberByRchId.setModificationDate(DateTime.now());
                         return updateOrCreateSubscription(subscriberByRchId, subscription, lmp, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, greaterCaseNo);
                     }
                 }
-                subscriptionErrorDataService.create(new SubscriptionError(msisdn, motherUpdate.getRchId(), SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED, pack.getType(), "Unrelated Subscribers exists with this Msisdn and RchId", SubscriptionOrigin.RCH_IMPORT));
-                return null;
+                if (subscriptionService.activeSubscriptionByMsisdnRch(msisdn, SubscriptionPackType.PREGNANCY, motherUpdate.getRchId(), null)) {
+                    subscriptionErrorDataService.create(new SubscriptionError(msisdn, motherUpdate.getRchId(), SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED, pack.getType(), "Unrelated Subscribers exists with this Msisdn and RchId", SubscriptionOrigin.RCH_IMPORT));
+                    return null;
+                } else {
+                    subscriberByRchId.setCallingNumber(msisdn);
+                    Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
+                    subscriberByRchId.setLastMenstrualPeriod(lmp);
+                    subscriberByRchId.setModificationDate(DateTime.now());
+                    subscriberByRchId.getMother().setModificationDate(DateTime.now());
+                    return updateOrCreateSubscription(subscriberByRchId, subscription, lmp, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
+                }
             }
         }
     }
@@ -400,7 +416,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 }
             } else { // subscriber number is already in use
                 for (Subscriber subscriber : subscriberByMsisdns) {
-                    if (subscriptionService.activeSubscriptionByMsisdn(msisdn, pack.getType(), motherBeneficiaryId, childBeneficiaryId)) {
+                    if (subscriptionService.activeSubscriptionByMsisdnMcts(msisdn, pack.getType(), motherBeneficiaryId, childBeneficiaryId)) {
                         LOGGER.error("An active subscription is already present for this phone number.");
                         return childRejectionMcts(convertMapToChild(record), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action);
                     }
@@ -421,6 +437,8 @@ public class SubscriberServiceImpl implements SubscriberService {
                             subscriber.setChild(childUpdate);
                             subscriber.setMother(childUpdate.getMother());
                             Subscription childSubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.CHILD);
+                            subscriber.getChild().setModificationDate(DateTime.now());
+                            subscriber.setModificationDate(DateTime.now());
                             finalSubscription = updateOrCreateSubscription(subscriber, childSubscription, dob, pack, language, circle, SubscriptionOrigin.MCTS_IMPORT, false);
                         } else { // IVR mother. Check for IVR child. If not found, create a new subscriber
                             Subscription childSubscription = splitSubscribers(subscriber, msisdn, childUpdate, dob, pack, language, circle);
@@ -451,8 +469,18 @@ public class SubscriberServiceImpl implements SubscriberService {
                 }
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
                 subscriberByMctsId.setDateOfBirth(dob);
+                subscriberByMctsId.getChild().setModificationDate(DateTime.now());
+                subscriberByMctsId.setModificationDate(DateTime.now());
                 finalSubscription = updateOrCreateSubscription(subscriberByMctsId, subscription, dob, pack, language, circle, SubscriptionOrigin.MCTS_IMPORT, false);
-            } else {    // we have a subscriber by phone# and also one with the MCTS id
+            } else if (subscriberByMsisdns.isEmpty() && childUpdate.getMother() == null) {
+                subscriberByMctsId.setCallingNumber(msisdn);
+                Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
+                subscriberByMctsId.setDateOfBirth(dob);
+                subscriberByMctsId.getChild().setModificationDate(DateTime.now());
+                subscriberByMctsId.setModificationDate(DateTime.now());
+                finalSubscription = updateOrCreateSubscription(subscriberByMctsId, subscription, dob, pack, language, circle, SubscriptionOrigin.MCTS_IMPORT, false);
+            }
+            else {    // we have a subscriber by phone# and also one with the MCTS id
                 Boolean isSameSubscriber = true;
                 for (Subscriber subscriber : subscriberByMsisdns) {
                     if (subscriberByMctsId.getId().equals(subscriber.getId())) {
@@ -461,6 +489,8 @@ public class SubscriberServiceImpl implements SubscriberService {
                         if (subscriberByMctsId.getMother() == null) {
                             subscriberByMctsId.setMother(childUpdate.getMother());
                         }
+                        subscriberByMctsId.getChild().setModificationDate(DateTime.now());
+                        subscriberByMctsId.setModificationDate(DateTime.now());
                         finalSubscription = updateOrCreateSubscription(subscriberByMctsId, subscription, dob, pack, language, circle, SubscriptionOrigin.MCTS_IMPORT, false);
                     } else {
                         //A different subscriber found with same mobile number
@@ -474,7 +504,6 @@ public class SubscriberServiceImpl implements SubscriberService {
         }
 
         liveBirthChildDeathCheck(finalSubscription, record);
-        mctsChildDataService.update(childUpdate);
 
         return childRejectionMcts(convertMapToChild(record), true, null, action);
 
@@ -504,6 +533,12 @@ public class SubscriberServiceImpl implements SubscriberService {
         List<Subscriber> subscribersByMsisdn = getSubscriber(msisdn);
         Subscriber subscriberByRchId = getSubscriberByBeneficiary(childUpdate);
         Subscription finalSubscription = null;
+        String motherRchId;
+        if (childUpdate.getMother() != null) {
+            motherRchId = childUpdate.getMother().getRchId();
+        } else {
+            motherRchId = null;
+        }
 
         if (subscriberByRchId != null) { //subscriber exists with the provided RCH id
             if (subscribersByMsisdn.isEmpty()) { //no subscriber with provided msisdn
@@ -517,6 +552,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 }
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                 subscriberByRchId.setDateOfBirth(dob);
+                subscriberByRchId.getChild().setModificationDate(DateTime.now());
                 finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
             } else {
                 //subscriber found with provided msisdn
@@ -528,6 +564,9 @@ public class SubscriberServiceImpl implements SubscriberService {
                             subscriberByRchId.setMother(childUpdate.getMother());
                         }
                         subscriberByRchId.setDateOfBirth(dob);
+                        subscriberByRchId.getChild().setModificationDate(DateTime.now());
+                        subscriberByRchId.getChild().setDateOfBirth(dob);
+                        subscriberByRchId.setModificationDate(DateTime.now());
                         finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
                     } else {
                         //A different subscriber found with same mobile number
@@ -535,10 +574,23 @@ public class SubscriberServiceImpl implements SubscriberService {
                     }
                 }
                 if (!isSameSubscriber) {
-                    return childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action);
+                    if (subscriptionService.activeSubscriptionByMsisdnRch(msisdn, SubscriptionPackType.CHILD, motherRchId, childUpdate.getRchId())) {
+                        return childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action);
+                    } else {
+                        subscriberByRchId.setCallingNumber(msisdn);
+                        if (subscriberByRchId.getMother() == null) {
+                            subscriberByRchId.setMother(childUpdate.getMother());
+                        }
+                        Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
+                        subscriberByRchId.setDateOfBirth(dob);
+                        subscriberByRchId.getChild().setModificationDate(DateTime.now());
+                        subscriberByRchId.setModificationDate(DateTime.now());
+                        finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
+                    }
                 }
             }
         } else { // no subscribers found with the provided RCH id
+            LOGGER.debug("here1");
             if (subscribersByMsisdn.isEmpty() && childUpdate.getMother() != null) { // no subscriber exists with provided msisdn
                 Subscriber subscriberByRchMotherId = getSubscriberByBeneficiary(childUpdate.getMother());
                 if (subscriberByRchMotherId == null) { // no subscriber exists with RCH mother id either
@@ -554,12 +606,14 @@ public class SubscriberServiceImpl implements SubscriberService {
                         //update subscriber with child
                         subscriberByRchMotherId.setChild(childUpdate);
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchMotherId, pack.getType());
+                        subscriberByRchMotherId.getChild().setModificationDate(DateTime.now());
                         finalSubscription = updateOrCreateSubscription(subscriberByRchMotherId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
                     } else {
                         return childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.ALREADY_SUBSCRIBED.toString(), action);
                     }
                 }
             } else { //subscriber exists with provided msisdn
+                LOGGER.debug("here2");
                 if (subscribersByMsisdn.size() == 1 && childUpdate.getMother() != null && subscribersByMsisdn.get(0).getMother() != null && subscribersByMsisdn.get(0).getChild() == null) {
                     //update subscriber with child
                     if (subscribersByMsisdn.get(0).getMother().getRchId().equals(childUpdate.getMother().getRchId())) {
@@ -567,9 +621,19 @@ public class SubscriberServiceImpl implements SubscriberService {
                         subscriber.setDateOfBirth(dob);
                         subscriber.setChild(childUpdate);
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriber, pack.getType());
+                        subscriber.getChild().setModificationDate(DateTime.now());
                         finalSubscription = updateOrCreateSubscription(subscriber, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
                     } else {
-                        return childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action);
+                        if (subscriptionService.activeSubscriptionByMsisdnRch(msisdn, SubscriptionPackType.CHILD, motherRchId, childUpdate.getRchId())) {
+                            return childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action);
+                        } else {
+                            Subscriber subscriber = new Subscriber(msisdn, language);
+                            subscriber.setDateOfBirth(dob);
+                            subscriber.setMother(childUpdate.getMother());
+                            subscriber.setChild(childUpdate);
+                            create(subscriber);
+                            finalSubscription = subscriptionService.createSubscription(subscriber, msisdn, language, pack, SubscriptionOrigin.RCH_IMPORT);
+                        }
                     }
 
                 } else if (subscribersByMsisdn.size() == 0 && childUpdate.getMother() == null) {
@@ -580,13 +644,23 @@ public class SubscriberServiceImpl implements SubscriberService {
                     create(subscriber);
                     finalSubscription = subscriptionService.createSubscription(subscriber, msisdn, language, pack, SubscriptionOrigin.RCH_IMPORT);
                 } else {
-                    return childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action);
+                    if (subscriptionService.activeSubscriptionByMsisdnRch(msisdn, SubscriptionPackType.CHILD, motherRchId, childUpdate.getRchId())) {
+                        return childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action);
+                    } else {
+                        Subscriber subscriber = new Subscriber(msisdn, language);
+                        subscriber.setDateOfBirth(dob);
+                        if (childUpdate.getMother() != null) {
+                            subscriber.setMother(childUpdate.getMother());
+                        }
+                        subscriber.setChild(childUpdate);
+                        create(subscriber);
+                        finalSubscription = subscriptionService.createSubscription(subscriber, msisdn, language, pack, SubscriptionOrigin.RCH_IMPORT);
+                    }
                 }
             }
         }
 
         liveBirthChildDeathCheck(finalSubscription, record);
-        mctsChildDataService.update(childUpdate);
 
         return childRejectionRch(convertMapToRchChild(record), true, null, action);
     }
@@ -595,6 +669,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         Subscription deactivatedSubscripion = subscriptionService.getLatestDeactivatedSubscription(subscriber, pack.getType());
         if (subscription != null && (SubscriptionStatus.ACTIVE == subscription.getStatus() || SubscriptionStatus.PENDING_ACTIVATION == subscription.getStatus() || SubscriptionStatus.HOLD == subscription.getStatus())) {
             subscriptionService.updateStartDate(subscription, dateTime);
+            subscription.setModificationDate(DateTime.now());
             return subscription;
         } else if (subscription == null && deactivatedSubscripion != null && pack.getType() == SubscriptionPackType.CHILD) {
             if (DeactivationReason.LOW_LISTENERSHIP == deactivatedSubscripion.getDeactivationReason() ||  DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED == deactivatedSubscripion.getDeactivationReason()) {
