@@ -256,7 +256,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 File localResponseFile = scpResponseToLocal(rchImportFacilitatorMother.getFileName());
                 if (localResponseFile != null) {
                     LOGGER.info("RCH Mother response file successfully copied from remote server to local directory.");
-                    DS_DataResponseDS_DataResult result = readResponses(localResponseFile);
+                    String result = readResponsesFromXml(localResponseFile);
                     Long stateId = rchImportFacilitatorMother.getStateId();
                     State state = stateDataService.findByCode(stateId);
 
@@ -267,33 +267,36 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     LocalDate endDate = rchImportFacilitatorMother.getEndDate();
 
                     try {
-                        validMothersDataResponse(result, stateId);
-                        List motherResultFeed = result.get_any()[1].getChildren();
+                        if (result.contains(RECORDS)) {
 
-                        RchMothersDataSet mothersDataSet = (motherResultFeed == null) ?
-                                null :
-                                (RchMothersDataSet) MarshallUtils.unmarshall(motherResultFeed.get(0).toString(), RchMothersDataSet.class);
+                            RchMothersDataSet mothersDataSet = (result == null) ?
+                                    null :
+                                    (RchMothersDataSet) MarshallUtils.unmarshall(result, RchMothersDataSet.class);
 
-                        LOGGER.info("Starting RCH mother import");
-                        StopWatch stopWatch = new StopWatch();
-                        stopWatch.start();
+                            LOGGER.info("Starting RCH mother import");
+                            StopWatch stopWatch = new StopWatch();
+                            stopWatch.start();
 
-                        if (mothersDataSet == null || mothersDataSet.getRecords() == null) {
-                            String warning = String.format("No mother data set received from RCH for %s state", stateName);
-                            LOGGER.warn(warning);
-                            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, warning));
+                            if (mothersDataSet == null || mothersDataSet.getRecords() == null) {
+                                String warning = String.format("No mother data set received from RCH for %s state", stateName);
+                                LOGGER.warn(warning);
+                                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, warning));
+                            } else {
+                                LOGGER.info("Received {} mother records from RCH for {} state", sizeNullSafe(mothersDataSet.getRecords()), stateName);
+
+                                RchImportAudit audit = saveImportedMothersData(mothersDataSet, stateName, stateCode, startDate, endDate);
+                                rchImportAuditDataService.create(audit);
+                                stopWatch.stop();
+                                double seconds = stopWatch.getTime() / THOUSAND;
+                                LOGGER.info("Finished RCH mother import dispatch in {} seconds. Accepted {} mothers, Rejected {} mothers",
+                                        seconds, audit.getAccepted(), audit.getRejected());
+
+                                LOGGER.info("fromDate for delete {} {}", startDate, endDate);
+                                deleteRchImportFailRecords(startDate, endDate, RchUserType.MOTHER, stateId);
+                            }
                         } else {
-                            LOGGER.info("Received {} mother records from RCH for {} state", sizeNullSafe(mothersDataSet.getRecords()), stateName);
-
-                            RchImportAudit audit = saveImportedMothersData(mothersDataSet, stateName, stateCode, startDate, endDate);
-                            rchImportAuditDataService.create(audit);
-                            stopWatch.stop();
-                            double seconds = stopWatch.getTime() / THOUSAND;
-                            LOGGER.info("Finished RCH mother import dispatch in {} seconds. Accepted {} mothers, Rejected {} mothers",
-                                    seconds, audit.getAccepted(), audit.getRejected());
-
-                            LOGGER.info("fromDate for delete {} {}", startDate, endDate);
-                            deleteRchImportFailRecords(startDate, endDate, RchUserType.MOTHER, stateId);
+                            String warning = String.format("No Mother data set received from RCH for %d stateId", stateId);
+                            LOGGER.warn(warning);
                         }
                     } catch (JAXBException e) {
                         throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH mother data from %s location.", stateId), e);
@@ -362,7 +365,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             for (RchImportFacilitator rchImportFacilitatorChild : rchImportFacilitatorsChild
                     ) {
                 File localResponseFile = scpResponseToLocal(rchImportFacilitatorChild.getFileName());
-                DS_DataResponseDS_DataResult result = readResponses(localResponseFile);
+                String result = readResponsesFromXml(localResponseFile);
                 Long stateId = rchImportFacilitatorChild.getStateId();
                 State state = stateDataService.findByCode(stateId);
 
@@ -372,32 +375,35 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 LocalDate startReferenceDate = rchImportFacilitatorChild.getStartDate();
                 LocalDate endReferenceDate = rchImportFacilitatorChild.getEndDate();
                 try {
-                    validChildrenDataResponse(result, stateId);
-                    List childResultFeed = result.get_any()[1].getChildren();
-                    RchChildrenDataSet childrenDataSet = (childResultFeed == null) ?
-                            null :
-                            (RchChildrenDataSet) MarshallUtils.unmarshall(childResultFeed.get(0).toString(), RchChildrenDataSet.class);
+                    if (result.contains(RECORDS)) {
+                        RchChildrenDataSet childrenDataSet = (result == null) ?
+                                null :
+                                (RchChildrenDataSet) MarshallUtils.unmarshall(result, RchChildrenDataSet.class);
 
-                    LOGGER.info("Starting RCH children import for stateId: {}", stateId);
-                    StopWatch stopWatch = new StopWatch();
-                    stopWatch.start();
+                        LOGGER.info("Starting RCH children import for stateId: {}", stateId);
+                        StopWatch stopWatch = new StopWatch();
+                        stopWatch.start();
 
-                    if (childrenDataSet == null || childrenDataSet.getRecords() == null) {
-                        String warning = String.format("No child data set received from RCH for %s state", stateName);
-                        LOGGER.warn(warning);
-                        rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, warning));
+                        if (childrenDataSet == null || childrenDataSet.getRecords() == null) {
+                            String warning = String.format("No child data set received from RCH for %s state", stateName);
+                            LOGGER.warn(warning);
+                            rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, warning));
+                        } else {
+                            LOGGER.info("Received {} children records from RCH for {} state", sizeNullSafe(childrenDataSet.getRecords()), stateName);
+
+                            RchImportAudit audit = saveImportedChildrenData(childrenDataSet, stateName, stateCode, startReferenceDate, endReferenceDate);
+                            rchImportAuditDataService.create(audit);
+                            stopWatch.stop();
+                            double seconds = stopWatch.getTime() / THOUSAND;
+                            LOGGER.info("Finished children import dispatch in {} seconds. Accepted {} children, Rejected {} children",
+                                    seconds, audit.getAccepted(), audit.getRejected());
+
+                            // Delete RchImportFailRecords once import is successful
+                            deleteRchImportFailRecords(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateId);
+                        }
                     } else {
-                        LOGGER.info("Received {} children records from RCH for {} state", sizeNullSafe(childrenDataSet.getRecords()), stateName);
-
-                        RchImportAudit audit = saveImportedChildrenData(childrenDataSet, stateName, stateCode, startReferenceDate, endReferenceDate);
-                        rchImportAuditDataService.create(audit);
-                        stopWatch.stop();
-                        double seconds = stopWatch.getTime() / THOUSAND;
-                        LOGGER.info("Finished children import dispatch in {} seconds. Accepted {} children, Rejected {} children",
-                                seconds, audit.getAccepted(), audit.getRejected());
-
-                        // Delete RchImportFailRecords once import is successful
-                        deleteRchImportFailRecords(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateId);
+                        String warning = String.format("No Child data set received from RCH for %d stateId", stateId);
+                        LOGGER.warn(warning);
                     }
                 } catch (JAXBException e) {
                     throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH children data from %s location.", stateId), e);
