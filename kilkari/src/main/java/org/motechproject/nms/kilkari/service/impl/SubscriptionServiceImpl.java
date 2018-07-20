@@ -540,6 +540,45 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return true;
     }
 
+    private boolean enrollmentPreconditionCheckForUpkeep(Subscriber subscriber, SubscriptionPack pack, SubscriptionOrigin importOrigin) {
+        if (pack.getType() == SubscriptionPackType.CHILD) {
+
+            if (subscriber.getDateOfBirth() == null) {
+                return false;
+            }
+
+            if (Subscription.hasCompletedForStartDate(subscriber.getDateOfBirth(), DateTime.now(), pack)) {
+                return false;
+            }
+
+            if (getActiveSubscriptionForUpkeep(subscriber, SubscriptionPackType.CHILD) != null) {
+                // reject the subscription if it already exists
+                logRejectedSubscription(subscriber.getCallingNumber(), (importOrigin == SubscriptionOrigin.MCTS_IMPORT) ? subscriber.getChild().getBeneficiaryId() : subscriber.getChild().getRchId(),
+                        SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD, importOrigin);
+                return false;
+            }
+        } else { // SubscriptionPackType.PREGNANCY
+
+            if (subscriber.getLastMenstrualPeriod() == null) {
+                return false;
+            }
+
+            if (Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(KilkariConstants.THREE_MONTHS),
+                    DateUtil.now(), pack)) {
+                return false;
+            }
+
+            if (getActiveSubscriptionForUpkeep(subscriber, SubscriptionPackType.PREGNANCY) != null) {
+                // reject the subscription if it already exists
+                logRejectedSubscription(subscriber.getCallingNumber(), (importOrigin == SubscriptionOrigin.MCTS_IMPORT) ? subscriber.getMother().getBeneficiaryId() : subscriber.getMother().getRchId(),
+                        SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY, importOrigin);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private void logRejectedSubscription(long callingNumber, String beneficiaryId, SubscriptionRejectionReason reason,
                                          SubscriptionPackType packType, SubscriptionOrigin importOrigin) {
         SubscriptionError error = new SubscriptionError(callingNumber, beneficiaryId, reason, packType, "Active subscription exists for same pack", importOrigin);
@@ -565,6 +604,30 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     if (type == SubscriptionPackType.CHILD && (existingSubscription.getStatus() == SubscriptionStatus.ACTIVE ||
                             existingSubscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION ||
                             existingSubscription.getStatus() == SubscriptionStatus.HOLD)) {
+                        return existingSubscription;
+                    }
+                }
+            }
+            return null;
+        }
+        return null;
+    }
+
+    private Subscription getActiveSubscriptionForUpkeep(Subscriber subscriber, SubscriptionPackType type) {
+        if (subscriber != null && subscriber.getSubscriptions() != null) {
+            Iterator<Subscription> subscriptionIterator = subscriber.getSubscriptions().iterator();
+            Subscription existingSubscription;
+
+            while (subscriptionIterator.hasNext()) {
+                existingSubscription = subscriptionIterator.next();
+                if (existingSubscription.getSubscriptionPack().getType() == type) {
+                    if (type == SubscriptionPackType.PREGNANCY &&
+                            (existingSubscription.getStatus() == SubscriptionStatus.ACTIVE ||
+                                    existingSubscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
+                        return existingSubscription;
+                    }
+                    if (type == SubscriptionPackType.CHILD && (existingSubscription.getStatus() == SubscriptionStatus.ACTIVE ||
+                            existingSubscription.getStatus() == SubscriptionStatus.PENDING_ACTIVATION)) {
                         return existingSubscription;
                     }
                 }
@@ -742,7 +805,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         Subscriber currentSubscriber = currentSubscription.getSubscriber();
         SubscriptionPack currentPack = currentSubscription.getSubscriptionPack();
 
-        if (enrollmentPreconditionCheck(currentSubscriber, currentPack, currentSubscription.getOrigin())) { // Don't need a full check but it doesn't hurt
+        if (enrollmentPreconditionCheckForUpkeep(currentSubscriber, currentPack, currentSubscription.getOrigin())) { // Don't need a full check but it doesn't hurt
             currentSubscription.setStatus(SubscriptionStatus.ACTIVE);
             subscriptionDataService.update(currentSubscription);
             return true;
