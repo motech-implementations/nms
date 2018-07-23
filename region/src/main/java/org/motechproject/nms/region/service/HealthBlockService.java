@@ -10,6 +10,9 @@ import java.util.Map;
 
 public interface HealthBlockService {
     HealthBlock findByTalukaAndCode(Taluka taluka, Long code);
+
+    HealthBlock findByDistrictAndCode(District district, Long code);
+
     HealthBlock create(HealthBlock healthBlock);
     HealthBlock update(HealthBlock healthBlock);
 
