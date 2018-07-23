@@ -733,7 +733,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
         for (Map<String, Object> record : rejectedRchChildren) {
             action = (String) record.get(KilkariConstants.ACTION);
-            LOGGER.error("Existing Child Record with same MSISDN in the data set");
+            LOGGER.debug("Existing Child Record with same MSISDN in the data set");
             childImportRejection = childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action);
             rejectedChilds.put(childImportRejection.getRegistrationNo(), childImportRejection);
             rejectionStatus.put(childImportRejection.getRegistrationNo(), childImportRejection.getAccepted());
@@ -865,7 +865,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 String flwId = record.getGfId().toString();
                 FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
                 if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || state != flw.getState()))  && flw.getStatus() != FrontLineWorkerStatus.ANONYMOUS) {
-                    LOGGER.error("Existing FLW with same MSISDN but different MCTS ID");
+                    LOGGER.debug("Existing FLW with same MSISDN but different MCTS ID");
                     flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
                     rejected++;
                 } else {
