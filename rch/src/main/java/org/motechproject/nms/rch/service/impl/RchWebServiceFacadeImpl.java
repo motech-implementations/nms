@@ -615,7 +615,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
         for (Map<String, Object> record : rejectedRchMothers) {
             action = (String) record.get(KilkariConstants.ACTION);
-            LOGGER.error("Existing Mother Record with same MSISDN in the data set");
+            LOGGER.debug("Existing Mother Record with same MSISDN in the data set");
             motherImportRejection = motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action);
             rejectedMothers.put(motherImportRejection.getRegistrationNo(), motherImportRejection);
             rejectionStatus.put(motherImportRejection.getRegistrationNo(), motherImportRejection.getAccepted());
@@ -847,7 +847,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         String action = "";
         for (RchAnmAshaRecord record : rejectedRchAshas) {
             action = this.rchFlwActionFinder(record);
-            LOGGER.error("Existing Asha Record with same MSISDN in the data set");
+            LOGGER.debug("Existing Asha Record with same MSISDN in the data set");
             flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action));
         }
         List<RchAnmAshaRecord> acceptedRchAshas = rchAshaRecordsSet.get(1);
@@ -884,7 +884,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                             flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.INVALID_LOCATION.toString(), action));
                             rejected++;
                         } catch (FlwImportException e) {
-                            LOGGER.error("Existing FLW with same MSISDN but different RCH ID", e);
+                            LOGGER.debug("Existing FLW with same MSISDN but different RCH ID", e);
                             flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
                             rejected++;
                         } catch (FlwExistingRecordException e) {
