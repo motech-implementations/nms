@@ -233,7 +233,7 @@ public class SubscriberServiceImpl implements SubscriberService {
             } else { // subscriber (number) is already in use
                 for (Subscriber subscriber : subscriberByMsisdns) {
                     if (subscriptionService.activeSubscriptionByMsisdnMcts(msisdn, pack.getType(), motherBeneficiaryId, null)) {
-                        LOGGER.error("An active subscription is already present for this phone number.");
+                        LOGGER.debug("An active subscription is already present for this phone number.");
                         subscriptionErrorDataService.create(new SubscriptionError(msisdn, motherUpdate.getBeneficiaryId(), SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED, pack.getType(), "Msisdn already has an active Subscription", SubscriptionOrigin.MCTS_IMPORT));
                         return null;
                     }
@@ -417,7 +417,7 @@ public class SubscriberServiceImpl implements SubscriberService {
             } else { // subscriber number is already in use
                 for (Subscriber subscriber : subscriberByMsisdns) {
                     if (subscriptionService.activeSubscriptionByMsisdnMcts(msisdn, pack.getType(), motherBeneficiaryId, childBeneficiaryId)) {
-                        LOGGER.error("An active subscription is already present for this phone number.");
+                        LOGGER.debug("An active subscription is already present for this phone number.");
                         return childRejectionMcts(convertMapToChild(record), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action);
                     }
 
