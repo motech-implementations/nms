@@ -63,7 +63,7 @@
         <scm.developerConnection>scm:git:https://github.com/motech/modules.git</scm.developerConnection>
         <scm.url>https://github.com/motech/modules</scm.url>
     </properties>
-
+Su
     <dependencies>
         <!-- Spring -->
         <dependency>
