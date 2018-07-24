@@ -319,7 +319,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     subscriptionsSize = subscriptions.size();
                     if (subscriptionsSize != 0) {
                         if (subscriptionsSize == 1) {
-                            if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.CHILD)) {
+                            if (SubscriptionPackType.CHILD.equals(subscriptions.get(0).getSubscriptionPack().getType())) {
                                 return true;
                             } else {
                                 return (subscriber.getMother() != null && subscriber.getMother().getRchId() != null && !subscriber.getMother().getRchId().equals(motherRchId));
@@ -340,9 +340,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     subscriptionsSize = subscriptions.size();
                     if (subscriptionsSize != 0) {
                         if (subscriptionsSize == 1) {
-                            if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.PREGNANCY) && subscriber.getMother() != null && !motherRchId.equals(subscriber.getMother().getRchId())) {
+                            if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && !subscriber.getMother().getRchId().equals(motherRchId)) {
                                 return true;
-                            } else if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.PREGNANCY) && subscriber.getMother() != null && subscriber.getMother().getRchId().equals(motherRchId)) {
+                            } else if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && motherRchId.equals(subscriber.getMother().getRchId())) {
                                 return false;
                             } else {
                                 return (subscriber.getChild() != null && !subscriber.getChild().getRchId().equals(childRchId));
