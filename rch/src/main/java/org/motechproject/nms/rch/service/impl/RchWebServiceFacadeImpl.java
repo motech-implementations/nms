@@ -155,6 +155,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String LOCAL_RESPONSE_DIR = "rch.local_response_dir";
     private static final String REMOTE_RESPONSE_DIR = "rch.remote_response_dir";
     private static final String REMOTE_RESPONSE_DIR_CSV = "rch.remote_response_dir_csv";
+    private static final String REMOTE_RESPONSE_DIR_XML = "rch.remote_response_dir_xml";
     private static final String LOC_UPDATE_DIR_RCH = "rch.loc_update_dir";
     private static final String REMOTE_RESPONSE_DIR_LOCATION = "rch.remote_response_dir_locations";
     private static final String NEXT_LINE = "\r\n";
@@ -1667,7 +1668,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
         for (Map<String, Object> record : rejectedRchMothers) {
             action = (String) record.get(KilkariConstants.ACTION);
-            LOGGER.error("Existing Mother Record with same MSISDN in the data set");
+            LOGGER.debug("Existing Mother Record with same MSISDN in the data set");
             motherImportRejection = motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action);
             rejectedMothers.put(motherImportRejection.getRegistrationNo(), motherImportRejection);
             rejectionStatus.put(motherImportRejection.getRegistrationNo(), motherImportRejection.getAccepted());
@@ -1785,7 +1786,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
         for (Map<String, Object> record : rejectedRchChildren) {
             action = (String) record.get(KilkariConstants.ACTION);
-            LOGGER.error("Existing Child Record with same MSISDN in the data set");
+            LOGGER.debug("Existing Child Record with same MSISDN in the data set");
             childImportRejection = childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action);
             rejectedChilds.put(childImportRejection.getRegistrationNo(), childImportRejection);
             rejectionStatus.put(childImportRejection.getRegistrationNo(), childImportRejection.getAccepted());
@@ -1899,7 +1900,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         String action = "";
         for (RchAnmAshaRecord record : rejectedRchAshas) {
             action = this.rchFlwActionFinder(record);
-            LOGGER.error("Existing Asha Record with same MSISDN in the data set");
+            LOGGER.debug("Existing Asha Record with same MSISDN in the data set");
             flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action));
         }
         List<RchAnmAshaRecord> acceptedRchAshas = rchAshaRecordsSet.get(1);
@@ -1917,7 +1918,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 String flwId = record.getGfId().toString();
                 FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
                 if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || state != flw.getState()))  && flw.getStatus() != FrontLineWorkerStatus.ANONYMOUS) {
-                    LOGGER.error("Existing FLW with same MSISDN but different MCTS ID");
+                    LOGGER.debug("Existing FLW with same MSISDN but different MCTS ID");
                     flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
                     rejected++;
                 } else {
@@ -1936,7 +1937,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                             flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.INVALID_LOCATION.toString(), action));
                             rejected++;
                         } catch (FlwImportException e) {
-                            LOGGER.error("Existing FLW with same MSISDN but different RCH ID", e);
+                            LOGGER.debug("Existing FLW with same MSISDN but different RCH ID", e);
                             flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
                             rejected++;
                         } catch (FlwExistingRecordException e) {
@@ -2213,6 +2214,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return new File(remoteResponseFile(fileName));
     }
 
+    private File fileForXmlLocUpdate(String fileName) {
+        return new File(remoteResponseFileForXml(fileName));
+    }
+
     public String localResponseFile(String file) {
         String localFile = settingsFacade.getProperty(LOCAL_RESPONSE_DIR);
         localFile += localFile.endsWith("/") ? "" : "/";
@@ -2222,6 +2227,13 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     public String remoteResponseFile(String file) {
         String remoteFile = settingsFacade.getProperty(REMOTE_RESPONSE_DIR);
+        remoteFile += remoteFile.endsWith("/") ? "" : "/";
+        remoteFile += file;
+        return remoteFile;
+    }
+
+    public String remoteResponseFileForXml(String file) {
+        String remoteFile = settingsFacade.getProperty(REMOTE_RESPONSE_DIR_XML);
         remoteFile += remoteFile.endsWith("/") ? "" : "/";
         remoteFile += file;
         return remoteFile;
@@ -2367,7 +2379,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
             for (RchImportFacilitator rchImportFile : rchImportFiles
                     ) {
-                File remoteResponseFile = fileForLocUpdate(rchImportFile.getFileName());
+                File remoteResponseFile = fileForXmlLocUpdate(rchImportFile.getFileName());
 
                 if (remoteResponseFile.exists() && !remoteResponseFile.isDirectory()) {
 
