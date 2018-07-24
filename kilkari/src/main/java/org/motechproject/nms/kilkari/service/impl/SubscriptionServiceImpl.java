@@ -342,7 +342,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         if (subscriptionsSize == 1) {
                             if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && !subscriber.getMother().getRchId().equals(motherRchId)) {
                                 return true;
-                            } else if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && motherRchId.equals(subscriber.getMother().getRchId())) {
+                            } else if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && subscriber.getMother().getRchId().equals(motherRchId)) {
                                 return false;
                             } else {
                                 return (subscriber.getChild() != null && !subscriber.getChild().getRchId().equals(childRchId));

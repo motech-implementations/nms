@@ -612,9 +612,9 @@ public class SubscriberServiceImpl implements SubscriberService {
                     }
                 }
             } else { //subscriber exists with provided msisdn
-                if (subscribersByMsisdn.size() == 1 && childUpdate.getMother() != null && subscribersByMsisdn.get(0).getMother() != null && subscribersByMsisdn.get(0).getChild() == null) {
+                if (subscribersByMsisdn.size() == 1 && (childUpdate.getMother() != null) && (subscribersByMsisdn.get(0).getMother() != null) && subscribersByMsisdn.get(0).getChild() == null) {
                     //update subscriber with child
-                    if (childUpdate.getMother().getRchId().equals(subscribersByMsisdn.get(0).getMother().getRchId())) {
+                    if (childUpdate.getMother().getRchId() != null  && subscribersByMsisdn.get(0).getMother().getRchId() != null && childUpdate.getMother().getRchId().equals(subscribersByMsisdn.get(0).getMother().getRchId())) {
                         Subscriber subscriber = subscribersByMsisdn.get(0);
                         subscriber.setDateOfBirth(dob);
                         subscriber.setChild(childUpdate);
