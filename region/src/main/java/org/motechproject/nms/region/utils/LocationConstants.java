@@ -27,6 +27,7 @@ public final class LocationConstants {
     public static final String HEALTHSUBFACILITY_ID = "HealthSubFacility_ID";
     public static final String HEALTHSUBFACILITY_NAME = "HealthSubFacility_Name";
 
+    public static final String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
 
 
     public static final String OR_SQL_STRING = " OR ";
