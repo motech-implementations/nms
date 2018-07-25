@@ -15,7 +15,11 @@ public interface MctsBeneficiaryImportReaderService {
 
     int importMotherData(Reader reader, SubscriptionOrigin importOrigin) throws IOException;
 
+    List<List<Map<String, Object>>> splitRecords(List<Map<String, Object>> recordList, String contactNumber);
+
     List<Map<String, Object>> readCsv(BufferedReader bufferedReader, Map<String, CellProcessor> cellProcessorMapper) throws IOException;
+
+    List<Map<String, Object>> sortByMobileNumber(List<Map<String, Object>> recordList, Boolean mctsImport);
 
     Map<String, CellProcessor> getRchChildProcessorMapping();
 }
