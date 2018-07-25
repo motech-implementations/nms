@@ -1502,13 +1502,21 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             } else {
                 List<RchAnmAshaRecord> anmAshaRecords = ashaDataSet.getRecords();
                 LOGGER.debug("Records read {}", anmAshaRecords.size());
-                List<String> existingAshaIds = getDatabaseAsha(anmAshaRecords);
+                State state = stateDataService.findByCode(stateId);
+                List<FrontLineWorker> existingAshas = getDatabaseAsha(anmAshaRecords,state.getId());
+                Map<String, Long> existingAshaIds = new HashMap<>();
+                List<String> mctsIds = new ArrayList<>();
+                for (FrontLineWorker asha : existingAshas) {
+                    existingAshaIds.put(asha.getMctsFlwId(), asha.getId());
+                    mctsIds.add(asha.getMctsFlwId());
+                }
                 for (RchAnmAshaRecord record : anmAshaRecords
                      ) {
-                    if(existingAshaIds.contains(record.getGfId().toString())) {
+                    if(mctsIds.contains(record.getGfId().toString())) {
                         Map<String, Object> locMap = new HashMap<>();
                         toMapLoc(locMap, record);
-                        locMap.put(FlwConstants.ID, record.getGfId());
+                        locMap.put(FlwConstants.ID, existingAshaIds.get(record.getGfId().toString()));
+                        locMap.put(FlwConstants.GF_ID, record.getGfId());
                         locArrList.add(locMap);
                     }
                 }
@@ -1537,13 +1545,20 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 RchAnmAshaRecord rchAnmAshaRecord = frontLineWorkerImportService.convertMapToRchAsha(record);
                 rchAshaRecords.add(rchAnmAshaRecord);
             }
-            List<String> existingAshaIds = getDatabaseAsha(rchAshaRecords);
-
+            State state = stateDataService.findByCode(stateId);
+            List<FrontLineWorker> existingAshas = getDatabaseAsha(rchAshaRecords,state.getId());
+            Map<String, Long> existingAshaIds = new HashMap<>();
+            List<String> mctsIds = new ArrayList<>();
+            for (FrontLineWorker asha : existingAshas) {
+                existingAshaIds.put(asha.getMctsFlwId(), asha.getId());
+                mctsIds.add(asha.getMctsFlwId());
+            }
             for(RchAnmAshaRecord rchAnmAshaRecord : rchAshaRecords) {
-                if (existingAshaIds.contains(rchAnmAshaRecord.getGfId().toString())) {
+                if (mctsIds.contains(rchAnmAshaRecord.getGfId().toString())) {
                     Map<String, Object> locMap = new HashMap<>();
                     toMapLoc(locMap, rchAnmAshaRecord);
-                    locMap.put(FlwConstants.ID, rchAnmAshaRecord.getGfId());
+                    locMap.put(FlwConstants.ID, existingAshaIds.get(rchAnmAshaRecord.getGfId().toString()));
+                    locMap.put(FlwConstants.GF_ID, rchAnmAshaRecord.getGfId());
                     locArrList.add(locMap);
                 }
             }
@@ -1667,6 +1682,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 ) {
             Map<String, Object> updatedMap = setLocationFields(locationFinder, record);
             if("asha".equalsIgnoreCase(rchUserType.toString())){
+                updatedMap.put(FlwConstants.GF_ID, record.get(FlwConstants.GF_ID));
                 updatedMap.put(FlwConstants.ID, record.get(FlwConstants.ID));
             }else {
                 updatedMap.put(KilkariConstants.RCH_ID, record.get(KilkariConstants.RCH_ID));
@@ -1782,6 +1798,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
             writer.write(FlwConstants.ID);
             writer.write(TAB);
+            writer.write(FlwConstants.GF_ID);
+            writer.write(TAB);
             writer.write(FlwConstants.STATE_ID);
             writer.write(TAB);
             writer.write(FlwConstants.DISTRICT_ID);
@@ -1811,6 +1829,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             for (Map<String, Object> map : locArrList
                     ) {
                 writer.write(map.get(FlwConstants.ID).toString());
+                writer.write(TAB);
+                writer.write(map.get(FlwConstants.GF_ID).toString());
                 writer.write(TAB);
                 writer.write(map.get(FlwConstants.STATE_ID).toString());
                 writer.write(TAB);
@@ -1941,32 +1961,31 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
 
-    private List<String> getDatabaseAsha(final List<RchAnmAshaRecord> ashaRecords) {
+    private List<FrontLineWorker> getDatabaseAsha(final List<RchAnmAshaRecord> ashaRecords, final long stateID) {
         Timer queryTimer = new Timer();
 
         @SuppressWarnings("unchecked")
-        SqlQueryExecution<List<String>> queryExecution = new SqlQueryExecution<List<String>>() {
+        SqlQueryExecution<List<FrontLineWorker>> queryExecution = new SqlQueryExecution<List<FrontLineWorker>>() {
 
             @Override
             public String getSqlQuery() {
-                String query = "SELECT mctsFlwId FROM nms_front_line_workers WHERE mctsFlwId IN " + queryIdListAsha(ashaRecords);
+                String query = "SELECT * FROM nms_front_line_workers WHERE state_id_OID = " + stateID +
+                            " and mctsFlwId IN (SELECT mctsFlwId from nms_front_line_workers WHERE state_id_OID = " + stateID +
+                            " group by mctsFlwId having count(*) = 1) " +
+                            " and  mctsFlwId IN " + queryIdListAsha(ashaRecords);
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
 
             @Override
-            public List<String> execute(Query query) {
-
+            public List<FrontLineWorker> execute(Query query) {
+                query.setClass(FrontLineWorker.class);
                 ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
-                List<String> result = new ArrayList<>();
-                for (String existingAshaId : (List<String>) fqr) {
-                    result.add(existingAshaId);
-                }
-                return result;
+                return (List<FrontLineWorker>) fqr;
             }
         };
 
-        List<String> result = (List<String>) rchImportFacilitatorDataService.executeSQLQuery(queryExecution);
+        List<FrontLineWorker> result = rchImportFacilitatorDataService.executeSQLQuery(queryExecution);
         LOGGER.debug("Database asha's query time {}", queryTimer.time());
         return result;
 
