@@ -122,18 +122,20 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
         for (Map<String, Object> healthSubFacility : healthSubFacilities) {
             Taluka taluka = talukaHashMap.get(healthSubFacility.get(LocationConstants.CSV_STATE_ID).toString() + "_" +
                     healthSubFacility.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    healthSubFacility.get(LocationConstants.TALUKA_ID).toString());
+                    healthSubFacility.get(LocationConstants.TALUKA_ID).toString().trim());
             HealthFacility healthFacility = healthFacilityHashMap.get(healthSubFacility.get(LocationConstants.CSV_STATE_ID).toString() + "_" +
                     healthSubFacility.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    healthSubFacility.get(LocationConstants.TALUKA_ID).toString() + "_" +
+                    healthSubFacility.get(LocationConstants.TALUKA_ID).toString().trim() + "_" +
                     healthSubFacility.get(LocationConstants.HEALTHFACILITY_ID).toString());
-            if (taluka != null && healthFacility != null) {
+            Long healthSubFacilityCode = (Long) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_ID);
+            if (taluka != null && healthFacility != null  && healthSubFacilityCode != null && !healthSubFacilityCode.equals(0L)) {
                 if (i != 0) {
                     stringBuilder.append(", ");
                 }
                 stringBuilder.append("(");
-                stringBuilder.append(healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_ID) + ", ");
-                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME) == null ? "" : healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME).toString()) + QUOTATION_COMMA);
+                stringBuilder.append(healthSubFacilityCode + ", ");
+                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME) == null ?
+                        "" : healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME).toString()) + QUOTATION_COMMA);
                 stringBuilder.append(healthFacility.getId() + ", ");
                 stringBuilder.append(taluka.getId() + ", ");
                 stringBuilder.append(MOTECH_STRING);

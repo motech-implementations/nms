@@ -150,11 +150,15 @@ public class DistrictServiceImpl implements DistrictService {
 
             @Override
             public String getSqlQuery() {
-                String query = "INSERT into nms_districts (`code`, `name`, `state_id_OID`, " +
-                        " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
-                        districtQuerySet(districts, stateHashMap) +
-                        " ON DUPLICATE KEY UPDATE " +
-                        "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                String districtValues = districtQuerySet(districts, stateHashMap);
+                String query = "";
+                if(!districtValues.isEmpty()) {
+                    query = "INSERT into nms_districts (`code`, `name`, `state_id_OID`, " +
+                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                            districtValues +
+                            " ON DUPLICATE KEY UPDATE " +
+                            "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                }
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
@@ -183,13 +187,15 @@ public class DistrictServiceImpl implements DistrictService {
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> district : districts) {
             State state = stateHashMap.get(district.get(LocationConstants.CSV_STATE_ID).toString());
-            if (state != null) {
+            Long districtCode = (Long) district.get(LocationConstants.DISTRICT_ID);
+            if (state != null && districtCode != null && !districtCode.equals(0L)) {
                 if (i != 0) {
                     stringBuilder.append(", ");
                 }
                 stringBuilder.append("(");
-                stringBuilder.append(district.get(LocationConstants.DISTRICT_ID) + ", ");
-                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(district.get(LocationConstants.DISTRICT_NAME).toString()) + QUOTATION_COMMA);
+                stringBuilder.append(districtCode + ", ");
+                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(district.get(LocationConstants.DISTRICT_NAME) == null ?
+                        "" : district.get(LocationConstants.DISTRICT_NAME).toString()) + QUOTATION_COMMA);
                 stringBuilder.append(state.getId() + ", ");
                 stringBuilder.append(MOTECH_STRING);
                 stringBuilder.append(MOTECH_STRING);

@@ -231,14 +231,16 @@ public class HealthBlockServiceImpl implements HealthBlockService {
         for (Map<String, Object> healthBlock : healthBlocks) {
             District district = districtHashMap.get(healthBlock.get(LocationConstants.CSV_STATE_ID).toString() + "_" + healthBlock.get(LocationConstants.DISTRICT_ID).toString());
             Taluka taluka = talukaHashMap.get(healthBlock.get(LocationConstants.CSV_STATE_ID).toString() + "_" + healthBlock.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    healthBlock.get(LocationConstants.TALUKA_ID).toString());
-            if (district != null && taluka != null) {
+                    healthBlock.get(LocationConstants.TALUKA_ID).toString().trim());
+            Long healthBlockCode = (Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID);
+            if (district != null && taluka != null && healthBlockCode != null && !healthBlockCode.equals(0L)) {
                 if (i != 0) {
                     stringBuilder.append(", ");
                 }
                 stringBuilder.append("(");
-                stringBuilder.append(healthBlock.get(LocationConstants.HEALTHBLOCK_ID) + ", ");
-                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthBlock.get(LocationConstants.HEALTHBLOCK_NAME).toString()) + QUOTATION_COMMA);
+                stringBuilder.append(healthBlockCode + ", ");
+                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthBlock.get(LocationConstants.HEALTHBLOCK_NAME) == null ?
+                        "" : healthBlock.get(LocationConstants.HEALTHBLOCK_NAME).toString()) + QUOTATION_COMMA);
                 stringBuilder.append(district.getId() + ", ");
                 stringBuilder.append(taluka.getId() + ", ");
                 stringBuilder.append(MOTECH_STRING);
@@ -273,7 +275,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                         query1 += " select t.id, h.id, now(), now() from nms_states s " +
                                 " join nms_districts d on  d.state_id_OID = s.id " +
                                 " join nms_talukas t on t.district_id_OID = d.id and t.code = " +
-                                record.get(LocationConstants.TALUKA_ID).toString() +
+                                record.get(LocationConstants.TALUKA_ID).toString().trim() +
                                 " join nms_health_blocks h on h.district_id_OID = t.district_id_OID and h.code = " +
                                 record.get(LocationConstants.HEALTHBLOCK_ID).toString() +
                                 " where s.code = " + record.get(LocationConstants.CSV_STATE_ID).toString();

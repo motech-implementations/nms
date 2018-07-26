@@ -383,7 +383,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LOGGER.info("Copying RCH district response file from remote server to local directory.");
         try {
             List<RchImportFacilitator> rchImportFacilitatorsDistricts = rchImportFacilitatorService.findByImportDateAndRchUserType(LocalDate.now(), RchUserType.DISTRICT);
-            LOGGER.info("Files imported today for mothers= " + rchImportFacilitatorsDistricts.size());
+            LOGGER.info("Files imported today for districts= " + rchImportFacilitatorsDistricts.size());
             ArrayList<Map<String, Object>> districtArrList = new ArrayList<>();
             for (RchImportFacilitator rchImportFacilitatorsDistrict : rchImportFacilitatorsDistricts
                     ) {
