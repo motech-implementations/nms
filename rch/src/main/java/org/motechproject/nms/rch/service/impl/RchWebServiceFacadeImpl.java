@@ -246,7 +246,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
     @MotechListener(subjects = Constants.RCH_MOTHER_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
-    @Transactional
     public void readMotherResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         LOGGER.info("Copying RCH mother response file from remote server to local directory.");
         try {
@@ -357,7 +356,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
     @MotechListener(subjects = Constants.RCH_CHILD_READ_SUBJECT)
-    @Transactional
     public void readChildResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         LOGGER.info("Copying RCH child response file from remote server to local directory.");
         try {
@@ -1049,6 +1047,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return true;
     }
 
+    @Transactional
     private void deleteRchImportFailRecords(final LocalDate startReferenceDate, final LocalDate endReferenceDate, final RchUserType rchUserType, final Long stateId) {
 
         LOGGER.debug("Deleting nms_rch_failures records which are successfully imported");
