@@ -123,7 +123,7 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
         final Set<String> healthFacilityKeys = new HashSet<>();
         for(Map<String, Object> record : recordList) {
             healthFacilityKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    record.get(LocationConstants.TALUKA_ID).toString() + "_" +
+                    record.get(LocationConstants.TALUKA_ID).toString().trim() + "_" +
                     record.get(LocationConstants.HEALTHFACILITY_ID).toString());
         }
         Map<String, HealthFacility> healthFacilityHashMap = new HashMap<>();
@@ -193,16 +193,17 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
         for (Map<String, Object> healthFacility : healthFacilities) {
             Taluka taluka = talukaHashMap.get(healthFacility.get(LocationConstants.CSV_STATE_ID).toString() + "_" +
                     healthFacility.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    healthFacility.get(LocationConstants.TALUKA_ID).toString());
+                    healthFacility.get(LocationConstants.TALUKA_ID).toString().trim());
             HealthBlock healthBlock = healthBlockHashMap.get(healthFacility.get(LocationConstants.CSV_STATE_ID).toString() + "_" +
                     healthFacility.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                     healthFacility.get(LocationConstants.HEALTHBLOCK_ID).toString());
-            if (taluka != null && healthBlock != null) {
+            Long healthFacilityCode = (Long) healthFacility.get(LocationConstants.HEALTHFACILITY_ID);
+            if (taluka != null && healthBlock != null && healthFacilityCode != null && !healthFacilityCode.equals(0L)) {
                 if (i != 0) {
                     stringBuilder.append(", ");
                 }
                 stringBuilder.append("(");
-                stringBuilder.append(healthFacility.get(LocationConstants.HEALTHFACILITY_ID) + ", ");
+                stringBuilder.append(healthFacilityCode + ", ");
                 stringBuilder.append(QUOTATION +
                         StringEscapeUtils.escapeSql(healthFacility.get(LocationConstants.HEALTHFACILITY_NAME) == null ?
                                 "" : healthFacility.get(LocationConstants.HEALTHFACILITY_NAME).toString()) + QUOTATION_COMMA);

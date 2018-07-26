@@ -119,7 +119,7 @@ public class TalukaServiceImpl implements TalukaService {
         final Set<String> talukaKeys = new HashSet<>();
         for(Map<String, Object> record : recordList) {
             talukaKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    record.get(LocationConstants.TALUKA_ID).toString());
+                    record.get(LocationConstants.TALUKA_ID).toString().trim());
         }
         Map<String, Taluka> talukaHashMap = new HashMap<>();
 
@@ -189,13 +189,15 @@ public class TalukaServiceImpl implements TalukaService {
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> taluka : talukas) {
             District district = districtHashMap.get(taluka.get(LocationConstants.CSV_STATE_ID).toString() + "_" + taluka.get(LocationConstants.DISTRICT_ID).toString());
-            if (district != null) {
+            if (district != null && taluka.get(LocationConstants.TALUKA_ID) != null &&
+                    !taluka.get(LocationConstants.TALUKA_ID).toString().trim().equals("0000")) {
                 if (i != 0) {
                     stringBuilder.append(", ");
                 }
                 stringBuilder.append("(");
-                stringBuilder.append(QUOTATION + taluka.get(LocationConstants.TALUKA_ID) + QUOTATION_COMMA);
-                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(taluka.get(LocationConstants.TALUKA_NAME).toString()) + QUOTATION_COMMA);
+                stringBuilder.append(QUOTATION + taluka.get(LocationConstants.TALUKA_ID).toString().trim() + QUOTATION_COMMA);
+                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(taluka.get(LocationConstants.TALUKA_NAME) == null ?
+                        "" : taluka.get(LocationConstants.TALUKA_NAME).toString()) + QUOTATION_COMMA);
                 stringBuilder.append(district.getId() + ", ");
                 stringBuilder.append(MOTECH_STRING);
                 stringBuilder.append(MOTECH_STRING);

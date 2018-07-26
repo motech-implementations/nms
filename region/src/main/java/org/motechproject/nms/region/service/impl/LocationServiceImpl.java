@@ -505,7 +505,7 @@ public class LocationServiceImpl implements LocationService {
 
                         if (isValidID(record, TALUKA_ID)) {
                             Taluka taluka = new Taluka();
-                            taluka.setCode((String) record.get(TALUKA_ID));
+                            taluka.setCode(record.get(TALUKA_ID).toString().trim());
                             taluka.setName((String) record.get(TALUKA_NAME));
                             mapKey.append("_");
                             mapKey.append(Long.parseLong(record.get(TALUKA_ID).toString().trim()));
