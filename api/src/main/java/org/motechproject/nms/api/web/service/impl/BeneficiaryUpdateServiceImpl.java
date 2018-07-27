@@ -172,7 +172,8 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
     private Map<String, CellProcessor> getRchAshaProcessorMapping() {
         Map<String, CellProcessor> mapping = new HashMap<>();
 
-        mapping.put(FlwConstants.ID, new org.supercsv.cellprocessor.Optional(new GetString()));
+        mapping.put(FlwConstants.ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(FlwConstants.GF_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(FlwConstants.STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
 
         mapping.put(FlwConstants.DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
@@ -217,13 +218,13 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
 
             @Override
             public String getSqlQuery() {
-                String query = "INSERT INTO nms_front_line_workers (mctsFlwId, state_id_OID, district_id_OID, taluka_id_OID," +
+                String query = "INSERT INTO nms_front_line_workers (id, mctsFlwId, state_id_OID, district_id_OID, taluka_id_OID," +
                         " healthBlock_id_OID, healthFacility_id_OID, healthSubFacility_id_OID, village_id_OID," +
                         " modifiedBy, modificationDate)  " +
                         "values  " +
                         updateQuerySet(updateObjects, rchUserType, origin) +
                         " ON DUPLICATE KEY UPDATE " +
-                        "state_id_OID = VALUES(state_id_OID), district_id_OID = VALUES(district_id_OID)," +
+                        " state_id_OID = VALUES(state_id_OID), district_id_OID = VALUES(district_id_OID)," +
                         " taluka_id_OID = VALUES(taluka_id_OID), healthBlock_id_OID = VALUES(healthBlock_id_OID)," +
                         " healthFacility_id_OID = VALUES(healthFacility_id_OID), healthSubFacility_id_OID = VALUES(healthSubFacility_id_OID)," +
                         " village_id_OID = VALUES(village_id_OID), modifiedBy = VALUES(modifiedBy), modificationDate = VALUES(modificationDate)";
@@ -487,7 +488,8 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
     private StringBuilder addLocationsFlw(StringBuilder stringBuilder, Map<String, Object> updateObject) {
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
-        stringBuilder.append(QUOTATION + updateObject.get(FlwConstants.ID) + QUOTATION_COMMA);
+        stringBuilder.append(updateObject.get(FlwConstants.ID) + ", ");
+        stringBuilder.append(QUOTATION + updateObject.get(FlwConstants.GF_ID) + QUOTATION_COMMA);
         stringBuilder.append(updateObject.get(FlwConstants.STATE_ID) + ", ");
         stringBuilder.append(updateObject.get(FlwConstants.DISTRICT_ID) + ", ");
         stringBuilder.append(updateObject.get(FlwConstants.TALUKA_ID) + ", ");

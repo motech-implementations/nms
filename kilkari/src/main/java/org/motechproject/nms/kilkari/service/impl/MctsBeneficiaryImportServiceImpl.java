@@ -192,6 +192,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         mother.setName(name);
         mother.setDateOfBirth(motherDOB);
+        mother.setLastMenstrualPeriod(lmp);
         mother.setUpdatedDateNic(lastUpdatedDateNic);
 
 
@@ -220,7 +221,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             Subscription subscription;
             if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
                 //validate if an ACTIVE child is already present for the mother. If yes, ignore the update
-                if (childAlreadyPresent(beneficiaryId)) {
+                if (childAlreadyPresent(beneficiaryId, importOrigin)) {
                     return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ACTIVE_CHILD_PRESENT, false);
                 }
                 subscription = subscriberService.updateMotherSubscriber(msisdn, mother, lmp, record, action);
@@ -228,6 +229,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED, false);
                 }
             } else {
+
+                if (childAlreadyPresent(beneficiaryId, importOrigin)) {
+                    return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ACTIVE_CHILD_PRESENT, false);
+                }
+
                 Long caseNo = (Long) record.get(KilkariConstants.CASE_NO);
                 // validate caseNo
                 if (!validateCaseNo(caseNo, mother)) {
@@ -341,7 +347,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         // validate and set location
         try {
             mctsBeneficiaryValueProcessor.setLocationFieldsCSV(locationFinder, record, child);
-            if (mother != null) {
+            if (mother != null && mother.getLastMenstrualPeriod() == null) {
                 mctsBeneficiaryValueProcessor.setLocationFieldsCSV(locationFinder, record, mother);
             }
         } catch (InvalidLocationException le) {
@@ -350,6 +356,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
 
         //validate if it's an updated record compared to one from database
+        LOGGER.debug("child.getUpdatedDateNic() : {}", child.getUpdatedDateNic());
+        LOGGER.debug("lastUpdateDateNic: {}", lastUpdateDateNic);
         if (child.getUpdatedDateNic() != null && (lastUpdateDateNic == null || child.getUpdatedDateNic().isAfter(lastUpdateDateNic))) {
             return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
         }
@@ -444,14 +452,18 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return true;
     }
 
-    private boolean childAlreadyPresent(final String motherBenificiaryId) {
+    private boolean childAlreadyPresent(final String motherBenificiaryId, final SubscriptionOrigin importOrigin) {
         //Found mother by beneficiary id. If there is no mother already present,then import will
         //go to the next check. Else we get the subscriber by the mother id
         //and check if the child subscription is ACTIVE. If yes we do not update the mother.
         MctsMother mctsMother = null;
 
         try {
-            mctsMother = mctsMotherDataService.findByBeneficiaryId(motherBenificiaryId);
+            if (SubscriptionOrigin.MCTS_IMPORT.equals(importOrigin)) {
+                mctsMother = mctsMotherDataService.findByBeneficiaryId(motherBenificiaryId);
+            } else {
+                mctsMother = mctsMotherDataService.findByRchId(motherBenificiaryId);
+            }
 
             if (mctsMother == null) {
                 return false;
@@ -462,11 +474,21 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     return false;
                 } else {
                     for (Subscription subscription : subscriber.getAllSubscriptions()) {
-                        if (subscription.getSubscriptionPack().getType().equals(SubscriptionPackType.CHILD)
-                                && subscription.getStatus().equals(SubscriptionStatus.ACTIVE)
-                                && subscriber.getChild().getMother() != null
-                                && subscriber.getChild().getMother().getBeneficiaryId().equals(motherBenificiaryId)) {
-                            return true;
+                        SubscriptionStatus status = subscription.getStatus();
+                        if (SubscriptionOrigin.MCTS_IMPORT.equals(importOrigin)) {
+                            if (subscription.getSubscriptionPack().getType().equals(SubscriptionPackType.CHILD)
+                                    && (SubscriptionStatus.ACTIVE.equals(status) || SubscriptionStatus.PENDING_ACTIVATION.equals(status) || SubscriptionStatus.HOLD.equals(status))
+                                    && subscriber.getChild().getMother() != null
+                                    && subscriber.getChild().getMother().getBeneficiaryId().equals(motherBenificiaryId)) {
+                                return true;
+                            }
+                        } else {
+                            if (subscription.getSubscriptionPack().getType().equals(SubscriptionPackType.CHILD)
+                                    && (SubscriptionStatus.ACTIVE.equals(status) || SubscriptionStatus.PENDING_ACTIVATION.equals(status) || SubscriptionStatus.HOLD.equals(status))
+                                    && subscriber.getChild().getMother() != null
+                                    && subscriber.getChild().getMother().getRchId().equals(motherBenificiaryId)) {
+                                return true;
+                            }
                         }
                     }
                 }
