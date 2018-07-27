@@ -186,25 +186,27 @@ public class DistrictServiceImpl implements DistrictService {
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> district : districts) {
-            State state = stateHashMap.get(district.get(LocationConstants.CSV_STATE_ID).toString());
-            Long districtCode = (Long) district.get(LocationConstants.DISTRICT_ID);
-            if (state != null && districtCode != null && !districtCode.equals(0L)) {
-                if (i != 0) {
-                    stringBuilder.append(", ");
-                }
-                stringBuilder.append("(");
-                stringBuilder.append(districtCode + ", ");
-                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(district.get(LocationConstants.DISTRICT_NAME) == null ?
-                        "" : district.get(LocationConstants.DISTRICT_NAME).toString()) + QUOTATION_COMMA);
-                stringBuilder.append(state.getId() + ", ");
-                stringBuilder.append(MOTECH_STRING);
-                stringBuilder.append(MOTECH_STRING);
-                stringBuilder.append(MOTECH_STRING);
-                stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-                stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
-                stringBuilder.append(")");
+            if (district.get(LocationConstants.CSV_STATE_ID) != null) {
+                State state = stateHashMap.get(district.get(LocationConstants.CSV_STATE_ID).toString());
+                Long districtCode = (Long) district.get(LocationConstants.DISTRICT_ID);
+                if (state != null && districtCode != null && !districtCode.equals(0L)) {
+                    if (i != 0) {
+                        stringBuilder.append(", ");
+                    }
+                    stringBuilder.append("(");
+                    stringBuilder.append(districtCode + ", ");
+                    stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(district.get(LocationConstants.DISTRICT_NAME) == null ?
+                            "" : district.get(LocationConstants.DISTRICT_NAME).toString()) + QUOTATION_COMMA);
+                    stringBuilder.append(state.getId() + ", ");
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                    stringBuilder.append(")");
 
-                i++;
+                    i++;
+                }
             }
         }
 

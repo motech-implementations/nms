@@ -232,28 +232,31 @@ public class HealthBlockServiceImpl implements HealthBlockService {
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> healthBlock : healthBlocks) {
-            District district = districtHashMap.get(healthBlock.get(LocationConstants.CSV_STATE_ID).toString() + "_" + healthBlock.get(LocationConstants.DISTRICT_ID).toString());
-            Taluka taluka = talukaHashMap.get(healthBlock.get(LocationConstants.CSV_STATE_ID).toString() + "_" + healthBlock.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    healthBlock.get(LocationConstants.TALUKA_ID).toString().trim());
-            Long healthBlockCode = (Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID);
-            if (district != null && taluka != null && healthBlockCode != null && !healthBlockCode.equals(0L)) {
-                if (i != 0) {
-                    stringBuilder.append(", ");
-                }
-                stringBuilder.append("(");
-                stringBuilder.append(healthBlockCode + ", ");
-                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthBlock.get(LocationConstants.HEALTHBLOCK_NAME) == null ?
-                        "" : healthBlock.get(LocationConstants.HEALTHBLOCK_NAME).toString()) + QUOTATION_COMMA);
-                stringBuilder.append(district.getId() + ", ");
-                stringBuilder.append(taluka.getId() + ", ");
-                stringBuilder.append(MOTECH_STRING);
-                stringBuilder.append(MOTECH_STRING);
-                stringBuilder.append(MOTECH_STRING);
-                stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-                stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
-                stringBuilder.append(")");
+            if (healthBlock.get(LocationConstants.CSV_STATE_ID) != null && healthBlock.get(LocationConstants.DISTRICT_ID) != null &&
+                    healthBlock.get(LocationConstants.TALUKA_ID) != null) {
+                District district = districtHashMap.get(healthBlock.get(LocationConstants.CSV_STATE_ID).toString() + "_" + healthBlock.get(LocationConstants.DISTRICT_ID).toString());
+                Taluka taluka = talukaHashMap.get(healthBlock.get(LocationConstants.CSV_STATE_ID).toString() + "_" + healthBlock.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+                        healthBlock.get(LocationConstants.TALUKA_ID).toString().trim());
+                Long healthBlockCode = (Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID);
+                if (district != null && taluka != null && healthBlockCode != null && !healthBlockCode.equals(0L)) {
+                    if (i != 0) {
+                        stringBuilder.append(", ");
+                    }
+                    stringBuilder.append("(");
+                    stringBuilder.append(healthBlockCode + ", ");
+                    stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthBlock.get(LocationConstants.HEALTHBLOCK_NAME) == null ?
+                            "" : healthBlock.get(LocationConstants.HEALTHBLOCK_NAME).toString()) + QUOTATION_COMMA);
+                    stringBuilder.append(district.getId() + ", ");
+                    stringBuilder.append(taluka.getId() + ", ");
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                    stringBuilder.append(")");
 
-                i++;
+                    i++;
+                }
             }
         }
 

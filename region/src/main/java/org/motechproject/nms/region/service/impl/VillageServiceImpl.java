@@ -119,28 +119,31 @@ public class VillageServiceImpl implements VillageService {
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> village : villages) {
-            Taluka taluka = talukaHashMap.get(village.get(LocationConstants.CSV_STATE_ID).toString() + "_" +
-                    village.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    village.get(LocationConstants.TALUKA_ID).toString().trim());
-            Long villageCode = (Long) village.get(LocationConstants.VILLAGE_ID);
-            if (taluka != null && taluka.getId() != null && villageCode != null && !villageCode.equals(0L)){
-                if (i != 0) {
-                    stringBuilder.append(", ");
-                }
-                stringBuilder.append("(");
-                stringBuilder.append(villageCode + ", ");
-                stringBuilder.append(0 + ", ");
-                stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(village.get(LocationConstants.VILLAGE_NAME) == null ?
-                        "" : village.get(LocationConstants.VILLAGE_NAME).toString().replaceAll(":", "")) + QUOTATION_COMMA);
-                stringBuilder.append(taluka.getId() + ", ");
-                stringBuilder.append(MOTECH_STRING);
-                stringBuilder.append(MOTECH_STRING);
-                stringBuilder.append(MOTECH_STRING);
-                stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-                stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
-                stringBuilder.append(")");
+            if (village.get(LocationConstants.CSV_STATE_ID) != null && village.get(LocationConstants.DISTRICT_ID) != null &&
+                    village.get(LocationConstants.TALUKA_ID) != null) {
+                Taluka taluka = talukaHashMap.get(village.get(LocationConstants.CSV_STATE_ID).toString() + "_" +
+                        village.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+                        village.get(LocationConstants.TALUKA_ID).toString().trim());
+                Long villageCode = (Long) village.get(LocationConstants.VILLAGE_ID);
+                if (taluka != null && taluka.getId() != null && villageCode != null && !villageCode.equals(0L)) {
+                    if (i != 0) {
+                        stringBuilder.append(", ");
+                    }
+                    stringBuilder.append("(");
+                    stringBuilder.append(villageCode + ", ");
+                    stringBuilder.append(0 + ", ");
+                    stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(village.get(LocationConstants.VILLAGE_NAME) == null ?
+                            "" : village.get(LocationConstants.VILLAGE_NAME).toString().replaceAll(":", "")) + QUOTATION_COMMA);
+                    stringBuilder.append(taluka.getId() + ", ");
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                    stringBuilder.append(")");
 
-                i++;
+                    i++;
+                }
             }
         }
 
