@@ -586,7 +586,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                 }
             }
         } else { // no subscribers found with the provided RCH id
-            LOGGER.debug("here1");
             if (subscribersByMsisdn.isEmpty() && childUpdate.getMother() != null) { // no subscriber exists with provided msisdn
                 Subscriber subscriberByRchMotherId = getSubscriberByBeneficiary(childUpdate.getMother());
                 if (subscriberByRchMotherId == null) { // no subscriber exists with RCH mother id either
@@ -609,10 +608,9 @@ public class SubscriberServiceImpl implements SubscriberService {
                     }
                 }
             } else { //subscriber exists with provided msisdn
-                LOGGER.debug("here2");
-                if (subscribersByMsisdn.size() == 1 && childUpdate.getMother() != null && subscribersByMsisdn.get(0).getMother() != null && subscribersByMsisdn.get(0).getChild() == null) {
+                if (subscribersByMsisdn.size() == 1 && (childUpdate.getMother() != null) && (subscribersByMsisdn.get(0).getMother() != null) && subscribersByMsisdn.get(0).getChild() == null) {
                     //update subscriber with child
-                    if (subscribersByMsisdn.get(0).getMother().getRchId().equals(childUpdate.getMother().getRchId())) {
+                    if (childUpdate.getMother().getRchId() != null  && subscribersByMsisdn.get(0).getMother().getRchId() != null && childUpdate.getMother().getRchId().equals(subscribersByMsisdn.get(0).getMother().getRchId())) {
                         Subscriber subscriber = subscribersByMsisdn.get(0);
                         subscriber.setDateOfBirth(dob);
                         subscriber.setChild(childUpdate);
@@ -671,7 +669,7 @@ public class SubscriberServiceImpl implements SubscriberService {
             if (DeactivationReason.LOW_LISTENERSHIP == deactivatedSubscripion.getDeactivationReason() ||  DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED == deactivatedSubscripion.getDeactivationReason()) {
                 return reactivateSubscription(subscriber, deactivatedSubscripion, dateTime);
             } else {
-                LOGGER.error("Reactivation is not valid in this scenario.");
+                LOGGER.debug("Reactivation is not valid in this scenario.");
                 return null;
             }
         } else if (subscription == null  && deactivatedSubscripion != null  && (DeactivationReason.LOW_LISTENERSHIP == deactivatedSubscripion.getDeactivationReason() ||  DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED == deactivatedSubscripion.getDeactivationReason())) {
