@@ -250,7 +250,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         MotherImportRejection motherImportRejection;
         for (Map<String, Object> record : rejectedMotherRecords) {
             action = (String) record.get(KilkariConstants.ACTION);
-            LOGGER.error("Existing Mother Record with same MSISDN in the data set");
+            LOGGER.debug("Existing Mother Record with same MSISDN in the data set");
             motherImportRejection = motherRejectionMcts(convertMapToMother(record), false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action);
             rejectedMothers.put(motherImportRejection.getIdNo(), motherImportRejection);
             rejectionStatus.put(motherImportRejection.getIdNo(), motherImportRejection.getAccepted());
@@ -420,7 +420,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
         for (Map<String, Object> record : rejectedChildRecords) {
             action = (String) record.get(KilkariConstants.ACTION);
-            LOGGER.error("Existing Child Record with same MSISDN in the data set");
+            LOGGER.debug("Existing Child Record with same MSISDN in the data set");
             childImportRejection = childRejectionMcts(convertMapToChild(record), false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action);
             rejectedChilds.put(childImportRejection.getIdNo(), childImportRejection);
             rejectionStatus.put(childImportRejection.getIdNo(), childImportRejection.getAccepted());
@@ -593,7 +593,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         for (AnmAshaRecord record : rejectedAshaRecords) {
             record.setStateId(stateCode);
             action = this.flwActionFinder(record);
-            LOGGER.error("Existing Asha Record with same MSISDN in the data set");
+            LOGGER.debug("Existing Asha Record with same MSISDN in the data set");
             flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action));
             rejected++;
         }
@@ -610,7 +610,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                 String mctsFlwId = record.getId().toString();
                 FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
                 if (flw != null && ((!mctsFlwId.equals(flw.getMctsFlwId()) || state.getId() != flw.getState().getId())) && flw.getStatus() != FrontLineWorkerStatus.ANONYMOUS) {
-                    LOGGER.error("Existing FLW with same MSISDN but different MCTS ID");
+                    LOGGER.debug("Existing FLW with same MSISDN but different MCTS ID");
                     flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
                     rejected++;
                 } else {

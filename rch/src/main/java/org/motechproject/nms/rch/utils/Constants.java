@@ -15,13 +15,13 @@ public final class Constants {
     public static final String RCH_CHILD_READ_CRON = "rch.child.sync.cron";
     public static final String RCH_ASHA_READ_CRON = "rch.asha.sync.cron";
     public static final String RCH_TALUKA_READ_CRON = "rch.taluka.sync.cron";
-    public static final String RCH_VILLAGE_READ_CRON = "rch.taluka.sync.cron";
+    public static final String RCH_VILLAGE_READ_CRON = "rch.village.sync.cron";
     public static final String RCH_DISTRICT_READ_CRON = "rch.district.sync.cron";
     public static final String RCH_HEALTHBLOCK_READ_CRON = "rch.healthblock.sync.cron";
     public static final String RCH_HEALTHFACILITY_READ_CRON = "rch.healthfacility.sync.cron";
     public static final String RCH_HEALTHSUBFACILITY_READ_CRON = "rch.healthfacility.sync.cron";
     public static final String RCH_VILLAGEHEALTHSUBFACILITY_READ_CRON = "rch.healthfacility.sync.cron";
-    public static final String RCH_TALUKA_HEALTHBLOCK_READ_CRON = "rch.talukaHealthBlock.sync.cron";
+    public static final String RCH_TALUKA_HEALTHBLOCK_READ_CRON = "rch.talukahealthblock.sync.cron";
     public static final String RCH_ENDPOINT = "rch.endpointUrl";
     public static final String DAYS_TO_PULL = "rch.days_to_pull";
     public static final String HPD_STATES = "rch.hpd.states";

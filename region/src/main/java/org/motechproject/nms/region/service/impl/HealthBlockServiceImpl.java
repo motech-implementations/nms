@@ -82,6 +82,36 @@ public class HealthBlockServiceImpl implements HealthBlockService {
     }
 
     @Override
+    public HealthBlock findByDistrictAndCode(final District district, final Long code) {
+        if (district == null) { return null; }
+
+        SqlQueryExecution<HealthBlock> queryExecution = new SqlQueryExecution<HealthBlock>() {
+
+            @Override
+            public String getSqlQuery() {
+                return "select * " +
+                        "from nms_health_blocks " +
+                        "where code = ? and district_id_OID = ?";
+            }
+
+            @Override
+            public HealthBlock execute(Query query) {
+                query.setClass(HealthBlock.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute(code, district.getId());
+                if (fqr.isEmpty()) {
+                    return null;
+                }
+                if (fqr.size() == 1) {
+                    return (HealthBlock) fqr.get(0);
+                }
+                throw new IllegalStateException("More than one row returned!");
+            }
+        };
+
+        return healthBlockDataService.executeSQLQuery(queryExecution);
+    }
+
+    @Override
     public HealthBlock create(HealthBlock healthBlock) {
         return healthBlockDataService.create(healthBlock);
     }

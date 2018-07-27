@@ -230,7 +230,7 @@ public class LocationServiceImpl implements LocationService {
         if (!isValidID(map, HEALTHBLOCK_ID)) {
             return locations;
         }
-        HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka, (Long) map.get(HEALTHBLOCK_ID));
+        HealthBlock healthBlock = healthBlockService.findByDistrictAndCode(district, (Long) map.get(HEALTHBLOCK_ID));
         if (healthBlock == null && createIfNotExists) {
             healthBlock = new HealthBlock();
             healthBlock.addTaluka(taluka);
