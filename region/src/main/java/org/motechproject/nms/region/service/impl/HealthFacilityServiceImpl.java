@@ -194,32 +194,35 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> healthFacility : healthFacilities) {
-            Taluka taluka = talukaHashMap.get(healthFacility.get(LocationConstants.CSV_STATE_ID).toString() + "_" +
-                    healthFacility.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    healthFacility.get(LocationConstants.TALUKA_ID).toString().trim());
-            HealthBlock healthBlock = healthBlockHashMap.get(healthFacility.get(LocationConstants.CSV_STATE_ID).toString() + "_" +
-                    healthFacility.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    healthFacility.get(LocationConstants.HEALTHBLOCK_ID).toString());
-            Long healthFacilityCode = (Long) healthFacility.get(LocationConstants.HEALTHFACILITY_ID);
-            if (taluka != null && healthBlock != null && healthFacilityCode != null && !healthFacilityCode.equals(0L)) {
-                if (i != 0) {
-                    stringBuilder.append(", ");
-                }
-                stringBuilder.append("(");
-                stringBuilder.append(healthFacilityCode + ", ");
-                stringBuilder.append(QUOTATION +
-                        StringEscapeUtils.escapeSql(healthFacility.get(LocationConstants.HEALTHFACILITY_NAME) == null ?
-                                "" : healthFacility.get(LocationConstants.HEALTHFACILITY_NAME).toString()) + QUOTATION_COMMA);
-                stringBuilder.append(healthBlock.getId() + ", ");
-                stringBuilder.append(taluka.getId() + ", ");
-                stringBuilder.append(MOTECH_STRING);
-                stringBuilder.append(MOTECH_STRING);
-                stringBuilder.append(MOTECH_STRING);
-                stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-                stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
-                stringBuilder.append(")");
+            if (healthFacility.get(LocationConstants.CSV_STATE_ID) != null && healthFacility.get(LocationConstants.DISTRICT_ID) != null &&
+                    healthFacility.get(LocationConstants.TALUKA_ID) != null && healthFacility.get(LocationConstants.HEALTHBLOCK_ID) != null) {
+                Taluka taluka = talukaHashMap.get(healthFacility.get(LocationConstants.CSV_STATE_ID).toString() + "_" +
+                        healthFacility.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+                        healthFacility.get(LocationConstants.TALUKA_ID).toString().trim());
+                HealthBlock healthBlock = healthBlockHashMap.get(healthFacility.get(LocationConstants.CSV_STATE_ID).toString() + "_" +
+                        healthFacility.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+                        healthFacility.get(LocationConstants.HEALTHBLOCK_ID).toString());
+                Long healthFacilityCode = (Long) healthFacility.get(LocationConstants.HEALTHFACILITY_ID);
+                if (taluka != null && healthBlock != null && healthFacilityCode != null && !healthFacilityCode.equals(0L)) {
+                    if (i != 0) {
+                        stringBuilder.append(", ");
+                    }
+                    stringBuilder.append("(");
+                    stringBuilder.append(healthFacilityCode + ", ");
+                    stringBuilder.append(QUOTATION +
+                            StringEscapeUtils.escapeSql(healthFacility.get(LocationConstants.HEALTHFACILITY_NAME) == null ?
+                                    "" : healthFacility.get(LocationConstants.HEALTHFACILITY_NAME).toString()) + QUOTATION_COMMA);
+                    stringBuilder.append(healthBlock.getId() + ", ");
+                    stringBuilder.append(taluka.getId() + ", ");
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                    stringBuilder.append(")");
 
-                i++;
+                    i++;
+                }
             }
         }
 
