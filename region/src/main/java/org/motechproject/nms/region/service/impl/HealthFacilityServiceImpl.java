@@ -122,9 +122,12 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
     public Map<String, HealthFacility> fillHealthFacilitiesFromTalukas(List<Map<String, Object>> recordList, final Map<String, Taluka> talukaHashMap) {
         final Set<String> healthFacilityKeys = new HashSet<>();
         for(Map<String, Object> record : recordList) {
-            healthFacilityKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    record.get(LocationConstants.TALUKA_ID).toString().trim() + "_" +
-                    record.get(LocationConstants.HEALTHFACILITY_ID).toString());
+            if (record.get(LocationConstants.CSV_STATE_ID) != null && record.get(LocationConstants.DISTRICT_ID) != null
+                    && record.get(LocationConstants.TALUKA_ID) != null && record.get(LocationConstants.HEALTHFACILITY_ID) != null) {
+                healthFacilityKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+                        record.get(LocationConstants.TALUKA_ID).toString().trim() + "_" +
+                        record.get(LocationConstants.HEALTHFACILITY_ID).toString());
+            }
         }
         Map<String, HealthFacility> healthFacilityHashMap = new HashMap<>();
 

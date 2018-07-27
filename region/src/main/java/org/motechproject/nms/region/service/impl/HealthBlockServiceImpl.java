@@ -161,8 +161,11 @@ public class HealthBlockServiceImpl implements HealthBlockService {
     public Map<String, HealthBlock> fillHealthBlockIds(List<Map<String, Object>> recordList, final Map<String, District> districtHashMap) {
         final Set<String> healthBlockKeys = new HashSet<>();
         for(Map<String, Object> record : recordList) {
-            healthBlockKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    record.get(LocationConstants.HEALTHBLOCK_ID).toString());
+            if (record.get(LocationConstants.CSV_STATE_ID) != null && record.get(LocationConstants.DISTRICT_ID) != null
+                    && record.get(LocationConstants.HEALTHBLOCK_ID) != null) {
+                healthBlockKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+                        record.get(LocationConstants.HEALTHBLOCK_ID).toString());
+            }
         }
         Map<String, HealthBlock> healthBlockHashMap = new HashMap<>();
 

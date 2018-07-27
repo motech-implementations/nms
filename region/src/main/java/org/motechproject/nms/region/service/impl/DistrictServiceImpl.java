@@ -215,7 +215,9 @@ public class DistrictServiceImpl implements DistrictService {
     public Map<String, District> fillDistrictIds(List<Map<String, Object>> recordList, final Map<String, State> stateHashMap) {
         final Set<String> districtKeys = new HashSet<>();
         for(Map<String, Object> record : recordList) {
-            districtKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString());
+            if (record.get(LocationConstants.CSV_STATE_ID) != null && record.get(LocationConstants.DISTRICT_ID) != null) {
+                districtKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString());
+            }
         }
         Map<String, District> districtHashMap = new HashMap<>();
 

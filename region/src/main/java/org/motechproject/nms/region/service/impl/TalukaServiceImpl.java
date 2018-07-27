@@ -118,8 +118,11 @@ public class TalukaServiceImpl implements TalukaService {
     public Map<String, Taluka> fillTalukaIds(List<Map<String, Object>> recordList, final Map<String, District> districtHashMap) {
         final Set<String> talukaKeys = new HashSet<>();
         for(Map<String, Object> record : recordList) {
-            talukaKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    record.get(LocationConstants.TALUKA_ID).toString().trim());
+            if (record.get(LocationConstants.CSV_STATE_ID) != null && record.get(LocationConstants.DISTRICT_ID) != null
+                    && record.get(LocationConstants.TALUKA_ID) != null) {
+                talukaKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+                        record.get(LocationConstants.TALUKA_ID).toString().trim());
+            }
         }
         Map<String, Taluka> talukaHashMap = new HashMap<>();
 

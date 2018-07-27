@@ -66,7 +66,9 @@ public class StateServiceImpl implements StateService {
     public Map<String, State> fillStateIds(List<Map<String, Object>> recordList) {
         final Set<String> stateKeys = new HashSet<>();
         for(Map<String, Object> record : recordList) {
-            stateKeys.add(record.get(CSV_STATE_ID).toString());
+            if (record.get(CSV_STATE_ID) != null) {
+                stateKeys.add(record.get(CSV_STATE_ID).toString());
+            }
         }
         Map<String, State> stateHashMap = new HashMap<>();
         Timer queryTimer = new Timer();
