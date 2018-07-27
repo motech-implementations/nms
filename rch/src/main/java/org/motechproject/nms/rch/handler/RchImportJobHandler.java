@@ -65,14 +65,7 @@ public class RchImportJobHandler {
         initMotherReadJob();
         initChildReadJob();
         initAshaReadJob();
-        initDistrictReadJob();
-        initTalukaReadJob();
-        initVillageReadJob();
-        initHealthBlockReadJob();
-        initTalukaHealthBlockReadJob();
-        initHealthFacilityReadJob();
-        initHealthSubFacilityReadJob();
-        initVillageHealthSubFacilityReadJob();
+        initLocationReadJob();
     }
 
     public void initMotherReadJob() {
@@ -91,8 +84,8 @@ public class RchImportJobHandler {
         motechSchedulerService.safeScheduleJob(rchMotherRead);
     }
 
-    public void initDistrictReadJob() {
-        String cronExpression = settingsFacade.getProperty(Constants.RCH_DISTRICT_READ_CRON);
+    public void initLocationReadJob() {
+        String cronExpression = settingsFacade.getProperty(Constants.RCH_LOCATION_READ_CRON);
         if (StringUtils.isBlank(cronExpression)) {
             LOGGER.warn(NO_CRON_CONFIGURED);
             return;
@@ -102,122 +95,9 @@ public class RchImportJobHandler {
             throw new RchImportConfigurationException("Cron expression for district read is invalid: " + cronExpression);
         }
 
-        LOGGER.info("Created RCH District Read Event");
-        CronSchedulableJob rchDistrictRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_DISTRICT_READ_SUBJECT), cronExpression);
+        LOGGER.info("Created RCH location Read Event");
+        CronSchedulableJob rchDistrictRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_LOCATION_READ_SUBJECT), cronExpression);
         motechSchedulerService.safeScheduleJob(rchDistrictRead);
-    }
-
-    public void initTalukaReadJob() {
-        String cronExpression = settingsFacade.getProperty(Constants.RCH_TALUKA_READ_CRON);
-        if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn(NO_CRON_CONFIGURED);
-            return;
-        }
-
-        if (!CronExpression.isValidExpression(cronExpression)) {
-            throw new RchImportConfigurationException("Cron expression for taluka read is invalid: " + cronExpression);
-        }
-
-        LOGGER.info("Created RCH Taluka Read Event");
-        CronSchedulableJob rchTalukaRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_TALUKA_READ_SUBJECT), cronExpression);
-        motechSchedulerService.safeScheduleJob(rchTalukaRead);
-    }
-
-    public void initVillageReadJob() {
-        String cronExpression = settingsFacade.getProperty(Constants.RCH_VILLAGE_READ_CRON);
-        if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn(NO_CRON_CONFIGURED);
-            return;
-        }
-
-        if (!CronExpression.isValidExpression(cronExpression)) {
-            throw new RchImportConfigurationException("Cron expression for village read is invalid: " + cronExpression);
-        }
-
-        LOGGER.info("Created RCH Taluka Read Event");
-        CronSchedulableJob rchVillageRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_VILLAGE_READ_SUBJECT), cronExpression);
-        motechSchedulerService.safeScheduleJob(rchVillageRead);
-    }
-
-
-    public void initHealthBlockReadJob() {
-        String cronExpression = settingsFacade.getProperty(Constants.RCH_HEALTHBLOCK_READ_CRON);
-        if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn(NO_CRON_CONFIGURED);
-            return;
-        }
-
-        if (!CronExpression.isValidExpression(cronExpression)) {
-            throw new RchImportConfigurationException("Cron expression for healthBlock read is invalid: " + cronExpression);
-        }
-
-        LOGGER.info("Created RCH healthBlock Read Event");
-        CronSchedulableJob rchHealthBlockRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_HEALTHBLOCK_READ_SUBJECT), cronExpression);
-        motechSchedulerService.safeScheduleJob(rchHealthBlockRead);
-    }
-
-    public void initTalukaHealthBlockReadJob() {
-        String cronExpression = settingsFacade.getProperty(Constants.RCH_TALUKA_HEALTHBLOCK_READ_CRON);
-        if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn(NO_CRON_CONFIGURED);
-            return;
-        }
-
-        if (!CronExpression.isValidExpression(cronExpression)) {
-            throw new RchImportConfigurationException("Cron expression for taluka healthBlock read is invalid: " + cronExpression);
-        }
-
-        LOGGER.info("Created RCH taluka healthBlock Read Event");
-        CronSchedulableJob rchTalukaHealthBlockRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_TALUKA_HEALTHBLOCK_READ_SUBJECT), cronExpression);
-        motechSchedulerService.safeScheduleJob(rchTalukaHealthBlockRead);
-    }
-
-    public void initHealthFacilityReadJob() {
-        String cronExpression = settingsFacade.getProperty(Constants.RCH_HEALTHFACILITY_READ_CRON);
-        if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn(NO_CRON_CONFIGURED);
-            return;
-        }
-
-        if (!CronExpression.isValidExpression(cronExpression)) {
-            throw new RchImportConfigurationException("Cron expression for healthFacility read is invalid: " + cronExpression);
-        }
-
-        LOGGER.info("Created RCH healthFacility Read Event");
-        CronSchedulableJob rchHealthFacilityRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_HEALTHFACILITY_READ_SUBJECT), cronExpression);
-        motechSchedulerService.safeScheduleJob(rchHealthFacilityRead);
-    }
-
-    public void initHealthSubFacilityReadJob() {
-        String cronExpression = settingsFacade.getProperty(Constants.RCH_HEALTHSUBFACILITY_READ_CRON);
-        if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn(NO_CRON_CONFIGURED);
-            return;
-        }
-
-        if (!CronExpression.isValidExpression(cronExpression)) {
-            throw new RchImportConfigurationException("Cron expression for healthSubFacility read is invalid: " + cronExpression);
-        }
-
-        LOGGER.info("Created RCH healthFacility Read Event");
-        CronSchedulableJob rchHealthSubFacilityRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_HEALTHSUBFACILITY_READ_SUBJECT), cronExpression);
-        motechSchedulerService.safeScheduleJob(rchHealthSubFacilityRead);
-    }
-
-    public void initVillageHealthSubFacilityReadJob() {
-        String cronExpression = settingsFacade.getProperty(Constants.RCH_VILLAGEHEALTHSUBFACILITY_READ_CRON);
-        if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn(NO_CRON_CONFIGURED);
-            return;
-        }
-
-        if (!CronExpression.isValidExpression(cronExpression)) {
-            throw new RchImportConfigurationException("Cron expression for villageHealthSubFacility read is invalid: " + cronExpression);
-        }
-
-        LOGGER.info("Created RCH healthFacility Read Event");
-        CronSchedulableJob rchVillageHealthSubFacilityRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_VILLAGEHEALTHSUBFACILITY_READ_SUBJECT), cronExpression);
-        motechSchedulerService.safeScheduleJob(rchVillageHealthSubFacilityRead);
     }
 
     public void initChildReadJob() {
