@@ -653,57 +653,59 @@ public class LocationServiceImpl implements LocationService {
         Map<String, HealthFacility> healthFacilityHashMap;
 
         Long updatedRecords = 0L;
-        switch (locationType) {
-            case DISTRICT :
-                stateHashMap = stateService.fillStateIds(recordList);
-                updatedRecords = districtService.createUpdateDistricts(recordList, stateHashMap);
-                break;
+        if (recordList.size()>0) {
+            switch (locationType) {
+                case DISTRICT:
+                    stateHashMap = stateService.fillStateIds(recordList);
+                    updatedRecords = districtService.createUpdateDistricts(recordList, stateHashMap);
+                    break;
 
-            case TALUKA:
-                stateHashMap = stateService.fillStateIds(recordList);
-                districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
-                updatedRecords = talukaService.createUpdateTalukas(recordList, districtHashMap);
-                break;
+                case TALUKA:
+                    stateHashMap = stateService.fillStateIds(recordList);
+                    districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
+                    updatedRecords = talukaService.createUpdateTalukas(recordList, districtHashMap);
+                    break;
 
-            case VILLAGE:
-                stateHashMap = stateService.fillStateIds(recordList);
-                districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
-                talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
-                updatedRecords = villageService.createUpdateVillages(recordList, talukaHashMap);
-                break;
+                case VILLAGE:
+                    stateHashMap = stateService.fillStateIds(recordList);
+                    districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
+                    talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
+                    updatedRecords = villageService.createUpdateVillages(recordList, talukaHashMap);
+                    break;
 
-            case HEALTHBLOCK:
-                stateHashMap = stateService.fillStateIds(recordList);
-                districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
-                talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
-                updatedRecords = healthBlockService.createUpdateHealthBlocks(recordList, districtHashMap, talukaHashMap);
-                break;
+                case HEALTHBLOCK:
+                    stateHashMap = stateService.fillStateIds(recordList);
+                    districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
+                    talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
+                    updatedRecords = healthBlockService.createUpdateHealthBlocks(recordList, districtHashMap, talukaHashMap);
+                    break;
 
-            case TALUKAHEALTHBLOCK:
-                updatedRecords = healthBlockService.createUpdateTalukaHealthBlock(recordList);
-                break;
+                case TALUKAHEALTHBLOCK:
+                    updatedRecords = healthBlockService.createUpdateTalukaHealthBlock(recordList);
+                    break;
 
-            case HEALTHFACILITY:
-                stateHashMap = stateService.fillStateIds(recordList);
-                districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
-                talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
-                healthBlockHashMap = healthBlockService.fillHealthBlockIds(recordList, districtHashMap);
-                updatedRecords = healthFacilityService.createUpdateHealthFacilities(recordList, talukaHashMap, healthBlockHashMap);
-                break;
+                case HEALTHFACILITY:
+                    stateHashMap = stateService.fillStateIds(recordList);
+                    districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
+                    talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
+                    healthBlockHashMap = healthBlockService.fillHealthBlockIds(recordList, districtHashMap);
+                    updatedRecords = healthFacilityService.createUpdateHealthFacilities(recordList, talukaHashMap, healthBlockHashMap);
+                    break;
 
-            case HEALTHSUBFACILITY:
-                stateHashMap = stateService.fillStateIds(recordList);
-                districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
-                talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
-                //Adding Health Facilities using Talukas as HealthBlock code is not given
-                healthFacilityHashMap = healthFacilityService.fillHealthFacilitiesFromTalukas(recordList, talukaHashMap);
-                updatedRecords = healthSubFacilityService.createUpdateHealthSubFacilities(recordList, talukaHashMap, healthFacilityHashMap);
-                break;
+                case HEALTHSUBFACILITY:
+                    stateHashMap = stateService.fillStateIds(recordList);
+                    districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
+                    talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
+                    //Adding Health Facilities using Talukas as HealthBlock code is not given
+                    healthFacilityHashMap = healthFacilityService.fillHealthFacilitiesFromTalukas(recordList, talukaHashMap);
+                    updatedRecords = healthSubFacilityService.createUpdateHealthSubFacilities(recordList, talukaHashMap, healthFacilityHashMap);
+                    break;
 
-            case VILLAGEHEALTHSUBFACILITY:
-                updatedRecords = healthSubFacilityService.createUpdateVillageHealthSubFacility(recordList);
-                break;
+                case VILLAGEHEALTHSUBFACILITY:
+                    updatedRecords = healthSubFacilityService.createUpdateVillageHealthSubFacility(recordList);
+                    break;
 
+            }
         }
         LOGGER.debug("File {}, Part {} processed. {} records updated", rchImportFileName, partNumber, updatedRecords);
         return updatedRecords;
