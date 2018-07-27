@@ -35,6 +35,7 @@ public final class LocationConstants {
 
     public static final Long LOCATION_PART_SIZE = 5000L;
     public static final Long SMALL_LOCATION_PART_SIZE = 2000L;
+    public static final String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
 
     private LocationConstants() {
     }
