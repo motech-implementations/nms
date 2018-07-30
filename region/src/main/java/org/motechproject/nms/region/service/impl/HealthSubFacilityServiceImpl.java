@@ -114,7 +114,7 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
         return createdHealthSubFacilities;
     }
 
-    private String healthSubFacilityQuerySet(List<Map<String, Object>> healthSubFacilities, Map<String, Taluka> talukaHashMap, Map<String, HealthFacility> healthFacilityHashMap) {
+    private String healthSubFacilityQuerySet(List<Map<String, Object>> healthSubFacilities, Map<String, Taluka> talukaHashMap, Map<String, HealthFacility> healthFacilityHashMap) { //NO CHECKSTYLE Cyclomatic Complexity
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
         DateTime dateTimeNow = new DateTime();
@@ -130,7 +130,7 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
                         healthSubFacility.get(LocationConstants.TALUKA_ID).toString().trim() + "_" +
                         healthSubFacility.get(LocationConstants.HEALTHFACILITY_ID).toString());
                 Long healthSubFacilityCode = (Long) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_ID);
-                if (taluka != null && healthFacility != null && healthSubFacilityCode != null && !healthSubFacilityCode.equals(0L)) {
+                if (taluka != null && healthFacility != null && healthSubFacilityCode != null && !((Long) (0L)).equals(healthSubFacilityCode)) {
                     if (i != 0) {
                         stringBuilder.append(", ");
                     }

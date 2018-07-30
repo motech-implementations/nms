@@ -118,7 +118,7 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
     }
 
 
-    @Override
+    @Override //NO CHECKSTYLE Cyclomatic Complexity
     public Map<String, HealthFacility> fillHealthFacilitiesFromTalukas(List<Map<String, Object>> recordList, final Map<String, Taluka> talukaHashMap) {
         final Set<String> healthFacilityKeys = new HashSet<>();
         for(Map<String, Object> record : recordList) {
@@ -188,7 +188,7 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
         return healthFacilityHashMap;
     }
 
-    private String healthFacilityQuerySet(List<Map<String, Object>> healthFacilities, Map<String, Taluka> talukaHashMap, Map<String, HealthBlock> healthBlockHashMap) {
+    private String healthFacilityQuerySet(List<Map<String, Object>> healthFacilities, Map<String, Taluka> talukaHashMap, Map<String, HealthBlock> healthBlockHashMap) { //NO CHECKSTYLE Cyclomatic Complexity
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
         DateTime dateTimeNow = new DateTime();
@@ -203,25 +203,27 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
                         healthFacility.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                         healthFacility.get(LocationConstants.HEALTHBLOCK_ID).toString());
                 Long healthFacilityCode = (Long) healthFacility.get(LocationConstants.HEALTHFACILITY_ID);
-                if (taluka != null && healthBlock != null && healthFacilityCode != null && !healthFacilityCode.equals(0L) && healthBlock.getDistrict().getId().equals(taluka.getDistrict().getId())) {
-                    if (i != 0) {
-                        stringBuilder.append(", ");
-                    }
-                    stringBuilder.append("(");
-                    stringBuilder.append(healthFacilityCode + ", ");
-                    stringBuilder.append(QUOTATION +
-                            StringEscapeUtils.escapeSql(healthFacility.get(LocationConstants.HEALTHFACILITY_NAME) == null ?
-                                    "" : healthFacility.get(LocationConstants.HEALTHFACILITY_NAME).toString()) + QUOTATION_COMMA);
-                    stringBuilder.append(healthBlock.getId() + ", ");
-                    stringBuilder.append(taluka.getId() + ", ");
-                    stringBuilder.append(MOTECH_STRING);
-                    stringBuilder.append(MOTECH_STRING);
-                    stringBuilder.append(MOTECH_STRING);
-                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
-                    stringBuilder.append(")");
+                if (taluka != null && healthBlock != null && healthFacilityCode != null) {
+                    if (!((Long) (0L)).equals(healthFacilityCode) && healthBlock.getDistrict().getId().equals(taluka.getDistrict().getId())) {
+                        if (i != 0) {
+                            stringBuilder.append(", ");
+                        }
+                        stringBuilder.append("(");
+                        stringBuilder.append(healthFacilityCode + ", ");
+                        stringBuilder.append(QUOTATION +
+                                StringEscapeUtils.escapeSql(healthFacility.get(LocationConstants.HEALTHFACILITY_NAME) == null ?
+                                        "" : healthFacility.get(LocationConstants.HEALTHFACILITY_NAME).toString()) + QUOTATION_COMMA);
+                        stringBuilder.append(healthBlock.getId() + ", ");
+                        stringBuilder.append(taluka.getId() + ", ");
+                        stringBuilder.append(MOTECH_STRING);
+                        stringBuilder.append(MOTECH_STRING);
+                        stringBuilder.append(MOTECH_STRING);
+                        stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                        stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                        stringBuilder.append(")");
 
-                    i++;
+                        i++;
+                    }
                 }
             }
         }
