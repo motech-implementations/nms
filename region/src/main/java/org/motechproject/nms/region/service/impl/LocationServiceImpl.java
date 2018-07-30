@@ -53,6 +53,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -89,6 +91,8 @@ import static org.motechproject.nms.region.utils.LocationConstants.VILLAGE_NAME;
 public class LocationServiceImpl implements LocationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LocationServiceImpl.class);
+
+    private static final Integer PARTITION_SIZE = 2000;
 
     private StateService stateService;
 
@@ -1023,56 +1027,71 @@ public class LocationServiceImpl implements LocationService {
      * @param talukaHashMap contains (stateCode_districtCode_talukaCode, Taluka) with original Taluka objects from database
      */
     private void fillVillages(Map<String, Village> villageHashMap, final Map<String, Taluka> talukaHashMap) {
+        int count = 0;
         Timer queryTimer = new Timer();
-        final Set<String> villageKeys = villageHashMap.keySet();
         Map<Long, String> talukaIdMap = new HashMap<>();
+        List<Village> villagesTotal = new ArrayList<>();
         for (String districtKey : talukaHashMap.keySet()) {
             talukaIdMap.put(talukaHashMap.get(districtKey).getId(), districtKey);
         }
+        final Set<String> villageKeys = villageHashMap.keySet();
+        Iterator<String> iterator = villageKeys.iterator();
 
-        @SuppressWarnings("unchecked")
-        SqlQueryExecution<List<Village>> queryExecution = new SqlQueryExecution<List<Village>>() {
+        while (iterator.hasNext()) {
+            final Set<String> villageKeysPart = new HashSet<>();
+            while (villageKeysPart.size() < PARTITION_SIZE && count < villageKeys.size()) {
+                villageKeysPart.add(iterator.next());
+                count++;
+            }
 
-            @Override
-            public String getSqlQuery() {
-                String query = "SELECT * from nms_villages where";
-                int count = villageKeys.size();
-                for (String villageString : villageKeys) {
-                    count--;
-                    String[] ids = villageString.split("_");
-                    Long talukaId = talukaHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]).getId();
-                    query += " (vcode = " + ids[3] + " and svid = " + ids[4] + " and taluka_id_oid = " + talukaId + ")";
-                    if (count > 0) {
-                        query += OR_SQL_STRING;
+
+            @SuppressWarnings("unchecked")
+            SqlQueryExecution<List<Village>> queryExecution = new SqlQueryExecution<List<Village>>() {
+
+                @Override
+                public String getSqlQuery() {
+                    String query = "SELECT * from nms_villages where";
+                    int count = villageKeysPart.size();
+                    for (String villageString : villageKeysPart) {
+                        count--;
+                        String[] ids = villageString.split("_");
+                        Long talukaId = talukaHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]).getId();
+                        query += " (vcode = " + ids[3] + " and svid = " + ids[4] + " and taluka_id_oid = " + talukaId + ")";
+                        if (count > 0) {
+                            query += OR_SQL_STRING;
+                        }
                     }
+
+                    LOGGER.debug("VILLAGE Query: {}", query);
+                    return query;
                 }
 
-                LOGGER.debug("VILLAGE Query: {}", query);
-                return query;
-            }
-
-            @Override
-            public List<Village> execute(Query query) {
-                query.setClass(Village.class);
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
-                List<Village> villages;
-                if (fqr.isEmpty()) {
-                    return null;
+                @Override
+                public List<Village> execute(Query query) {
+                    query.setClass(Village.class);
+                    ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                    List<Village> villages;
+                    if (fqr.isEmpty()) {
+                        return null;
+                    }
+                    villages = (List<Village>) fqr;
+                    return villages;
                 }
-                villages = (List<Village>) fqr;
-                return villages;
-            }
-        };
+            };
 
-        List<Village> villages = villageDataService.executeSQLQuery(queryExecution);
+             villagesTotal.addAll(villageDataService.executeSQLQuery(queryExecution));
+
+        }
+
         LOGGER.debug("VILLAGE Query time: {}", queryTimer.time());
-        if(villages != null && !villages.isEmpty()) {
-            for (Village village : villages) {
+        if(villagesTotal != null && !villagesTotal.isEmpty()) {
+            for (Village village : villagesTotal) {
                 String talukaKey = talukaIdMap.get(village.getTaluka().getId());
                 villageHashMap.put(talukaKey + "_" + village.getVcode() + "_" + village.getSvid(), village);
             }
         }
     }
+
 
     /**
      * Fills healthBlockHashMap with HealthBlock objects from database
@@ -1140,51 +1159,63 @@ public class LocationServiceImpl implements LocationService {
      *                           with original HealthBlock objects from database
      */
     private void fillHealthFacilities(Map<String, HealthFacility> healthFacilityHashMap, final Map<String, HealthBlock> healthBlockHashMap) {
+        int count = 0;
+        List<HealthFacility> healthFacilitiesTotal = new ArrayList<>();
         Timer queryTimer = new Timer();
-        final Set<String> healthFacilityKeys = healthFacilityHashMap.keySet();
         Map<Long, String> healthBlockIdMap = new HashMap<>();
         for (String healthBlockKey : healthBlockHashMap.keySet()) {
             healthBlockIdMap.put(healthBlockHashMap.get(healthBlockKey).getId(), healthBlockKey);
         }
+        final Set<String> healthFacilityKeys = healthFacilityHashMap.keySet();
+        Iterator<String> iterator = healthFacilityKeys.iterator();
 
-        @SuppressWarnings("unchecked")
-        SqlQueryExecution<List<HealthFacility>> queryExecution = new SqlQueryExecution<List<HealthFacility>>() {
+        while (iterator.hasNext()) {
+            final Set<String> healthFacilityKeysPart = new HashSet<>();
+            while (healthFacilityKeysPart.size() < PARTITION_SIZE && count < healthFacilityKeys.size()) {
+                healthFacilityKeysPart.add(iterator.next());
+                count++;
+            }
 
-            @Override
-            public String getSqlQuery() {
-                String query = "SELECT * from nms_health_facilities where";
-                int count = healthFacilityKeys.size();
-                for (String healthFacilityString : healthFacilityKeys) {
-                    count--;
-                    String[] ids = healthFacilityString.split("_");
-                    Long healthBlockId = healthBlockHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]).getId();
-                    query += CODE_SQL_STRING + ids[3] +  " and healthBlock_id_oid = " + healthBlockId + ")";
-                    if (count > 0) {
-                        query += OR_SQL_STRING;
+
+            @SuppressWarnings("unchecked")
+            SqlQueryExecution<List<HealthFacility>> queryExecution = new SqlQueryExecution<List<HealthFacility>>() {
+
+                @Override
+                public String getSqlQuery() {
+                    String query = "SELECT * from nms_health_facilities where";
+                    int count = healthFacilityKeysPart.size();
+                    for (String healthFacilityString : healthFacilityKeysPart) {
+                        count--;
+                        String[] ids = healthFacilityString.split("_");
+                        Long healthBlockId = healthBlockHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]).getId();
+                        query += CODE_SQL_STRING + ids[3] + " and healthBlock_id_oid = " + healthBlockId + ")";
+                        if (count > 0) {
+                            query += OR_SQL_STRING;
+                        }
                     }
+
+                    LOGGER.debug("HEALTHFACILITY Query: {}", query);
+                    return query;
                 }
 
-                LOGGER.debug("HEALTHFACILITY Query: {}", query);
-                return query;
-            }
-
-            @Override
-            public List<HealthFacility> execute(Query query) {
-                query.setClass(HealthFacility.class);
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
-                List<HealthFacility> healthFacilities;
-                if (fqr.isEmpty()) {
-                    return null;
+                @Override
+                public List<HealthFacility> execute(Query query) {
+                    query.setClass(HealthFacility.class);
+                    ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                    List<HealthFacility> healthFacilities;
+                    if (fqr.isEmpty()) {
+                        return null;
+                    }
+                    healthFacilities = (List<HealthFacility>) fqr;
+                    return healthFacilities;
                 }
-                healthFacilities = (List<HealthFacility>) fqr;
-                return healthFacilities;
-            }
-        };
+            };
 
-        List<HealthFacility> healthFacilities = healthFacilityDataService.executeSQLQuery(queryExecution);
+            healthFacilitiesTotal.addAll(healthFacilityDataService.executeSQLQuery(queryExecution));
+        }
         LOGGER.debug("HEALTHFACILITY Query time: {}", queryTimer.time());
-        if(healthFacilities != null && !healthFacilities.isEmpty()) {
-            for (HealthFacility healthFacility : healthFacilities) {
+        if(healthFacilitiesTotal != null && !healthFacilitiesTotal.isEmpty()) {
+            for (HealthFacility healthFacility : healthFacilitiesTotal) {
                 String healthBlockKey = healthBlockIdMap.get(healthFacility.getHealthBlock().getId());
                 healthFacilityHashMap.put(healthBlockKey + "_" + healthFacility.getCode(), healthFacility);
             }
@@ -1200,51 +1231,62 @@ public class LocationServiceImpl implements LocationService {
      *                           with original HealthFacility objects from database
      */
     private void fillHealthSubFacilities(Map<String, HealthSubFacility> healthSubFacilityHashMap, final Map<String, HealthFacility> healthFacilityHashMap) {
+        int count = 0;
+        List<HealthSubFacility> healthSubFacilitiesTotal = new ArrayList<>();
         Timer queryTimer = new Timer();
-        final Set<String> healthSubFacilityKeys = healthSubFacilityHashMap.keySet();
         Map<Long, String> healthFacilityIdMap = new HashMap<>();
         for (String healthFacilityKey : healthFacilityHashMap.keySet()) {
             healthFacilityIdMap.put(healthFacilityHashMap.get(healthFacilityKey).getId(), healthFacilityKey);
         }
+        final Set<String> healthSubFacilityKeys = healthSubFacilityHashMap.keySet();
+        Iterator<String> iterator = healthSubFacilityKeys.iterator();
 
-        @SuppressWarnings("unchecked")
-        SqlQueryExecution<List<HealthSubFacility>> queryExecution = new SqlQueryExecution<List<HealthSubFacility>>() {
+        while (iterator.hasNext()) {
+            final Set<String> healthSubFacilityKeysPart = new HashSet<>();
+            while (healthSubFacilityKeysPart.size() < PARTITION_SIZE && count < healthSubFacilityKeys.size()) {
+                healthSubFacilityKeysPart.add(iterator.next());
+                count++;
+            }
 
-            @Override
-            public String getSqlQuery() {
-                String query = "SELECT * from nms_health_sub_facilities where";
-                int count = healthSubFacilityKeys.size();
-                for (String healthFacilityString : healthSubFacilityKeys) {
-                    count--;
-                    String[] ids = healthFacilityString.split("_");
-                    Long healthFacilityId = healthFacilityHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2] + "_" + ids[3]).getId();
-                    query += CODE_SQL_STRING + ids[4] +  " and healthFacility_id_oid = " + healthFacilityId + ")";
-                    if (count > 0) {
-                        query += OR_SQL_STRING;
+            @SuppressWarnings("unchecked")
+            SqlQueryExecution<List<HealthSubFacility>> queryExecution = new SqlQueryExecution<List<HealthSubFacility>>() {
+
+                @Override
+                public String getSqlQuery() {
+                    String query = "SELECT * from nms_health_sub_facilities where";
+                    int count = healthSubFacilityKeysPart.size();
+                    for (String healthFacilityString : healthSubFacilityKeysPart) {
+                        count--;
+                        String[] ids = healthFacilityString.split("_");
+                        Long healthFacilityId = healthFacilityHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2] + "_" + ids[3]).getId();
+                        query += CODE_SQL_STRING + ids[4] + " and healthFacility_id_oid = " + healthFacilityId + ")";
+                        if (count > 0) {
+                            query += OR_SQL_STRING;
+                        }
                     }
+
+                    LOGGER.debug("HEALTHSUBFACILITY Query: {}", query);
+                    return query;
                 }
 
-                LOGGER.debug("HEALTHSUBFACILITY Query: {}", query);
-                return query;
-            }
-
-            @Override
-            public List<HealthSubFacility> execute(Query query) {
-                query.setClass(HealthSubFacility.class);
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
-                List<HealthSubFacility> healthSubFacilities;
-                if (fqr.isEmpty()) {
-                    return null;
+                @Override
+                public List<HealthSubFacility> execute(Query query) {
+                    query.setClass(HealthSubFacility.class);
+                    ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                    List<HealthSubFacility> healthSubFacilities;
+                    if (fqr.isEmpty()) {
+                        return null;
+                    }
+                    healthSubFacilities = (List<HealthSubFacility>) fqr;
+                    return healthSubFacilities;
                 }
-                healthSubFacilities = (List<HealthSubFacility>) fqr;
-                return healthSubFacilities;
-            }
-        };
+            };
 
-        List<HealthSubFacility> healthSubFacilities = healthSubFacilityDataService.executeSQLQuery(queryExecution);
+            healthSubFacilitiesTotal.addAll(healthSubFacilityDataService.executeSQLQuery(queryExecution));
+        }
         LOGGER.debug("HEALTHSUBFACILITY Query time: {}", queryTimer.time());
-        if(healthSubFacilities != null && !healthSubFacilities.isEmpty()) {
-            for (HealthSubFacility healthSubFacility : healthSubFacilities) {
+        if(healthSubFacilitiesTotal != null && !healthSubFacilitiesTotal.isEmpty()) {
+            for (HealthSubFacility healthSubFacility : healthSubFacilitiesTotal) {
                 String healthFacilityKey = healthFacilityIdMap.get(healthSubFacility.getHealthFacility().getId());
                 healthSubFacilityHashMap.put(healthFacilityKey + "_" + healthSubFacility.getCode(), healthSubFacility);
             }
