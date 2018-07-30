@@ -189,7 +189,7 @@ public class DistrictServiceImpl implements DistrictService {
             if (district.get(LocationConstants.CSV_STATE_ID) != null) {
                 State state = stateHashMap.get(district.get(LocationConstants.CSV_STATE_ID).toString());
                 Long districtCode = (Long) district.get(LocationConstants.DISTRICT_ID);
-                if (state != null && districtCode != null && !districtCode.equals(0L)) {
+                if (state != null && districtCode != null && !((Long) (0L)).equals(districtCode)) {
                     if (i != 0) {
                         stringBuilder.append(", ");
                     }

@@ -226,7 +226,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
         return healthBlockHashMap;
     }
 
-    private String healthBlockQuerySet(final List<Map<String, Object>> healthBlocks, final Map<String, District> districtHashMap, final Map<String, Taluka> talukaHashMap) {
+    private String healthBlockQuerySet(List<Map<String, Object>> healthBlocks, Map<String, District> districtHashMap, Map<String, Taluka> talukaHashMap) { //NO CHECKSTYLE Cyclomatic Complexity
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
         DateTime dateTimeNow = new DateTime();
@@ -238,7 +238,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                 Taluka taluka = talukaHashMap.get(healthBlock.get(LocationConstants.CSV_STATE_ID).toString() + "_" + healthBlock.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                         healthBlock.get(LocationConstants.TALUKA_ID).toString().trim());
                 Long healthBlockCode = (Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID);
-                if (district != null && taluka != null && healthBlockCode != null && !healthBlockCode.equals(0L)) {
+                if (district != null && taluka != null && healthBlockCode != null && !((Long) (0L)).equals(healthBlockCode)) {
                     if (i != 0) {
                         stringBuilder.append(", ");
                     }

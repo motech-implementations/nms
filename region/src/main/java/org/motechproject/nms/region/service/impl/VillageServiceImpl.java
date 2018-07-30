@@ -113,7 +113,7 @@ public class VillageServiceImpl implements VillageService {
         return createdVillages;
     }
 
-    private String villageQuerySet(List<Map<String, Object>> villages, Map<String, Taluka> talukaHashMap) {
+    private String villageQuerySet(List<Map<String, Object>> villages, Map<String, Taluka> talukaHashMap) { //NO CHECKSTYLE Cyclomatic Complexity
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
         DateTime dateTimeNow = new DateTime();
@@ -125,7 +125,7 @@ public class VillageServiceImpl implements VillageService {
                         village.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                         village.get(LocationConstants.TALUKA_ID).toString().trim());
                 Long villageCode = (Long) village.get(LocationConstants.VILLAGE_ID);
-                if (taluka != null && taluka.getId() != null && villageCode != null && !villageCode.equals(0L)) {
+                if (taluka != null && taluka.getId() != null && villageCode != null && !((Long) (0L)).equals(villageCode)) {
                     if (i != 0) {
                         stringBuilder.append(", ");
                     }
