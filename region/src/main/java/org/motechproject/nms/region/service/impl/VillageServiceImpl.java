@@ -105,7 +105,7 @@ public class VillageServiceImpl implements VillageService {
         };
 
         Long createdVillages = 0L;
-        if (!talukaHashMap.isEmpty()) {
+        if (!talukaHashMap.isEmpty() && !queryExecution.getSqlQuery().isEmpty()) {
             createdVillages = dataService.executeSQLQuery(queryExecution);
         }
         LOGGER.debug("VILLAGE Query time: {}", queryTimer.time());

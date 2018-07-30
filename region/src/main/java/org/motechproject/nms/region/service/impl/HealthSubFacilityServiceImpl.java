@@ -107,7 +107,7 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
         };
 
         Long createdHealthSubFacilities = 0L;
-        if (!healthFacilityHashMap.isEmpty() && !talukaHashMap.isEmpty()) {
+        if (!healthFacilityHashMap.isEmpty() && !talukaHashMap.isEmpty() && !queryExecution.getSqlQuery().isEmpty()) {
             createdHealthSubFacilities = dataService.executeSQLQuery(queryExecution);
         }
 
