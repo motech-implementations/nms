@@ -173,7 +173,7 @@ public class DistrictServiceImpl implements DistrictService {
         };
 
         Long createdDistricts = 0L;
-        if (!stateHashMap.isEmpty()) {
+        if (!stateHashMap.isEmpty() && !queryExecution.getSqlQuery().isEmpty()) {
             createdDistricts = districtDataService.executeSQLQuery(queryExecution);
         }
 
@@ -239,12 +239,14 @@ public class DistrictServiceImpl implements DistrictService {
                 String query = "SELECT * from nms_districts where";
                 int count = districtKeys.size();
                 for (String districtString : districtKeys) {
-                    count--;
                     String[] ids = districtString.split("_");
-                    Long stateId = stateHashMap.get(ids[0]).getId();
-                    query += LocationConstants.CODE_SQL_STRING + ids[1] + " and state_id_oid = " + stateId + ")";
-                    if (count > 0) {
-                        query += LocationConstants.OR_SQL_STRING;
+                    State state = stateHashMap.get(ids[0]);
+                    if (state != null) {
+                        if (count != districtKeys.size()) {
+                            query += LocationConstants.OR_SQL_STRING;
+                        }
+                        query += LocationConstants.CODE_SQL_STRING + ids[1] + " and state_id_oid = " + state.getId() + ")";
+                        count--;
                     }
                 }
 

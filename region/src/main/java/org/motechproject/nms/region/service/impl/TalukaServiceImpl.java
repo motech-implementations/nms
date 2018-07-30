@@ -107,7 +107,7 @@ public class TalukaServiceImpl implements TalukaService {
         };
 
         Long createdTalukas = 0L;
-        if (!districtHashMap.isEmpty()) {
+        if (!districtHashMap.isEmpty() && !queryExecution.getSqlQuery().isEmpty()) {
             createdTalukas = dataService.executeSQLQuery(queryExecution);
         }
 
@@ -142,14 +142,14 @@ public class TalukaServiceImpl implements TalukaService {
                 String query = "SELECT * from nms_talukas where";
                 int count = talukaKeys.size();
                 for (String talukaString : talukaKeys) {
-                    count--;
                     String[] ids = talukaString.split("_");
                     District district = districtHashMap.get(ids[0] + "_" + ids[1]);
                     if (district != null && district.getId() != null) {
-                        query += LocationConstants.CODE_SQL_STRING + ids[2] + " and district_id_oid = " + district.getId() + ")";
-                        if (count > 0) {
+                        if (count != talukaKeys.size()) {
                             query += LocationConstants.OR_SQL_STRING;
                         }
+                        query += LocationConstants.CODE_SQL_STRING + ids[2] + " and district_id_oid = " + district.getId() + ")";
+                        count--;
                     }
                 }
 

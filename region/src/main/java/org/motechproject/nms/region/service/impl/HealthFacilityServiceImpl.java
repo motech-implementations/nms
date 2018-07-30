@@ -110,7 +110,7 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
         };
 
         Long createdHealthFacilities = 0L;
-        if (!talukaHashMap.isEmpty() && !healthBlockHashMap.isEmpty()) {
+        if (!talukaHashMap.isEmpty() && !healthBlockHashMap.isEmpty() && !queryExecution.getSqlQuery().isEmpty()) {
             createdHealthFacilities = dataService.executeSQLQuery(queryExecution);
         }
 
@@ -146,14 +146,14 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
                 String query = "SELECT * from nms_health_facilities where";
                 int count = healthFacilityKeys.size();
                 for (String healthFacilityString : healthFacilityKeys) {
-                    count--;
                     String[] ids = healthFacilityString.split("_");
                     Taluka taluka = talukaHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]);
                     if (taluka != null && taluka.getId() != null) {
-                        query += LocationConstants.CODE_SQL_STRING + ids[3] + " and taluka_id_oid = " + taluka.getId() + ")";
-                        if (count > 0) {
+                        if (count != healthFacilityKeys.size()) {
                             query += LocationConstants.OR_SQL_STRING;
                         }
+                        query += LocationConstants.CODE_SQL_STRING + ids[3] + " and taluka_id_oid = " + taluka.getId() + ")";
+                        count--;
                     }
                 }
 

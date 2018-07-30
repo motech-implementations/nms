@@ -150,7 +150,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
         };
 
         Long createdHealthBlocks = 0L;
-        if (!districtHashMap.isEmpty() && !talukaHashMap.isEmpty()) {
+        if (!districtHashMap.isEmpty() && !talukaHashMap.isEmpty() && !queryExecution.getSqlQuery().isEmpty()) {
             createdHealthBlocks = healthBlockDataService.executeSQLQuery(queryExecution);
         }
 
@@ -184,14 +184,14 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                 String query = "SELECT * from nms_health_blocks where";
                 int count = healthBlockKeys.size();
                 for (String healthBlockString : healthBlockKeys) {
-                    count--;
                     String[] ids = healthBlockString.split("_");
                     District district = districtHashMap.get(ids[0] + "_" + ids[1]);
                     if (district != null && district.getId() != null) {
-                        query += "(code = " + ids[2] + " and district_id_OID = " + district.getId() + ")";
-                        if (count > 0) {
+                        if (count != healthBlockKeys.size()) {
                             query += LocationConstants.OR_SQL_STRING;
                         }
+                        query += "(code = " + ids[2] + " and district_id_OID = " + district.getId() + ")";
+                        count--;
                     }
                 }
 
