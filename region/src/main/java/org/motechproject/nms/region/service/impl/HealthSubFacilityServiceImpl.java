@@ -164,16 +164,18 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
-            public String getSqlQuery() { //as of now there are no creationDate and modificationDate
+            public String getSqlQuery() {
                 String query = "INSERT IGNORE into nms_village_healthsubfacility (village_id, healthSubFacility_id, creationDate, modificationDate) ";
+                String query2 = "";
                 int count = recordList.size();
                 for (Map<String, Object> record : recordList) {
-                    count--;
-                    if (record.get(LocationConstants.DISTRICT_ID) != null && record.get(LocationConstants.CSV_STATE_ID) != null
+                    if (record.get(LocationConstants.CSV_STATE_ID) != null
                             && record.get(LocationConstants.HEALTHSUBFACILITY_ID) != null && record.get(LocationConstants.VILLAGE_ID) != null) {
-                        query += " select v.id as village_Id, hsf.id as healthSubFacility_Id, now(), now() from nms_states s " +
-                                " JOIN nms_districts d on s.id=d.state_id_oid and d.code = " +
-                                record.get(LocationConstants.DISTRICT_ID).toString() +
+                        if (count != recordList.size()) {
+                            query2 += " UNION ";
+                        }
+                        query2 += " select v.id as village_Id, hsf.id as healthSubFacility_Id, now(), now() from nms_states s " +
+                                " JOIN nms_districts d on s.id=d.state_id_oid " +
                                 " JOIN nms_talukas t on t.district_id_oid = d.id " +
                                 " JOIN nms_villages v on v.taluka_id_oid = t.id and v.vcode = " +
                                 record.get(LocationConstants.VILLAGE_ID).toString() +
@@ -181,14 +183,17 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
                                 " JOIN nms_health_sub_facilities hsf on hsf.taluka_id_oid = v.taluka_id_oid and hsf.code =  " +
                                 record.get(LocationConstants.HEALTHSUBFACILITY_ID).toString() +
                                 " where s.code = " + record.get(LocationConstants.CSV_STATE_ID).toString();
-                        if (count > 0) {
-                            query += " UNION ";
-                        }
+                        count--;
                     }
                 }
 
-                LOGGER.debug("VILLAGE_HEALTHSUBFACILITY Query: {}", query);
-                return query;
+                if (query2.isEmpty()) {
+                    LOGGER.debug("VILLAGE_HEALTHSUBFACILITY Query: {}", query2);
+                    return query2;
+                }
+
+                LOGGER.debug("VILLAGE_HEALTHSUBFACILITY Query: {}", query + query2);
+                return query + query2;
             }
 
             @Override
@@ -197,7 +202,10 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
             }
         };
 
-        Long villageHealthSubFacilityCount = dataService.executeSQLQuery(queryExecution);
+        Long villageHealthSubFacilityCount = 0L;
+        if (!queryExecution.getSqlQuery().isEmpty()) {
+            villageHealthSubFacilityCount = dataService.executeSQLQuery(queryExecution);
+        }
         LOGGER.debug("VILLAGE_HEALTHSUBFACILITYs inserted : {}", villageHealthSubFacilityCount);
         LOGGER.debug("VILLAGE_HEALTHSUBFACILITYs INSERT Query time: {}", queryTimer.time());
         return villageHealthSubFacilityCount;

@@ -171,7 +171,7 @@ public class TalukaServiceImpl implements TalukaService {
         };
 
         List<Taluka> talukas = null;
-        if (!districtHashMap.isEmpty()) {
+        if (!districtHashMap.isEmpty() && !talukaKeys.isEmpty()) {
             talukas = dataService.executeSQLQuery(queryExecution);
         }
         LOGGER.debug("TALUKA Query time: {}", queryTimer.time());

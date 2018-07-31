@@ -174,19 +174,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String RCH_WEB_SERVICE = "RCH Web Service";
     private static final String BULK_REJECTION_ERROR_MESSAGE = "Error while bulk updating rejection records";
     private static final double THOUSAND = 1000d;
-    private static final RchUserType MOTHER = RchUserType.MOTHER;
-    private static final RchUserType CHILD = RchUserType.CHILD;
-    private static final RchUserType ASHA = RchUserType.ASHA;
-    private static final RchUserType DISTRICT = RchUserType.DISTRICT;
-    private static final RchUserType TALUKA = RchUserType.TALUKA;
-    private static final RchUserType HEALTHBLOCK = RchUserType.HEALTHBLOCK;
-    private static final RchUserType TALUKAHEALTHBLOCK = RchUserType.TALUKAHEALTHBLOCK;
-    private static final RchUserType HEALTHFACILITY = RchUserType.HEALTHFACILITY;
-    private static final RchUserType HEALTHSUBFACILITY = RchUserType.HEALTHSUBFACILITY;
-    private static final RchUserType VILLAGE = RchUserType.VILLAGE;
-    private static final RchUserType VILLAGEHEALTHSUBFACILITY = RchUserType.VILLAGEHEALTHSUBFACILITY;
-
-
 
     @Autowired
     @Qualifier("rchSettings")
