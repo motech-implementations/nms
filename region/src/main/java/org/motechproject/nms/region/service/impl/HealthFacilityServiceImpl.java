@@ -175,7 +175,7 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
         };
 
         List<HealthFacility> healthFacilities = null;
-        if (!talukaHashMap.isEmpty()) {
+        if (!talukaHashMap.isEmpty() && !healthFacilityKeys.isEmpty()) {
             healthFacilities = dataService.executeSQLQuery(queryExecution);
         }
         LOGGER.debug("HEALTHFACILITY Query time: {}", queryTimer.time());

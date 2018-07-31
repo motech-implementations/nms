@@ -213,7 +213,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
         };
 
         List<HealthBlock> healthBlocks = null;
-        if (!districtHashMap.isEmpty()) {
+        if (!districtHashMap.isEmpty() && !healthBlockKeys.isEmpty()) {
             healthBlocks = healthBlockDataService.executeSQLQuery(queryExecution);
         }
         LOGGER.debug("HEALTHBLOCK Query time: {}", queryTimer.time());
@@ -271,28 +271,34 @@ public class HealthBlockServiceImpl implements HealthBlockService {
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
-            public String getSqlQuery() { //as of now there are no creationDate and modificationDate
+            public String getSqlQuery() {
                 String query1 = "INSERT IGNORE into nms_taluka_healthblock (taluka_id, healthBlock_id, creationDate, modificationDate) ";
                 int count = recordList.size();
+                String query2 = "";
                 for (Map<String, Object> record : recordList) {
-                    count--;
                     if (record.get(LocationConstants.TALUKA_ID) != null && record.get(LocationConstants.CSV_STATE_ID) != null
                             && record.get(LocationConstants.HEALTHBLOCK_ID) != null) {
-                        query1 += " select t.id, h.id, now(), now() from nms_states s " +
+                        if (count != recordList.size()) {
+                            query2 += " UNION ";
+                        }
+                        query2 += " select t.id, h.id, now(), now() from nms_states s " +
                                 " join nms_districts d on  d.state_id_OID = s.id " +
                                 " join nms_talukas t on t.district_id_OID = d.id and t.code = " +
                                 record.get(LocationConstants.TALUKA_ID).toString().trim() +
                                 " join nms_health_blocks h on h.district_id_OID = t.district_id_OID and h.code = " +
                                 record.get(LocationConstants.HEALTHBLOCK_ID).toString() +
                                 " where s.code = " + record.get(LocationConstants.CSV_STATE_ID).toString();
-                        if (count > 0) {
-                            query1 += " UNION ";
-                        }
+                        count--;
                     }
                 }
 
-                LOGGER.debug("Taluka_HEALTHBLOCK Query: {}", query1);
-                return query1;
+                if (query2.isEmpty()) {
+                    LOGGER.debug("Taluka_HEALTHBLOCK Query: {}", query2);
+                    return query2;
+                }
+
+                LOGGER.debug("Taluka_HEALTHBLOCK Query: {}", query1 + query2);
+                return query1 + query2;
             }
 
             @Override
@@ -301,7 +307,10 @@ public class HealthBlockServiceImpl implements HealthBlockService {
             }
         };
 
-        Long healthBlockTalukaCount = healthBlockDataService.executeSQLQuery(queryExecution);
+        Long healthBlockTalukaCount = 0L;
+        if (!queryExecution.getSqlQuery().isEmpty()) {
+            healthBlockTalukaCount = healthBlockDataService.executeSQLQuery(queryExecution);
+        }
         LOGGER.debug("Taluka_HEALTHBLOCKs inserted : {}", healthBlockTalukaCount);
         LOGGER.debug("Taluka_HEALTHBLOCKs INSERT Query time: {}", queryTimer.time());
         return healthBlockTalukaCount;

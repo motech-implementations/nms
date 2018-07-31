@@ -268,7 +268,7 @@ public class DistrictServiceImpl implements DistrictService {
         };
 
         List<District> districts = null;
-        if (!stateHashMap.isEmpty()) {
+        if (!stateHashMap.isEmpty() && !districtKeys.isEmpty()) {
             districts = districtDataService.executeSQLQuery(queryExecution);
         }
         LOGGER.debug("DISTRICT Query time: {}", queryTimer.time());
