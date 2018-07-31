@@ -56,24 +56,24 @@ public final class MctsBeneficiaryUtils {
     public static void setLocationFields(Map<String, Object> locations, MctsBeneficiary beneficiary) throws InvalidLocationException {
 
         LOGGER.info("locations {}", locations);
-        if (locations.get(KilkariConstants.MAPPER_STATE) == null && locations.get(KilkariConstants.MAPPER_DISTRICT) == null) {
+        if (locations.get(KilkariConstants.STATE_ID) == null && locations.get(KilkariConstants.DISTRICT_ID) == null) {
             throw new InvalidLocationException("Missing mandatory state and district fields");
         }
 
-        if (locations.get(KilkariConstants.MAPPER_STATE) == null) {
+        if (locations.get(KilkariConstants.STATE_ID) == null) {
             throw new InvalidLocationException("Missing mandatory state field");
         }
 
-        if (locations.get(KilkariConstants.MAPPER_DISTRICT) == null) {
+        if (locations.get(KilkariConstants.DISTRICT_ID) == null) {
             throw new InvalidLocationException("Missing mandatory district field");
         }
-        beneficiary.setState((State) locations.get(KilkariConstants.MAPPER_STATE));
-        beneficiary.setDistrict((District) locations.get(KilkariConstants.MAPPER_DISTRICT));
-        beneficiary.setTaluka((Taluka) locations.get(KilkariConstants.MAPPER_TALUKA));
-        beneficiary.setHealthBlock((HealthBlock) locations.get(KilkariConstants.MAPPER_HEALTH_BLOCK));
-        beneficiary.setHealthFacility((HealthFacility) locations.get(KilkariConstants.MAPPER_PHC));
-        beneficiary.setHealthSubFacility((HealthSubFacility) locations.get(KilkariConstants.MAPPER_SUBCENTRE));
-        beneficiary.setVillage((Village) locations.get(KilkariConstants.MAPPER_CENSUS_VILLAGE + KilkariConstants.MAPPER_NON_CENSUS_VILLAGE));
+        beneficiary.setState((State) locations.get(KilkariConstants.STATE_ID));
+        beneficiary.setDistrict((District) locations.get(KilkariConstants.DISTRICT_ID));
+        beneficiary.setTaluka((Taluka) locations.get(KilkariConstants.TALUKA_ID));
+        beneficiary.setHealthBlock((HealthBlock) locations.get(KilkariConstants.HEALTH_BLOCK_ID));
+        beneficiary.setHealthFacility((HealthFacility) locations.get(KilkariConstants.PHC_ID));
+        beneficiary.setHealthSubFacility((HealthSubFacility) locations.get(KilkariConstants.SUB_CENTRE_ID));
+        beneficiary.setVillage((Village) locations.get(KilkariConstants.CENSUS_VILLAGE_ID + KilkariConstants.NON_CENSUS_VILLAGE_ID));
     }
 
     public static String createErrorMessage(String message, int rowNumber) {

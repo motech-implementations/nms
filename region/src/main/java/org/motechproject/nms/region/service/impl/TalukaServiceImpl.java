@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
+import javax.jdo.annotations.Transactional;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -77,16 +78,21 @@ public class TalukaServiceImpl implements TalukaService {
     }
 
     @Override
+    @Transactional
     public Long createUpdateTalukas(final List<Map<String, Object>> talukas, final Map<String, District> districtHashMap) {
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
             public String getSqlQuery() {
-                String query = "INSERT into nms_talukas (`code`, `name`, `district_id_OID`, " +
-                        " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
-                        talukaQuerySet(talukas, districtHashMap) +
-                        " ON DUPLICATE KEY UPDATE " +
-                        "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                String talukaValues = talukaQuerySet(talukas, districtHashMap);
+                String query = "";
+                if (!talukaValues.isEmpty()) {
+                    query = "INSERT into nms_talukas (`code`, `name`, `district_id_OID`, " +
+                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                            talukaValues +
+                            " ON DUPLICATE KEY UPDATE " +
+                            "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                }
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
@@ -100,18 +106,23 @@ public class TalukaServiceImpl implements TalukaService {
             }
         };
 
-        Long createdDistricts = dataService.executeSQLQuery(queryExecution);
+        Long createdTalukas = 0L;
+        if (!districtHashMap.isEmpty() && !queryExecution.getSqlQuery().isEmpty()) {
+            createdTalukas = dataService.executeSQLQuery(queryExecution);
+        }
 
-
-        return createdDistricts;
+        return createdTalukas;
     }
 
     @Override
     public Map<String, Taluka> fillTalukaIds(List<Map<String, Object>> recordList, final Map<String, District> districtHashMap) {
         final Set<String> talukaKeys = new HashSet<>();
         for(Map<String, Object> record : recordList) {
-            talukaKeys.add(record.get(LocationConstants.STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    record.get(LocationConstants.TALUKA_ID).toString());
+            if (record.get(LocationConstants.CSV_STATE_ID) != null && record.get(LocationConstants.DISTRICT_ID) != null
+                    && record.get(LocationConstants.TALUKA_ID) != null) {
+                talukaKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+                        record.get(LocationConstants.TALUKA_ID).toString().trim());
+            }
         }
         Map<String, Taluka> talukaHashMap = new HashMap<>();
 
@@ -131,12 +142,14 @@ public class TalukaServiceImpl implements TalukaService {
                 String query = "SELECT * from nms_talukas where";
                 int count = talukaKeys.size();
                 for (String talukaString : talukaKeys) {
-                    count--;
                     String[] ids = talukaString.split("_");
-                    Long districtId = districtHashMap.get(ids[0] + "_" + ids[1]).getId();
-                    query += LocationConstants.CODE_SQL_STRING + ids[2] + " and district_id_oid = " + districtId + ")";
-                    if (count > 0) {
-                        query += LocationConstants.OR_SQL_STRING;
+                    District district = districtHashMap.get(ids[0] + "_" + ids[1]);
+                    if (district != null && district.getId() != null) {
+                        if (count != talukaKeys.size()) {
+                            query += LocationConstants.OR_SQL_STRING;
+                        }
+                        query += LocationConstants.CODE_SQL_STRING + ids[2] + " and district_id_oid = " + district.getId() + ")";
+                        count--;
                     }
                 }
 
@@ -157,9 +170,12 @@ public class TalukaServiceImpl implements TalukaService {
             }
         };
 
-        List<Taluka> talukas = dataService.executeSQLQuery(queryExecution);
+        List<Taluka> talukas = null;
+        if (!districtHashMap.isEmpty() && !talukaKeys.isEmpty()) {
+            talukas = dataService.executeSQLQuery(queryExecution);
+        }
         LOGGER.debug("TALUKA Query time: {}", queryTimer.time());
-        if(talukas != null && !talukas.isEmpty()) {
+        if (talukas != null && !talukas.isEmpty()) {
             for (Taluka taluka : talukas) {
                 String districtKey = districtIdMap.get(taluka.getDistrict().getId());
                 talukaHashMap.put(districtKey + "_" + taluka.getCode(), taluka);
@@ -175,21 +191,28 @@ public class TalukaServiceImpl implements TalukaService {
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> taluka : talukas) {
-            if (i != 0) {
-                stringBuilder.append(", ");
-            }
-            stringBuilder.append("(");
-            stringBuilder.append(taluka.get(LocationConstants.TALUKA_ID) + ", ");
-            stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(taluka.get(LocationConstants.TALUKA_NAME).toString()) + QUOTATION_COMMA);
-            stringBuilder.append(districtHashMap.get(taluka.get(LocationConstants.STATE_ID).toString() + "_" + taluka.get(LocationConstants.DISTRICT_ID).toString()).getId() + ", ");
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
-            stringBuilder.append(")");
+            if (taluka.get(LocationConstants.CSV_STATE_ID) != null && taluka.get(LocationConstants.DISTRICT_ID) != null) {
+                District district = districtHashMap.get(taluka.get(LocationConstants.CSV_STATE_ID).toString() + "_" + taluka.get(LocationConstants.DISTRICT_ID).toString());
+                if (district != null && taluka.get(LocationConstants.TALUKA_ID) != null &&
+                        !("0000").equals(taluka.get(LocationConstants.TALUKA_ID).toString().trim())) {
+                    if (i != 0) {
+                        stringBuilder.append(", ");
+                    }
+                    stringBuilder.append("(");
+                    stringBuilder.append(QUOTATION + taluka.get(LocationConstants.TALUKA_ID).toString().trim() + QUOTATION_COMMA);
+                    stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(taluka.get(LocationConstants.TALUKA_NAME) == null ?
+                            "" : taluka.get(LocationConstants.TALUKA_NAME).toString()) + QUOTATION_COMMA);
+                    stringBuilder.append(district.getId() + ", ");
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                    stringBuilder.append(")");
 
-            i++;
+                    i++;
+                }
+            }
         }
 
         return stringBuilder.toString();

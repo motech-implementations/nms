@@ -6,5 +6,13 @@ package org.motechproject.nms.rch.domain;
 public enum RchUserType {
     ASHA,
     MOTHER,
-    CHILD
+    CHILD,
+    DISTRICT,
+    TALUKA,
+    VILLAGE,
+    HEALTHBLOCK,
+    TALUKAHEALTHBLOCK,
+    HEALTHFACILITY,
+    HEALTHSUBFACILITY,
+    VILLAGEHEALTHSUBFACILITY
 }

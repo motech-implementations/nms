@@ -25,6 +25,14 @@ public interface RchWsImportService {
 
     // TEST HOOK ONLY. Do not call directly in production.
     void importRchMothersData(MotechEvent motechEvent);
+    void importRchDistrictData(MotechEvent motechEvent);
+    void importRchTalukaData(MotechEvent motechEvent);
+    void importRchVillageData(MotechEvent motechEvent);
+    void importRchHealthBlockData(MotechEvent motechEvent);
+    void importRchTalukaHealthBlockData(MotechEvent motechEvent);
+    void importRchHealthFacilityData(MotechEvent motechEvent);
+    void importRchHealthSubFacilityData(MotechEvent motechEvent);
+    void importRchVillageHealthSubFacilityData(MotechEvent motechEvent);
     void importRchChildrenData(MotechEvent motechEvent);
     void importRchAshaData(MotechEvent motechEvent);
 }

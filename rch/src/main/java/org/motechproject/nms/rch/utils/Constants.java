@@ -14,6 +14,7 @@ public final class Constants {
     public static final String RCH_MOTHER_READ_CRON = "rch.mother.sync.cron";
     public static final String RCH_CHILD_READ_CRON = "rch.child.sync.cron";
     public static final String RCH_ASHA_READ_CRON = "rch.asha.sync.cron";
+    public static final String RCH_LOCATION_READ_CRON = "rch.location.sync.cron";
     public static final String RCH_ENDPOINT = "rch.endpointUrl";
     public static final String DAYS_TO_PULL = "rch.days_to_pull";
     public static final String HPD_STATES = "rch.hpd.states";
@@ -21,6 +22,15 @@ public final class Constants {
     public static final String RCH_MOTHER_USER = "rch.mother";
     public static final String RCH_CHILD_USER = "rch.child";
     public static final String RCH_ASHA_USER = "rch.asha";
+    public static final String RCH_LOCATION_TALUKA = "rch.taluka";
+    public static final String RCH_LOCATION_HEALTHBLOCK = "rch.healthBlock";
+    public static final String RCH_LOCATION_TALUKA_HEALTHBLOCK = "rch.talukaHealthBlock";
+    public static final String RCH_LOCATION_HEALTHFACILITY = "rch.healthFacility";
+    public static final String RCH_LOCATION_HEALTHSUBFACILITY = "rch.healthSubFacility";
+    public static final String RCH_LOCATION_VILLAGE_HEALTHSUBFACILITY = "rch.villageHealthSubFacility";
+    public static final String RCH_LOCATION_VILLAGE = "rch.village";
+    public static final String RCH_LOCATION_DISTRICT = "rch.district";
+
 
     /**
      * Events
@@ -30,9 +40,20 @@ public final class Constants {
     public static final String RCH_CHILD_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".child.import";
     public static final String RCH_MOTHER_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".mother.import";
     public static final String RCH_ASHA_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".asha.import";
-    public static final String RCH_MOTHER_READ_SUBJECT = BASE_RCH_SUBJECT + ".mother.read";
+    public static final String RCH_TALUKA_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".taluka.import";
+    public static final String RCH_VILLAGE_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".village.import";
+    public static final String RCH_DISTRICT_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".district.import";
+    public static final String RCH_HEALTHBLOCK_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".healthBlock.import";
+    public static final String RCH_TALUKA_HEALTHBLOCK_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".talukaHealthBlock.import";
+    public static final String RCH_HEALTHFACILITY_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".healthFacility.import";
+    public static final String RCH_HEALTHSUBFACILITY_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".healthSubFacility.import";
+    public static final String RCH_VILLAGEHEALTHSUBFACILITY_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".villageHealthSubFacility.import";
+
     public static final String RCH_CHILD_READ_SUBJECT = BASE_RCH_SUBJECT + ".child.read";
+    public static final String RCH_MOTHER_READ_SUBJECT = BASE_RCH_SUBJECT + ".mother.read";
     public static final String RCH_ASHA_READ_SUBJECT = BASE_RCH_SUBJECT + ".asha.read";
+    public static final String RCH_LOCATION_READ_SUBJECT = BASE_RCH_SUBJECT + ".location.read";
+
     public static final String STATE_ID_PARAM = "stateId";
     public static final String ENDPOINT_PARAM = "endpoint";
     public static final String STATE_NAME_PARAM = "stateName";
