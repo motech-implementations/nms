@@ -635,7 +635,9 @@ public class LocationServiceImpl implements LocationService {
                     count++;
                 }
                 partNumber++;
-                totalUpdatedRecords += createLocationPart(recordListPart, locationType, rchImportFile.getOriginalFilename(), partNumber);
+                if (recordListPart.size()>0) {
+                    totalUpdatedRecords += createLocationPart(recordListPart, locationType, rchImportFile.getOriginalFilename(), partNumber);
+                }
                 recordListPart.clear();
             }
             LOGGER.debug("File {} processed. {} records updated", rchImportFile.getOriginalFilename(), totalUpdatedRecords);
