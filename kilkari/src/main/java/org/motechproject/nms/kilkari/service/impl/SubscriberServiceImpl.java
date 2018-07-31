@@ -31,7 +31,6 @@ import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
-import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +64,6 @@ public class SubscriberServiceImpl implements SubscriberService {
     private SubscriptionPackDataService subscriptionPackDataService;
     private DeactivationSubscriptionAuditRecordDataService deactivationSubscriptionAuditRecordDataService;
     private BlockedMsisdnRecordDataService blockedMsisdnRecordDataService;
-    private MotherRejectionService motherRejectionService;
     private ReactivatedBeneficiaryAuditDataService reactivatedBeneficiaryAuditDataService;
     private MctsChildDataService mctsChildDataService;
     private MctsMotherDataService mctsMotherDataService;
@@ -77,7 +75,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                                  SubscriptionPackDataService subscriptionPackDataService,
                                  BlockedMsisdnRecordDataService blockedMsisdnRecordDataService,
                                  DeactivationSubscriptionAuditRecordDataService deactivationSubscriptionAuditRecordDataService,
-                                 MotherRejectionService motherRejectionService,
                                  ReactivatedBeneficiaryAuditDataService reactivatedBeneficiaryAuditDataService,
                                  MctsChildDataService mctsChildDataService) {
         this.subscriberDataService = subscriberDataService;
@@ -87,7 +84,6 @@ public class SubscriberServiceImpl implements SubscriberService {
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.deactivationSubscriptionAuditRecordDataService = deactivationSubscriptionAuditRecordDataService;
         this.blockedMsisdnRecordDataService = blockedMsisdnRecordDataService;
-        this.motherRejectionService = motherRejectionService;
         this.reactivatedBeneficiaryAuditDataService = reactivatedBeneficiaryAuditDataService;
         this.mctsChildDataService = mctsChildDataService;
     }

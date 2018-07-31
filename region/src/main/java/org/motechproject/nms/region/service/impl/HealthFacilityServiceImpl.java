@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
+import javax.jdo.annotations.Transactional;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -80,16 +81,21 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
     }
 
     @Override
+    @Transactional
     public Long createUpdateHealthFacilities(final List<Map<String, Object>> healthFacilities, final Map<String, Taluka> talukaHashMap, final Map<String, HealthBlock> healthBlockHashMap) {
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
             public String getSqlQuery() {
-                String query = "INSERT into nms_health_blocks (`code`, `name`, `healthBlock_id_OID`, `taluka_id_oid`, " +
-                        " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
-                        healthFacilityQuerySet(healthFacilities, talukaHashMap, healthBlockHashMap) +
-                        " ON DUPLICATE KEY UPDATE " +
-                        "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                String healthFacilityValues = healthFacilityQuerySet(healthFacilities, talukaHashMap, healthBlockHashMap);
+                String query = "";
+                if (!healthFacilityValues.isEmpty()) {
+                    query = "INSERT into nms_health_facilities (`code`, `name`, `healthBlock_id_OID`, `taluka_id_oid`, " +
+                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                            healthFacilityValues +
+                            " ON DUPLICATE KEY UPDATE " +
+                            "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                }
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
@@ -103,25 +109,31 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
             }
         };
 
-        Long createdDistricts = dataService.executeSQLQuery(queryExecution);
+        Long createdHealthFacilities = 0L;
+        if (!talukaHashMap.isEmpty() && !healthBlockHashMap.isEmpty() && !queryExecution.getSqlQuery().isEmpty()) {
+            createdHealthFacilities = dataService.executeSQLQuery(queryExecution);
+        }
 
-
-        return createdDistricts;
+        return createdHealthFacilities;
     }
 
-    @Override
-    public Map<String, HealthFacility> fillHealthFacilityIds(List<Map<String, Object>> recordList, final Map<String, HealthBlock> healthBlockHashMap) {
+
+    @Override //NO CHECKSTYLE Cyclomatic Complexity
+    public Map<String, HealthFacility> fillHealthFacilitiesFromTalukas(List<Map<String, Object>> recordList, final Map<String, Taluka> talukaHashMap) {
         final Set<String> healthFacilityKeys = new HashSet<>();
         for(Map<String, Object> record : recordList) {
-            healthFacilityKeys.add(record.get(LocationConstants.STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    record.get(LocationConstants.TALUKA_ID).toString() + "_" + record.get(LocationConstants.HEALTHBLOCK_ID).toString() + "_" +
-                    record.get(LocationConstants.HEALTHFACILITY_ID).toString());
+            if (record.get(LocationConstants.CSV_STATE_ID) != null && record.get(LocationConstants.DISTRICT_ID) != null
+                    && record.get(LocationConstants.TALUKA_ID) != null && record.get(LocationConstants.HEALTHFACILITY_ID) != null) {
+                healthFacilityKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+                        record.get(LocationConstants.TALUKA_ID).toString().trim() + "_" +
+                        record.get(LocationConstants.HEALTHFACILITY_ID).toString());
+            }
         }
         Map<String, HealthFacility> healthFacilityHashMap = new HashMap<>();
 
-        Map<Long, String> healthBlockIdMap = new HashMap<>();
-        for (String healthBlockKey : healthBlockHashMap.keySet()) {
-            healthBlockIdMap.put(healthBlockHashMap.get(healthBlockKey).getId(), healthBlockKey);
+        Map<Long, String> talukaIdMap = new HashMap<>();
+        for (String talukaKey : talukaHashMap.keySet()) {
+            talukaIdMap.put(talukaHashMap.get(talukaKey).getId(), talukaKey);
         }
 
         Timer queryTimer = new Timer();
@@ -134,12 +146,14 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
                 String query = "SELECT * from nms_health_facilities where";
                 int count = healthFacilityKeys.size();
                 for (String healthFacilityString : healthFacilityKeys) {
-                    count--;
                     String[] ids = healthFacilityString.split("_");
-                    Long healthBlockId = healthBlockHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[3]).getId();
-                    query += LocationConstants.CODE_SQL_STRING + ids[4] +  " and healthBlock_id_oid = " + healthBlockId + ")";
-                    if (count > 0) {
-                        query += LocationConstants.OR_SQL_STRING;
+                    Taluka taluka = talukaHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]);
+                    if (taluka != null && taluka.getId() != null) {
+                        if (count != healthFacilityKeys.size()) {
+                            query += LocationConstants.OR_SQL_STRING;
+                        }
+                        query += LocationConstants.CODE_SQL_STRING + ids[3] + " and taluka_id_oid = " + taluka.getId() + ")";
+                        count--;
                     }
                 }
 
@@ -160,43 +174,58 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
             }
         };
 
-        List<HealthFacility> healthFacilities = dataService.executeSQLQuery(queryExecution);
+        List<HealthFacility> healthFacilities = null;
+        if (!talukaHashMap.isEmpty() && !healthFacilityKeys.isEmpty()) {
+            healthFacilities = dataService.executeSQLQuery(queryExecution);
+        }
         LOGGER.debug("HEALTHFACILITY Query time: {}", queryTimer.time());
         if(healthFacilities != null && !healthFacilities.isEmpty()) {
             for (HealthFacility healthFacility : healthFacilities) {
-                String healthBlockKey = healthBlockIdMap.get(healthFacility.getHealthBlock().getId());
-                healthFacilityHashMap.put(healthBlockKey + "_" + healthFacility.getCode(), healthFacility);
+                String talukaKey = talukaIdMap.get(healthFacility.getTaluka().getId());
+                healthFacilityHashMap.put(talukaKey + "_" + healthFacility.getCode(), healthFacility);
             }
         }
         return healthFacilityHashMap;
     }
 
-    private String healthFacilityQuerySet(List<Map<String, Object>> healthFacilities, Map<String, Taluka> talukaHashMap, Map<String, HealthBlock> healthBlockHashMap) {
+    private String healthFacilityQuerySet(List<Map<String, Object>> healthFacilities, Map<String, Taluka> talukaHashMap, Map<String, HealthBlock> healthBlockHashMap) { //NO CHECKSTYLE Cyclomatic Complexity
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> healthFacility : healthFacilities) {
-            if (i != 0) {
-                stringBuilder.append(", ");
-            }
-            stringBuilder.append("(");
-            stringBuilder.append(healthFacility.get(LocationConstants.HEALTHFACILITY_ID) + ", ");
-            stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthFacility.get(LocationConstants.HEALTHFACILITY_NAME).toString()) + QUOTATION_COMMA);
-            stringBuilder.append(healthBlockHashMap.get(healthFacility.get(LocationConstants.STATE_ID).toString() + "_" +
-                    healthFacility.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    healthFacility.get(LocationConstants.HEALTHBLOCK_ID).toString()).getId() + ", ");
-            stringBuilder.append(talukaHashMap.get(healthFacility.get(LocationConstants.STATE_ID).toString() + "_" +
-                    healthFacility.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    healthFacility.get(LocationConstants.TALUKA_ID).toString()).getId() + ", ");
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
-            stringBuilder.append(")");
+            if (healthFacility.get(LocationConstants.CSV_STATE_ID) != null && healthFacility.get(LocationConstants.DISTRICT_ID) != null &&
+                    healthFacility.get(LocationConstants.TALUKA_ID) != null && healthFacility.get(LocationConstants.HEALTHBLOCK_ID) != null) {
+                Taluka taluka = talukaHashMap.get(healthFacility.get(LocationConstants.CSV_STATE_ID).toString() + "_" +
+                        healthFacility.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+                        healthFacility.get(LocationConstants.TALUKA_ID).toString().trim());
+                HealthBlock healthBlock = healthBlockHashMap.get(healthFacility.get(LocationConstants.CSV_STATE_ID).toString() + "_" +
+                        healthFacility.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+                        healthFacility.get(LocationConstants.HEALTHBLOCK_ID).toString());
+                Long healthFacilityCode = (Long) healthFacility.get(LocationConstants.HEALTHFACILITY_ID);
+                if (taluka != null && healthBlock != null && healthFacilityCode != null) {
+                    if (!((Long) (0L)).equals(healthFacilityCode) && healthBlock.getDistrict().getId().equals(taluka.getDistrict().getId())) {
+                        if (i != 0) {
+                            stringBuilder.append(", ");
+                        }
+                        stringBuilder.append("(");
+                        stringBuilder.append(healthFacilityCode + ", ");
+                        stringBuilder.append(QUOTATION +
+                                StringEscapeUtils.escapeSql(healthFacility.get(LocationConstants.HEALTHFACILITY_NAME) == null ?
+                                        "" : healthFacility.get(LocationConstants.HEALTHFACILITY_NAME).toString()) + QUOTATION_COMMA);
+                        stringBuilder.append(healthBlock.getId() + ", ");
+                        stringBuilder.append(taluka.getId() + ", ");
+                        stringBuilder.append(MOTECH_STRING);
+                        stringBuilder.append(MOTECH_STRING);
+                        stringBuilder.append(MOTECH_STRING);
+                        stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                        stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                        stringBuilder.append(")");
 
-            i++;
+                        i++;
+                    }
+                }
+            }
         }
 
         return stringBuilder.toString();
