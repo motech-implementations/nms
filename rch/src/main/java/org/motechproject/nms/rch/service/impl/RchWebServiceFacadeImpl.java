@@ -19,6 +19,7 @@ import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
+import org.motechproject.event.listener.EventRelay;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.query.SqlQueryExecution;
@@ -225,6 +226,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     @Autowired
     private LocationService locationService;
 
+    @Autowired
+    private EventRelay eventRelay;
+
+
     @Override
     public boolean getMothersData(LocalDate from, LocalDate to, URL endpoint, Long stateId) {
         DS_DataResponseDS_DataResult result;
@@ -377,7 +382,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return status;
     }
 
-    @MotechListener(subjects = Constants.RCH_LOCATION_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
+    @MotechListener(subjects = Constants.RCH_DISTRICT_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void readDistrictResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         LOGGER.info("Copying RCH district response file from remote server to local directory.");
@@ -463,9 +468,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.error("Failed to copy file from remote server to local directory." + e);
         }
 
-        readTalukaResponseFromFile();
+        eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_TALUKA_READ_SUBJECT));
     }
 
+    @MotechListener(subjects = Constants.RCH_TALUKA_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     private void readTalukaResponseFromFile() throws RchFileManipulationException {
         LOGGER.info("Copying RCH taluka response file from remote server to local directory.");
@@ -551,11 +557,12 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.error("Failed to copy file from remote server to local directory." + e);
         }
 
-        readHealthBlockResponseFromFile();
+        eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_HEALTHBLOCK_READ_SUBJECT));
     }
 
+    @MotechListener(subjects = Constants.RCH_VILLAGE_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
-    private void readVillageResponseFromFile() throws RchFileManipulationException { //NO CHECKSTYLE Cyclomatic Complexity
+    private void readVillageResponseFromFile() throws RchFileManipulationException {
         LOGGER.info("Copying RCH village response file from remote server to local directory.");
         try {
             List<RchImportFacilitator> rchImportFacilitatorsVillages = rchImportFacilitatorService.findByImportDateAndRchUserType(LocalDate.now(), RchUserType.VILLAGE);
@@ -639,11 +646,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.error("Failed to copy file from remote server to local directory." + e);
         }
 
-        readVillageHealthSubFacilityResponseFromFile();
+        eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_VILLAGE_HEALTHSUBFACILITY_READ_SUBJECT));
     }
 
     @MotechListener(subjects = Constants.RCH_MOTHER_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
-    @Transactional
     public void readMotherResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         LOGGER.info("Copying RCH mother response file from remote server to local directory.");
         try {
@@ -753,7 +759,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
     @MotechListener(subjects = Constants.RCH_CHILD_READ_SUBJECT)
-    @Transactional
     public void readChildResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         LOGGER.info("Copying RCH child response file from remote server to local directory.");
         try {
@@ -963,6 +968,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return status;
     }
 
+    @MotechListener(subjects = Constants.RCH_HEALTHBLOCK_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     private void readHealthBlockResponseFromFile() throws RchFileManipulationException {
         LOGGER.info("Copying RCH healthblock response file from remote server to local directory.");
@@ -1047,7 +1053,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.error("Failed to copy file from remote server to local directory." + e);
         }
 
-        readTalukaHealthBlockResponseFromFile();
+        eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_TALUKA_HEALTHBLOCK_READ_SUBJECT));
     }
 
     @Override
@@ -1088,6 +1094,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return status;
     }
 
+    @MotechListener(subjects = Constants.RCH_TALUKA_HEALTHBLOCK_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     private void readTalukaHealthBlockResponseFromFile() throws RchFileManipulationException {
         LOGGER.info("Copying RCH taluka-healthblock response file from remote server to local directory.");
@@ -1171,7 +1178,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.error("Failed to copy file from remote server to local directory." + e);
         }
 
-        readHealthFacilityResponseFromFile();
+        eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_HEALTHFACILITY_READ_SUBJECT));
     }
 
     @Override
@@ -1288,8 +1295,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return status;
     }
 
+    @MotechListener(subjects = Constants.RCH_HEALTHFACILITY_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
-    private void readHealthFacilityResponseFromFile() throws RchFileManipulationException { //NO CHECKSTYLE Cyclomatic Complexity
+    private void readHealthFacilityResponseFromFile() throws RchFileManipulationException {
         LOGGER.info("Copying RCH healthfacility response file from remote server to local directory.");
         try {
             List<RchImportFacilitator> rchImportFacilitatorsHealthFacilities = rchImportFacilitatorService.findByImportDateAndRchUserType(LocalDate.now(), RchUserType.HEALTHFACILITY);
@@ -1372,11 +1380,12 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.error("Failed to copy file from remote server to local directory." + e);
         }
 
-        readHealthSubFacilityResponseFromFile();
+        eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_HEALTHSUBFACILITY_READ_SUBJECT));
     }
 
+    @MotechListener(subjects = Constants.RCH_HEALTHSUBFACILITY_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
-    private void readHealthSubFacilityResponseFromFile() throws RchFileManipulationException { //NO CHECKSTYLE Cyclomatic Complexity
+    private void readHealthSubFacilityResponseFromFile() throws RchFileManipulationException {
         LOGGER.info("Copying RCH healthsubfacility response file from remote server to local directory.");
         try {
             List<RchImportFacilitator> rchImportFacilitatorsHealthSubFacilities = rchImportFacilitatorService.findByImportDateAndRchUserType(LocalDate.now(), RchUserType.HEALTHSUBFACILITY);
@@ -1459,11 +1468,12 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.error("Failed to copy file from remote server to local directory." + e);
         }
 
-        readVillageResponseFromFile();
+        eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_VILLAGE_READ_SUBJECT));
     }
 
+    @MotechListener(subjects = Constants.RCH_VILLAGE_HEALTHSUBFACILITY_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
-    private void readVillageHealthSubFacilityResponseFromFile() throws RchFileManipulationException { //NO CHECKSTYLE Cyclomatic Complexity
+    private void readVillageHealthSubFacilityResponseFromFile() throws RchFileManipulationException {
         LOGGER.info("Copying RCH villageHealthsubfacility response file from remote server to local directory.");
         try {
             List<RchImportFacilitator> rchImportFacilitatorsVillageHealthSubFacilities = rchImportFacilitatorService.findByImportDateAndRchUserType(LocalDate.now(), RchUserType.VILLAGEHEALTHSUBFACILITY);
