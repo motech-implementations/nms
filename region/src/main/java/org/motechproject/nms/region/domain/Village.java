@@ -73,7 +73,7 @@ public class Village extends MdsEntity {
     @JsonBackReference
     private Taluka taluka;
 
-    @Persistent(mappedBy = "villages", defaultFetchGroup = "false")
+    @Persistent(mappedBy = "villages", defaultFetchGroup = "true")
     @JsonManagedReference
     private Set<HealthSubFacility> healthSubFacilities;
 
