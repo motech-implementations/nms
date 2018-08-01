@@ -52,7 +52,14 @@ public final class Constants {
     public static final String RCH_CHILD_READ_SUBJECT = BASE_RCH_SUBJECT + ".child.read";
     public static final String RCH_MOTHER_READ_SUBJECT = BASE_RCH_SUBJECT + ".mother.read";
     public static final String RCH_ASHA_READ_SUBJECT = BASE_RCH_SUBJECT + ".asha.read";
-    public static final String RCH_LOCATION_READ_SUBJECT = BASE_RCH_SUBJECT + ".location.read";
+    public static final String RCH_DISTRICT_READ_SUBJECT = BASE_RCH_SUBJECT + ".district.read";
+    public static final String RCH_TALUKA_READ_SUBJECT = BASE_RCH_SUBJECT + ".taluka.read";
+    public static final String RCH_HEALTHBLOCK_READ_SUBJECT = BASE_RCH_SUBJECT + ".healthblock.read";
+    public static final String RCH_TALUKA_HEALTHBLOCK_READ_SUBJECT = BASE_RCH_SUBJECT + ".talukahealthblock.read";
+    public static final String RCH_HEALTHFACILITY_READ_SUBJECT = BASE_RCH_SUBJECT + ".healthfacility.read";
+    public static final String RCH_HEALTHSUBFACILITY_READ_SUBJECT = BASE_RCH_SUBJECT + ".healthsubfacility.read";
+    public static final String RCH_VILLAGE_READ_SUBJECT = BASE_RCH_SUBJECT + ".village.read";
+    public static final String RCH_VILLAGE_HEALTHSUBFACILITY_READ_SUBJECT = BASE_RCH_SUBJECT + ".villagehealthsubfacility.read";
 
     public static final String STATE_ID_PARAM = "stateId";
     public static final String ENDPOINT_PARAM = "endpoint";

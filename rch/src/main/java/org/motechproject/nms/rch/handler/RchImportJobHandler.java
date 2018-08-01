@@ -96,7 +96,7 @@ public class RchImportJobHandler {
         }
 
         LOGGER.info("Created RCH location Read Event");
-        CronSchedulableJob rchDistrictRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_LOCATION_READ_SUBJECT), cronExpression);
+        CronSchedulableJob rchDistrictRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_DISTRICT_READ_SUBJECT), cronExpression);
         motechSchedulerService.safeScheduleJob(rchDistrictRead);
     }
 
