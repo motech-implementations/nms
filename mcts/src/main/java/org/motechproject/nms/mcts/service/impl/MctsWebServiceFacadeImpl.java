@@ -200,7 +200,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                     file2Date = getDateFromFileName(m2.getOriginalFilename());
                     flag = file1Date.compareTo(file2Date);
                 } catch (ParseException e) {
-                    e.printStackTrace();
+                    LOGGER.error("Error while parsing File Names ", e);
                 }
                 return flag; //ascending order
             }
@@ -835,8 +835,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
     private Date getDateFromFileName(String fileName) throws ParseException {
         String[] names = fileName.split("_");
         String dateString = names[5].split(".csv")[0];
-        Date date = new SimpleDateFormat(DATE_FORMAT).parse(dateString);
-        return date;
+        return new SimpleDateFormat(DATE_FORMAT).parse(dateString);
     }
 
 }

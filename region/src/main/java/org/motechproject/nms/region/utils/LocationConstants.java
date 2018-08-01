@@ -21,23 +21,19 @@ public final class LocationConstants {
     public static final String VILLAGE_NAME = "Village_Name";
     public static final String NON_CENSUS_VILLAGE = "SVID";
 
+    public static final String CSV_STATE_ID = "State_ID";
     public static final String HEALTHFACILITY_ID = "HealthFacility_ID";
     public static final String HEALTHFACILITY_NAME = "HealthFacility_Name";
     public static final String HEALTHSUBFACILITY_ID = "HealthSubFacility_ID";
     public static final String HEALTHSUBFACILITY_NAME = "HealthSubFacility_Name";
 
 
-
     public static final String OR_SQL_STRING = " OR ";
     public static final String CODE_SQL_STRING = " (code = ";
-    public static final String OPEN_PARANTHESES_STRING = " ( ";
-    public static final String COMMA_QUOTATION_STRING = ", '";
-    public static final String QUOTATION_COMMA_STRING = "', ";
-    public static final String COMMA_STRING = " , ";
-
-    public static final String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
 
     public static final Long LOCATION_PART_SIZE = 5000L;
+    public static final Long SMALL_LOCATION_PART_SIZE = 2000L;
+    public static final String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
 
     private LocationConstants() {
     }

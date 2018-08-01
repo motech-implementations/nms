@@ -31,7 +31,6 @@ import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
 
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
-import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +64,6 @@ public class SubscriberServiceImpl implements SubscriberService {
     private SubscriptionPackDataService subscriptionPackDataService;
     private DeactivationSubscriptionAuditRecordDataService deactivationSubscriptionAuditRecordDataService;
     private BlockedMsisdnRecordDataService blockedMsisdnRecordDataService;
-    private MotherRejectionService motherRejectionService;
     private ReactivatedBeneficiaryAuditDataService reactivatedBeneficiaryAuditDataService;
     private MctsChildDataService mctsChildDataService;
     private MctsMotherDataService mctsMotherDataService;
@@ -77,7 +75,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                                  SubscriptionPackDataService subscriptionPackDataService,
                                  BlockedMsisdnRecordDataService blockedMsisdnRecordDataService,
                                  DeactivationSubscriptionAuditRecordDataService deactivationSubscriptionAuditRecordDataService,
-                                 MotherRejectionService motherRejectionService,
                                  ReactivatedBeneficiaryAuditDataService reactivatedBeneficiaryAuditDataService,
                                  MctsChildDataService mctsChildDataService) {
         this.subscriberDataService = subscriberDataService;
@@ -87,7 +84,6 @@ public class SubscriberServiceImpl implements SubscriberService {
         this.subscriptionPackDataService = subscriptionPackDataService;
         this.deactivationSubscriptionAuditRecordDataService = deactivationSubscriptionAuditRecordDataService;
         this.blockedMsisdnRecordDataService = blockedMsisdnRecordDataService;
-        this.motherRejectionService = motherRejectionService;
         this.reactivatedBeneficiaryAuditDataService = reactivatedBeneficiaryAuditDataService;
         this.mctsChildDataService = mctsChildDataService;
     }
@@ -590,7 +586,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                 }
             }
         } else { // no subscribers found with the provided RCH id
-            LOGGER.debug("here1");
             if (subscribersByMsisdn.isEmpty() && childUpdate.getMother() != null) { // no subscriber exists with provided msisdn
                 Subscriber subscriberByRchMotherId = getSubscriberByBeneficiary(childUpdate.getMother());
                 if (subscriberByRchMotherId == null) { // no subscriber exists with RCH mother id either
@@ -613,10 +608,9 @@ public class SubscriberServiceImpl implements SubscriberService {
                     }
                 }
             } else { //subscriber exists with provided msisdn
-                LOGGER.debug("here2");
-                if (subscribersByMsisdn.size() == 1 && childUpdate.getMother() != null && subscribersByMsisdn.get(0).getMother() != null && subscribersByMsisdn.get(0).getChild() == null) {
+                if (subscribersByMsisdn.size() == 1 && (childUpdate.getMother() != null) && (subscribersByMsisdn.get(0).getMother() != null) && subscribersByMsisdn.get(0).getChild() == null) {
                     //update subscriber with child
-                    if (subscribersByMsisdn.get(0).getMother().getRchId().equals(childUpdate.getMother().getRchId())) {
+                    if (childUpdate.getMother().getRchId() != null  && subscribersByMsisdn.get(0).getMother().getRchId() != null && childUpdate.getMother().getRchId().equals(subscribersByMsisdn.get(0).getMother().getRchId())) {
                         Subscriber subscriber = subscribersByMsisdn.get(0);
                         subscriber.setDateOfBirth(dob);
                         subscriber.setChild(childUpdate);
@@ -675,7 +669,7 @@ public class SubscriberServiceImpl implements SubscriberService {
             if (DeactivationReason.LOW_LISTENERSHIP == deactivatedSubscripion.getDeactivationReason() ||  DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED == deactivatedSubscripion.getDeactivationReason()) {
                 return reactivateSubscription(subscriber, deactivatedSubscripion, dateTime);
             } else {
-                LOGGER.error("Reactivation is not valid in this scenario.");
+                LOGGER.debug("Reactivation is not valid in this scenario.");
                 return null;
             }
         } else if (subscription == null  && deactivatedSubscripion != null  && (DeactivationReason.LOW_LISTENERSHIP == deactivatedSubscripion.getDeactivationReason() ||  DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED == deactivatedSubscripion.getDeactivationReason())) {

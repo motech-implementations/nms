@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
+import javax.jdo.annotations.Transactional;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -143,16 +144,21 @@ public class DistrictServiceImpl implements DistrictService {
     }
 
     @Override
+    @Transactional
     public Long createUpdateDistricts(final List<Map<String, Object>> districts, final Map<String, State> stateHashMap) {
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
             public String getSqlQuery() {
-                String query = "INSERT into nms_districts (`code`, `name`, `state_id_OID`, " +
-                        " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
-                        districtQuerySet(districts, stateHashMap) +
-                        " ON DUPLICATE KEY UPDATE " +
-                        "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                String districtValues = districtQuerySet(districts, stateHashMap);
+                String query = "";
+                if(!districtValues.isEmpty()) {
+                    query = "INSERT into nms_districts (`code`, `name`, `state_id_OID`, " +
+                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                            districtValues +
+                            " ON DUPLICATE KEY UPDATE " +
+                            "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                }
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
@@ -166,8 +172,10 @@ public class DistrictServiceImpl implements DistrictService {
             }
         };
 
-        Long createdDistricts = districtDataService.executeSQLQuery(queryExecution);
-
+        Long createdDistricts = 0L;
+        if (!stateHashMap.isEmpty() && !queryExecution.getSqlQuery().isEmpty()) {
+            createdDistricts = districtDataService.executeSQLQuery(queryExecution);
+        }
 
         return createdDistricts;
     }
@@ -178,21 +186,28 @@ public class DistrictServiceImpl implements DistrictService {
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> district : districts) {
-            if (i != 0) {
-                stringBuilder.append(", ");
-            }
-            stringBuilder.append("(");
-            stringBuilder.append(district.get(LocationConstants.DISTRICT_ID) + ", ");
-            stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(district.get(LocationConstants.DISTRICT_NAME).toString()) + QUOTATION_COMMA);
-            stringBuilder.append(stateHashMap.get(district.get(LocationConstants.STATE_ID)).getId() + ", ");
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
-            stringBuilder.append(")");
+            if (district.get(LocationConstants.CSV_STATE_ID) != null) {
+                State state = stateHashMap.get(district.get(LocationConstants.CSV_STATE_ID).toString());
+                Long districtCode = (Long) district.get(LocationConstants.DISTRICT_ID);
+                if (state != null && districtCode != null && !((Long) (0L)).equals(districtCode)) {
+                    if (i != 0) {
+                        stringBuilder.append(", ");
+                    }
+                    stringBuilder.append("(");
+                    stringBuilder.append(districtCode + ", ");
+                    stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(district.get(LocationConstants.DISTRICT_NAME) == null ?
+                            "" : district.get(LocationConstants.DISTRICT_NAME).toString()) + QUOTATION_COMMA);
+                    stringBuilder.append(state.getId() + ", ");
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                    stringBuilder.append(")");
 
-            i++;
+                    i++;
+                }
+            }
         }
 
         return stringBuilder.toString();
@@ -202,7 +217,9 @@ public class DistrictServiceImpl implements DistrictService {
     public Map<String, District> fillDistrictIds(List<Map<String, Object>> recordList, final Map<String, State> stateHashMap) {
         final Set<String> districtKeys = new HashSet<>();
         for(Map<String, Object> record : recordList) {
-            districtKeys.add(record.get(LocationConstants.STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString());
+            if (record.get(LocationConstants.CSV_STATE_ID) != null && record.get(LocationConstants.DISTRICT_ID) != null) {
+                districtKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString());
+            }
         }
         Map<String, District> districtHashMap = new HashMap<>();
 
@@ -222,12 +239,14 @@ public class DistrictServiceImpl implements DistrictService {
                 String query = "SELECT * from nms_districts where";
                 int count = districtKeys.size();
                 for (String districtString : districtKeys) {
-                    count--;
                     String[] ids = districtString.split("_");
-                    Long stateId = stateHashMap.get(ids[0]).getId();
-                    query += LocationConstants.CODE_SQL_STRING + ids[1] + " and state_id_oid = " + stateId + ")";
-                    if (count > 0) {
-                        query += LocationConstants.OR_SQL_STRING;
+                    State state = stateHashMap.get(ids[0]);
+                    if (state != null) {
+                        if (count != districtKeys.size()) {
+                            query += LocationConstants.OR_SQL_STRING;
+                        }
+                        query += LocationConstants.CODE_SQL_STRING + ids[1] + " and state_id_oid = " + state.getId() + ")";
+                        count--;
                     }
                 }
 
@@ -248,11 +267,16 @@ public class DistrictServiceImpl implements DistrictService {
             }
         };
 
-        List<District> districts = districtDataService.executeSQLQuery(queryExecution);
+        List<District> districts = null;
+        if (!stateHashMap.isEmpty() && !districtKeys.isEmpty()) {
+            districts = districtDataService.executeSQLQuery(queryExecution);
+        }
         LOGGER.debug("DISTRICT Query time: {}", queryTimer.time());
-        for (District district : districts) {
-            String stateKey = stateIdMap.get(district.getState().getId());
-            districtHashMap.put(stateKey + "_" + district.getCode(), district);
+        if (districts != null && !districts.isEmpty()) {
+            for (District district : districts) {
+                String stateKey = stateIdMap.get(district.getState().getId());
+                districtHashMap.put(stateKey + "_" + district.getCode(), district);
+            }
         }
 
         return districtHashMap;
