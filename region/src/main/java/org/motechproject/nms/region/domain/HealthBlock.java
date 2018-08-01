@@ -64,7 +64,7 @@ public class HealthBlock extends MdsEntity {
     @NotNull
     private Long talukaIdOID;
 
-    @Persistent(table="nms_taluka_healthblock")
+    @Persistent(table="nms_taluka_healthblock", defaultFetchGroup = "true")
     @Join(column = "healthblock_id")
     @Element(column = "taluka_id")
     @JsonManagedReference
