@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.motechproject.nms.region.utils.LocationConstants.CSV_STATE_ID;
 import static org.motechproject.nms.region.utils.LocationConstants.OR_SQL_STRING;
-import static org.motechproject.nms.region.utils.LocationConstants.STATE_ID;
 
 @Service("stateService")
 public class StateServiceImpl implements StateService {
@@ -66,13 +66,27 @@ public class StateServiceImpl implements StateService {
     public Map<String, State> fillStateIds(List<Map<String, Object>> recordList) {
         final Set<String> stateKeys = new HashSet<>();
         for(Map<String, Object> record : recordList) {
-            stateKeys.add(record.get(STATE_ID).toString());
+            if (record.get(CSV_STATE_ID) != null) {
+                stateKeys.add(record.get(CSV_STATE_ID).toString());
+            }
         }
         Map<String, State> stateHashMap = new HashMap<>();
         Timer queryTimer = new Timer();
 
         @SuppressWarnings("unchecked")
         SqlQueryExecution<List<State>> queryExecution = new SqlQueryExecution<List<State>>() {
+
+            @Override
+            public List<State> execute(Query query) {
+                query.setClass(State.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                List<State> states;
+                if (fqr.isEmpty()) {
+                    return null;
+                }
+                states = (List<State>) fqr;
+                return states;
+            }
 
             @Override
             public String getSqlQuery() {
@@ -90,17 +104,7 @@ public class StateServiceImpl implements StateService {
                 return query;
             }
 
-            @Override
-            public List<State> execute(Query query) {
-                query.setClass(State.class);
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
-                List<State> states;
-                if (fqr.isEmpty()) {
-                    return null;
-                }
-                states = (List<State>) fqr;
-                return states;
-            }
+
         };
 
         List<State> states = stateDataService.executeSQLQuery(queryExecution);

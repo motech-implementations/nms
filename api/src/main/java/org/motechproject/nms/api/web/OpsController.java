@@ -27,6 +27,7 @@ import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 
 import org.motechproject.nms.rch.domain.RchUserType;
 import org.motechproject.nms.rch.service.RchWebServiceFacade;
+import org.motechproject.nms.region.domain.LocationEnum;
 import org.motechproject.nms.region.service.LocationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,15 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+
+import static org.motechproject.nms.region.domain.LocationEnum.DISTRICT;
+import static org.motechproject.nms.region.domain.LocationEnum.HEALTHBLOCK;
+import static org.motechproject.nms.region.domain.LocationEnum.HEALTHFACILITY;
+import static org.motechproject.nms.region.domain.LocationEnum.HEALTHSUBFACILITY;
+import static org.motechproject.nms.region.domain.LocationEnum.TALUKA;
+import static org.motechproject.nms.region.domain.LocationEnum.TALUKAHEALTHBLOCK;
+import static org.motechproject.nms.region.domain.LocationEnum.VILLAGE;
+import static org.motechproject.nms.region.domain.LocationEnum.VILLAGEHEALTHSUBFACILITY;
 
 /**
  * Controller to expose methods for OPS personnel
@@ -333,23 +343,24 @@ public class OpsController extends BaseController {
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public Boolean createLocations(@PathVariable("stateID") Long stateID) {
-        String locationType = "District";
+        LocationEnum locationType = DISTRICT;
+        String fileLocation = rchWebServiceFacade.getLocationFilesDirectory();
         try {
-            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
-            locationType = "Taluka";
-            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
-            locationType = "HealthBlock";
-            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
-            locationType = "TalukaHealthBlock";
-            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
-            locationType = "HealthFacility";
-            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
-            locationType = "HealthSubFacility";
-            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
-            locationType = "Village";
-            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
-            locationType = "VillageHealthSubFacility";
-            locationService.createLocations(stateID, locationType, rchWebServiceFacade.getLocationFilesDirectory());
+            locationService.createLocations(stateID, locationType, fileLocation);
+            locationType = TALUKA;
+            locationService.createLocations(stateID, locationType, fileLocation);
+            locationType = HEALTHBLOCK;
+            locationService.createLocations(stateID, locationType, fileLocation);
+            locationType = TALUKAHEALTHBLOCK;
+            locationService.createLocations(stateID, locationType, fileLocation);
+            locationType = HEALTHFACILITY;
+            locationService.createLocations(stateID, locationType, fileLocation);
+            locationType = HEALTHSUBFACILITY;
+            locationService.createLocations(stateID, locationType, fileLocation);
+            locationType = VILLAGE;
+            locationService.createLocations(stateID, locationType, fileLocation);
+            locationType = VILLAGEHEALTHSUBFACILITY;
+            locationService.createLocations(stateID, locationType, fileLocation);
         } catch (IOException e) {
             LOGGER.error("{} Location File not Found. Exception: {}", locationType, e);
         }
