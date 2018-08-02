@@ -1079,8 +1079,10 @@ public class LocationServiceImpl implements LocationService {
                 }
             };
 
-             villagesTotal.addAll(villageDataService.executeSQLQuery(queryExecution));
-
+            List<Village> villages = villageDataService.executeSQLQuery(queryExecution);
+            if (villages != null) {
+                villagesTotal.addAll(villages);
+            }
         }
 
         LOGGER.debug("VILLAGE Query time: {}", queryTimer.time());
@@ -1211,7 +1213,10 @@ public class LocationServiceImpl implements LocationService {
                 }
             };
 
-            healthFacilitiesTotal.addAll(healthFacilityDataService.executeSQLQuery(queryExecution));
+            List<HealthFacility> healthFacilities = healthFacilityDataService.executeSQLQuery(queryExecution);
+            if (healthFacilities != null) {
+                healthFacilitiesTotal.addAll(healthFacilities);
+            }
         }
         LOGGER.debug("HEALTHFACILITY Query time: {}", queryTimer.time());
         if(healthFacilitiesTotal != null && !healthFacilitiesTotal.isEmpty()) {
@@ -1282,7 +1287,10 @@ public class LocationServiceImpl implements LocationService {
                 }
             };
 
-            healthSubFacilitiesTotal.addAll(healthSubFacilityDataService.executeSQLQuery(queryExecution));
+            List<HealthSubFacility> healthSubFacilities = healthSubFacilityDataService.executeSQLQuery(queryExecution);
+            if (healthSubFacilities != null) {
+                healthSubFacilitiesTotal.addAll(healthSubFacilities);
+            }
         }
         LOGGER.debug("HEALTHSUBFACILITY Query time: {}", queryTimer.time());
         if(healthSubFacilitiesTotal != null && !healthSubFacilitiesTotal.isEmpty()) {
