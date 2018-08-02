@@ -66,7 +66,7 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
             motherInstance = KilkariConstants.RCH_MOTHER;
         }
         int count = 0;
-        Timer timer = new Timer("kid", "kids");
+        Timer timer = new Timer("mom", "moms");
         for (Map<String, Object> record : recordList) {
             count++;
             LOGGER.debug("Started mother import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
