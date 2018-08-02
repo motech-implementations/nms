@@ -56,7 +56,7 @@ public class Taluka extends MdsEntity {
     @JsonBackReference
     private District district;
 
-    @Persistent(mappedBy = "talukas", defaultFetchGroup = "true")
+    @Persistent(mappedBy = "talukas", defaultFetchGroup = "false")
     @JsonManagedReference
     private Set<HealthBlock> healthBlocks;
 
