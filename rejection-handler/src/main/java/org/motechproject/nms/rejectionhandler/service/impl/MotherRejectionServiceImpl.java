@@ -33,7 +33,7 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
     private static final String QUOTATION_COMMA = "', ";
     private static final String MOTECH_STRING = "'motech', ";
     private static final String SQL_QUERY_LOG = "SQL QUERY: {}";
-    private static final String CHILD_LOG_STRING = "List of child rejects in {}";
+    private static final String MOTHER_LOG_STRING = "List of mother rejects in {}";
     private static final String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
 
     @Autowired
@@ -91,7 +91,7 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
         };
 
         Map<String, Object> resultMap = motherRejectionDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
+        LOGGER.debug(MOTHER_LOG_STRING, queryTimer.time());
         return resultMap;
     }
 
@@ -123,7 +123,7 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
         };
 
         Map<String, Object> resultMap = motherRejectionDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
+        LOGGER.debug(MOTHER_LOG_STRING, queryTimer.time());
         return resultMap;
     }
 
@@ -184,7 +184,7 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
         };
 
         Long insertedNo = motherRejectionDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
+        LOGGER.debug(MOTHER_LOG_STRING, queryTimer.time());
         return insertedNo;
     }
 
@@ -262,7 +262,7 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
         };
 
         Long updatedNo = motherRejectionDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
+        LOGGER.debug(MOTHER_LOG_STRING, queryTimer.time());
         return updatedNo;
     }
 
@@ -301,7 +301,7 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
         };
 
         Long insertedNo = motherRejectionDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
+        LOGGER.debug(MOTHER_LOG_STRING, queryTimer.time());
         return insertedNo;
     }
 
@@ -353,7 +353,7 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
         };
 
         Long updatedNo = motherRejectionDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
+        LOGGER.debug(MOTHER_LOG_STRING, queryTimer.time());
         return updatedNo;
     }
 
