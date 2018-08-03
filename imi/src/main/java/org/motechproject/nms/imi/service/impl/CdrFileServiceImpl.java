@@ -117,6 +117,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String UNABLE_TO_READ_HEADER = "Unable to read  header %s: %s";
     private static final int CDR_PROGRESS_REPORT_CHUNK = 10000;
     private static final int PARTITION_SIZE = 50000;
+    private static final int PARTITION_SIZE_CSR = 10000;
     private static final String MAX_CDR_ERROR_COUNT = "imi.max_cdr_error_count";
     private static final String CSR_TABLE_NAME = "motech_data_services.nms_imi_csrs";
     private static final int MAX_CDR_ERROR_COUNT_DEFAULT = 100;
@@ -136,6 +137,7 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String MOTECH_STRING = "'motech', ";
     private static final String MOTECH = "'motech'";
     private static final String CDR_LOG_STRING = "List of CDR's in {}";
+    private static final String CSR_LOG_STRING = "List of CSR's in {}";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CdrFileServiceImpl.class);
     public static final double HALF = 0.5;
@@ -675,6 +677,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         int chunkCount = 0;
         int chunkNumber = 0;
         String fileName = file.getName();
+        List<CallSummaryRecord> callSummaryRecords = new ArrayList<>();
 
         LOGGER.info("processCsrs({}, {})", fileName, lineCount);
 
@@ -713,10 +716,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 try {
 
                     CallSummaryRecord csr = CsrHelper.csvLineToCsr(line);
-                    if (callSummaryRecordDataService.countFindByRequestId(csr.getRequestId()) == 0) {
-                        callSummaryRecordDataService.create(csr);
-                        saveCount++;
-                    }
+                    callSummaryRecords.add(csr);
 
                     if (chunkSize > 1) {
                         chunk.add(csr.toDto());
@@ -751,6 +751,8 @@ public class CdrFileServiceImpl implements CdrFileService {
 
                 lineNumber++;
             }
+            Long updatedRecords = bulkUpdateCsr(callSummaryRecords);
+            LOGGER.debug("{} records updated in time : {}", updatedRecords, timer.time());
 
             LOGGER.info(String.format("Read %s", timer.frequency(lineNumber - 1)));
             if (chunkSize <= 1) {
@@ -768,6 +770,94 @@ public class CdrFileServiceImpl implements CdrFileService {
             alertService.create(fileName, "processCsrs", msg.substring(0, min(msg.length(), MAX_CHAR_ALERT)),
                     AlertType.CRITICAL, AlertStatus.NEW, 0, null);
         }
+    }
+
+
+    private Long bulkUpdateCsr(List<CallSummaryRecord> callSummaryRecords){
+
+        int count = 0;
+        Long sqlCount = 0L;
+        while (count < callSummaryRecords.size()) {
+            List<CallSummaryRecord> updateObjectsPart = new ArrayList<>();
+            while (updateObjectsPart.size() < PARTITION_SIZE_CSR && count < callSummaryRecords.size()) {
+                updateObjectsPart.add(callSummaryRecords.get(count));
+                count++;
+            }
+
+            sqlCount += csrBulkInsert(updateObjectsPart);
+            updateObjectsPart.clear();
+        }
+        return sqlCount;
+
+    }
+
+    private Long csrBulkInsert(final List<CallSummaryRecord> updateObjects) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "INSERT IGNORE INTO nms_imi_csrs (attempts, callFlowUrl, circle, cli, contentFileName," +
+                        "creationDate, creator, finalStatus, languageLocationCode, modificationDate, modifiedBy," +
+                        " msisdn, owner, priority, requestId, serviceId, statusCode, weekId)  " +
+                        "values  " +
+                        insertQuerySetCsr(updateObjects);
+
+                LOGGER.debug(SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public Long execute(Query query) {
+                query.setClass(CallDetailRecord.class);
+                return (Long) query.execute();
+            }
+        };
+
+        Long updatedNo = callSummaryRecordDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug(CSR_LOG_STRING, queryTimer.time());
+        return updatedNo;
+    }
+
+
+    private String insertQuerySetCsr(List<CallSummaryRecord> callSummaryRecords){
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
+        DateTime dateTimeNow = new DateTime();
+
+        int i = 0;
+        for (CallSummaryRecord callSummaryRecord: callSummaryRecords) {
+            if (i != 0) {
+                stringBuilder.append(", ");
+            }
+            stringBuilder.append("(");
+            stringBuilder.append(callSummaryRecord.getAttempts() + ", ");
+            stringBuilder.append(QUOTATION + callSummaryRecord.getCallFlowUrl() + QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callSummaryRecord.getCircle() + QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callSummaryRecord.getCli() + QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callSummaryRecord.getContentFileName() + QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+            stringBuilder.append(MOTECH_STRING);
+            stringBuilder.append(callSummaryRecord.getFinalStatus() + ", ");
+            stringBuilder.append(QUOTATION + callSummaryRecord.getLanguageLocationCode() + QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+            stringBuilder.append(MOTECH_STRING);
+            stringBuilder.append(callSummaryRecord.getMsisdn() + ", ");
+            stringBuilder.append(MOTECH_STRING);
+            stringBuilder.append(callSummaryRecord.getPriority() + ", ");
+            stringBuilder.append(QUOTATION + callSummaryRecord.getRequestId() + QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callSummaryRecord.getServiceId() + QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callSummaryRecord.getStatusCode()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + callSummaryRecord.getWeekId()+ QUOTATION);
+            stringBuilder.append(")");
+            i++;
+        }
+        return stringBuilder.toString();
+
     }
 
 
