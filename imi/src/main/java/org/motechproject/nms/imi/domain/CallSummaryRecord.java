@@ -7,11 +7,13 @@ import org.motechproject.nms.kilkari.exception.InvalidCallRecordDataException;
 import org.motechproject.nms.props.domain.RequestId;
 
 import javax.jdo.annotations.Index;
+import javax.jdo.annotations.Unique;
 
 /**
  * See NMS API - 4.4.2 CDR Summary File Format
  */
 @Entity(tableName = "nms_imi_csrs")
+@Unique(name = "unique_requestId", members = { "requestId"})
 @Index(members = { "requestId" })
 public class CallSummaryRecord {
 
