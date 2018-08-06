@@ -50,8 +50,11 @@ public final class Constants {
     public static final String RCH_VILLAGEHEALTHSUBFACILITY_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".villageHealthSubFacility.import";
 
     public static final String RCH_CHILD_READ_SUBJECT = BASE_RCH_SUBJECT + ".child.read";
+    public static final String RCH_CHILD_READ = "child.read";
     public static final String RCH_MOTHER_READ_SUBJECT = BASE_RCH_SUBJECT + ".mother.read";
+    public static final String RCH_MOTHER_READ = "mother.read";
     public static final String RCH_ASHA_READ_SUBJECT = BASE_RCH_SUBJECT + ".asha.read";
+    public static final String RCH_ASHA_READ = "asha.read";
     public static final String RCH_LOCATION_READ_SUBJECT = BASE_RCH_SUBJECT + ".location.read";
     public static final String RCH_DISTRICT_READ_SUBJECT = BASE_RCH_SUBJECT + ".district.read";
     public static final String RCH_TALUKA_READ_SUBJECT = BASE_RCH_SUBJECT + ".taluka.read";
