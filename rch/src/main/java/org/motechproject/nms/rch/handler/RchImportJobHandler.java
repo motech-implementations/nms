@@ -92,12 +92,12 @@ public class RchImportJobHandler {
         }
 
         if (!CronExpression.isValidExpression(cronExpression)) {
-            throw new RchImportConfigurationException("Cron expression for district read is invalid: " + cronExpression);
+            throw new RchImportConfigurationException("Cron expression for location read is invalid: " + cronExpression);
         }
 
         LOGGER.info("Created RCH location Read Event");
-        CronSchedulableJob rchDistrictRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_DISTRICT_READ_SUBJECT), cronExpression);
-        motechSchedulerService.safeScheduleJob(rchDistrictRead);
+        CronSchedulableJob rchLocationRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_LOCATION_READ_SUBJECT), cronExpression);
+        motechSchedulerService.safeScheduleJob(rchLocationRead);
     }
 
     public void initChildReadJob() {
