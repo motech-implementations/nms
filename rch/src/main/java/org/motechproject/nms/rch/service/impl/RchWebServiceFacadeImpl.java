@@ -382,97 +382,108 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return status;
     }
 
+    @MotechListener(subjects = Constants.RCH_LOCATION_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
+    @Transactional
+    public void readLocationResponse(MotechEvent event) throws RchFileManipulationException {
+
+        LOGGER.info("Starting location read.");
+        List<Long> stateIds = getStateIds();
+        for (Long stateId : stateIds
+                ) {
+            Map<String, Object> eventParams = new HashMap<>();
+            eventParams.put(Constants.STATE_ID_PARAM, stateId);
+            eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_DISTRICT_READ_SUBJECT, eventParams));
+        }
+    }
+
     @MotechListener(subjects = Constants.RCH_DISTRICT_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void readDistrictResponseFromFile(MotechEvent event) throws RchFileManipulationException {
+        Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
         LOGGER.info("Copying RCH district response file from remote server to local directory.");
-        List<Long> stateIds = getStateIds();
-        for (Long stateId : stateIds
-             ) {
+        try {
+            RchImportFacilitator rchImportFacilitatorsDistrict = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.DISTRICT);
+            ArrayList<Map<String, Object>> districtArrList = new ArrayList<>();
+            File localResponseFile = scpResponseToLocal(rchImportFacilitatorsDistrict.getFileName());
+            if (localResponseFile != null) {
+                LOGGER.info("RCH district response file successfully copied from remote server to local directory.");
+                String result = readResponsesFromXml(localResponseFile);
+                State state = stateDataService.findByCode(stateId);
 
-            try {
-                RchImportFacilitator rchImportFacilitatorsDistrict = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.DISTRICT);
-                ArrayList<Map<String, Object>> districtArrList = new ArrayList<>();
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsDistrict.getFileName());
-                if (localResponseFile != null) {
-                    LOGGER.info("RCH district response file successfully copied from remote server to local directory.");
-                    String result = readResponsesFromXml(localResponseFile);
-                    State state = stateDataService.findByCode(stateId);
+                String stateName = state.getName() != null ? state.getName() : " ";
+                Long stateCode = state.getCode() != null ? state.getCode() : 1L;
 
-                    String stateName = state.getName() != null ? state.getName() : " ";
-                    Long stateCode = state.getCode() != null ? state.getCode() : 1L;
+                LocalDate startDate = rchImportFacilitatorsDistrict.getStartDate();
+                LocalDate endDate = rchImportFacilitatorsDistrict.getEndDate();
 
-                    LocalDate startDate = rchImportFacilitatorsDistrict.getStartDate();
-                    LocalDate endDate = rchImportFacilitatorsDistrict.getEndDate();
+                try {
 
-                    try {
+                    if (result.contains(RECORDS)) {
+                        RchDistrictDataSet districtDataSet = (result == null) ?
+                                null :
+                                (RchDistrictDataSet) MarshallUtils.unmarshall(result, RchDistrictDataSet.class);
 
-                        if (result.contains(RECORDS)) {
-                            RchDistrictDataSet districtDataSet = (result == null) ?
-                                    null :
-                                    (RchDistrictDataSet) MarshallUtils.unmarshall(result, RchDistrictDataSet.class);
+                        LOGGER.info("Starting RCH district import");
+                        StopWatch stopWatch = new StopWatch();
+                        stopWatch.start();
 
-                            LOGGER.info("Starting RCH district import");
-                            StopWatch stopWatch = new StopWatch();
-                            stopWatch.start();
-
-                            if (districtDataSet == null || districtDataSet.getRecords() == null) {
-                                String warning = String.format("No district data set received from RCH for %s state", stateName);
-                                LOGGER.warn(warning);
-                                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, warning));
-                            } else {
-                                List<RchDistrictRecord> districtRecords = districtDataSet.getRecords();
-                                for (RchDistrictRecord record : districtRecords) {
-                                    Map<String, Object> locMap = new HashMap<>();
-                                    toMapDistrict(locMap, record, stateCode);
-                                    districtArrList.add(locMap);
-
-                                }
-                            }
-                            int count = 0;
-                            int partNumber = 0;
-                            Long totalUpdatedRecords = 0L;
-                            while (count < districtArrList.size()) {
-                                List<Map<String, Object>> recordListPart = new ArrayList<>();
-                                while (recordListPart.size() < LOCATION_PART_SIZE && count < districtArrList.size()) {
-                                    recordListPart.add(districtArrList.get(count));
-                                    count++;
-                                }
-                                partNumber++;
-                                totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.DISTRICT, rchImportFacilitatorsDistrict.getFileName(), partNumber);
-                                recordListPart.clear();
-                            }
-
-                            LOGGER.debug("File {} processed. {} records updated", rchImportFacilitatorsDistrict.getFileName(), totalUpdatedRecords);
-
-                        } else {
-                            String warning = String.format("No district data set received from RCH for %d stateId", stateId);
+                        if (districtDataSet == null || districtDataSet.getRecords() == null) {
+                            String warning = String.format("No district data set received from RCH for %s state", stateName);
                             LOGGER.warn(warning);
+                            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, warning));
+                        } else {
+                            List<RchDistrictRecord> districtRecords = districtDataSet.getRecords();
+                            for (RchDistrictRecord record : districtRecords) {
+                                Map<String, Object> locMap = new HashMap<>();
+                                toMapDistrict(locMap, record, stateCode);
+                                districtArrList.add(locMap);
+
+                            }
+                        }
+                        int count = 0;
+                        int partNumber = 0;
+                        Long totalUpdatedRecords = 0L;
+                        while (count < districtArrList.size()) {
+                            List<Map<String, Object>> recordListPart = new ArrayList<>();
+                            while (recordListPart.size() < LOCATION_PART_SIZE && count < districtArrList.size()) {
+                                recordListPart.add(districtArrList.get(count));
+                                count++;
+                            }
+                            partNumber++;
+                            totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.DISTRICT, rchImportFacilitatorsDistrict.getFileName(), partNumber);
+                            recordListPart.clear();
                         }
 
-                    } catch (JAXBException e) {
-                        throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH district data from %s location.", stateId), e);
-                    } catch (RchInvalidResponseStructureException e) {
-                        String error = String.format("Cannot read RCH districts data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
-                        LOGGER.error(error, e);
-                        alertService.create(RCH_WEB_SERVICE, "RCH Web Service District Import", e
-                                .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                        rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, error));
-                        rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
-                    } catch (NullPointerException e) {
-                        LOGGER.error("No files saved a : ", e);
-                    }
-                }
+                        LOGGER.debug("File {} processed. {} records updated", rchImportFacilitatorsDistrict.getFileName(), totalUpdatedRecords);
 
-            } catch (ExecutionException e) {
-                LOGGER.error("Failed to copy file from remote server to local directory." + e);
-            } finally {
-                Map<String, Object> eventParams = new HashMap<>();
-                eventParams.put(Constants.STATE_ID_PARAM, stateId);
-                eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_TALUKA_READ_SUBJECT, eventParams));
+                    } else {
+                        String warning = String.format("No district data set received from RCH for %d stateId", stateId);
+                            LOGGER.warn(warning);
+                    }
+
+                } catch (JAXBException e) {
+                    throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH district data from %s location.", stateId), e);
+                } catch (RchInvalidResponseStructureException e) {
+                    String error = String.format("Cannot read RCH districts data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
+                    LOGGER.error(error, e);
+                    alertService.create(RCH_WEB_SERVICE, "RCH Web Service District Import", e
+                            .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+                    rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, error));
+                    rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
+                } catch (NullPointerException e) {
+                        LOGGER.error("No files saved a : ", e);
+                }
             }
+
+        } catch (ExecutionException e) {
+            LOGGER.error("Failed to copy file from remote server to local directory." + e);
+        } finally {
+            Map<String, Object> eventParams = new HashMap<>();
+            eventParams.put(Constants.STATE_ID_PARAM, stateId);
+            eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_TALUKA_READ_SUBJECT, eventParams));
         }
     }
+
 
     @MotechListener(subjects = Constants.RCH_TALUKA_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
@@ -1543,7 +1554,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     LOGGER.error("No files saved a : ", e);
                 }
             }
-            
+
         } catch (ExecutionException e) {
             LOGGER.error("Failed to copy file from remote server to local directory." + e);
         }
