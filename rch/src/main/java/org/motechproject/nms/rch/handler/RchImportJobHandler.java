@@ -80,7 +80,9 @@ public class RchImportJobHandler {
             throw new RchImportConfigurationException("Cron expression for mother read is invalid: " + cronExpression);
         }
 
-        initReadJobs(RchUserType.MOTHER, cronExpression);
+        LOGGER.info("Created RCH Mother Read Event");
+        CronSchedulableJob rchMotherRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT), cronExpression);
+        motechSchedulerService.safeScheduleJob(rchMotherRead);
     }
 
     public void initLocationReadJob() {
@@ -94,7 +96,9 @@ public class RchImportJobHandler {
             throw new RchImportConfigurationException("Cron expression for location read is invalid: " + cronExpression);
         }
 
-        initReadJobs(null, cronExpression);
+        LOGGER.info("Created RCH location Read Event");
+        CronSchedulableJob rchLocationRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_LOCATION_READ_SUBJECT), cronExpression);
+        motechSchedulerService.safeScheduleJob(rchLocationRead);
     }
 
     public void initChildReadJob() {
@@ -108,7 +112,9 @@ public class RchImportJobHandler {
             throw new RchImportConfigurationException("Cron expression for child read is invalid: " + cronExpression);
         }
 
-        initReadJobs(RchUserType.CHILD, cronExpression);
+        LOGGER.info("Created RCH Child Read Event");
+        CronSchedulableJob rchChildRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_CHILD_READ_SUBJECT), cronExpression);
+        motechSchedulerService.safeScheduleJob(rchChildRead);
     }
 
     public void initAshaReadJob() {
@@ -122,33 +128,35 @@ public class RchImportJobHandler {
             throw new RchImportConfigurationException("Cron expression for asha read is invalid: " + cronExpression);
         }
 
-        initReadJobs(RchUserType.ASHA, cronExpression);
+        LOGGER.info("Created RCH Asha Read Event");
+        CronSchedulableJob rchAshaRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_ASHA_READ_SUBJECT), cronExpression);
+        motechSchedulerService.safeScheduleJob(rchAshaRead);
     }
 
-    public void initReadJobs(RchUserType type, String cronExpression) {
-        switch (type) {
-            case MOTHER:
-                LOGGER.info("Created RCH Mother Read Event");
-                CronSchedulableJob rchMotherRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT), cronExpression);
-                motechSchedulerService.safeScheduleJob(rchMotherRead);
-                break;
-            case CHILD:
-                LOGGER.info("Created RCH Child Read Event");
-                CronSchedulableJob rchChildRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_CHILD_READ_SUBJECT), cronExpression);
-                motechSchedulerService.safeScheduleJob(rchChildRead);
-                break;
-            case ASHA:
-                LOGGER.info("Created RCH Asha Read Event");
-                CronSchedulableJob rchAshaRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_ASHA_READ_SUBJECT), cronExpression);
-                motechSchedulerService.safeScheduleJob(rchAshaRead);
-                break;
-            default:
-                LOGGER.info("Created RCH location Read Event");
-                CronSchedulableJob rchLocationRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_LOCATION_READ_SUBJECT), cronExpression);
-                motechSchedulerService.safeScheduleJob(rchLocationRead);
-                break;
-        }
-    }
+//    public void initReadJobs(RchUserType type, String cronExpression) {
+//        switch (type) {
+//            case MOTHER:
+//                LOGGER.info("Created RCH Mother Read Event");
+//                CronSchedulableJob rchMotherRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT), cronExpression);
+//                motechSchedulerService.safeScheduleJob(rchMotherRead);
+//                break;
+//            case CHILD:
+//                LOGGER.info("Created RCH Child Read Event");
+//                CronSchedulableJob rchChildRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_CHILD_READ_SUBJECT), cronExpression);
+//                motechSchedulerService.safeScheduleJob(rchChildRead);
+//                break;
+//            case ASHA:
+//                LOGGER.info("Created RCH Asha Read Event");
+//                CronSchedulableJob rchAshaRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_ASHA_READ_SUBJECT), cronExpression);
+//                motechSchedulerService.safeScheduleJob(rchAshaRead);
+//                break;
+//            default:
+//                LOGGER.info("Created RCH location Read Event");
+//                CronSchedulableJob rchLocationRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_LOCATION_READ_SUBJECT), cronExpression);
+//                motechSchedulerService.safeScheduleJob(rchLocationRead);
+//                break;
+//        }
+//    }
 
     @MotechListener(subjects = Constants.RCH_IMPORT_EVENT)
     @Transactional
