@@ -82,6 +82,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
     }
 
     @Override
+    //Using this because TalukaId, healthblockCode combination might return more than 1 healthblocks
     public HealthBlock findByDistrictAndCode(final District district, final Long code) {
         if (district == null) { return null; }
 

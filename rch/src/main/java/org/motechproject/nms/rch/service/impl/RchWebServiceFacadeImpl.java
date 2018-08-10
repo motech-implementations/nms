@@ -46,7 +46,10 @@ import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
+import org.motechproject.nms.kilkari.domain.ThreadProcessorObject;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService;
+import org.motechproject.nms.kilkari.service.ChildCsvThreadProcessor;
+import org.motechproject.nms.kilkari.service.MotherCsvThreadProcessor;
 import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
@@ -139,6 +142,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
 import java.text.SimpleDateFormat;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanRchMotherRecords;
 import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanRchChildRecords;
@@ -1726,43 +1734,57 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             rejected++;
         }
         List<Map<String, Object>> acceptedRchMothers = rchMotherRecordsSet.get(1);
-        LocationFinder locationFinder = locationService.updateLocations(acceptedRchMothers);
 
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
+        List<Map<String, Object>> recordList = new ArrayList<>();
         for (Map<String, Object> recordMap : acceptedRchMothers) {
-            String rchId = (String) recordMap.get(KilkariConstants.RCH_ID);
-            try {
-                // validate if user needs to be hpd filtered (true if user can be added)
-                boolean hpdValidation = validateHpdUser(hpdMap,
-                        (long) recordMap.get(KilkariConstants.STATE_ID),
-                        (long) recordMap.get(KilkariConstants.DISTRICT_ID));
-                if (hpdValidation) {
-
-                    motherImportRejection = mctsBeneficiaryImportService.importMotherRecord(recordMap, SubscriptionOrigin.RCH_IMPORT, locationFinder);
-                    if (motherImportRejection != null) {
-                        rejectedMothers.put(motherImportRejection.getRegistrationNo(), motherImportRejection);
-                        rejectionStatus.put(motherImportRejection.getRegistrationNo(), motherImportRejection.getAccepted());
-                    }
-                    if (motherImportRejection.getAccepted()) {
-                        saved++;
-                        LOGGER.info("saved mother {}", rchId);
-                    } else {
-                        rejected++;
-                        LOGGER.info("rejected mother {}", rchId);
-                    }
-                } else {
-                    rejected++;
-                    LOGGER.info("rejected mother {}", rchId);
-                }
-            } catch (RuntimeException e) {
-                LOGGER.error("RCH Mother import Error. Cannot import Mother with ID: {} for state ID: {}",
-                        rchId, stateCode, e);
-                rejected++;
-            }
-            if ((saved + rejected) % THOUSAND == 0) {
-                LOGGER.debug("RCH import: {} state, Progress: {} mothers imported, {} mothers rejected", stateName, saved, rejected);
+            boolean hpdValidation = validateHpdUser(hpdMap,
+                    (long) recordMap.get(KilkariConstants.STATE_ID),
+                    (long) recordMap.get(KilkariConstants.DISTRICT_ID));
+            if (hpdValidation) {
+                recordList.add(recordMap);
             }
         }
+
+        LocationFinder locationFinder = locationService.updateLocations(recordList);
+        recordList = mctsBeneficiaryImportReaderService.sortByMobileNumber(recordList, false);
+
+        Timer timer = new Timer("mom", "moms");
+        List<List<Map<String, Object>>> recordListArray = mctsBeneficiaryImportReaderService.splitRecords(recordList, KilkariConstants.MOBILE_NO);
+
+        LOGGER.debug("Thread Processing Start");
+        Integer recordsProcessed = 0;
+        ExecutorService executor = Executors.newCachedThreadPool();
+        List<Future<ThreadProcessorObject>> list = new ArrayList<>();
+
+        for (int i = 0; i < recordListArray.size(); i++) {
+            Callable<ThreadProcessorObject> callable = new MotherCsvThreadProcessor(recordListArray.get(i), false, SubscriptionOrigin.RCH_IMPORT, locationFinder,
+                    mctsBeneficiaryValueProcessor, mctsBeneficiaryImportService);
+            Future<ThreadProcessorObject> future = executor.submit(callable);
+            list.add(future);
+        }
+
+        for (Future<ThreadProcessorObject> fut : list) {
+            try {
+                ThreadProcessorObject threadProcessorObject = fut.get();
+                rejectedMothers.putAll(threadProcessorObject.getRejectedBeneficiaries());
+                rejectionStatus.putAll(threadProcessorObject.getRejectionStatus());
+                recordsProcessed += threadProcessorObject.getRecordsProcessed();
+            } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
+                LOGGER.error("Error while running thread", e);
+            }
+        }
+        executor.shutdown();
+        try {
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            LOGGER.error("Error while Terminating thread", e);
+        }
+        LOGGER.debug("Thread Processing End");
+
+        LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(recordsProcessed));
+
+
         try {
             mctsBeneficiaryImportService.createOrUpdateRchMotherRejections(rejectedMothers , rejectionStatus);
         } catch (RuntimeException e) {
@@ -1845,46 +1867,57 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             rejected++;
         }
         List<Map<String, Object>> acceptedRchChildren = rchChildRecordsSet.get(1);
-        LocationFinder locationFinder = locationService.updateLocations(acceptedRchChildren);
+
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
-
+        List<Map<String, Object>> recordList = new ArrayList<>();
         for (Map<String, Object> recordMap : acceptedRchChildren) {
-            String rchId = (String) recordMap.get(KilkariConstants.RCH_ID);
-            try {
-                // validate if user needs to be hpd filtered (true if user can be added)
-                boolean hpdValidation = validateHpdUser(hpdMap,
-                        (long) recordMap.get(KilkariConstants.STATE_ID),
-                        (long) recordMap.get(KilkariConstants.DISTRICT_ID));
-
-                if (hpdValidation) {
-
-                    childImportRejection = mctsBeneficiaryImportService.importChildRecord(recordMap, SubscriptionOrigin.RCH_IMPORT, locationFinder);
-                    if (childImportRejection != null) {
-                        rejectedChilds.put(childImportRejection.getRegistrationNo(), childImportRejection);
-                        rejectionStatus.put(childImportRejection.getRegistrationNo(), childImportRejection.getAccepted());
-                        if (childImportRejection.getAccepted()) {
-                            saved++;
-                            LOGGER.info("saved child {}", rchId);
-                        } else {
-                            rejected++;
-                            LOGGER.info("rejected child {}", rchId);
-                        }
-                    }
-                } else {
-                    rejected++;
-                    LOGGER.info("rejected child {}", rchId);
-                }
-
-            } catch (RuntimeException e) {
-                LOGGER.error("RCH Child import Error. Cannot import Child with ID: {} for state:{} with state ID: {}",
-                        rchId, stateName, stateCode, e);
-                rejected++;
-            }
-
-            if ((saved + rejected) % THOUSAND == 0) {
-                LOGGER.debug("RCH import: {} state, Progress: {} children imported, {} children rejected", stateName, saved, rejected);
+            boolean hpdValidation = validateHpdUser(hpdMap,
+                    (long) recordMap.get(KilkariConstants.STATE_ID),
+                    (long) recordMap.get(KilkariConstants.DISTRICT_ID));
+            if (hpdValidation) {
+                recordList.add(recordMap);
             }
         }
+
+        LocationFinder locationFinder = locationService.updateLocations(recordList);
+        recordList = mctsBeneficiaryImportReaderService.sortByMobileNumber(recordList, false);
+
+        Timer timer = new Timer("kid", "kids");
+
+        List<List<Map<String, Object>>> recordListArray = mctsBeneficiaryImportReaderService.splitRecords(recordList, KilkariConstants.MOBILE_NO);
+
+        LOGGER.debug("Thread Processing Start");
+        Integer recordsProcessed = 0;
+        ExecutorService executor = Executors.newCachedThreadPool();
+        List<Future<ThreadProcessorObject>> list = new ArrayList<>();
+
+        for (int i = 0; i < recordListArray.size(); i++) {
+            Callable<ThreadProcessorObject> callable = new ChildCsvThreadProcessor(recordListArray.get(i), false, SubscriptionOrigin.RCH_IMPORT, locationFinder,
+                    mctsBeneficiaryValueProcessor, mctsBeneficiaryImportService);
+            Future<ThreadProcessorObject> future = executor.submit(callable);
+            list.add(future);
+        }
+
+        for (Future<ThreadProcessorObject> fut : list) {
+            try {
+                ThreadProcessorObject threadProcessorObject = fut.get();
+                rejectedChilds.putAll(threadProcessorObject.getRejectedBeneficiaries());
+                rejectionStatus.putAll(threadProcessorObject.getRejectionStatus());
+                recordsProcessed += threadProcessorObject.getRecordsProcessed();
+            } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
+                LOGGER.error("Error while running thread", e);
+            }
+        }
+        executor.shutdown();
+        try {
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            LOGGER.error("Error while Terminating thread", e);
+        }
+        LOGGER.debug("Thread Processing End");
+
+        LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(recordsProcessed));
+
 
         try {
             mctsBeneficiaryImportService.createOrUpdateRchChildRejections(rejectedChilds , rejectionStatus);
