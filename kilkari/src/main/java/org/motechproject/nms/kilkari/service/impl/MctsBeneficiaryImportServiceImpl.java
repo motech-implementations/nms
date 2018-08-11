@@ -122,6 +122,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     @Override // NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public MotherImportRejection importMotherRecord(Map<String, Object> record, SubscriptionOrigin importOrigin, LocationFinder locationFinder) { //NOPMD NcssMethodCount
+        LOGGER.debug("MotherImportRejection::importMotherRecord Start");
         if (pregnancyPack == null) {
             pregnancyPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.PREGNANCY);
         }
@@ -204,6 +205,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         List<DeactivatedBeneficiary> deactivatedUsers = null;
         synchronized (this) {
+            LOGGER.debug("MotherImportRejection::importMotherRecord Start synchronized block");
             deactivatedUsers = deactivatedBeneficiaryService.findDeactivatedBeneficiariesOtherThanManualDeactivation(beneficiaryId);
 
             if (deactivatedUsers != null && deactivatedUsers.size() > 0) {
@@ -211,6 +213,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     if (deactivatedUser.getOrigin() == importOrigin) {
                         String message = deactivatedUser.isCompletedSubscription() ? SUBSCRIPTION_COMPLETED : USER_DEACTIVATED;
                         if (message.length() > 2) {
+                            LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block");
                             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
                         }
                     }
@@ -222,25 +225,30 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
                 //validate if an ACTIVE child is already present for the mother. If yes, ignore the update
                 if (childAlreadyPresent(beneficiaryId, importOrigin)) {
+                    LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block");
                     return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ACTIVE_CHILD_PRESENT, false);
                 }
                 subscription = subscriberService.updateMotherSubscriber(msisdn, mother, lmp, record, action);
                 if (subscription == null) {
+                    LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block");
                     return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED, false);
                 }
             } else {
 
                 if (childAlreadyPresent(beneficiaryId, importOrigin)) {
+                    LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block");
                     return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ACTIVE_CHILD_PRESENT, false);
                 }
 
                 Long caseNo = (Long) record.get(KilkariConstants.CASE_NO);
                 // validate caseNo
                 if (!validateCaseNo(caseNo, mother)) {
+                    LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block");
                     return motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.INVALID_CASE_NO.toString(), action);
                 }
                 subscription = subscriberService.updateRchMotherSubscriber(msisdn, mother, lmp, caseNo, deactivate, record, action);
                 if (subscription == null) {
+                    LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block");
                     return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED, false);
                 }
             }
@@ -257,8 +265,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             if ((death != null) && death) {
                 subscriptionService.deactivateSubscription(subscription, DeactivationReason.MATERNAL_DEATH);
             }
-
+            LOGGER.debug("MotherImportRejection::importMotherRecord Start synchronized block");
             return createUpdateMotherRejections(flagForMcts, record, action, null, true);
+
         }
     }
 

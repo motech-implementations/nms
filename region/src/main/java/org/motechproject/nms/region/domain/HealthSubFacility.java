@@ -54,7 +54,7 @@ public class HealthSubFacility extends MdsEntity {
     @JsonBackReference
     private HealthFacility healthFacility;
 
-    @Persistent(table="nms_village_healthsubfacility", defaultFetchGroup = "true")
+    @Persistent(table="nms_village_healthsubfacility", defaultFetchGroup = "false")
     @Join(column = "healthsubfacility_id")
     @Element(column = "village_id")
     @JsonManagedReference
