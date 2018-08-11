@@ -220,7 +220,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 }
             }
 
-
+            LOGGER.debug("MotherImportRejection::importMotherRecord Handled Deactived Users ");
             Subscription subscription;
             if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
                 //validate if an ACTIVE child is already present for the mother. If yes, ignore the update
@@ -252,6 +252,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED, false);
                 }
             }
+
+            LOGGER.debug("MotherImportRejection::importMotherRecord Handled Subscriptions  ");
             // We rejected the update/create for the subscriber
 
             if ((abortion != null) && abortion) {
