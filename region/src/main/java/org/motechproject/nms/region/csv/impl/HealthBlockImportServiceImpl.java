@@ -54,17 +54,19 @@ public class HealthBlockImportServiceImpl extends BaseLocationImportService<Heal
 
     @Override
     protected void createOrUpdateInstance(HealthBlock instance) {
-        HealthBlock existing = healthBlockService.findByTalukaAndCode(instance.getTalukas().iterator().next(), instance.getCode());
-
-        if (existing != null) {
-            existing.setName(instance.getName());
-            existing.setRegionalName(instance.getRegionalName());
-            existing.setHq(instance.getHq());
-
-            healthBlockService.update(existing);
-        } else {
-            healthBlockService.create(instance);
-        }
+        //TODO HARITHA Commendted it out because no longer using the service and trying removing m-n between hb and talukas
+        return ;
+//        HealthBlock existing = healthBlockService.findByTalukaAndCode(instance.getTalukas().iterator().next(), instance.getCode());
+//
+//        if (existing != null) {
+//            existing.setName(instance.getName());
+//            existing.setRegionalName(instance.getRegionalName());
+//            existing.setHq(instance.getHq());
+//
+//            healthBlockService.update(existing);
+//        } else {
+//            healthBlockService.create(instance);
+//        }
     }
 
     @Override

@@ -74,11 +74,11 @@ public class FullLocationValidatorUnitTest {
         taluka.setDistrict(district);
         taluka.getVillages().add(village);
         village.setTaluka(taluka);
-
-        healthBlock.addTaluka(taluka);
+        //TODO HARITHA commented 2 lines m-n taluka hb
+        //healthBlock.addTaluka(taluka);
         healthBlock.setDistrict(district);
 
-        taluka.addHealthBlock(healthBlock);
+        //taluka.addHealthBlock(healthBlock);
 
         healthBlock.getHealthFacilities().add(healthFacility);
         healthFacility.setHealthBlock(healthBlock);

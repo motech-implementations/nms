@@ -73,21 +73,22 @@ public class Village extends MdsEntity {
     @JsonBackReference
     private Taluka taluka;
 
-    @Persistent(mappedBy = "villages", defaultFetchGroup = "false")
-    @JsonManagedReference
-    private Set<HealthSubFacility> healthSubFacilities;
 
-    public Village() {
-        this.healthSubFacilities = new HashSet<>();
-    }
+//    @Persistent(mappedBy = "villages", defaultFetchGroup = "false")
+//    @JsonManagedReference
+//    private Set<HealthSubFacility> healthSubFacilities;
 
-    public void addHealthSubFacility(HealthSubFacility healthSubFacility) {
-        this.healthSubFacilities.add(healthSubFacility);
-    }
-
-    public void removeHealthSubFacility(HealthSubFacility healthSubFacility) {
-        this.healthSubFacilities.remove(healthSubFacility);
-    }
+//    public Village() {
+//        this.healthSubFacilities = new HashSet<>();
+//    }
+//
+//    public void addHealthSubFacility(HealthSubFacility healthSubFacility) {
+//        this.healthSubFacilities.add(healthSubFacility);
+//    }
+//
+//    public void removeHealthSubFacility(HealthSubFacility healthSubFacility) {
+//        this.healthSubFacilities.remove(healthSubFacility);
+//    }
 
     public String getName() {
         return name;
@@ -148,14 +149,14 @@ public class Village extends MdsEntity {
     public void setTaluka(Taluka taluka) {
         this.taluka = taluka;
     }
-
-    public Set<HealthSubFacility> getHealthSubFacilities() {
-        return healthSubFacilities;
-    }
-
-    public void setHealthSubFacilities(Set<HealthSubFacility> healthSubFacilities) {
-        this.healthSubFacilities = healthSubFacilities;
-    }
+//
+//    public Set<HealthSubFacility> getHealthSubFacilities() {
+//        return healthSubFacilities;
+//    }
+//
+//    public void setHealthSubFacilities(Set<HealthSubFacility> healthSubFacilities) {
+//        this.healthSubFacilities = healthSubFacilities;
+//    }
 
     @Override
     public boolean equals(Object o) {

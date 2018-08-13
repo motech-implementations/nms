@@ -166,6 +166,7 @@ public class LocationServiceImpl implements LocationService {
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
     @SuppressWarnings("PMD")
+
     public Map<String, Object> getLocations(Map<String, Object> map, boolean createIfNotExists) throws InvalidLocationException {
 
         Map<String, Object> locations = new HashMap<>();
@@ -237,11 +238,13 @@ public class LocationServiceImpl implements LocationService {
         HealthBlock healthBlock = healthBlockService.findByDistrictAndCode(district, (Long) map.get(HEALTHBLOCK_ID));
         if (healthBlock == null && createIfNotExists) {
             healthBlock = new HealthBlock();
-            healthBlock.addTaluka(taluka);
+            //TODO HARITHA removing talukas commenting 2 lines
+            healthBlock.setTalukaIdOID(taluka.getId());
+            //healthBlock.addTaluka(taluka);
             healthBlock.setDistrict(district);
             healthBlock.setCode((Long) map.get(HEALTHBLOCK_ID));
             healthBlock.setName((String) map.get(HEALTHBLOCK_NAME));
-            taluka.addHealthBlock(healthBlock);
+            //taluka.addHealthBlock(healthBlock);
             district.getHealthBlocks().add(healthBlock);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthBlock, taluka, healthBlock.getId()));
         }
@@ -270,13 +273,14 @@ public class LocationServiceImpl implements LocationService {
         }
         HealthSubFacility healthSubFacility = healthSubFacilityService.findByHealthFacilityAndCode(healthFacility, (Long) map.get(SUBCENTRE_ID));
         if (healthSubFacility == null && createIfNotExists) {
+            //TODO HARITHA commented 2 lines m-n taluka hb
             healthSubFacility = new HealthSubFacility();
-            healthSubFacility.addVillage(village);
+            //healthSubFacility.addVillage(village);
             healthSubFacility.setHealthFacility(healthFacility);
             healthSubFacility.setCode((Long) map.get(SUBCENTRE_ID));
             healthSubFacility.setName((String) map.get(SUBCENTRE_NAME));
             healthFacility.getHealthSubFacilities().add(healthSubFacility);
-            village.addHealthSubFacility(healthSubFacility);
+            //village.addHealthSubFacility(healthSubFacility);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthSubFacility, healthFacility, healthSubFacility.getId()));
         }
         locations.put(SUBCENTRE_ID, healthSubFacility);
@@ -315,11 +319,14 @@ public class LocationServiceImpl implements LocationService {
         HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka, (Long) flw.get(HEALTHBLOCK_ID));
         if (healthBlock == null && createIfNotExists) {
             healthBlock = new HealthBlock();
-            healthBlock.addTaluka(taluka);
+            //TODO HARITHA  removed list and added single id !!!
+            healthBlock.setTalukaIdOID(taluka.getId());
+
+            //healthBlock.addTaluka(taluka);
             healthBlock.setDistrict(taluka.getDistrict());
             healthBlock.setCode((Long) flw.get(HEALTHBLOCK_ID));
             healthBlock.setName((String) flw.get(HEALTHBLOCK_NAME));
-            taluka.addHealthBlock(healthBlock);
+            //taluka.addHealthBlock(healthBlock);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthBlock, taluka, healthBlock.getId()));
         }
         return healthBlock;

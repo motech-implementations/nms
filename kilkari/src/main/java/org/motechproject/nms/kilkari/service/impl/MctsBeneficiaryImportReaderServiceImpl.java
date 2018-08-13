@@ -196,12 +196,13 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             Timer timer = new Timer("mom", "moms");
             List<List<Map<String, Object>>> recordListArray = this.splitRecords(recordList, contactNumber);
 
-            LOGGER.debug("Thread Processing Start");
+
             Integer recordsProcessed = 0;
             ExecutorService executor = Executors.newCachedThreadPool();
             List<Future<ThreadProcessorObject>> list = new ArrayList<>();
 
             for (int i = 0; i < recordListArray.size(); i++) {
+                LOGGER.debug("Thread Processing Start" + i);
                 Callable<ThreadProcessorObject> callable = new MotherCsvThreadProcessor(recordListArray.get(i), mctsImport, importOrigin, locationFinder,
                         mctsBeneficiaryValueProcessor, mctsBeneficiaryImportService);
                 Future<ThreadProcessorObject> future = executor.submit(callable);
@@ -224,7 +225,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             } catch (InterruptedException e) {
                 LOGGER.error("Error while Terminating thread", e);
             }
-            LOGGER.debug("Thread Processing End");
+            LOGGER.debug("Thread Processing End" );
             try {
                 if (mctsImport) {
                     mctsBeneficiaryImportService.createOrUpdateMctsMotherRejections(rejectedMothers , rejectionStatus);
