@@ -241,7 +241,6 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    @Transactional
     public void setLocationFieldsCSV(LocationFinder locationFinder, Map<String, Object> record, MctsBeneficiary beneficiary) throws InvalidLocationException {
 
         StringBuffer mapKey = new StringBuffer(record.get(KilkariConstants.STATE_ID).toString());
