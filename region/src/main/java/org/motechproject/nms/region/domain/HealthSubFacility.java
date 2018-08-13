@@ -54,15 +54,15 @@ public class HealthSubFacility extends MdsEntity {
     @JsonBackReference
     private HealthFacility healthFacility;
 
-    @Persistent(table="nms_village_healthsubfacility", defaultFetchGroup = "false")
-    @Join(column = "healthsubfacility_id")
-    @Element(column = "village_id")
-    @JsonManagedReference
-    private Set<Village> villages;
+//    @Persistent(table="nms_village_healthsubfacility", defaultFetchGroup = "false")
+//    @Join(column = "healthsubfacility_id")
+//    @Element(column = "village_id")
+//    @JsonManagedReference
+//    private Set<Village> villages;
 
-    public HealthSubFacility() {
-        this.villages = new HashSet<>();
-    }
+//    public HealthSubFacility() {
+//        this.villages = new HashSet<>();
+//    }
 
     public String getName() {
         return name;
@@ -104,21 +104,21 @@ public class HealthSubFacility extends MdsEntity {
         this.healthFacility = healthFacility;
     }
 
-    public Set<Village> getVillages() {
-        return villages;
-    }
-
-    public void setVillages(Set<Village> villages) {
-        this.villages = villages;
-    }
-
-    public void addVillage(Village village) {
-        this.villages.add(village);
-    }
-
-    public void removeVillage(Village village) {
-        this.villages.remove(village);
-    }
+//    public Set<Village> getVillages() {
+//        return villages;
+//    }
+//
+//    public void setVillages(Set<Village> villages) {
+//        this.villages = villages;
+//    }
+//
+//    public void addVillage(Village village) {
+//        this.villages.add(village);
+//    }
+//
+//    public void removeVillage(Village village) {
+//        this.villages.remove(village);
+//    }
 
     @Override
     public boolean equals(Object o) {

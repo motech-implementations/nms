@@ -131,7 +131,8 @@ public class LocationDataUpdateServiceBundleIT extends BasePaxIT {
 
     private HealthBlock createHealthBlock(Taluka taluka) {
         HealthBlock healthBlock = new HealthBlock();
-        healthBlock.addTaluka(taluka);
+        //TODO HARITHA commented 2 lines m-n taluka hb
+        //healthBlock.addTaluka(taluka);
         healthBlock.setDistrict(taluka.getDistrict());
         healthBlock.setCode(6l);
         healthBlock.setName("health block name");
@@ -258,7 +259,8 @@ public class LocationDataUpdateServiceBundleIT extends BasePaxIT {
 
         // add health block
         HealthBlock orignalHealthBlock = new HealthBlock();
-        orignalHealthBlock.addTaluka(taluka);
+        //TODO HARITHA commented 2 lines m-n taluka hb
+        //orignalHealthBlock.addTaluka(taluka);
         orignalHealthBlock.setDistrict(district);
         orignalHealthBlock.setCode(6l);
         orignalHealthBlock.setName("name");

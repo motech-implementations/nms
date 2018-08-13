@@ -56,9 +56,9 @@ public class Taluka extends MdsEntity {
     @JsonBackReference
     private District district;
 
-    @Persistent(mappedBy = "talukas", defaultFetchGroup = "false")
-    @JsonManagedReference
-    private Set<HealthBlock> healthBlocks;
+//    @Persistent(mappedBy = "talukas", defaultFetchGroup = "false")
+//    @JsonManagedReference
+//    private Set<HealthBlock> healthBlocks;
 
     @Field
     @Cascade(delete = true)
@@ -79,7 +79,7 @@ public class Taluka extends MdsEntity {
     private List<HealthSubFacility> healthSubFacilities;
 
     public Taluka() {
-        this.healthBlocks = new HashSet<>();
+        //this.healthBlocks = new HashSet<>();
         this.villages = new ArrayList<>();
     }
 
@@ -123,21 +123,21 @@ public class Taluka extends MdsEntity {
         this.district = district;
     }
 
-    public Set<HealthBlock> getHealthBlocks() {
-        return healthBlocks;
-    }
-
-    public void setHealthBlocks(Set<HealthBlock> healthBlocks) {
-        this.healthBlocks = healthBlocks;
-    }
-
-    public void addHealthBlock(HealthBlock healthBlock) {
-        this.healthBlocks.add(healthBlock);
-    }
-
-    public void removeHealthBlock(HealthBlock healthBlock) {
-        this.healthBlocks.remove(healthBlock);
-    }
+//    public Set<HealthBlock> getHealthBlocks() {
+//        return healthBlocks;
+//    }
+//
+//    public void setHealthBlocks(Set<HealthBlock> healthBlocks) {
+//        this.healthBlocks = healthBlocks;
+//    }
+//
+//    public void addHealthBlock(HealthBlock healthBlock) {
+//        this.healthBlocks.add(healthBlock);
+//    }
+//
+//    public void removeHealthBlock(HealthBlock healthBlock) {
+//        this.healthBlocks.remove(healthBlock);
+//    }
 
     public List<Village> getVillages() {
         return villages;

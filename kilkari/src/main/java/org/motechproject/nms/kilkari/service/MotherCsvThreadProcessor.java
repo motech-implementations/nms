@@ -46,6 +46,7 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
 
     @Override
     public ThreadProcessorObject call() throws Exception { //NOPMD SignatureDeclareThrowsException
+
         ThreadProcessorObject threadProcessorObject = new ThreadProcessorObject();
         Map<String, Object> rejectedMothers = new HashMap<>();
         Map<String, Object> rejectionStatus = new HashMap<>();
@@ -83,7 +84,9 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
             record.put(motherInstance, mother);
 
             try {
+                LOGGER.debug("Calling Import Mother Record for"  + count );
                 motherImportRejection = mctsBeneficiaryImportService.importMotherRecord(record, importOrigin, locationFinder);
+                LOGGER.debug("Completed  Import Mother Record for" +  count);
                 if (motherImportRejection != null) {
                     if (mctsImport) {
                         rejectedMothers.put(motherImportRejection.getIdNo(), motherImportRejection);
