@@ -2385,13 +2385,17 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
             String xmlString;
             String string = FileUtils.readFileToString(file);
-            xmlString = "<NewDataSet" + string.split("NewDataSet")[3] + "NewDataSet>";
-            xmlString = xmlString.replaceAll("\\n", " ");
-            xmlString = xmlString.replaceAll("<Records diffgr:id=\"Records[0-9]+\" msdata:rowOrder=\"[0-9]+\">", "<Records >");
-            return xmlString;
+            String[] newDataSetArr = string.split("NewDataSet");
+            if(newDataSetArr.length > 2) {
+                xmlString = "<NewDataSet" + newDataSetArr[3] + "NewDataSet>";
+                xmlString = xmlString.replaceAll("\\n", " ");
+                xmlString = xmlString.replaceAll("<Records diffgr:id=\"Records[0-9]+\" msdata:rowOrder=\"[0-9]+\">", "<Records >");
+                return xmlString;
+            }
         } catch (Exception e) {
-            throw new RchFileManipulationException("Failed to read response file."); //NOPMD
+            throw new RchFileManipulationException("Failed to read response file.", e); //NOPMD
         }
+        return "";
     }
 
 
