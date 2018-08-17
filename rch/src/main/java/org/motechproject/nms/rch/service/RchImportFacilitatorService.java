@@ -14,7 +14,7 @@ public interface RchImportFacilitatorService {
 
     List<RchImportFacilitator> findByImportDateAndRchUserType(LocalDate importDate, RchUserType rchUserType);
 
-    RchImportFacilitator findByImportDateStateIdAndRchUserType(Long stateId, LocalDate importDate, RchUserType rchUserType);
+    List<RchImportFacilitator> findByImportDateStateIdAndRchUserType(Long stateId, LocalDate importDate, RchUserType rchUserType);
 
     List<RchImportFacilitator> findByStateIdAndRchUserType(Long stateId, RchUserType rchUserType);
 }
