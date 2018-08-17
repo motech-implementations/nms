@@ -12,9 +12,11 @@ import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.ThreadProcessorObject;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.service.ChildCsvThreadProcessor;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
+import org.motechproject.nms.kilkari.service.MotherCsvThreadProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.motechproject.nms.region.domain.LocationFinder;
@@ -88,14 +90,14 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
 
         LocationFinder locationFinder = locationService.updateLocations(recordList);
 
-        recordList = sortByMobileNumber(recordList, mctsImport);
+        recordList = this.sortByMobileNumber(recordList, mctsImport);
 
         try {
             Map<String, Object> rejectedChilds = new HashMap<>();
             Map<String, Object> rejectionStatus = new HashMap<>();
             Timer timer = new Timer("kid", "kids");
 
-            List<List<Map<String, Object>>> recordListArray = splitRecords(recordList, contactNumber);
+            List<List<Map<String, Object>>> recordListArray = this.splitRecords(recordList, contactNumber);
 
             LOGGER.debug("Thread Processing Start");
             Integer recordsProcessed = 0;
@@ -186,13 +188,13 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
 
         LocationFinder locationFinder = locationService.updateLocations(recordList);
 
-        recordList = sortByMobileNumber(recordList, mctsImport);
+        recordList = this.sortByMobileNumber(recordList, mctsImport);
 
         try {
             Map<String, Object> rejectedMothers = new HashMap<>();
             Map<String, Object> rejectionStatus = new HashMap<>();
             Timer timer = new Timer("mom", "moms");
-            List<List<Map<String, Object>>> recordListArray = splitRecords(recordList, contactNumber);
+            List<List<Map<String, Object>>> recordListArray = this.splitRecords(recordList, contactNumber);
 
             LOGGER.debug("Thread Processing Start");
             Integer recordsProcessed = 0;
@@ -245,7 +247,8 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
         return recordList.size();
     }
 
-    private List<List<Map<String, Object>>> splitRecords(List<Map<String, Object>> recordList, String contactNumber) {
+    @Override
+    public List<List<Map<String, Object>>> splitRecords(List<Map<String, Object>> recordList, String contactNumber) {
         List<List<Map<String, Object>>> recordListArray = new ArrayList<>();
         int count = 0;
         while (count < recordList.size()) {
@@ -288,7 +291,8 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
         return recordList;
     }
 
-    private List<Map<String, Object>> sortByMobileNumber(List<Map<String, Object>> recordList, final Boolean mctsImport) {
+    @Override
+    public List<Map<String, Object>> sortByMobileNumber(List<Map<String, Object>> recordList, final Boolean mctsImport) {
         Collections.sort(recordList, new Comparator<Map<String, Object>>() {
             public int compare(Map<String, Object> m1, Map<String, Object> m2) {
                 Object phoneM1 = m1.get(mctsImport ? KilkariConstants.MSISDN : KilkariConstants.MOBILE_NO);
