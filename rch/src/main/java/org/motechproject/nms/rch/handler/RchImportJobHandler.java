@@ -34,6 +34,7 @@ import java.util.List;
 public class RchImportJobHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RchWsImportServiceImpl.class);
+    private static final String NO_CRON_CONFIGURED = "No cron expression configured for RCH data read, no import will be performed";
 
     @Autowired
     @Qualifier("rchSettings")
@@ -64,12 +65,13 @@ public class RchImportJobHandler {
         initMotherReadJob();
         initChildReadJob();
         initAshaReadJob();
+        initLocationReadJob();
     }
 
     public void initMotherReadJob() {
         String cronExpression = settingsFacade.getProperty(Constants.RCH_MOTHER_READ_CRON);
         if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            LOGGER.warn(NO_CRON_CONFIGURED);
             return;
         }
 
@@ -82,10 +84,26 @@ public class RchImportJobHandler {
         motechSchedulerService.safeScheduleJob(rchMotherRead);
     }
 
+    public void initLocationReadJob() {
+        String cronExpression = settingsFacade.getProperty(Constants.RCH_LOCATION_READ_CRON);
+        if (StringUtils.isBlank(cronExpression)) {
+            LOGGER.warn(NO_CRON_CONFIGURED);
+            return;
+        }
+
+        if (!CronExpression.isValidExpression(cronExpression)) {
+            throw new RchImportConfigurationException("Cron expression for district read is invalid: " + cronExpression);
+        }
+
+        LOGGER.info("Created RCH location Read Event");
+        CronSchedulableJob rchDistrictRead = new CronSchedulableJob(new MotechEvent(Constants.RCH_DISTRICT_READ_SUBJECT), cronExpression);
+        motechSchedulerService.safeScheduleJob(rchDistrictRead);
+    }
+
     public void initChildReadJob() {
         String cronExpression = settingsFacade.getProperty(Constants.RCH_CHILD_READ_CRON);
         if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            LOGGER.warn(NO_CRON_CONFIGURED);
             return;
         }
 
@@ -101,7 +119,7 @@ public class RchImportJobHandler {
     public void initAshaReadJob() {
         String cronExpression = settingsFacade.getProperty(Constants.RCH_ASHA_READ_CRON);
         if (StringUtils.isBlank(cronExpression)) {
-            LOGGER.warn("No cron expression configured for RCH data read, no import will be performed");
+            LOGGER.warn(NO_CRON_CONFIGURED);
             return;
         }
 
