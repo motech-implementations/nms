@@ -37,6 +37,8 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RchWsImportServiceImpl.class);
     private static final String RCH_WEB_SERVICE = "RCH Web Service";
+    private static final String FILE_RECORD_SUCCESS = "RCH Responses for state id {} recorded to file successfully.";
+    private static final String LOG_STATEID = "stateId = {}";
 
     @Autowired
     private StateDataService stateDataService;
@@ -79,6 +81,14 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             sendImportEventForAUserType(stateId, RchUserType.MOTHER, referenceDate, endpoint, Constants.RCH_MOTHER_IMPORT_SUBJECT);
             sendImportEventForAUserType(stateId, RchUserType.CHILD, referenceDate, endpoint, Constants.RCH_CHILD_IMPORT_SUBJECT);
             sendImportEventForAUserType(stateId, RchUserType.ASHA, referenceDate, endpoint, Constants.RCH_ASHA_IMPORT_SUBJECT);
+            sendImportEventForAUserType(stateId, RchUserType.DISTRICT, referenceDate, endpoint, Constants.RCH_DISTRICT_IMPORT_SUBJECT);
+            sendImportEventForAUserType(stateId, RchUserType.TALUKA, referenceDate, endpoint, Constants.RCH_TALUKA_IMPORT_SUBJECT);
+            sendImportEventForAUserType(stateId, RchUserType.VILLAGE, referenceDate, endpoint, Constants.RCH_VILLAGE_IMPORT_SUBJECT);
+            sendImportEventForAUserType(stateId, RchUserType.HEALTHBLOCK, referenceDate, endpoint, Constants.RCH_HEALTHBLOCK_IMPORT_SUBJECT);
+            sendImportEventForAUserType(stateId, RchUserType.TALUKAHEALTHBLOCK, referenceDate, endpoint, Constants.RCH_TALUKA_HEALTHBLOCK_IMPORT_SUBJECT);
+            sendImportEventForAUserType(stateId, RchUserType.HEALTHFACILITY, referenceDate, endpoint, Constants.RCH_HEALTHFACILITY_IMPORT_SUBJECT);
+            sendImportEventForAUserType(stateId, RchUserType.HEALTHSUBFACILITY, referenceDate, endpoint, Constants.RCH_HEALTHSUBFACILITY_IMPORT_SUBJECT);
+            sendImportEventForAUserType(stateId, RchUserType.VILLAGEHEALTHSUBFACILITY, referenceDate, endpoint, Constants.RCH_VILLAGEHEALTHSUBFACILITY_IMPORT_SUBJECT);
         }
 
         LOGGER.info("Initiated import workflow from RCH for mothers and children");
@@ -105,7 +115,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         Long stateCode = state.getCode();
         try {
             if (rchWebServiceFacade.getMothersData(startDate, endDate, endpoint, stateId)) {
-                LOGGER.info("RCH Responses for state id {} recorded to file successfully.", stateId);
+                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
             }
         } catch (RchWebServiceException e) {
             String error = String.format("Cannot read RCH mothers data from %s state with state id: %d", stateName, stateId);
@@ -114,6 +124,266 @@ public class RchWsImportServiceImpl implements RchWsImportService {
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.MOTHER, stateId));
+        }
+    }
+
+    @MotechListener(subjects = { Constants.RCH_DISTRICT_IMPORT_SUBJECT })
+    @Transactional
+    @Override
+    public void importRchDistrictData(MotechEvent motechEvent) {
+        Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
+        LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
+        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
+
+        State state = stateDataService.findByCode(stateId);
+        if (state == null) {
+            String error = String.format("State with code %s doesn't exist in database. Skipping district import for this state", stateId);
+            LOGGER.error(error);
+            return;
+        }
+
+        String stateName = state.getName();
+        Long stateCode = state.getCode();
+        try {
+            if (rchWebServiceFacade.getDistrictData(startDate, endDate, endpoint, stateId)) {
+                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
+            }
+        } catch (RchWebServiceException e) {
+            String error = String.format("Cannot read RCH district data from %s state with state id: %d", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service district Import", e
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
+        }
+    }
+
+    @MotechListener(subjects = { Constants.RCH_TALUKA_IMPORT_SUBJECT })
+    @Transactional
+    @Override
+    public void importRchTalukaData(MotechEvent motechEvent) {
+        Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
+        LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
+        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
+
+        State state = stateDataService.findByCode(stateId);
+        if (state == null) {
+            String error = String.format("State with code %s doesn't exist in database. Skipping Taluka import for this state", stateId);
+            LOGGER.error(error);
+            return;
+        }
+
+        String stateName = state.getName();
+        Long stateCode = state.getCode();
+        try {
+            if (rchWebServiceFacade.getTalukasData(startDate, endDate, endpoint, stateId)) {
+                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
+            }
+        } catch (RchWebServiceException e) {
+            String error = String.format("Cannot read RCH taluka data from %s state with state id: %d", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service Taluka Import", e
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
+        }
+    }
+
+    @MotechListener(subjects = { Constants.RCH_VILLAGE_IMPORT_SUBJECT })
+    @Transactional
+    @Override
+    public void importRchVillageData(MotechEvent motechEvent) {
+        Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
+        LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
+        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
+
+        State state = stateDataService.findByCode(stateId);
+        if (state == null) {
+            String error = String.format("State with code %s doesn't exist in database. Skipping Village import for this state", stateId);
+            LOGGER.error(error);
+            return;
+        }
+
+        String stateName = state.getName();
+        Long stateCode = state.getCode();
+        try {
+            if (rchWebServiceFacade.getVillagesData(startDate, endDate, endpoint, stateId)) {
+                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
+            }
+        } catch (RchWebServiceException e) {
+            String error = String.format("Cannot read RCH Village data from %s state with state id: %d", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service Village Import", e
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGE, stateId));
+        }
+    }
+
+    @MotechListener(subjects = { Constants.RCH_HEALTHBLOCK_IMPORT_SUBJECT})
+    @Transactional
+    @Override
+    public void importRchHealthBlockData(MotechEvent motechEvent) {
+        Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
+        LOGGER.debug(LOG_STATEID, stateId);
+        LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
+        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
+
+        State state = stateDataService.findByCode(stateId);
+        if (state == null) {
+            String error = String.format("State with code %s doesn't exist in database. Skipping HealthBlock import for this state", stateId);
+            LOGGER.error(error);
+            return;
+        }
+
+        String stateName = state.getName();
+        Long stateCode = state.getCode();
+        try {
+            if (rchWebServiceFacade.getHealthBlockData(startDate, endDate, endpoint, stateId)) {
+                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
+            }
+        } catch (RchWebServiceException e) {
+            String error = String.format("Cannot read RCH healthblock data from %s state with state id: %d", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service HealthBlock Import", e
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHBLOCK, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHBLOCK, stateId));
+        }
+    }
+
+    @MotechListener(subjects = { Constants.RCH_TALUKA_HEALTHBLOCK_IMPORT_SUBJECT})
+    @Transactional
+    @Override
+    public void importRchTalukaHealthBlockData(MotechEvent motechEvent) {
+        Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
+        LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
+        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
+
+        State state = stateDataService.findByCode(stateId);
+        if (state == null) {
+            String error = String.format("State with code %s doesn't exist in database. Skipping taluka-healthblock import for this state", stateId);
+            LOGGER.error(error);
+            return;
+        }
+
+        String stateName = state.getName();
+        Long stateCode = state.getCode();
+        try {
+            if (rchWebServiceFacade.getTalukaHealthBlockData(startDate, endDate, endpoint, stateId)) {
+                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
+            }
+        } catch (RchWebServiceException e) {
+            String error = String.format("Cannot read RCH taluka-healthblock data from %s state with state id: %d", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service Taluka healthBlock Import", e
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKAHEALTHBLOCK, stateId));
+        }
+    }
+
+    @MotechListener(subjects = { Constants.RCH_HEALTHFACILITY_IMPORT_SUBJECT})
+    @Transactional
+    @Override
+    public void importRchHealthFacilityData(MotechEvent motechEvent) {
+        Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
+        LOGGER.debug(LOG_STATEID, stateId);
+        LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
+        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
+
+        State state = stateDataService.findByCode(stateId);
+        if (state == null) {
+            String error = String.format("State with code %s doesn't exist in database. Skipping HealthFacility import for this state", stateId);
+            LOGGER.error(error);
+            return;
+        }
+
+        String stateName = state.getName();
+        Long stateCode = state.getCode();
+        try {
+            if (rchWebServiceFacade.getHealthFacilityData(startDate, endDate, endpoint, stateId)) {
+                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
+            }
+        } catch (RchWebServiceException e) {
+            String error = String.format("Cannot read RCH HealthFacility data from %s state with state id: %d", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service HealthFacility Import", e
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHFACILITY, stateId));
+        }
+    }
+
+    @MotechListener(subjects = { Constants.RCH_HEALTHSUBFACILITY_IMPORT_SUBJECT})
+    @Transactional
+    @Override
+    public void importRchHealthSubFacilityData(MotechEvent motechEvent) {
+        Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
+        LOGGER.debug(LOG_STATEID, stateId);
+        LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
+        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
+
+        State state = stateDataService.findByCode(stateId);
+        if (state == null) {
+            String error = String.format("State with code %s doesn't exist in database. Skipping HealthSubFacility import for this state", stateId);
+            LOGGER.error(error);
+            return;
+        }
+
+        String stateName = state.getName();
+        Long stateCode = state.getCode();
+        try {
+            if (rchWebServiceFacade.getHealthSubFacilityData(startDate, endDate, endpoint, stateId)) {
+                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
+            }
+        } catch (RchWebServiceException e) {
+            String error = String.format("Cannot read RCH HealthSubFacility data from %s state with state id: %d", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service HealthSubFacility Import", e
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHSUBFACILITY, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHSUBFACILITY, stateId));
+        }
+    }
+
+    @MotechListener(subjects = { Constants.RCH_VILLAGEHEALTHSUBFACILITY_IMPORT_SUBJECT})
+    @Transactional
+    @Override
+    public void importRchVillageHealthSubFacilityData(MotechEvent motechEvent) {
+        Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
+        LOGGER.debug(LOG_STATEID, stateId);
+        LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
+        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
+
+        State state = stateDataService.findByCode(stateId);
+        if (state == null) {
+            String error = String.format("State with code %s doesn't exist in database. Skipping VillageHealthSubFacility import for this state", stateId);
+            LOGGER.error(error);
+            return;
+        }
+
+        String stateName = state.getName();
+        Long stateCode = state.getCode();
+        try {
+            if (rchWebServiceFacade.getVillageHealthSubFacilityData(startDate, endDate, endpoint, stateId)) {
+                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
+            }
+        } catch (RchWebServiceException e) {
+            String error = String.format("Cannot read RCH VillageHealthSubFacility data from %s state with state id: %d", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service VillageHealthSubFacility Import", e
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId));
         }
     }
 

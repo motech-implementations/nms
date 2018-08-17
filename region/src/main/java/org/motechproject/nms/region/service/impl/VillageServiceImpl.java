@@ -18,11 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
-import java.util.HashMap;
-import java.util.HashSet;
+import javax.jdo.annotations.Transactional;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Service("villageService")
 public class VillageServiceImpl implements VillageService {
@@ -78,16 +76,22 @@ public class VillageServiceImpl implements VillageService {
     }
 
     @Override
+    @Transactional
     public Long createUpdateVillages(final List<Map<String, Object>> villages, final Map<String, Taluka> talukaHashMap) {
+        Timer queryTimer = new Timer();
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
             public String getSqlQuery() {
-                String query = "INSERT into nms_health_blocks (`vcode`, `svid`, `name`, `taluka_id_OID`, " +
-                        " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
-                        villageQuerySet(villages, talukaHashMap) +
-                        " ON DUPLICATE KEY UPDATE " +
-                        "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                String villageValues = villageQuerySet(villages, talukaHashMap);
+                String query = "";
+                if (!villageValues.isEmpty()) {
+                    query = "INSERT into nms_villages (`vcode`, `svid`, `name`, `taluka_id_OID`, " +
+                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                            villageValues +
+                            " ON DUPLICATE KEY UPDATE " +
+                            "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                }
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
@@ -96,98 +100,51 @@ public class VillageServiceImpl implements VillageService {
 
             @Override
             public Long execute(Query query) {
-                query.setClass(Village.class);
                 return (Long) query.execute();
             }
         };
 
-        Long createdDistricts = dataService.executeSQLQuery(queryExecution);
-
-
-        return createdDistricts;
-    }
-
-    @Override
-    public Map<String, Village> fillVillageIds(List<Map<String, Object>> villages, final Map<String, Taluka> talukaHashMap) {
-        final Set<String> villageKeys = new HashSet<>();
-        for(Map<String, Object> village : villages) {
-            villageKeys.add(village.get(LocationConstants.STATE_ID).toString() + "_" + village.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    village.get(LocationConstants.TALUKA_ID).toString() + "_" + village.get(LocationConstants.VILLAGE_ID).toString() + "_" + 0);
+        Long createdVillages = 0L;
+        if (!talukaHashMap.isEmpty() && !queryExecution.getSqlQuery().isEmpty()) {
+            createdVillages = dataService.executeSQLQuery(queryExecution);
         }
-        Map<String, Village> villageHashMap = new HashMap<>();
-        Map<Long, String> talukaIdMap = new HashMap<>();
-        for (String districtKey : talukaHashMap.keySet()) {
-            talukaIdMap.put(talukaHashMap.get(districtKey).getId(), districtKey);
-        }
-        Timer queryTimer = new Timer();
-        @SuppressWarnings("unchecked")
-        SqlQueryExecution<List<Village>> queryExecution = new SqlQueryExecution<List<Village>>() {
-
-            @Override
-            public String getSqlQuery() {
-                String query = "SELECT * from nms_villages where";
-                int count = villageKeys.size();
-                for (String villageString : villageKeys) {
-                    count--;
-                    String[] ids = villageString.split("_");
-                    Long talukaId = talukaHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]).getId();
-                    query += " (vcode = " + ids[3] + " and svid = " + ids[4] + " and taluka_id_oid = " + talukaId + ")";
-                    if (count > 0) {
-                        query += LocationConstants.OR_SQL_STRING;
-                    }
-                }
-
-                LOGGER.debug("VILLAGE Query: {}", query);
-                return query;
-            }
-
-            @Override
-            public List<Village> execute(Query query) {
-                query.setClass(Village.class);
-                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
-                List<Village> villages;
-                if (fqr.isEmpty()) {
-                    return null;
-                }
-                villages = (List<Village>) fqr;
-                return villages;
-            }
-        };
-
-        List<Village> dbVillages = dataService.executeSQLQuery(queryExecution);
         LOGGER.debug("VILLAGE Query time: {}", queryTimer.time());
-        if(dbVillages != null && !dbVillages.isEmpty()) {
-            for (Village village : dbVillages) {
-                String talukaKey = talukaIdMap.get(village.getTaluka().getId());
-                villageHashMap.put(talukaKey + "_" + village.getVcode() + "_" + village.getSvid(), village);
-            }
-        }
-        return villageHashMap;
+
+        return createdVillages;
     }
 
-    private String villageQuerySet(List<Map<String, Object>> villages, Map<String, Taluka> talukaHashMap) {
+    private String villageQuerySet(List<Map<String, Object>> villages, Map<String, Taluka> talukaHashMap) { //NO CHECKSTYLE Cyclomatic Complexity
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> village : villages) {
-            if (i != 0) {
-                stringBuilder.append(", ");
-            }
-            stringBuilder.append("(");
-            stringBuilder.append(village.get(LocationConstants.VILLAGE_ID) + ", ");
-            stringBuilder.append(0 + ", ");
-            stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(village.get(LocationConstants.VILLAGE_NAME).toString()) + QUOTATION_COMMA);
-            stringBuilder.append(talukaHashMap.get(village.get(LocationConstants.STATE_ID).toString() + "_" + village.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                    village.get(LocationConstants.TALUKA_ID).toString()).getId() + ", ");
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(MOTECH_STRING);
-            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
-            stringBuilder.append(")");
+            if (village.get(LocationConstants.CSV_STATE_ID) != null && village.get(LocationConstants.DISTRICT_ID) != null &&
+                    village.get(LocationConstants.TALUKA_ID) != null) {
+                Taluka taluka = talukaHashMap.get(village.get(LocationConstants.CSV_STATE_ID).toString() + "_" +
+                        village.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+                        village.get(LocationConstants.TALUKA_ID).toString().trim());
+                Long villageCode = (Long) village.get(LocationConstants.VILLAGE_ID);
+                if (taluka != null && taluka.getId() != null && villageCode != null && !((Long) (0L)).equals(villageCode)) {
+                    if (i != 0) {
+                        stringBuilder.append(", ");
+                    }
+                    stringBuilder.append("(");
+                    stringBuilder.append(villageCode + ", ");
+                    stringBuilder.append(0 + ", ");
+                    stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(village.get(LocationConstants.VILLAGE_NAME) == null ?
+                            "" : village.get(LocationConstants.VILLAGE_NAME).toString().replaceAll(":", "")) + QUOTATION_COMMA);
+                    stringBuilder.append(taluka.getId() + ", ");
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(MOTECH_STRING);
+                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                    stringBuilder.append(")");
 
-            i++;
+                    i++;
+                }
+            }
         }
 
         return stringBuilder.toString();
