@@ -1,12 +1,10 @@
-package org.motechproject.nms.kilkari.service.impl;
+package org.motechproject.nms.kilkari.service;
 
 import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.ThreadProcessorObject;
-import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
-import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
