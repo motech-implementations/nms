@@ -695,8 +695,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     @MotechListener(subjects = Constants.RCH_MOTHER_READ) //NO CHECKSTYLE Cyclomatic Complexity
     public void readMotherResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
-        LOGGER.info("Copying RCH mother response file from remote server to local directory.");
         try {
+            LOGGER.info("Copying RCH mother response file from remote server to local directory.");
             List<RchImportFacilitator> rchImportFacilitatorMothers = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now().minusDays(1), RchUserType.MOTHER);
             for (RchImportFacilitator rchImportFacilitatorMother: rchImportFacilitatorMothers
                  ) {
