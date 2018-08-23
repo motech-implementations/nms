@@ -9,6 +9,7 @@ import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
+import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.repository.HealthBlockDataService;
 import org.motechproject.nms.region.service.HealthBlockService;
@@ -124,15 +125,15 @@ public class HealthBlockServiceImpl implements HealthBlockService {
 
     @Override
     @Transactional
-    public Long createUpdateHealthBlocks(final List<Map<String, Object>> healthBlocks, final Map<String, District> districtHashMap, final Map<String, Taluka> talukaHashMap) {
+    public Long createUpdateHealthBlocks(final List<Map<String, Object>> healthBlocks, final Map<String, State> stateHashMap, final Map<String, District> districtHashMap, final Map<String, Taluka> talukaHashMap) {
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
             public String getSqlQuery() {
-                String healthBlockValues = healthBlockQuerySet(healthBlocks, districtHashMap, talukaHashMap);
+                String healthBlockValues = healthBlockQuerySet(healthBlocks, stateHashMap, districtHashMap, talukaHashMap);
                 String query = "";
                 if(!healthBlockValues.isEmpty()) {
-                    query = "INSERT into nms_health_blocks (`code`, `name`, `district_id_OID`, `taluka_id_OID`, " +
+                    query = "INSERT into nms_health_blocks (`code`, `name`, `state_id_OID`, `district_id_OID`, `taluka_id_OID`, " +
                             " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
                             healthBlockValues + " ON DUPLICATE KEY UPDATE " +
                             "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
@@ -227,7 +228,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
         return healthBlockHashMap;
     }
 
-    private String healthBlockQuerySet(List<Map<String, Object>> healthBlocks, Map<String, District> districtHashMap, Map<String, Taluka> talukaHashMap) { //NO CHECKSTYLE Cyclomatic Complexity
+    private String healthBlockQuerySet(List<Map<String, Object>> healthBlocks, Map<String, State> stateHashMap, Map<String, District> districtHashMap, Map<String, Taluka> talukaHashMap) { //NO CHECKSTYLE Cyclomatic Complexity
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
         DateTime dateTimeNow = new DateTime();
@@ -235,6 +236,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
         for (Map<String, Object> healthBlock : healthBlocks) {
             if (healthBlock.get(LocationConstants.CSV_STATE_ID) != null && healthBlock.get(LocationConstants.DISTRICT_ID) != null &&
                     healthBlock.get(LocationConstants.TALUKA_ID) != null) {
+                State state = stateHashMap.get(healthBlock.get(LocationConstants.CSV_STATE_ID).toString());
                 District district = districtHashMap.get(healthBlock.get(LocationConstants.CSV_STATE_ID).toString() + "_" + healthBlock.get(LocationConstants.DISTRICT_ID).toString());
                 Taluka taluka = talukaHashMap.get(healthBlock.get(LocationConstants.CSV_STATE_ID).toString() + "_" + healthBlock.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                         healthBlock.get(LocationConstants.TALUKA_ID).toString().trim());
@@ -247,6 +249,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                     stringBuilder.append(healthBlockCode + ", ");
                     stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthBlock.get(LocationConstants.HEALTHBLOCK_NAME) == null ?
                             "" : healthBlock.get(LocationConstants.HEALTHBLOCK_NAME).toString()) + QUOTATION_COMMA);
+                    stringBuilder.append(state.getId()+ ", ");
                     stringBuilder.append(district.getId() + ", ");
                     stringBuilder.append(taluka.getId() + ", ");
                     stringBuilder.append(MOTECH_STRING);
