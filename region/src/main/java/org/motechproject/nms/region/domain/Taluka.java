@@ -80,18 +80,6 @@ public class Taluka extends MdsEntity {
     @Column
     private Long stateIdOID;
 
-    public Long getDistrictIdOID() {
-        return districtIdOID;
-    }
-
-    public void setDistrictIdOID(Long districtIdOID) {
-        this.districtIdOID = districtIdOID;
-    }
-
-    @Field(name = "district_id_OID")
-    @Column
-    private Long districtIdOID;
-
 //    @Field
 //    @Cascade(delete = true)
 //    @Persistent(mappedBy = "taluka", defaultFetchGroup = "false")
