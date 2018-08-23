@@ -8,6 +8,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.service.TalukaService;
@@ -79,15 +80,15 @@ public class TalukaServiceImpl implements TalukaService {
 
     @Override
     @Transactional
-    public Long createUpdateTalukas(final List<Map<String, Object>> talukas, final Map<String, District> districtHashMap) {
+    public Long createUpdateTalukas(final List<Map<String, Object>> talukas, final Map<String, State> stateHashMap, final Map<String, District> districtHashMap) {
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
             public String getSqlQuery() {
-                String talukaValues = talukaQuerySet(talukas, districtHashMap);
+                String talukaValues = talukaQuerySet(talukas, stateHashMap, districtHashMap);
                 String query = "";
                 if (!talukaValues.isEmpty()) {
-                    query = "INSERT into nms_talukas (`code`, `name`, `district_id_OID`, " +
+                    query = "INSERT into nms_talukas (`code`, `name`, `state_id_OID`, `district_id_OID`, " +
                             " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
                             talukaValues +
                             " ON DUPLICATE KEY UPDATE " +
@@ -185,13 +186,14 @@ public class TalukaServiceImpl implements TalukaService {
         return talukaHashMap;
     }
 
-    private String talukaQuerySet(List<Map<String, Object>> talukas, Map<String, District> districtHashMap) {
+    private String talukaQuerySet(List<Map<String, Object>> talukas, Map<String, State> stateHashMap, Map<String, District> districtHashMap) {
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> taluka : talukas) {
             if (taluka.get(LocationConstants.CSV_STATE_ID) != null && taluka.get(LocationConstants.DISTRICT_ID) != null) {
+                State state = stateHashMap.get(taluka.get(LocationConstants.CSV_STATE_ID).toString());
                 District district = districtHashMap.get(taluka.get(LocationConstants.CSV_STATE_ID).toString() + "_" + taluka.get(LocationConstants.DISTRICT_ID).toString());
                 if (district != null && taluka.get(LocationConstants.TALUKA_ID) != null &&
                         !("0000").equals(taluka.get(LocationConstants.TALUKA_ID).toString().trim())) {
@@ -202,6 +204,7 @@ public class TalukaServiceImpl implements TalukaService {
                     stringBuilder.append(QUOTATION + taluka.get(LocationConstants.TALUKA_ID).toString().trim() + QUOTATION_COMMA);
                     stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(taluka.get(LocationConstants.TALUKA_NAME) == null ?
                             "" : taluka.get(LocationConstants.TALUKA_NAME).toString()) + QUOTATION_COMMA);
+                    stringBuilder.append(state.getId() + ", ");
                     stringBuilder.append(district.getId() + ", ");
                     stringBuilder.append(MOTECH_STRING);
                     stringBuilder.append(MOTECH_STRING);
