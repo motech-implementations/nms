@@ -266,9 +266,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name");
+                LOGGER.error("invalid file name", e);
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -304,9 +304,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name");
+                LOGGER.error("invalid file name", e);
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -342,9 +342,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name");
+                LOGGER.error("invalid file name", e);
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -380,9 +380,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name");
+                LOGGER.error("invalid file name", e);
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -789,7 +789,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
                 status = true;
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
                 LOGGER.error("invalid file error");
             }
@@ -907,9 +907,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
                 status = true;
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR,e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file error");
+                LOGGER.error("invalid file error",e);
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -1027,9 +1027,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name");
+                LOGGER.error("invalid file name", e);
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -1154,9 +1154,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name");
+                LOGGER.error("invalid file name", e);
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -1280,9 +1280,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name");
+                LOGGER.error("invalid file name", e);
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -1318,9 +1318,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name");
+                LOGGER.error("invalid file name", e);
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -1356,9 +1356,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name");
+                LOGGER.error("invalid file name", e);
             }
         } else {
             LOGGER.error("Error writing response to file.");

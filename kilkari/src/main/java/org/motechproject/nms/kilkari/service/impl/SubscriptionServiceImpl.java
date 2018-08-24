@@ -293,7 +293,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                             } else if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.PREGNANCY) && subscriber.getMother() != null && subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId)) {
                                 return false;
                             } else {
-                                return (subscriber.getChild() != null && !subscriber.getChild().getBeneficiaryId().equals(childBeneficiaryId));
+                                return (subscriber.getChild() != null && subscriber.getChild().getBeneficiaryId() != null && !subscriber.getChild().getBeneficiaryId().equals(childBeneficiaryId));
                             }
                         } else {
                             return ((subscriber.getChild() != null && !subscriber.getChild().getBeneficiaryId().equals(childBeneficiaryId)) || (subscriber.getMother() != null && !subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId)));
