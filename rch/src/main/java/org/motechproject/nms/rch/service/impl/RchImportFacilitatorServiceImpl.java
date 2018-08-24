@@ -33,7 +33,7 @@ public class RchImportFacilitatorServiceImpl implements RchImportFacilitatorServ
         LocalDate importDate = rchImportFacilitator.getImportDate();
         RchUserType rchUserType = rchImportFacilitator.getUserType();
         List<RchImportFacilitator> rchImportFacilitator1 = rchImportFacilitatorDataService.getByStateIdAndImportDateAndUserType(state, importDate, rchUserType);
-        LOGGER.info("list size {}", rchImportFacilitator1);
+        LOGGER.info("list size {}", rchImportFacilitator1.size());
         if (rchImportFacilitator.getFileName() == null) {
             throw new RchFileManipulationException("Invalid file name");
         } else if (rchImportFacilitator1.size() != 0) {
