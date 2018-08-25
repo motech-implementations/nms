@@ -182,7 +182,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         // validate and set location
 
         try {
-
              mctsBeneficiaryValueProcessor.setLocationFieldsCSV(locationFinder, record, mother);
         } catch (InvalidLocationException le) {
             LOGGER.error(le.toString());
