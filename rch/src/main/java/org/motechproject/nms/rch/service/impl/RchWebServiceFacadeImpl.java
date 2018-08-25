@@ -1800,9 +1800,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         for (Future<ThreadProcessorObject> fut : list) {
             try {
                 ThreadProcessorObject threadProcessorObject = fut.get();
-                rejectedMothers.putAll(threadProcessorObject.getRejectedBeneficiaries());
+                Map<String,Object> rejectedBen = threadProcessorObject.getRejectedBeneficiaries();
+                rejectedMothers.putAll(rejectedBen);
+                int currentRej = rejectedBen.size();
+                rejected += currentRej;
+                Integer currentRecordsPro = threadProcessorObject.getRecordsProcessed();
+                saved += currentRecordsPro - currentRej;
                 rejectionStatus.putAll(threadProcessorObject.getRejectionStatus());
-                recordsProcessed += threadProcessorObject.getRecordsProcessed();
+                recordsProcessed += currentRecordsPro;
             } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
                 LOGGER.error("Error while running thread", e);
             }
@@ -1934,9 +1939,15 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         for (Future<ThreadProcessorObject> fut : list) {
             try {
                 ThreadProcessorObject threadProcessorObject = fut.get();
-                rejectedChilds.putAll(threadProcessorObject.getRejectedBeneficiaries());
+                Map<String,Object> currRejBen = threadProcessorObject.getRejectedBeneficiaries();
+                Integer currRejBenSize = currRejBen.size();
+                rejectedChilds.putAll(currRejBen);
                 rejectionStatus.putAll(threadProcessorObject.getRejectionStatus());
-                recordsProcessed += threadProcessorObject.getRecordsProcessed();
+                Integer currentRecordsProcessed = threadProcessorObject.getRecordsProcessed();
+                recordsProcessed += currentRecordsProcessed;
+                rejected += currRejBenSize;
+                saved += recordsProcessed - currRejBenSize;
+
             } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
                 LOGGER.error("Error while running thread", e);
             }
