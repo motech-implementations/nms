@@ -45,11 +45,34 @@ public class HealthFacility extends MdsEntity {
     @Field
     private HealthFacilityType healthFacilityType;
 
-    @Field
-    @NotNull
-    @Column(allowsNull = "false")
-    @JsonBackReference
-    private Taluka taluka;
+    @Field(name = "taluka_id_OID", required = true)
+    @Column
+    private Long talukaIdOID;
+
+    public Long getStateIdOID() {
+        return stateIdOID;
+    }
+
+    public void setStateIdOID(Long stateIdOID) {
+        this.stateIdOID = stateIdOID;
+    }
+
+    @Field(name = "state_id_OID")
+    @Column
+    private Long stateIdOID;
+
+    public Long getDistrictIdOID() {
+        return districtIdOID;
+    }
+
+    public void setDistrictIdOID(Long districtIdOID) {
+        this.districtIdOID = districtIdOID;
+    }
+
+    @Field(name = "district_id_OID")
+    @Column
+    private Long districtIdOID;
+
 
     @Field
     @Column(allowsNull = "false")
@@ -99,12 +122,12 @@ public class HealthFacility extends MdsEntity {
         this.healthFacilityType = healthFacilityType;
     }
 
-    public Taluka getTaluka() {
-        return taluka;
+    public Long getTalukaIdOID() {
+        return talukaIdOID;
     }
 
-    public void setTaluka(Taluka taluka) {
-        this.taluka = taluka;
+    public void setTalukaIdOID(Long talukaIdOID) {
+        this.talukaIdOID = talukaIdOID;
     }
 
     public HealthBlock getHealthBlock() {
@@ -114,6 +137,15 @@ public class HealthFacility extends MdsEntity {
     public void setHealthBlock(HealthBlock healthBlock) {
         this.healthBlock = healthBlock;
     }
+
+    //    public Taluka getTaluka() {
+//        return taluka;
+//    }
+//
+//    public void setTaluka(Taluka taluka) {
+//        this.taluka = taluka;
+//    }
+
 
     public List<HealthSubFacility> getHealthSubFacilities() {
         return healthSubFacilities;

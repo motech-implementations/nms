@@ -180,14 +180,13 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         // have 12 weeks left in the pack. For existing users, their lmp could be updated to
         // an earlier date if it's an complete mother record(i.e not created through child import)
         // validate and set location
-        //TODO HARITHA remove below comment
-//        try {
-//
-//             mctsBeneficiaryValueProcessor.setLocationFieldsCSV(locationFinder, record, mother);
-//        } catch (InvalidLocationException le) {
-//            LOGGER.error(le.toString());
-//           return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.INVALID_LOCATION, false);
-//        }
+
+        try {
+             mctsBeneficiaryValueProcessor.setLocationFieldsCSV(locationFinder, record, mother);
+        } catch (InvalidLocationException le) {
+            LOGGER.error(le.toString());
+           return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.INVALID_LOCATION, false);
+        }
 
         //validate if it's an updated record compared to one from database
         if (mother.getUpdatedDateNic() != null && (lastUpdatedDateNic == null || mother.getUpdatedDateNic().isAfter(lastUpdatedDateNic))) {

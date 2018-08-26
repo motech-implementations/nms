@@ -66,17 +66,31 @@ public class Taluka extends MdsEntity {
     @JsonManagedReference
     private List<Village> villages;
 
-    @Field
-    @Cascade(delete = true)
-    @Persistent(mappedBy = "taluka", defaultFetchGroup = "false")
-    @JsonManagedReference
-    private List<HealthFacility> healthFacilities;
 
-    @Field
-    @Cascade(delete = true)
-    @Persistent(mappedBy = "taluka", defaultFetchGroup = "false")
-    @JsonManagedReference
-    private List<HealthSubFacility> healthSubFacilities;
+
+    public Long getStateIdOID() {
+        return stateIdOID;
+    }
+
+    public void setStateIdOID(Long stateIdOID) {
+        this.stateIdOID = stateIdOID;
+    }
+
+    @Field(name = "state_id_OID")
+    @Column
+    private Long stateIdOID;
+
+//    @Field
+//    @Cascade(delete = true)
+//    @Persistent(mappedBy = "taluka", defaultFetchGroup = "false")
+//    @JsonManagedReference
+//    private List<HealthFacility> healthFacilities;
+
+//    @Field
+//    @Cascade(delete = true)
+//    @Persistent(mappedBy = "taluka", defaultFetchGroup = "false")
+//    @JsonManagedReference
+//    private List<HealthSubFacility> healthSubFacilities;
 
     public Taluka() {
         //this.healthBlocks = new HashSet<>();
@@ -147,21 +161,23 @@ public class Taluka extends MdsEntity {
         this.villages = villages;
     }
 
-    public List<HealthFacility> getHealthFacilities() {
-        return healthFacilities;
-    }
 
-    public void setHealthFacilities(List<HealthFacility> healthFacilities) {
-        this.healthFacilities = healthFacilities;
-    }
 
-    public List<HealthSubFacility> getHealthSubFacilities() {
-        return healthSubFacilities;
-    }
-
-    public void setHealthSubFacilities(List<HealthSubFacility> healthSubFacilities) {
-        this.healthSubFacilities = healthSubFacilities;
-    }
+    //    public List<HealthFacility> getHealthFacilities() {
+//        return healthFacilities;
+//    }
+//
+//    public void setHealthFacilities(List<HealthFacility> healthFacilities) {
+//        this.healthFacilities = healthFacilities;
+//    }
+//
+//    public List<HealthSubFacility> getHealthSubFacilities() {
+//        return healthSubFacilities;
+//    }
+//
+//    public void setHealthSubFacilities(List<HealthSubFacility> healthSubFacilities) {
+//        this.healthSubFacilities = healthSubFacilities;
+//    }
 
     @Override
     public boolean equals(Object o) {

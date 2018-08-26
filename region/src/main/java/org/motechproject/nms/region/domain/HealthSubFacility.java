@@ -42,17 +42,46 @@ public class HealthSubFacility extends MdsEntity {
     @NotNull
     private Long code;
 
-    @Field
-    @NotNull
-    @Column(allowsNull = "false")
-    @JsonBackReference
-    private Taluka taluka;
+    @Field(name = "taluka_id_OID")
+    @Column
+    private Long talukaIdOID;
+
+//    @Field
+//    @NotNull
+//    @Column(allowsNull = "false")
+//    @JsonBackReference
+//    private Taluka taluka;
 
     @Field
     @Column(allowsNull = "false")
     @NotNull
     @JsonBackReference
     private HealthFacility healthFacility;
+
+
+    public Long getStateIdOID() {
+        return stateIdOID;
+    }
+
+    public void setStateIdOID(Long stateIdOID) {
+        this.stateIdOID = stateIdOID;
+    }
+
+    @Field(name = "state_id_OID")
+    @Column
+    private Long stateIdOID;
+
+    public Long getDistrictIdOID() {
+        return districtIdOID;
+    }
+
+    public void setDistrictIdOID(Long districtIdOID) {
+        this.districtIdOID = districtIdOID;
+    }
+
+    @Field(name = "district_id_OID")
+    @Column
+    private Long districtIdOID;
 
 //    @Persistent(table="nms_village_healthsubfacility", defaultFetchGroup = "false")
 //    @Join(column = "healthsubfacility_id")
@@ -88,14 +117,22 @@ public class HealthSubFacility extends MdsEntity {
         this.code = code;
     }
 
-    public Taluka getTaluka() {
-        return taluka;
+    public Long getTalukaIdOID() {
+        return talukaIdOID;
     }
 
-    public void setTaluka(Taluka taluka) {
-        this.taluka = taluka;
+    public void setTalukaIdOID(Long talukaIdOID) {
+        this.talukaIdOID = talukaIdOID;
     }
 
+    //    public Taluka getTaluka() {
+//        return taluka;
+//    }
+//
+//    public void setTaluka(Taluka taluka) {
+//        this.taluka = taluka;
+//    }
+//
     public HealthFacility getHealthFacility() {
         return healthFacility;
     }
