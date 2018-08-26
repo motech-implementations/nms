@@ -73,6 +73,31 @@ public class Village extends MdsEntity {
     @JsonBackReference
     private Taluka taluka;
 
+    public Long getStateIdOID() {
+        return stateIdOID;
+    }
+
+    public void setStateIdOID(Long stateIdOID) {
+        this.stateIdOID = stateIdOID;
+    }
+
+    @Field(name = "state_id_OID")
+    @Column
+    private Long stateIdOID;
+
+
+    public Long getDistrictIdOID() {
+        return districtIdOID;
+    }
+
+    public void setDistrictIdOID(Long districtIdOID) {
+        this.districtIdOID = districtIdOID;
+    }
+
+    @Field(name = "district_id_OID")
+    @Column
+    private Long districtIdOID;
+
 
 //    @Persistent(mappedBy = "villages", defaultFetchGroup = "false")
 //    @JsonManagedReference

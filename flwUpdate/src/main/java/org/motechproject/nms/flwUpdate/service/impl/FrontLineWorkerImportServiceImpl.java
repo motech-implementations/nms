@@ -541,7 +541,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             Long id = flw.getId();
             flw = frontLineWorkerService.getByContactNumber(msisdn);
 
-            if (flw != null && flw.getId() != id) {
+            if (flw != null && !flw.getId().equals(id)) {
                 throw new CsvImportDataException(String.format("Existing FLW with same MSISDN (%s) but " +
                         "different MCTS ID (%s != %s)", LogHelper.obscure(msisdn), mctsFlwId, flw.getMctsFlwId()));
             } else if (flw == null) {

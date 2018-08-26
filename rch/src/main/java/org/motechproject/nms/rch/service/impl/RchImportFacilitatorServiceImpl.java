@@ -32,11 +32,11 @@ public class RchImportFacilitatorServiceImpl implements RchImportFacilitatorServ
         Long state = rchImportFacilitator.getStateId();
         LocalDate importDate = rchImportFacilitator.getImportDate();
         RchUserType rchUserType = rchImportFacilitator.getUserType();
-        RchImportFacilitator rchImportFacilitator1 = rchImportFacilitatorDataService.getByStateIdAndImportDateAndUserType(state, importDate, rchUserType);
-        LOGGER.info("record {}", rchImportFacilitator1);
+        List<RchImportFacilitator> rchImportFacilitator1 = rchImportFacilitatorDataService.getByStateIdAndImportDateAndUserType(state, importDate, rchUserType);
+        LOGGER.info("list size {}", rchImportFacilitator1.size());
         if (rchImportFacilitator.getFileName() == null) {
             throw new RchFileManipulationException("Invalid file name");
-        } else if (rchImportFacilitator1 != null) {
+        } else if (rchImportFacilitator1.size() != 0) {
             LOGGER.error("A record already present for the same state and today's date.");
         } else {
             rchImportFacilitatorDataService.create(rchImportFacilitator);
@@ -49,7 +49,7 @@ public class RchImportFacilitatorServiceImpl implements RchImportFacilitatorServ
     }
 
     @Override
-    public RchImportFacilitator findByImportDateStateIdAndRchUserType(Long stateId, LocalDate importDate, RchUserType rchUserType) {
+    public List<RchImportFacilitator> findByImportDateStateIdAndRchUserType(Long stateId, LocalDate importDate, RchUserType rchUserType) {
         return rchImportFacilitatorDataService.getByStateIdAndImportDateAndUserType(stateId, importDate, rchUserType);
     }
 
