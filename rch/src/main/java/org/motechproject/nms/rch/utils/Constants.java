@@ -10,7 +10,24 @@ public final class Constants {
     public static final String RCH_PROJECT_ID = "rch.credentials.project_id";
     public static final String RCH_DTID = "rch.credentials.dtid";
     public static final String RCH_LOCATIONS = "rch.state_ids";
-    public static final String RCH_SYNC_CRON = "rch.sync.cron";
+    //public static final String RCH_SYNC_CRON = "rch.sync.cron";
+
+    public static final String RCH_SYNC_MOTHER_CRON = "rch.sync.cron.mother";
+    public static final String RCH_SYNC_CHILD_CRON = "rch.sync.cron.child";
+    public static final String RCH_SYNC_DISTRICT_CRON = "rch.sync.cron.district";
+    public static final String RCH_SYNC_TALUKA_CRON = "rch.sync.cron.taluka";
+    public static final String RCH_SYNC_HEALTHBLOCK_CRON = "rch.sync.cron.healthblock";
+    public static final String RCH_SYNC_VILLAGE_CRON = "rch.sync.cron.village";
+    public static final String RCH_SYNC_HEALTHFACILITY_CRON = "rch.sync.cron.healthfacility";
+    public static final String RCH_SYNC_HEALTHSUBFACILITY_CRON = "rch.sync.cron.healthsubfacility";
+    public static final String RCH_SYNC_TALUKA_HEALTHBLOCK_CRON = "rch.sync.cron.talukahealthblock";
+    public static final String RCH_SYNC_VILLAGE_HEALTHFACILITYCRON = "rch.sync.cron.villagesubfacility";
+    public static final String RCH_SYNC_ASHA_CRON = "rch.sync.cron.asha";
+
+
+
+
+
     public static final String RCH_MOTHER_READ_CRON = "rch.mother.sync.cron";
     public static final String RCH_CHILD_READ_CRON = "rch.child.sync.cron";
     public static final String RCH_ASHA_READ_CRON = "rch.asha.sync.cron";
@@ -37,6 +54,25 @@ public final class Constants {
      */
     public static final String BASE_RCH_SUBJECT = "org.motechproject.nms.rch";
     public static final String RCH_IMPORT_EVENT = BASE_RCH_SUBJECT + ".import";
+
+    /**
+     * Split RCH_IMPORT_EVENT into 11 separate - so that each could be associated with its cron
+     */
+    public static final String RCH_IMPORT_EVENT_CRON = RCH_IMPORT_EVENT +".cron";
+    public static final String RCH_CHILD_IMPORT_SUBJECT_CRON = RCH_IMPORT_EVENT_CRON + ".child";
+    public static final String RCH_MOTHER_IMPORT_SUBJECT_CRON = RCH_IMPORT_EVENT_CRON + ".mother";
+    public static final String RCH_ASHA_IMPORT_SUBJECT_CRON = RCH_IMPORT_EVENT_CRON + ".asha";
+    public static final String RCH_TALUKA_IMPORT_SUBJECT_CRON = RCH_IMPORT_EVENT_CRON + ".taluka";
+    public static final String RCH_VILLAGE_IMPORT_SUBJECT_CRON = RCH_IMPORT_EVENT_CRON + ".village";
+    public static final String RCH_DISTRICT_IMPORT_SUBJECT_CRON = RCH_IMPORT_EVENT_CRON + ".district";
+    public static final String RCH_HEALTHBLOCK_IMPORT_SUBJECT_CRON = RCH_IMPORT_EVENT_CRON + ".healthBlock";
+    public static final String RCH_TALUKA_HEALTHBLOCK_IMPORT_SUBJECT_CRON = RCH_IMPORT_EVENT_CRON + ".talukaHealthBlock";
+    public static final String RCH_HEALTHFACILITY_IMPORT_SUBJECT_CRON = RCH_IMPORT_EVENT_CRON + ".healthFacility";
+    public static final String RCH_HEALTHSUBFACILITY_IMPORT_SUBJECT_CRON = RCH_IMPORT_EVENT_CRON + ".healthSubFacility";
+    public static final String RCH_VILLAGEHEALTHSUBFACILITY_IMPORT_SUBJECT_CRON = RCH_IMPORT_EVENT_CRON + ".villageHealthSubFacility";
+
+
+
     public static final String RCH_CHILD_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".child.import";
     public static final String RCH_MOTHER_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".mother.import";
     public static final String RCH_ASHA_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".asha.import";
