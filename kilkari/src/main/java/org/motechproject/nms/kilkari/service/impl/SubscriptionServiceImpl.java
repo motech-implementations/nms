@@ -340,15 +340,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     subscriptionsSize = subscriptions.size();
                     if (subscriptionsSize != 0) {
                         if (subscriptionsSize == 1) {
-                            if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && !subscriber.getMother().getRchId().equals(motherRchId)) {
+                            if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && subscriber.getMother().getRchId() != null && !subscriber.getMother().getRchId().equals(motherRchId)) {
                                 return true;
-                            } else if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && subscriber.getMother().getRchId().equals(motherRchId)) {
+                            } else if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && subscriber.getMother().getRchId() != null && subscriber.getMother().getRchId().equals(motherRchId)) {
                                 return false;
                             } else {
                                 return (subscriber.getChild() != null && subscriber.getChild().getRchId() != null && !subscriber.getChild().getRchId().equals(childRchId));
                             }
                         } else {
-                            return ((subscriber.getChild() != null && !subscriber.getChild().getRchId().equals(childRchId)) || (subscriber.getMother() != null && !subscriber.getMother().getRchId().equals(motherRchId)));
+                            return ((subscriber.getChild() != null && subscriber.getChild().getRchId() !=null &&   !subscriber.getChild().getRchId().equals(childRchId)) || (subscriber.getMother() != null && subscriber.getMother().getRchId() != null && !subscriber.getMother().getRchId().equals(motherRchId)));
                         }
                     }
                 }
