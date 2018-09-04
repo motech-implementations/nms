@@ -2047,7 +2047,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 Long msisdn = Long.parseLong(record.getMobileNo());
                 String flwId = record.getGfId().toString();
                 FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
-                if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || state != flw.getState()))  && flw.getStatus() != FrontLineWorkerStatus.ANONYMOUS) {
+                if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || !state.equals(flw.getState())))  && !FrontLineWorkerStatus.ANONYMOUS.equals(flw.getStatus())) {
                     LOGGER.debug("Existing FLW with same MSISDN but different MCTS ID");
                     flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
                     rejected++;
@@ -2066,13 +2066,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                             LOGGER.warn("Invalid location for FLW: ", e);
                             flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.INVALID_LOCATION.toString(), action));
                             rejected++;
-                        } catch (FlwImportException e) {
+                        } catch (FlwExistingRecordException e) {
                             LOGGER.debug("Existing FLW with same MSISDN but different RCH ID", e);
                             flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
-                            rejected++;
-                        } catch (FlwExistingRecordException e) {
-                            LOGGER.error("Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}", record.getGfId(), record.getMobileNo(), e);
-                            flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS.toString(), action));
                             rejected++;
                         } catch (Exception e) {
                             LOGGER.error("RCH Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}",
