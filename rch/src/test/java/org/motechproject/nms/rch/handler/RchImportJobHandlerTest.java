@@ -54,7 +54,7 @@ public class RchImportJobHandlerTest {
         assertEquals("0 0 16 * * ? *", captor.getValue().getCronExpression());
         assertNull(captor.getValue().getEndTime());
         assertNull(captor.getValue().getStartTime());
-        assertEquals(Constants.RCH_IMPORT_EVENT, captor.getValue().getMotechEvent().getSubject());
+        assertEquals(Constants.RCH_MOTHER_IMPORT_SUBJECT_CRON, captor.getValue().getMotechEvent().getSubject());
     }
 
     public void shouldNotScheduleJobWhenNoCronInSettings() {
@@ -91,7 +91,7 @@ public class RchImportJobHandlerTest {
             rchImportJobHandler.handleMotherImportEvent(new MotechEvent());
 
             ArgumentCaptor<URL> urlCaptor = ArgumentCaptor.forClass(URL.class);
-            verify(rchWsImportService).importFromRch(eq(asList(4L, 15L, 51L, 2L)), eq(yesterday), urlCaptor.capture());
+            verify(rchWsImportService).importMothersFromRch(eq(asList(4L, 15L, 51L, 2L)), eq(yesterday), urlCaptor.capture());
             assertEquals("http://localhost:9090/test.svc", urlCaptor.getValue().toString());
         } finally {
             TimeFaker.stopFakingTime();
