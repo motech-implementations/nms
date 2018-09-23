@@ -1,5 +1,7 @@
 package org.motechproject.nms.mcts.service.impl;
 
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.io.IOUtils;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.LocalDate;
@@ -40,16 +42,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 
 import javax.jdo.Query;
 import javax.xml.bind.JAXBException;
 import javax.xml.rpc.ServiceException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -290,9 +293,9 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                 String[] fileNameSplitter =  f.getName().split("_");
                 if(Objects.equals(fileNameSplitter[2], stateId.toString()) && fileNameSplitter[3].equalsIgnoreCase(mctsUserType.toString())){
                     try {
-                        FileInputStream input = new FileInputStream(f);
-                        MultipartFile multipartFile = new MockMultipartFile("file",
-                                f.getName(), "text/plain", IOUtils.toByteArray(input));
+                        FileItem fileItem = new DiskFileItem("file", Files.probeContentType(file.toPath()), false, file.getName(), (int) file.length(), file.getParentFile());
+                        IOUtils.copy(new FileInputStream(file), fileItem.getOutputStream());
+                        MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
                         csvFilesByStateIdAndMctsUserType.add(multipartFile);
                     }catch(IOException e) {
                         LOGGER.debug("IO Exception", e);

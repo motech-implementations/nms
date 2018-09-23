@@ -6,6 +6,8 @@ import org.apache.axis.description.TypeDesc;
 import org.apache.axis.encoding.SerializationContext;
 import org.apache.axis.encoding.ser.BeanSerializer;
 import org.apache.axis.server.AxisServer;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -104,10 +106,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.xml.sax.helpers.AttributesImpl;
 
@@ -2908,9 +2910,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 String[] fileNameSplitter =  f.getName().split("_");
                 if(Objects.equals(fileNameSplitter[2], stateId.toString()) && fileNameSplitter[3].equalsIgnoreCase(rchUserType.toString())){
                     try {
-                        FileInputStream input = new FileInputStream(f);
-                        MultipartFile multipartFile = new MockMultipartFile("file",
-                                f.getName(), "text/plain", IOUtils.toByteArray(input));
+                        FileItem fileItem = new DiskFileItem("file",  "text/plain", false, file.getName(), (int) file.length(), file.getParentFile());
+                        IOUtils.copy(new FileInputStream(file), fileItem.getOutputStream());
+                        MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
                         csvFilesByStateIdAndRchUserType.add(multipartFile);
                     }catch(IOException e) {
                         LOGGER.debug("IO Exception", e);
