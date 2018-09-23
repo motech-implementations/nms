@@ -1,5 +1,7 @@
 package org.motechproject.nms.api.web.service.impl;
 
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -25,10 +27,10 @@ import org.motechproject.nms.rch.service.RchWebServiceFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 
 import javax.jdo.Query;
@@ -153,9 +155,9 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
                 String[] fileNameSplitter =  f.getName().split("_");
                 if(Objects.equals(fileNameSplitter[3], stateId.toString()) && fileNameSplitter[4].equalsIgnoreCase(rchUserType.toString())){
                     try {
-                        FileInputStream input = new FileInputStream(f);
-                        MultipartFile multipartFile = new MockMultipartFile("file",
-                                f.getName(), "text/plain", IOUtils.toByteArray(input));
+                        FileItem fileItem = new DiskFileItem("file",  "text/plain", false, file.getName(), (int) file.length(), file.getParentFile());
+                        IOUtils.copy(new FileInputStream(file), fileItem.getOutputStream());
+                        MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
                         csvFilesByStateIdAndRchUserType.add(multipartFile);
                     }catch(IOException e) {
                         LOGGER.debug("IO Exception", e);

@@ -1,5 +1,7 @@
 package org.motechproject.nms.region.service.impl;
 
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.io.IOUtils;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.motechproject.mds.query.SqlQueryExecution;
@@ -38,9 +40,9 @@ import org.motechproject.nms.region.service.VillageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.prefs.CsvPreference;
 
@@ -52,6 +54,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -832,10 +835,11 @@ public class LocationServiceImpl implements LocationService {
                 String[] fileNameSplitter =  f.getName().split("_");
                 if(fileNameSplitter[1].equalsIgnoreCase(stateId.toString()) && fileNameSplitter[0].equalsIgnoreCase(locationType)){
                     try {
-                        FileInputStream input = new FileInputStream(f);
-                        csvFilesByStateIdAndRchUserType = new MockMultipartFile("file",
-                                f.getName(), "text/plain", IOUtils.toByteArray(input));
-                    } catch (IOException e) {
+                        FileItem fileItem = new DiskFileItem("file",  "text/plain", false, file.getName(), (int) file.length(), file.getParentFile());
+                        IOUtils.copy(new FileInputStream(file), fileItem.getOutputStream());
+                        MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
+                        csvFilesByStateIdAndRchUserType = multipartFile;
+                    }catch(IOException e) {
                         LOGGER.debug("IO Exception", e);
                     }
                 }
@@ -1034,7 +1038,6 @@ public class LocationServiceImpl implements LocationService {
      * @param talukaHashMap contains (stateCode_districtCode_talukaCode, Taluka) with original Taluka objects from database
      */
     private void fillVillages(Map<String, Village> villageHashMap, final Map<String, Taluka> talukaHashMap) {
-        int count = 0;
         Timer queryTimer = new Timer();
         Map<Long, String> talukaIdMap = new HashMap<>();
         List<Village> villagesTotal = new ArrayList<>();
