@@ -1038,6 +1038,7 @@ public class LocationServiceImpl implements LocationService {
      * @param talukaHashMap contains (stateCode_districtCode_talukaCode, Taluka) with original Taluka objects from database
      */
     private void fillVillages(Map<String, Village> villageHashMap, final Map<String, Taluka> talukaHashMap) {
+        int count = 0;
         Timer queryTimer = new Timer();
         Map<Long, String> talukaIdMap = new HashMap<>();
         List<Village> villagesTotal = new ArrayList<>();
