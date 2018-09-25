@@ -609,7 +609,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                 Long msisdn = Long.parseLong(record.getContactNo());
                 String mctsFlwId = record.getId().toString();
                 FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
-                if (flw != null && ((!mctsFlwId.equals(flw.getMctsFlwId()) || state.getId() != flw.getState().getId())) && flw.getStatus() != FrontLineWorkerStatus.ANONYMOUS) {
+                if (flw != null && ((!mctsFlwId.equals(flw.getMctsFlwId()) || !state.getId().equals(flw.getState().getId()))) && !FrontLineWorkerStatus.ANONYMOUS.equals(flw.getStatus())) {
                     LOGGER.debug("Existing FLW with same MSISDN but different MCTS ID");
                     flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
                     rejected++;
