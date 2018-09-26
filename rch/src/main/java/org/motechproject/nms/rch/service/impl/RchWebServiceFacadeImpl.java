@@ -1857,7 +1857,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rejectedMothers.put(motherImportRejection.getRegistrationNo(), motherImportRejection);
                 rejectionStatus.put(motherImportRejection.getRegistrationNo(), motherImportRejection.getAccepted());
             } else {
-                if ((mother.getId() == null || (mother.getId() != null && mother.getLastMenstrualPeriod() == null)) && !mctsBeneficiaryImportService.validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, SubscriptionOrigin.MCTS_IMPORT)) {
+                if (!mctsBeneficiaryImportService.validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, SubscriptionOrigin.MCTS_IMPORT)) {
                     motherImportRejection = motherRejectionRch(convertMapToRchMother(recordMap), false, RejectionReasons.INVALID_LMP_DATE.toString(), action);
                     rejectedMothers.put(motherImportRejection.getRegistrationNo(), motherImportRejection);
                     rejectionStatus.put(motherImportRejection.getRegistrationNo(), motherImportRejection.getAccepted());
@@ -1999,7 +1999,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rejectedChilds.put(childImportRejection.getRegistrationNo(), childImportRejection);
                 rejectionStatus.put(childImportRejection.getRegistrationNo(), childImportRejection.getAccepted());
             } else {
-                if (child.getId() == null && !mctsBeneficiaryImportService.validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, SubscriptionOrigin.RCH_IMPORT)) {
+                if (!mctsBeneficiaryImportService.validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, SubscriptionOrigin.RCH_IMPORT)) {
                     childImportRejection = childRejectionRch(convertMapToRchChild(recordMap), false, RejectionReasons.INVALID_DOB.toString(), action);
                     rejectedChilds.put(childImportRejection.getRegistrationNo(), childImportRejection);
                     rejectionStatus.put(childImportRejection.getRegistrationNo(), childImportRejection.getAccepted());
