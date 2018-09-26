@@ -697,7 +697,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
         try {
             LOGGER.info("Copying RCH mother response file from remote server to local directory.");
-            List<RchImportFacilitator> rchImportFacilitatorMothers = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now().minusDays(1), RchUserType.MOTHER);
+            List<RchImportFacilitator> rchImportFacilitatorMothers = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.MOTHER);
             for (RchImportFacilitator rchImportFacilitatorMother: rchImportFacilitatorMothers
                  ) {
                 File localResponseFile = scpResponseToLocal(rchImportFacilitatorMother.getFileName());
@@ -820,7 +820,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
         LOGGER.info("Copying RCH child response file from remote server to local directory.");
         try {
-            List<RchImportFacilitator> rchImportFacilitatorChildren = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now().minusDays(1), RchUserType.CHILD);
+            List<RchImportFacilitator> rchImportFacilitatorChildren = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.CHILD);
             for (RchImportFacilitator rchImportFacilitatorChild: rchImportFacilitatorChildren
                  ) {
                 File localResponseFile = scpResponseToLocal(rchImportFacilitatorChild.getFileName());
@@ -939,7 +939,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LOGGER.info("Copying RCH Asha response file from remote server to local directory.");
 
         try {
-            List<RchImportFacilitator> rchImportFacilitatorAshas = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now().minusDays(1), RchUserType.ASHA);
+            List<RchImportFacilitator> rchImportFacilitatorAshas = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.ASHA);
             for (RchImportFacilitator rchImportFacilitatorAsha: rchImportFacilitatorAshas
                  ) {
                 File localResponseFile = scpResponseToLocal(rchImportFacilitatorAsha.getFileName());
