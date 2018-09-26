@@ -327,7 +327,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                 rejectedMothers.put(motherImportRejection.getIdNo(), motherImportRejection);
                 rejectionStatus.put(motherImportRejection.getIdNo(), motherImportRejection.getAccepted());
             } else {
-                boolean isValidLMP =  (mother.getId() == null || (mother.getId() != null && mother.getLastMenstrualPeriod() == null)) && !mctsBeneficiaryImportService.validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, SubscriptionOrigin.MCTS_IMPORT);
+                boolean isValidLMP =  (!mctsBeneficiaryImportService.validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, SubscriptionOrigin.MCTS_IMPORT));
                         if (isValidLMP) {
                             motherImportRejection = motherRejectionMcts(convertMapToMother(recordMap), false, RejectionReasons.INVALID_LMP_DATE.toString(), action);
                             rejectedMothers.put(motherImportRejection.getIdNo(), motherImportRejection);
@@ -503,7 +503,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                 rejectedChilds.put(childImportRejection.getIdNo(), childImportRejection);
                 rejectionStatus.put(childImportRejection.getIdNo(), childImportRejection.getAccepted());
             } else {
-                boolean isInValidDOB = child.getId() == null && !mctsBeneficiaryImportService.validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, SubscriptionOrigin.MCTS_IMPORT);
+                boolean isInValidDOB = !mctsBeneficiaryImportService.validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, SubscriptionOrigin.MCTS_IMPORT);
                 if (isInValidDOB) {
                     childImportRejection = childRejectionMcts(convertMapToChild(recordMap), false, RejectionReasons.INVALID_DOB.toString(), action);
                     rejectedChilds.put(childImportRejection.getIdNo(), childImportRejection);
