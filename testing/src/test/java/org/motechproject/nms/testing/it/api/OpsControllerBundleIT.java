@@ -579,7 +579,8 @@ public class OpsControllerBundleIT extends BasePaxIT {
         taluka.setIdentity(1);
         taluka.setCode("0004");
         taluka.getVillages().add(village);
-        taluka.addHealthBlock(healthBlock);
+        //TODO HARITHA commented 2 lines m-n taluka hb
+        //taluka.addHealthBlock(healthBlock);
 
         district = new District();
         district.setName("District 1");

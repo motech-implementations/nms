@@ -42,11 +42,15 @@ public class HealthSubFacility extends MdsEntity {
     @NotNull
     private Long code;
 
-    @Field
-    @NotNull
-    @Column(allowsNull = "false")
-    @JsonBackReference
-    private Taluka taluka;
+    @Field(name = "taluka_id_OID")
+    @Column
+    private Long talukaIdOID;
+
+//    @Field
+//    @NotNull
+//    @Column(allowsNull = "false")
+//    @JsonBackReference
+//    private Taluka taluka;
 
     @Field
     @Column(allowsNull = "false")
@@ -54,15 +58,40 @@ public class HealthSubFacility extends MdsEntity {
     @JsonBackReference
     private HealthFacility healthFacility;
 
-    @Persistent(table="nms_village_healthsubfacility", defaultFetchGroup = "false")
-    @Join(column = "healthsubfacility_id")
-    @Element(column = "village_id")
-    @JsonManagedReference
-    private Set<Village> villages;
 
-    public HealthSubFacility() {
-        this.villages = new HashSet<>();
+    public Long getStateIdOID() {
+        return stateIdOID;
     }
+
+    public void setStateIdOID(Long stateIdOID) {
+        this.stateIdOID = stateIdOID;
+    }
+
+    @Field(name = "state_id_OID")
+    @Column
+    private Long stateIdOID;
+
+    public Long getDistrictIdOID() {
+        return districtIdOID;
+    }
+
+    public void setDistrictIdOID(Long districtIdOID) {
+        this.districtIdOID = districtIdOID;
+    }
+
+    @Field(name = "district_id_OID")
+    @Column
+    private Long districtIdOID;
+
+//    @Persistent(table="nms_village_healthsubfacility", defaultFetchGroup = "false")
+//    @Join(column = "healthsubfacility_id")
+//    @Element(column = "village_id")
+//    @JsonManagedReference
+//    private Set<Village> villages;
+
+//    public HealthSubFacility() {
+//        this.villages = new HashSet<>();
+//    }
 
     public String getName() {
         return name;
@@ -88,14 +117,22 @@ public class HealthSubFacility extends MdsEntity {
         this.code = code;
     }
 
-    public Taluka getTaluka() {
-        return taluka;
+    public Long getTalukaIdOID() {
+        return talukaIdOID;
     }
 
-    public void setTaluka(Taluka taluka) {
-        this.taluka = taluka;
+    public void setTalukaIdOID(Long talukaIdOID) {
+        this.talukaIdOID = talukaIdOID;
     }
 
+    //    public Taluka getTaluka() {
+//        return taluka;
+//    }
+//
+//    public void setTaluka(Taluka taluka) {
+//        this.taluka = taluka;
+//    }
+//
     public HealthFacility getHealthFacility() {
         return healthFacility;
     }
@@ -104,21 +141,21 @@ public class HealthSubFacility extends MdsEntity {
         this.healthFacility = healthFacility;
     }
 
-    public Set<Village> getVillages() {
-        return villages;
-    }
-
-    public void setVillages(Set<Village> villages) {
-        this.villages = villages;
-    }
-
-    public void addVillage(Village village) {
-        this.villages.add(village);
-    }
-
-    public void removeVillage(Village village) {
-        this.villages.remove(village);
-    }
+//    public Set<Village> getVillages() {
+//        return villages;
+//    }
+//
+//    public void setVillages(Set<Village> villages) {
+//        this.villages = villages;
+//    }
+//
+//    public void addVillage(Village village) {
+//        this.villages.add(village);
+//    }
+//
+//    public void removeVillage(Village village) {
+//        this.villages.remove(village);
+//    }
 
     @Override
     public boolean equals(Object o) {

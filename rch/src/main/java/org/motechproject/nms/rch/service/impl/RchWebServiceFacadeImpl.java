@@ -266,9 +266,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name");
+                LOGGER.error("invalid file name", e);
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -304,9 +304,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name");
+                LOGGER.error("invalid file name", e);
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -342,9 +342,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name");
+                LOGGER.error("invalid file name", e);
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -380,9 +380,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name");
+                LOGGER.error("invalid file name", e);
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -697,7 +697,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
         try {
             LOGGER.info("Copying RCH mother response file from remote server to local directory.");
-            List<RchImportFacilitator> rchImportFacilitatorMothers = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now().minusDays(1), RchUserType.MOTHER);
+            List<RchImportFacilitator> rchImportFacilitatorMothers = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.MOTHER);
             for (RchImportFacilitator rchImportFacilitatorMother: rchImportFacilitatorMothers
                  ) {
                 File localResponseFile = scpResponseToLocal(rchImportFacilitatorMother.getFileName());
@@ -789,7 +789,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
                 status = true;
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
                 LOGGER.error("invalid file error");
             }
@@ -820,7 +820,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
         LOGGER.info("Copying RCH child response file from remote server to local directory.");
         try {
-            List<RchImportFacilitator> rchImportFacilitatorChildren = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now().minusDays(1), RchUserType.CHILD);
+            List<RchImportFacilitator> rchImportFacilitatorChildren = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.CHILD);
             for (RchImportFacilitator rchImportFacilitatorChild: rchImportFacilitatorChildren
                  ) {
                 File localResponseFile = scpResponseToLocal(rchImportFacilitatorChild.getFileName());
@@ -907,9 +907,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
                 status = true;
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR,e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file error");
+                LOGGER.error("invalid file error",e);
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -939,7 +939,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LOGGER.info("Copying RCH Asha response file from remote server to local directory.");
 
         try {
-            List<RchImportFacilitator> rchImportFacilitatorAshas = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now().minusDays(1), RchUserType.ASHA);
+            List<RchImportFacilitator> rchImportFacilitatorAshas = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.ASHA);
             for (RchImportFacilitator rchImportFacilitatorAsha: rchImportFacilitatorAshas
                  ) {
                 File localResponseFile = scpResponseToLocal(rchImportFacilitatorAsha.getFileName());
@@ -1027,9 +1027,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name");
+                LOGGER.error("invalid file name", e);
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -1154,9 +1154,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name");
+                LOGGER.error("invalid file name", e);
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -1280,9 +1280,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name");
+                LOGGER.error("invalid file name", e);
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -1318,9 +1318,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name");
+                LOGGER.error("invalid file name", e);
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -1356,9 +1356,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 status = true;
 
             } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR);
+                LOGGER.error(SCP_ERROR, e);
             } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name");
+                LOGGER.error("invalid file name", e);
             }
         } else {
             LOGGER.error("Error writing response to file.");
@@ -1800,9 +1800,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         for (Future<ThreadProcessorObject> fut : list) {
             try {
                 ThreadProcessorObject threadProcessorObject = fut.get();
-                rejectedMothers.putAll(threadProcessorObject.getRejectedBeneficiaries());
+                Map<String,Object> rejectedBen = threadProcessorObject.getRejectedBeneficiaries();
+                rejectedMothers.putAll(rejectedBen);
+                int currentRej = rejectedBen.size();
+                rejected += currentRej;
+                Integer currentRecordsPro = threadProcessorObject.getRecordsProcessed();
+                saved += currentRecordsPro - currentRej;
                 rejectionStatus.putAll(threadProcessorObject.getRejectionStatus());
-                recordsProcessed += threadProcessorObject.getRecordsProcessed();
+                recordsProcessed += currentRecordsPro;
             } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
                 LOGGER.error("Error while running thread", e);
             }
@@ -1934,9 +1939,15 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         for (Future<ThreadProcessorObject> fut : list) {
             try {
                 ThreadProcessorObject threadProcessorObject = fut.get();
-                rejectedChilds.putAll(threadProcessorObject.getRejectedBeneficiaries());
+                Map<String,Object> currRejBen = threadProcessorObject.getRejectedBeneficiaries();
+                Integer currRejBenSize = currRejBen.size();
+                rejectedChilds.putAll(currRejBen);
                 rejectionStatus.putAll(threadProcessorObject.getRejectionStatus());
-                recordsProcessed += threadProcessorObject.getRecordsProcessed();
+                Integer currentRecordsProcessed = threadProcessorObject.getRecordsProcessed();
+                recordsProcessed += currentRecordsProcessed;
+                rejected += currRejBenSize;
+                saved += recordsProcessed - currRejBenSize;
+
             } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
                 LOGGER.error("Error while running thread", e);
             }

@@ -1,5 +1,7 @@
 package org.motechproject.nms.region.service;
 
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
 
@@ -11,5 +13,5 @@ public interface VillageService {
     Village create(Village village);
     Village update(Village village);
 
-    Long createUpdateVillages(List<Map<String, Object>> recordList, Map<String, Taluka> talukaHashMap);
+    Long createUpdateVillages(List<Map<String, Object>> recordList, Map<String, State> stateHashMap, Map<String, District> districtHashMap, Map<String, Taluka> talukaHashMap);
 }

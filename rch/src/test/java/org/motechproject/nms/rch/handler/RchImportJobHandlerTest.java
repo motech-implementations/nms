@@ -45,7 +45,7 @@ public class RchImportJobHandlerTest {
     @Test
     public void shouldScheduleCronJobOnInit() {
         when(settingsFacade.getProperty(Constants.DAYS_TO_PULL)).thenReturn("1");
-        when(settingsFacade.getProperty(Constants.RCH_SYNC_CRON)).thenReturn("0 0 16 * * ? *");
+        when(settingsFacade.getProperty(Constants.RCH_SYNC_MOTHER_CRON)).thenReturn("0 0 16 * * ? *");
 
         rchImportJobHandler.initImportJob();
 
@@ -54,12 +54,12 @@ public class RchImportJobHandlerTest {
         assertEquals("0 0 16 * * ? *", captor.getValue().getCronExpression());
         assertNull(captor.getValue().getEndTime());
         assertNull(captor.getValue().getStartTime());
-        assertEquals(Constants.RCH_IMPORT_EVENT, captor.getValue().getMotechEvent().getSubject());
+        assertEquals(Constants.RCH_MOTHER_IMPORT_SUBJECT_CRON, captor.getValue().getMotechEvent().getSubject());
     }
 
     public void shouldNotScheduleJobWhenNoCronInSettings() {
         when(settingsFacade.getProperty(Constants.DAYS_TO_PULL)).thenReturn("1");
-        when(settingsFacade.getProperty(Constants.RCH_SYNC_CRON)).thenReturn("");
+        when(settingsFacade.getProperty(Constants.RCH_SYNC_MOTHER_CRON)).thenReturn("");
 
         rchImportJobHandler.initImportJob();
 
@@ -69,7 +69,7 @@ public class RchImportJobHandlerTest {
     @Test(expected = RchImportConfigurationException.class)
     public void shouldThrowExceptionOnInvalidCron() {
         when(settingsFacade.getProperty(Constants.DAYS_TO_PULL)).thenReturn("1");
-        when(settingsFacade.getProperty(Constants.RCH_SYNC_CRON)).thenReturn("whatever");
+        when(settingsFacade.getProperty(Constants.RCH_SYNC_MOTHER_CRON)).thenReturn("whatever");
         try {
             rchImportJobHandler.initImportJob();
         } finally {
@@ -88,10 +88,10 @@ public class RchImportJobHandlerTest {
             when(settingsFacade.getProperty(Constants.RCH_LOCATIONS)).thenReturn("4,15,51,2");
             when(settingsFacade.getProperty(Constants.RCH_ENDPOINT)).thenReturn("http://localhost:9090/test.svc");
 
-            rchImportJobHandler.handleImportEvent(new MotechEvent());
+            rchImportJobHandler.handleMotherImportEvent(new MotechEvent());
 
             ArgumentCaptor<URL> urlCaptor = ArgumentCaptor.forClass(URL.class);
-            verify(rchWsImportService).importFromRch(eq(asList(4L, 15L, 51L, 2L)), eq(yesterday), urlCaptor.capture());
+            verify(rchWsImportService).importMothersFromRch(eq(asList(4L, 15L, 51L, 2L)), eq(yesterday), urlCaptor.capture());
             assertEquals("http://localhost:9090/test.svc", urlCaptor.getValue().toString());
         } finally {
             TimeFaker.stopFakingTime();
