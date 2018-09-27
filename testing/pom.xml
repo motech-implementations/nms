@@ -35,6 +35,13 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>1.3.9</version>
+        </dependency>
+
+
         <!-- common properties -->
         <dependency>
             <groupId>org.motechproject.nms</groupId>
