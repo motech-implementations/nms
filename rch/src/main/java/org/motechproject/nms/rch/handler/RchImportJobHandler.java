@@ -49,7 +49,28 @@ public class RchImportJobHandler {
 
     @PostConstruct
     public void initImportJob() {
-        String cronExpression = settingsFacade.getProperty(Constants.RCH_SYNC_CRON);
+
+        initSyncJob(Constants.RCH_SYNC_MOTHER_CRON, Constants.RCH_MOTHER_IMPORT_SUBJECT_CRON);
+        initSyncJob(Constants.RCH_SYNC_CHILD_CRON, Constants.RCH_CHILD_IMPORT_SUBJECT_CRON);
+        initSyncJob(Constants.RCH_SYNC_TALUKA_CRON, Constants.RCH_TALUKA_IMPORT_SUBJECT_CRON);
+        initSyncJob(Constants.RCH_SYNC_DISTRICT_CRON, Constants.RCH_DISTRICT_IMPORT_SUBJECT_CRON);
+        initSyncJob(Constants.RCH_SYNC_VILLAGE_CRON, Constants.RCH_VILLAGE_IMPORT_SUBJECT_CRON);
+        initSyncJob(Constants.RCH_SYNC_HEALTHBLOCK_CRON, Constants.RCH_HEALTHBLOCK_IMPORT_SUBJECT_CRON);
+        initSyncJob(Constants.RCH_SYNC_HEALTHFACILITY_CRON, Constants.RCH_HEALTHFACILITY_IMPORT_SUBJECT_CRON);
+        initSyncJob(Constants.RCH_SYNC_HEALTHSUBFACILITY_CRON , Constants.RCH_HEALTHSUBFACILITY_IMPORT_SUBJECT_CRON);
+        initSyncJob(Constants.RCH_SYNC_TALUKA_HEALTHBLOCK_CRON , Constants.RCH_TALUKA_HEALTHBLOCK_IMPORT_SUBJECT_CRON);
+        initSyncJob(Constants.RCH_SYNC_VILLAGE_HEALTHFACILITYCRON, Constants.RCH_VILLAGEHEALTHSUBFACILITY_IMPORT_SUBJECT_CRON);
+        initSyncJob(Constants.RCH_SYNC_ASHA_CRON, Constants.RCH_ASHA_IMPORT_SUBJECT_CRON);
+
+
+        initMotherReadJob();
+        initChildReadJob();
+        initAshaReadJob();
+        initLocationReadJob();
+    }
+
+    public void initSyncJob(String cronExpConst , String syncEventName){
+        String cronExpression = settingsFacade.getProperty(cronExpConst);
         if (StringUtils.isBlank(cronExpression)) {
             LOGGER.warn("No cron expression configured for RCH data import, no import will be performed");
             return;
@@ -60,15 +81,9 @@ public class RchImportJobHandler {
         }
 
         LOGGER.info("Created RCH Import Event");
-        CronSchedulableJob rchImportJob = new CronSchedulableJob(new MotechEvent(Constants.RCH_IMPORT_EVENT), cronExpression);
+        CronSchedulableJob rchImportJob = new CronSchedulableJob(new MotechEvent(syncEventName), cronExpression);
         motechSchedulerService.safeScheduleJob(rchImportJob);
-
-        initMotherReadJob();
-        initChildReadJob();
-        initAshaReadJob();
-        initLocationReadJob();
     }
-
     public void initMotherReadJob() {
         String cronExpression = settingsFacade.getProperty(Constants.RCH_MOTHER_READ_CRON);
         if (StringUtils.isBlank(cronExpression)) {
@@ -158,9 +173,11 @@ public class RchImportJobHandler {
 //        }
 //    }
 
-    @MotechListener(subjects = Constants.RCH_IMPORT_EVENT)
+
+
+    @MotechListener(subjects = Constants.RCH_CHILD_IMPORT_SUBJECT_CRON)
     @Transactional
-    public void handleImportEvent(MotechEvent event) {
+    public void handleChildImportEvent(MotechEvent event) {
         LOGGER.info("Starting import from RCH");
 
         List<Long> stateIds = getStateIds();
@@ -171,10 +188,164 @@ public class RchImportJobHandler {
         if (stateIds.isEmpty()) {
             LOGGER.warn("No states configured for import, not doing anything");
         } else {
-            rchWsImportService.importFromRch(stateIds, referenceDate, endpoint);
+            rchWsImportService.importChildFromRch(stateIds, referenceDate, endpoint);
         }
     }
 
+    @MotechListener(subjects = Constants.RCH_MOTHER_IMPORT_SUBJECT_CRON)
+    @Transactional
+    public void handleMotherImportEvent(MotechEvent event) {
+        LOGGER.info("Starting import from RCH");
+
+        List<Long> stateIds = getStateIds();
+        URL endpoint = getEndpointUrl();
+        int daysToPull = getDaysToPull();
+        LocalDate referenceDate = DateUtil.today().minusDays(daysToPull);
+
+        if (stateIds.isEmpty()) {
+            LOGGER.warn("No states configured for import, not doing anything");
+        } else {
+            rchWsImportService.importMothersFromRch(stateIds, referenceDate, endpoint);
+        }
+    }
+    @MotechListener(subjects = Constants.RCH_ASHA_IMPORT_SUBJECT_CRON)
+    @Transactional
+    public void handleAshaImportEvent(MotechEvent event) {
+        LOGGER.info("Starting import from RCH");
+
+        List<Long> stateIds = getStateIds();
+        URL endpoint = getEndpointUrl();
+        int daysToPull = getDaysToPull();
+        LocalDate referenceDate = DateUtil.today().minusDays(daysToPull);
+
+        if (stateIds.isEmpty()) {
+            LOGGER.warn("No states configured for import, not doing anything");
+        } else {
+            rchWsImportService.importAshaFromRch(stateIds, referenceDate, endpoint);
+        }
+    }
+    @MotechListener(subjects = Constants.RCH_DISTRICT_IMPORT_SUBJECT_CRON)
+    @Transactional
+    public void handleDistrictImportEvent(MotechEvent event) {
+        LOGGER.info("Starting import from RCH");
+
+        List<Long> stateIds = getStateIds();
+        URL endpoint = getEndpointUrl();
+        int daysToPull = getDaysToPull();
+        LocalDate referenceDate = DateUtil.today().minusDays(daysToPull);
+
+        if (stateIds.isEmpty()) {
+            LOGGER.warn("No states configured for import, not doing anything");
+        } else {
+            rchWsImportService.importDistrictFromRch(stateIds, referenceDate, endpoint);
+        }
+    }
+    @MotechListener(subjects = Constants.RCH_TALUKA_IMPORT_SUBJECT_CRON)
+    @Transactional
+    public void handleTalukaImportEvent(MotechEvent event) {
+        LOGGER.info("Starting import from RCH");
+
+        List<Long> stateIds = getStateIds();
+        URL endpoint = getEndpointUrl();
+        int daysToPull = getDaysToPull();
+        LocalDate referenceDate = DateUtil.today().minusDays(daysToPull);
+
+        if (stateIds.isEmpty()) {
+            LOGGER.warn("No states configured for import, not doing anything");
+        } else {
+            rchWsImportService.importTalukaFromRch(stateIds, referenceDate, endpoint);
+        }
+    }@MotechListener(subjects = Constants.RCH_VILLAGE_IMPORT_SUBJECT_CRON)
+    @Transactional
+    public void handleVillageImportEvent(MotechEvent event) {
+        LOGGER.info("Starting import from RCH");
+
+        List<Long> stateIds = getStateIds();
+        URL endpoint = getEndpointUrl();
+        int daysToPull = getDaysToPull();
+        LocalDate referenceDate = DateUtil.today().minusDays(daysToPull);
+
+        if (stateIds.isEmpty()) {
+            LOGGER.warn("No states configured for import, not doing anything");
+        } else {
+            rchWsImportService.importVillageFromRch(stateIds, referenceDate, endpoint);
+        }
+    }@MotechListener(subjects = Constants.RCH_HEALTHBLOCK_IMPORT_SUBJECT_CRON)
+    @Transactional
+    public void handleHealthBlockImportEvent(MotechEvent event) {
+        LOGGER.info("Starting import from RCH");
+
+        List<Long> stateIds = getStateIds();
+        URL endpoint = getEndpointUrl();
+        int daysToPull = getDaysToPull();
+        LocalDate referenceDate = DateUtil.today().minusDays(daysToPull);
+
+        if (stateIds.isEmpty()) {
+            LOGGER.warn("No states configured for import, not doing anything");
+        } else {
+            rchWsImportService.importHealthBlockFromRch(stateIds, referenceDate, endpoint);
+        }
+    }@MotechListener(subjects = Constants.RCH_HEALTHFACILITY_IMPORT_SUBJECT_CRON)
+    @Transactional
+    public void handleHealthFacilityImportEvent(MotechEvent event) {
+        LOGGER.info("Starting import from RCH");
+
+        List<Long> stateIds = getStateIds();
+        URL endpoint = getEndpointUrl();
+        int daysToPull = getDaysToPull();
+        LocalDate referenceDate = DateUtil.today().minusDays(daysToPull);
+
+        if (stateIds.isEmpty()) {
+            LOGGER.warn("No states configured for import, not doing anything");
+        } else {
+            rchWsImportService.importHealthFacilityFromRch(stateIds, referenceDate, endpoint);
+        }
+    }@MotechListener(subjects = Constants.RCH_HEALTHSUBFACILITY_IMPORT_SUBJECT_CRON)
+    @Transactional
+    public void handleHealthSubFacilityImportEvent(MotechEvent event) {
+        LOGGER.info("Starting import from RCH");
+
+        List<Long> stateIds = getStateIds();
+        URL endpoint = getEndpointUrl();
+        int daysToPull = getDaysToPull();
+        LocalDate referenceDate = DateUtil.today().minusDays(daysToPull);
+
+        if (stateIds.isEmpty()) {
+            LOGGER.warn("No states configured for import, not doing anything");
+        } else {
+            rchWsImportService.importHealthSubFacilityFromRch(stateIds, referenceDate, endpoint);
+        }
+    }@MotechListener(subjects = Constants.RCH_TALUKA_HEALTHBLOCK_IMPORT_SUBJECT_CRON)
+    @Transactional
+    public void handleTalukaHealthBlockImportEvent(MotechEvent event) {
+        LOGGER.info("Starting import from RCH");
+
+        List<Long> stateIds = getStateIds();
+        URL endpoint = getEndpointUrl();
+        int daysToPull = getDaysToPull();
+        LocalDate referenceDate = DateUtil.today().minusDays(daysToPull);
+
+        if (stateIds.isEmpty()) {
+            LOGGER.warn("No states configured for import, not doing anything");
+        } else {
+            rchWsImportService.importTalukaHealthBlockFromRch(stateIds, referenceDate, endpoint);
+        }
+    }@MotechListener(subjects = Constants.RCH_VILLAGEHEALTHSUBFACILITY_IMPORT_SUBJECT_CRON)
+    @Transactional
+    public void handleVillageHealthSubFacilityImportEvent(MotechEvent event) {
+        LOGGER.info("Starting import from RCH");
+
+        List<Long> stateIds = getStateIds();
+        URL endpoint = getEndpointUrl();
+        int daysToPull = getDaysToPull();
+        LocalDate referenceDate = DateUtil.today().minusDays(daysToPull);
+
+        if (stateIds.isEmpty()) {
+            LOGGER.warn("No states configured for import, not doing anything");
+        } else {
+            rchWsImportService.importVillageHealthSubFacilityFromRch(stateIds, referenceDate, endpoint);
+        }
+    }
     private int getDaysToPull() {
         int daysToPull;
         String daysToPullValue = settingsFacade.getProperty(Constants.DAYS_TO_PULL);

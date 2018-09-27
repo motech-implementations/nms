@@ -144,9 +144,10 @@ public class CircleServiceBundleIT extends BasePaxIT {
         taluka.setCode("0004");
         taluka.getVillages().add(village);
 
-        taluka.addHealthBlock(healthBlock);
-
-        healthBlock.addTaluka(taluka);
+        //TODO HARITHA commented 2 lines m-n taluka hb
+//        taluka.addHealthBlock(healthBlock);
+//
+//        healthBlock.addTaluka(taluka);
 
         district = new District();
         district.setName("District 1");

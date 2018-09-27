@@ -130,16 +130,16 @@ public class MctsImportBundleIT extends BasePaxIT {
 
         taluka.setDistrict(district);
         district.setTalukas(new ArrayList<>(singletonList(taluka)));
-
+        //TODO HARITHA commented 2 lines m-n taluka hb
         HealthBlock healthBlock = new HealthBlock();
         healthBlock.setCode(113L);
         healthBlock.setName("HealthBlock_Name 1");
         healthBlock.setRegionalName("HB1");
         healthBlock.setHq("An HQ");
-        healthBlock.addTaluka(taluka);
+       // healthBlock.addTaluka(taluka);
         healthBlock.setDistrict(district);
 
-        taluka.addHealthBlock(healthBlock);
+       // taluka.addHealthBlock(healthBlock);
 
         HealthFacilityType phcType = new HealthFacilityType();
         phcType.setCode(11L);

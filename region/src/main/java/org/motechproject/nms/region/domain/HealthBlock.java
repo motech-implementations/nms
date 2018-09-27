@@ -60,15 +60,28 @@ public class HealthBlock extends MdsEntity {
     private District district;
 
     @Field(name = "taluka_id_OID", required = true)
-    @Column(allowsNull = "false")
-    @NotNull
+    @Column
     private Long talukaIdOID;
 
-    @Persistent(table="nms_taluka_healthblock", defaultFetchGroup = "false")
-    @Join(column = "healthblock_id")
-    @Element(column = "taluka_id")
-    @JsonManagedReference
-    private Set<Taluka> talukas;
+
+    public Long getStateIdOID() {
+        return stateIdOID;
+    }
+
+    public void setStateIdOID(Long stateIdOID) {
+        this.stateIdOID = stateIdOID;
+    }
+
+    @Field(name = "state_id_OID", required = true)
+    @Column
+    private Long stateIdOID;
+
+//    @Persistent(table="nms_taluka_healthblock", defaultFetchGroup = "false")
+//    @Join(column = "healthblock_id")
+//    @Element(column = "taluka_id")
+//    @JsonManagedReference
+//    private Set<Taluka> talukas;
+
 
     @Field
     @Cascade(delete = true)
@@ -77,7 +90,7 @@ public class HealthBlock extends MdsEntity {
     private List<HealthFacility> healthFacilities;
 
     public HealthBlock() {
-        this.talukas = new HashSet<>();
+        //this.talukas = new HashSet<>();
         this.healthFacilities = new ArrayList<>();
     }
 
@@ -129,21 +142,21 @@ public class HealthBlock extends MdsEntity {
         this.talukaIdOID = talukaIdOID;
     }
 
-    public Set<Taluka> getTalukas() {
-        return talukas;
-    }
+//    public Set<Taluka> getTalukas() {
+//        return talukas;
+//    }
+//
+//    public void setTalukas(Set<Taluka> talukas) {
+//        this.talukas = talukas;
+//    }
 
-    public void setTalukas(Set<Taluka> talukas) {
-        this.talukas = talukas;
-    }
-
-    public void addTaluka(Taluka taluka) {
-        this.talukas.add(taluka);
-    }
-
-    public void removeTaluka(Taluka taluka) {
-        this.talukas.remove(taluka);
-    }
+//    public void addTaluka(Taluka taluka) {
+//        this.talukas.add(taluka);
+//    }
+//
+//    public void removeTaluka(Taluka taluka) {
+//        this.talukas.remove(taluka);
+//    }
 
     public List<HealthFacility> getHealthFacilities() {
         return healthFacilities;

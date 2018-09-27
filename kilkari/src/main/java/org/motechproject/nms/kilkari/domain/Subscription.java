@@ -126,6 +126,10 @@ public class Subscription extends MdsEntity {
         }
     }
 
+    public void setReactivationStatus() {
+        this.status = SubscriptionStatus.ACTIVE;
+    }
+
     public SubscriptionOrigin getOrigin() { return origin; }
 
     public void setOrigin(SubscriptionOrigin origin) { this.origin = origin; }

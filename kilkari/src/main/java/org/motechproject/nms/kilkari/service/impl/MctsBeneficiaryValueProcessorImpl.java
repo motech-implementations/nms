@@ -64,7 +64,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
         MctsMother motherByRchId = mctsMotherDataService.findByRchId(rchId);
         MctsMother motherByMctsId;
         if (motherByRchId == null) {
-            if (mctsId == null || ("NULL").equalsIgnoreCase(mctsId)) {
+            if (mctsId == null || ("NULL").equalsIgnoreCase(mctsId) || mctsId.isEmpty()) {
                 motherByRchId = new MctsMother(rchId, null);
                 return motherByRchId;
             } else {
@@ -78,7 +78,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                 }
             }
         } else {
-            if (mctsId == null || ("NULL").equalsIgnoreCase(mctsId)) {
+            if (mctsId == null || ("NULL").equalsIgnoreCase(mctsId) || mctsId.isEmpty()) {
                 return motherByRchId;
             } else {
                 motherByMctsId = mctsMotherDataService.findByBeneficiaryId(mctsId);
@@ -241,7 +241,6 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    @Transactional
     public void setLocationFieldsCSV(LocationFinder locationFinder, Map<String, Object> record, MctsBeneficiary beneficiary) throws InvalidLocationException {
 
         StringBuffer mapKey = new StringBuffer(record.get(KilkariConstants.STATE_ID).toString());

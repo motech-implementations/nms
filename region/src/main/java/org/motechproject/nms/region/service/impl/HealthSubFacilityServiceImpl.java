@@ -7,9 +7,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.metrics.service.Timer;
-import org.motechproject.nms.region.domain.HealthFacility;
-import org.motechproject.nms.region.domain.HealthSubFacility;
-import org.motechproject.nms.region.domain.Taluka;
+import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
 import org.motechproject.nms.region.service.HealthSubFacilityService;
 import org.motechproject.nms.region.utils.LocationConstants;
@@ -79,15 +77,15 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
 
     @Override
     @Transactional
-    public Long createUpdateHealthSubFacilities(final List<Map<String, Object>> healthSubFacilities, final Map<String, Taluka> talukaHashMap, final Map<String, HealthFacility> healthFacilityHashMap) {
+    public Long createUpdateHealthSubFacilities(final List<Map<String, Object>> healthSubFacilities, final Map<String, State> stateHashMap, final Map<String, District> districtHashMap, final Map<String, Taluka> talukaHashMap, final Map<String, HealthFacility> healthFacilityHashMap) {
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
             public String getSqlQuery() {
-                String healthSubFacilityValues = healthSubFacilityQuerySet(healthSubFacilities, talukaHashMap, healthFacilityHashMap);
+                String healthSubFacilityValues = healthSubFacilityQuerySet(healthSubFacilities, stateHashMap, districtHashMap, talukaHashMap, healthFacilityHashMap);
                 String query = "";
                 if (!healthSubFacilityValues.isEmpty()) {
-                    query = "INSERT into nms_health_sub_facilities (`code`, `name`, `healthFacility_id_OID`, `taluka_id_oid`, " +
+                    query = "INSERT into nms_health_sub_facilities (`code`, `name`, `state_id_OID`, `district_id_OID`, `healthFacility_id_OID`, `taluka_id_oid`, " +
                             " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
                             healthSubFacilityValues +
                             " ON DUPLICATE KEY UPDATE " +
@@ -114,7 +112,7 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
         return createdHealthSubFacilities;
     }
 
-    private String healthSubFacilityQuerySet(List<Map<String, Object>> healthSubFacilities, Map<String, Taluka> talukaHashMap, Map<String, HealthFacility> healthFacilityHashMap) { //NO CHECKSTYLE Cyclomatic Complexity
+    private String healthSubFacilityQuerySet(List<Map<String, Object>> healthSubFacilities, Map<String, State> stateHashMap, Map<String, District> districtHashMap, Map<String, Taluka> talukaHashMap, Map<String, HealthFacility> healthFacilityHashMap) { //NO CHECKSTYLE Cyclomatic Complexity
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
         DateTime dateTimeNow = new DateTime();
@@ -122,6 +120,8 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
         for (Map<String, Object> healthSubFacility : healthSubFacilities) {
             if (healthSubFacility.get(LocationConstants.CSV_STATE_ID) != null && healthSubFacility.get(LocationConstants.DISTRICT_ID) != null &&
                     healthSubFacility.get(LocationConstants.TALUKA_ID) != null && healthSubFacility.get(LocationConstants.HEALTHFACILITY_ID) != null) {
+                State state = stateHashMap.get(healthSubFacility.get(LocationConstants.CSV_STATE_ID).toString());
+                District district = districtHashMap.get(healthSubFacility.get(LocationConstants.CSV_STATE_ID).toString() + "_" + healthSubFacility.get(LocationConstants.DISTRICT_ID).toString());
                 Taluka taluka = talukaHashMap.get(healthSubFacility.get(LocationConstants.CSV_STATE_ID).toString() + "_" +
                         healthSubFacility.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                         healthSubFacility.get(LocationConstants.TALUKA_ID).toString().trim());
@@ -138,6 +138,8 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
                     stringBuilder.append(healthSubFacilityCode + ", ");
                     stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME) == null ?
                             "" : healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME).toString()) + QUOTATION_COMMA);
+                    stringBuilder.append(state.getId() + ", ");
+                    stringBuilder.append(district.getId() + ", ");
                     stringBuilder.append(healthFacility.getId() + ", ");
                     stringBuilder.append(taluka.getId() + ", ");
                     stringBuilder.append(MOTECH_STRING);

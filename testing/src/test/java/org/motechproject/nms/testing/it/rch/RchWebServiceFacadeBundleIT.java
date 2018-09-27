@@ -114,10 +114,10 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         healthBlock.setRegionalName("HB1");
         healthBlock.setHq("An HQ");
         healthBlock.setDistrict(district);
-
-        healthBlock.addTaluka(taluka);
-
-        taluka.addHealthBlock(healthBlock);
+        //TODO HARITHA commented 2 lines m-n taluka hb
+//        healthBlock.addTaluka(taluka);
+//
+//        taluka.addHealthBlock(healthBlock);
 
         HealthFacilityType phcType = new HealthFacilityType();
         phcType.setCode(11L);

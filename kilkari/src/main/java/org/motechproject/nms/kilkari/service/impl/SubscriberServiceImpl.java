@@ -692,7 +692,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         reactivatedBeneficiaryAudit.setOrigin(subscription.getOrigin());
         reactivatedBeneficiaryAudit.setServiceReactivationDate(DateTime.now());
         reactivatedBeneficiaryAuditDataService.create(reactivatedBeneficiaryAudit);
-        subscription.setStatus(SubscriptionStatus.ACTIVE);
+        subscription.setReactivationStatus();
         subscription.setDeactivationReason(null);
         subscriptionService.updateStartDate(subscription, dateTime);
         if (subscriber.getMother() != null) {
