@@ -38,27 +38,16 @@
         <!-- common properties -->
         <dependency>
             <groupId>org.motechproject.nms</groupId>
-            <artifactId>props</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>kilkari</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
             <artifactId>api</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.motechproject.nms</groupId>
-            <artifactId>imi</artifactId>
+            <artifactId>csv</artifactId>
             <version>${project.version}</version>
         </dependency>
+
 
         <dependency>
             <groupId>org.motechproject.nms</groupId>
@@ -74,30 +63,31 @@
 
         <dependency>
             <groupId>org.motechproject.nms</groupId>
+            <artifactId>imi</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>kilkari</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>mcts</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
             <artifactId>mobile-academy</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.motechproject.nms</groupId>
-            <artifactId>region</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>csv</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>tracking</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>mcts</artifactId>
+            <artifactId>props</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -109,13 +99,32 @@
 
         <dependency>
             <groupId>org.motechproject.nms</groupId>
+            <artifactId>region</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
             <artifactId>rejection-handler</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>tracking</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.servicemix.bundles</groupId>
             <artifactId>org.apache.servicemix.bundles.javax.mail</artifactId>
         </dependency>
+
+        <!--<dependency>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring-test</artifactId>-->
+            <!--<version>${spring.version}</version>-->
+        <!--</dependency>-->
 
     </dependencies>
 
@@ -180,7 +189,7 @@
                                     </excludes>
                                     <encoding>UTF-8</encoding>
                                     <summaryFile>target/failsafe-reports/failsafe-summary-it.xml</summaryFile>
-                                    <argLine>-Xmx2G -XX:MaxPermSize=2G -Xms2G -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=9000</argLine>
+                                    <argLine>-Xmx8G -XX:MaxPermSize=8G -Xms8G -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005</argLine>
                                     <systemPropertiesFile>${modules.root.dir}/maven.properties</systemPropertiesFile>
                                     <runOrder>random</runOrder>
                                 </configuration>
@@ -300,6 +309,10 @@
                             net.sf.cglib.reflect,
                             org.springframework.transaction,
                             javax.mail,
+                            org.motechproject.nms.flw.domain,
+                            org.motechproject.nms.kilkari.domain,
+                            org.motechproject.nms.props.domain,
+                            org.motechproject.nms.region.domain,
                             *
                         </Import-Package>
                     </instructions>
