@@ -91,9 +91,22 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>org.apache.axis</groupId>
             <artifactId>com.springsource.org.apache.axis</artifactId>
+        </dependency>
+        <dependency>
+
+            <groupId>javax.jms</groupId>
+            <artifactId>com.springsource.javax.jms</artifactId>
+        </dependency>-->
+        <dependency>
+            <groupId>org.apache.geronimo.bundles</groupId>
+            <artifactId>axis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.bundles</groupId>
+            <artifactId>castor</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.servicemix.bundles</groupId>

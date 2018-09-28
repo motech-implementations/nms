@@ -653,10 +653,31 @@
                 <artifactId>motech-platform-osgi-extender-fragment</artifactId>
                 <version>${motech.version}</version>
             </dependency>
-            <dependency>
+            <!--<dependency>
                 <groupId>org.apache.axis</groupId>
                 <artifactId>com.springsource.org.apache.axis</artifactId>
                 <version>1.4.0</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.jms</groupId>
+                <artifactId>com.springsource.javax.jms</artifactId>
+                <version>1.1.0</version>
+            </dependency>-->
+            <dependency>
+                <groupId>org.apache.geronimo.bundles</groupId>
+                <artifactId>axis</artifactId>
+                <version>1.4_2</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.axis</groupId>
+                        <artifactId>axis</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.geronimo.bundles</groupId>
+                <artifactId>castor</artifactId>
+                <version>1.0.5_1</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.servicemix.bundles</groupId>
@@ -842,6 +863,10 @@
                     <exclusion>
                         <groupId>org.apache.bval</groupId>
                         <artifactId>bval-jsr303</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.reflections</groupId>
+                        <artifactId>reflections</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>

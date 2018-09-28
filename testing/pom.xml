@@ -196,7 +196,8 @@
                                     </excludes>
                                     <encoding>UTF-8</encoding>
                                     <summaryFile>target/failsafe-reports/failsafe-summary-it.xml</summaryFile>
-                                    <argLine>-Xmx8G -XX:MaxPermSize=8G -Xms8G -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005</argLine>
+                                    <!--<argLine>-Xmx8G -XX:MaxPermSize=8G -Xms8G -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005</argLine>-->
+                                    <argLine>-Xms512m -Xmx1028m -XX:PermSize=512m -XX:MaxPermSize=2048m</argLine>
                                     <systemPropertiesFile>${modules.root.dir}/maven.properties</systemPropertiesFile>
                                     <runOrder>random</runOrder>
                                 </configuration>
