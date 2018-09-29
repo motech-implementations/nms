@@ -518,7 +518,7 @@
             <dependency>
                 <groupId>org.apache.servicemix.bundles</groupId>
                 <artifactId>org.apache.servicemix.bundles.aspectj</artifactId>
-                <version>1.8.5_1</version>
+                <version>1.9.1_1</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.servicemix.bundles</groupId>
@@ -678,6 +678,11 @@
                 <groupId>org.apache.geronimo.bundles</groupId>
                 <artifactId>castor</artifactId>
                 <version>1.0.5_1</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-discovery</groupId>
+                <artifactId>commons-discovery</artifactId>
+                <version>0.5</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.servicemix.bundles</groupId>
@@ -929,7 +934,7 @@
             <dependency>
                 <groupId>org.apache.bval</groupId>
                 <artifactId>org.apache.bval.bundle</artifactId>
-                <version>1.1.2</version>
+                <version>0.5</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.apache.bval</groupId>

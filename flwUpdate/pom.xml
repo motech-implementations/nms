@@ -108,6 +108,7 @@
                             org.motechproject.nms.flw.repository,
                             org.motechproject.nms.flw.service,
                             org.motechproject.nms.rejectionhandler.service,
+                            org.datanucleus.enhancement,
                             *
                         </Import-Package>
                     </instructions>
