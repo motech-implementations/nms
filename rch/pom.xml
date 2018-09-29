@@ -109,6 +109,10 @@
             <artifactId>castor</artifactId>
         </dependency>
         <dependency>
+            <groupId>commons-discovery</groupId>
+            <artifactId>commons-discovery</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.servicemix.bundles</groupId>
             <artifactId>org.apache.servicemix.bundles.wsdl4j</artifactId>
         </dependency>
@@ -163,6 +167,7 @@
                             javax.mail,
                             net.sf.cglib.proxy,
                             net.sf.cglib.core,
+                            org.datanucleus.enhancement,
                             *
                         </Import-Package>
                     </instructions>

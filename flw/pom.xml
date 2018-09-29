@@ -109,6 +109,7 @@
                             org.motechproject.event.listener,
                             org.motechproject.nms.kilkari.domain,
                             org.motechproject.nms.kilkari.utils,
+                            org.datanucleus.enhancement,
                             *
                         </Import-Package>
                     </instructions>

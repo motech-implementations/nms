@@ -98,6 +98,8 @@
                             org.springframework.transaction,
                             org.motechproject.nms.kilkari.repository,
                             org.motechproject.nms.region.service,
+                            org.motechproject.nms.region.utils,
+                            org.datanucleus.enhancement,
                             *
                         </Import-Package>
                     </instructions>

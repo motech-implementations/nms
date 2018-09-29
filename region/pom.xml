@@ -88,7 +88,8 @@
                             org.motechproject.nms.region.domain.validation;version=${project.version},
                             org.motechproject.nms.region.exception;version=${project.version},
                             org.motechproject.nms.region.contract;version=${project.version},
-                            org.motechproject.nms.region.csv;version=${project.version}
+                            org.motechproject.nms.region.csv;version=${project.version},
+                            org.motechproject.nms.region.utils;version=${project.version}
                         </Export-Package>
                         <Import-Package>
                             net.sf.cglib.core,
@@ -105,6 +106,7 @@
                             org.springframework.cache.support,
                             org.springframework.cache.concurrent,
                             org.datanucleus.enhancer,
+                            org.datanucleus.enhancement,
                             *
                         </Import-Package>
                     </instructions>

@@ -109,6 +109,7 @@
                             org.motechproject.mtraining.service,
                             org.datanucleus.enhancer,
                             org.motechproject.nms.kilkari.service,
+                            org.datanucleus.enhancement,
                             *
                         </Import-Package>
                     </instructions>
