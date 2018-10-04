@@ -72,6 +72,7 @@
                             org.springframework.aop.framework,
                             org.springframework.cache.support,
                             org.springframework.cache.concurrent,
+                            org.datanucleus.enhancement,
                             *
                         </Import-Package>
                     </instructions>

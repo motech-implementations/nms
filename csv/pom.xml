@@ -70,6 +70,7 @@
                             org.springframework.aop,
                             org.springframework.aop.framework,
                             org.springframework.web.multipart.commons,
+                            org.datanucleus.enhancement,
                             *
                         </Import-Package>
                     </instructions>
