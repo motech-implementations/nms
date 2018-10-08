@@ -107,6 +107,7 @@
                             org.springframework.cache.concurrent,
                             org.datanucleus.enhancer,
                             org.datanucleus.enhancement,
+                            org.springframework.validation.beanvalidation,
                             *
                         </Import-Package>
                     </instructions>

@@ -109,6 +109,7 @@
                             org.motechproject.nms.flw.service,
                             org.motechproject.nms.rejectionhandler.service,
                             org.datanucleus.enhancement,
+                            org.springframework.validation.beanvalidation,
                             *
                         </Import-Package>
                     </instructions>

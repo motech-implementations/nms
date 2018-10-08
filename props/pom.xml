@@ -75,6 +75,7 @@
                             org.motechproject.nms.tracking.aspect,
                             org.aspectj.runtime.internal,
                             org.datanucleus.enhancement,
+                            org.springframework.validation.beanvalidation,
                             *
                         </Import-Package>
                     </instructions>

@@ -71,6 +71,7 @@
                             org.springframework.aop.framework,
                             org.springframework.web.multipart.commons,
                             org.datanucleus.enhancement,
+                            org.springframework.validation.beanvalidation,
                             *
                         </Import-Package>
                     </instructions>

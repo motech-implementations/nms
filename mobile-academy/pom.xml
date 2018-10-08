@@ -110,6 +110,7 @@
                             org.datanucleus.enhancer,
                             org.motechproject.nms.kilkari.service,
                             org.datanucleus.enhancement,
+                            org.springframework.validation.beanvalidation,
                             *
                         </Import-Package>
                     </instructions>
