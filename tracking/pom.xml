@@ -73,6 +73,9 @@
                             org.springframework.cache.support,
                             org.springframework.cache.concurrent,
                             org.datanucleus.enhancement,
+                            org.springframework.validation.beanvalidation,
+                            org.springframework.core,
+
                             *
                         </Import-Package>
                     </instructions>

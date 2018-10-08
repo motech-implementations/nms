@@ -143,6 +143,7 @@
                             org.motechproject.nms.region.service,
                             org.motechproject.nms.rch.service,
                             org.datanucleus.enhancement,
+                            org.springframework.validation.beanvalidation,
                             *
                         </Import-Package>
                     </instructions>

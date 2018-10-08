@@ -100,6 +100,7 @@
                             org.motechproject.nms.region.service,
                             org.motechproject.nms.region.utils,
                             org.datanucleus.enhancement,
+                            org.springframework.validation.beanvalidation,
                             *
                         </Import-Package>
                     </instructions>
