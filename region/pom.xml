@@ -108,6 +108,7 @@
                             org.datanucleus.enhancer,
                             org.datanucleus.enhancement,
                             org.springframework.validation.beanvalidation,
+                            org.springframework.core,
                             *
                         </Import-Package>
                     </instructions>
