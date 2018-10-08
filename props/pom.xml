@@ -76,6 +76,7 @@
                             org.aspectj.runtime.internal,
                             org.datanucleus.enhancement,
                             org.springframework.validation.beanvalidation,
+                            org.springframework.transaction.annotation,
                             *
                         </Import-Package>
                     </instructions>
