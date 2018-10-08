@@ -111,6 +111,7 @@
                             org.motechproject.nms.kilkari.utils,
                             org.datanucleus.enhancement,
                             org.springframework.validation.beanvalidation,
+                            org.springframework.core,
                             *
                         </Import-Package>
                     </instructions>

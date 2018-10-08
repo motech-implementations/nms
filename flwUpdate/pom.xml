@@ -110,6 +110,7 @@
                             org.motechproject.nms.rejectionhandler.service,
                             org.datanucleus.enhancement,
                             org.springframework.validation.beanvalidation,
+                            org.springframework.core,
                             *
                         </Import-Package>
                     </instructions>

@@ -144,6 +144,9 @@
                             org.motechproject.nms.rch.service,
                             org.datanucleus.enhancement,
                             org.springframework.validation.beanvalidation,
+                            org.springframework.cglib.proxy,
+                            org.springframework.cglib.core,
+                            org.springframework.core,
                             *
                         </Import-Package>
                     </instructions>
