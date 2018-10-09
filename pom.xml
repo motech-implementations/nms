@@ -319,7 +319,7 @@
                 <groupId>org.eclipse.gemini.blueprint</groupId>
                 <artifactId>gemini-blueprint-core</artifactId>
                 <version>2.1.0.RELEASE</version>
-                <scope>provided</scope>
+
 
                 <exclusions>
                     <exclusion>
@@ -407,7 +407,7 @@
             <dependency>
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
-                <version>1.10</version>
+                <version>1.11</version>
             </dependency>
             <dependency>
                 <groupId>commons-validator</groupId>
@@ -593,7 +593,7 @@
             <dependency>
                 <groupId>org.apache.servicemix.bundles</groupId>
                 <artifactId>org.apache.servicemix.bundles.velocity</artifactId>
-                <version>1.6.4_4</version>
+                <version>1.7_6</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.servicemix.bundles</groupId>
@@ -797,7 +797,7 @@
             <dependency>
                 <groupId>org.eclipse.gemini.blueprint</groupId>
                 <artifactId>org.motechproject.gemini-blueprint-test</artifactId>
-                <version>1.0.2.RELEASE</version>
+                <version>2.1.0.RELEASE</version>
                 <exclusions>
                     <exclusion>
                         <artifactId>com.springsource.org.junit</artifactId>
