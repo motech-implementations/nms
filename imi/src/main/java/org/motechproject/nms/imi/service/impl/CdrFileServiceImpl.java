@@ -1,12 +1,12 @@
 package org.motechproject.nms.imi.service.impl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
@@ -625,7 +625,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         List<CallSummaryRecordDto> csrDtos;
 
         try {
-            csrDtos = mapper.readValue(json, new TypeReference<List<CallSummaryRecordDto>>() { });
+            csrDtos = mapper.readValue(json, new TypeReference() { });
 
             LOGGER.debug("Processing {} ({} csrs)", name, csrDtos.size());
 
