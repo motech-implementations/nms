@@ -554,11 +554,11 @@
                 <artifactId>joda-time</artifactId>
                 <version>2.10</version>
             </dependency>
-            <dependency>
+            <!--<dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>org.motechproject.org.codehaus.jackson</artifactId>
                 <version>1.9.13-${external.dependency.release.tag.new}</version>
-            </dependency>
+            </dependency>-->
             <dependency>
                 <groupId>org.hamcrest</groupId>
                 <artifactId>hamcrest-all</artifactId>
