@@ -321,6 +321,11 @@
                             org.motechproject.nms.kilkari.domain,
                             org.motechproject.nms.props.domain,
                             org.motechproject.nms.region.domain,
+                            org.datanucleus.enhancement,
+                            org.springframework.validation.beanvalidation,
+                            org.springframework.core,
+                            org.springframework.cglib.proxy,
+                            org.springframework.cglib.core,
                             *
                         </Import-Package>
                     </instructions>
