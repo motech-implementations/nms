@@ -147,6 +147,7 @@
                             org.springframework.cglib.proxy,
                             org.springframework.cglib.core,
                             org.springframework.core,
+                            org.springframework.cglib.reflect,
                             *
                         </Import-Package>
                     </instructions>
