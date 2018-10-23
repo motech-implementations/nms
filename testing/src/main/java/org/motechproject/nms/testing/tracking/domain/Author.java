@@ -11,8 +11,8 @@ import java.util.Set;
 
 @Entity
 //TODO UPGRADE
-//@TrackClass
-//@TrackFields
+@TrackClass
+@TrackFields
 @InstanceLifecycleListeners
 public class Author extends MdsEntity {
 
