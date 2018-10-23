@@ -12,8 +12,8 @@ import java.util.List;
 
 @Entity
 //TODO UPGRADE
-//@TrackClass
-//@TrackFields
+@TrackClass
+@TrackFields
 @InstanceLifecycleListeners
 public class Department extends MdsEntity {
 
