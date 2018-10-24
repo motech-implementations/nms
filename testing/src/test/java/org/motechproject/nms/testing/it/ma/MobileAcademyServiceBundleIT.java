@@ -32,6 +32,7 @@ import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.service.LanguageService;
+import org.motechproject.nms.testing.it.api.OpsControllerBundleIT;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
 import org.motechproject.testing.osgi.container.MotechNativeTestContainerFactory;
@@ -50,12 +51,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Verify that MobileAcademyService present, functional.
@@ -109,6 +105,10 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
 
     @Inject
     PlatformTransactionManager transactionManager;
+
+
+    @Inject
+    OpsControllerBundleIT opsControllerBundleIT;
 
     private static final String VALID_COURSE_NAME = "MobileAcademyCourse";
 
@@ -649,6 +649,31 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         assertEquals(chapterwiseScore, ccrs.get(0).getChapterWiseScores());
         assertEquals(chapterwiseScore1, ccrs.get(1).getChapterWiseScores());
         assertEquals(chapterwiseScore2, ccrs.get(2).getChapterWiseScores());
+    }
+
+    @Test
+    public void testServiceForInactiveUser() {
+//        opsControllerBundleIT.createFlwHelper(String name, Long phoneNumber, String mctsFlwId)
+        long callingNumber = 9876543123L; // initialzing a contact number
+        FrontLineWorker flw = new FrontLineWorker(callingNumber); //creating a new flw object
+        flw.setJobStatus(FlwJobStatus.INACTIVE); // adding job status for flw
+        frontLineWorkerDataService.create(flw); // adding new flw
+        flw = frontLineWorkerService.getByContactNumber(callingNumber); //validating user's eligiblity
+        assertEquals(null,flw);
+
+    }
+
+    // TODO update the expected result
+    @Test
+    public void testServiceStoppedstateForActiveUser() {
+
+        long callingNumber = 9876543123L; // initialzing a contact number
+        FrontLineWorker flw = new FrontLineWorker(callingNumber); //creating a new flw object
+        flw.setJobStatus(FlwJobStatus.ACTIVE); // adding job status for flw
+        frontLineWorkerService.add(flw); // adding new flw
+        flw = frontLineWorkerService.getByContactNumber(callingNumber); //validating user's eligiblity
+        assertEquals(null,flw);
+
     }
 
     private void createLanguageLocationData() {
