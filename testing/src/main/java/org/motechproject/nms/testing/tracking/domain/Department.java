@@ -11,11 +11,10 @@ import javax.jdo.annotations.Persistent;
 import java.util.List;
 
 @Entity
-//TODO UPGRADE
 @TrackClass
 @TrackFields
 @InstanceLifecycleListeners
-public class Department extends MdsEntity {
+public class Department {
 
     @Field
     private Long id;
