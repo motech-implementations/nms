@@ -8,10 +8,9 @@ import org.motechproject.nms.tracking.annotation.TrackClass;
 import org.motechproject.nms.tracking.annotation.TrackField;
 
 @Entity
-//TODO UPGRADE
 @TrackClass
 @InstanceLifecycleListeners
-public class TrackedSimple extends MdsEntity {
+public class TrackedSimple {
 
     @Field
     private Long id;

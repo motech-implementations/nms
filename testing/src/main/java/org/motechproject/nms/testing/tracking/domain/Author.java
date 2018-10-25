@@ -10,11 +10,10 @@ import org.motechproject.nms.tracking.annotation.TrackFields;
 import java.util.Set;
 
 @Entity
-//TODO UPGRADE
 @TrackClass
 @TrackFields
 @InstanceLifecycleListeners
-public class Author extends MdsEntity {
+public class Author {
 
     @Field
     private Long id;
