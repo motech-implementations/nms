@@ -57,13 +57,13 @@ public class District extends MdsEntity {
     @Cascade(delete = true)
     @Persistent(mappedBy = "district", defaultFetchGroup = "false")
     @JsonManagedReference
-    private List<Taluka> talukas;
+    private ArrayList<Taluka> talukas;
 
     @Field
     @Cascade(delete = true)
     @Persistent(mappedBy = "district", defaultFetchGroup = "false")
     @JsonManagedReference
-    private List<HealthBlock> healthBlocks;
+    private ArrayList<HealthBlock> healthBlocks;
 
     @Field
     @JsonBackReference
@@ -109,19 +109,19 @@ public class District extends MdsEntity {
         this.state = state;
     }
 
-    public List<Taluka> getTalukas() {
+    public ArrayList<Taluka> getTalukas() {
         return talukas;
     }
 
-    public void setTalukas(List<Taluka> talukas) {
+    public void setTalukas(ArrayList<Taluka> talukas) {
         this.talukas = talukas;
     }
 
-    public List<HealthBlock> getHealthBlocks() {
+    public ArrayList<HealthBlock> getHealthBlocks() {
         return healthBlocks;
     }
 
-    public void setHealthBlocks(List<HealthBlock> healthBlocks) {
+    public void setHealthBlocks(ArrayList<HealthBlock> healthBlocks) {
         this.healthBlocks = healthBlocks;
     }
 
