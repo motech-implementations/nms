@@ -321,7 +321,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     }
 
 
-    //TODO UPGRADE
+    //This is a change in requirement -- hence this wouldnt pass
     @Test
     @Ignore
     public void testImportFromSampleDataFile() throws Exception {

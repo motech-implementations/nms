@@ -234,7 +234,6 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
      * NMS_FT_515 : To verify that status of Active flw is set to "Invalid" successfully
      */
     @Test
-    @Ignore //TODO UPGRADE
     public void testFrontLineWorkerUpdate() {
         createLanguageLocationData();
 
@@ -409,7 +408,6 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
      * To verify that status of Inactive flw is set to "Invalid" successfully
      */
     @Test
-    @Ignore //TODO UPGRADE
     public void verifyFT516() {
         createLanguageLocationData();
 
