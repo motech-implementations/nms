@@ -7,7 +7,6 @@ import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -296,7 +295,6 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
     /**
      * To verify LLC is set successfully for all the districts in a state.
      */
-    @Ignore  //Test is ignored since state.csv import location service is not supported.
     @Test
     public void verifyFT518() throws InterruptedException,
             IOException {
