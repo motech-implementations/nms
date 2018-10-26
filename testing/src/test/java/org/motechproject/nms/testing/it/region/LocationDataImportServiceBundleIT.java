@@ -50,7 +50,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
 import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
@@ -149,12 +148,13 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     }
 
     
-    @Test(expected = CsvImportDataException.class)
+    @Test
     public void testLocationDataImport() throws Exception {
-        State state = stateDataService.findByCode(1L);
+        stateImportService.importData(read("csv/state.csv"));
+        State state = stateDataService.findByCode(1234L);
         assertNotNull(state);
-        assertEquals(1L, (long) state.getCode());
-        assertEquals("EXAMPLE STATE", state.getName());
+        assertEquals(1234L, (long) state.getCode());
+        assertEquals("Delhi", state.getName());
 
         districtImportService.importData(read("csv/district.csv"));
         District district = districtService.findByStateAndCode(state, 1L);
@@ -426,7 +426,7 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     }
 
     /*
-    * To verify health block location data is rejected and stored in rejection table when taluka_id is having invalid value.
+    * To verify health block location data is rejected when taluka_id is having invalid value.
     */
     @Test
     public void verifyFT237() throws Exception {
@@ -438,10 +438,10 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
         try {
             healthBlockImportService.importData(reader);
         } catch (CsvImportDataException e) {
-            thrown = false;
+            thrown = true;
             assertEquals(errorMessage, e.getMessage());
         }
-        assertFalse(thrown);
+        assertTrue(thrown);
     }
 
     /*
@@ -544,21 +544,22 @@ public class LocationDataImportServiceBundleIT extends BasePaxIT {
     }
 
     /*
-    * To verify health sub facility location data is rejected and stored in rejection table when health_facality_id is having invalid value.
+    * To verify health sub facility location data is rejected when health_facality_id is having invalid value.
     */
     @Test
     public void verifyFT251() throws Exception {
         boolean thrown = false;
-        String errorMessage = "CSV instance error [row: 2]: Error loading entities in record for instance of type org.motechproject.nms.region.domain.HealthSubFacility, message: Unable to load HealthFacility 6 with a null HealthBlock";
+        String errorMessage = "CSV instance error [row: 2]: validation failed for instance of type " +
+                "org.motechproject.nms.region.domain.HealthSubFacility, violations: {'healthFacility': may not be null}";
         Reader reader = createReaderWithHeaders(
                 healthSubFacilityHeader, "8,health sub facility regional name,health sub facility name,1,2,00003,4,6");
         try {
             healthSubFacilityImportService.importData(reader);
         } catch (CsvImportDataException e) {
-            thrown = false;
+            thrown = true;
             assertEquals(errorMessage, e.getMessage());
         }
-        assertFalse(thrown);
+        assertTrue(thrown);
     }
 
     /*

@@ -297,7 +297,6 @@ public class LocationServiceBundleIT extends BasePaxIT {
 
     // Single Taluka Single HB, should find it
     // State -> District -> Taluka -> HealthBlock(1)
-    @Ignore //Iest is ignored since there is no direct mapping between Taluka and Health block.
     @Test
     public void testFindHealthBlockByTalukaAndCode1() {
         stateDataService.create(state);
@@ -313,7 +312,6 @@ public class LocationServiceBundleIT extends BasePaxIT {
     // Multiple, lookup by t(1) and HB(2), should find it
     // State -> District -> Taluka(1) -> HealthBlock(1)
     //                   -> Taluka(2) -> HealthBlock(2)
-    @Ignore  //Iest is ignored since there is no direct mapping between Taluka and Health block.
     @Test
     public void testFindHealthBlockByTalukaAndCode2() {
         stateDataService.create(state);
@@ -359,7 +357,6 @@ public class LocationServiceBundleIT extends BasePaxIT {
     // Two HB in Single Taluka, lookup by t(1) hb(1), should find it
     // State -> District -> Taluka -> HealthBlock(1)
     //                             -> HealthBlock(2)
-    @Ignore  //Iest is ignored since there is no direct mapping between Taluka and Health block.
     @Test
     public void testFindHealthBlockByTalukaAndCode3() {
         stateDataService.create(state);
@@ -388,7 +385,6 @@ public class LocationServiceBundleIT extends BasePaxIT {
     // Multiple, lookup by t(1), hb(2) should not find it
     // State(1) -> District -> Taluka(1) -> HealthBlock(1)
     // State(2) -> District -> Taluka(2) -> HealthBlock(2)
-    @Ignore  //Iest is ignored since there is no direct mapping between Taluka and Health block.
     @Test
     public void testFindHealthBlockByTalukaAndCode4() {
         stateDataService.create(state);
