@@ -293,67 +293,6 @@ public class LanguageLocationCodesImportServiceBundleIT extends BasePaxIT {
     }
 
     /**
-     * To verify LLC is set successfully for all the districts in a state.
-     */
-    @Test
-    public void verifyFT518() throws InterruptedException,
-            IOException {
-        HttpResponse response = null;
-        // Import state
-        response = importCsvFileForLocationData("state",
-                "state_ft_518.csv");
-        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-
-        // Import district
-        response = importCsvFileForLocationData("district",
-                "district_ft_518.csv");
-        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-
-        State upState = stateDataService.findByName("UTTAR PRADESH");
-        State delhiState = stateDataService.findByName("DELHI");
-
-        assertNotNull(upState);
-        assertNotNull(delhiState);
-
-        // fetch district and assert
-        District agraDistrict=districtService.findByStateAndName(upState, "AGRA");
-        District aligarhDistrict=districtService.findByStateAndName(upState, "ALIGARH");
-        District noidaDistrict=districtService.findByStateAndName(upState, "NOIDA");
-        District northDistrict=districtService.findByStateAndName(delhiState, "NORTH DISTRICT");
-
-        assertNull(agraDistrict.getLanguage());
-        assertNull(aligarhDistrict.getLanguage());
-        assertNull(noidaDistrict.getLanguage());
-        assertNull(northDistrict.getLanguage());
-
-        //import LLC data
-        response = importCsvFileForLocationData(null, "llc_data_ft_518.csv");
-        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-
-        // fetch circle and LLc data again
-        Circle ncrCircle = circleDataService.findByName("DELHI-NCR");
-        Circle upWestCircle = circleDataService.findByName("UP-WEST");
-
-        agraDistrict = districtService.findByStateAndName(upState, "AGRA");
-        aligarhDistrict = districtService
-                .findByStateAndName(upState, "ALIGARH");
-        noidaDistrict = districtService.findByStateAndName(upState, "NOIDA");
-        northDistrict = districtService.findByStateAndName(delhiState,
-                "NORTH DISTRICT");
-
-        // assert circle for default LLC
-        assertEquals("HINDI", ((Language)circleDataService.getDetachedField(upWestCircle, "defaultLanguage")).getName());
-        assertEquals("ENGLISH", ((Language)circleDataService.getDetachedField(ncrCircle, "defaultLanguage")).getName());
-
-        // assert district for LLC
-        assertEquals("HINDI", agraDistrict.getLanguage().getName());
-        assertEquals("URDU", aligarhDistrict.getLanguage().getName());
-        assertEquals("HINDI", noidaDistrict.getLanguage().getName());
-        assertEquals("ENGLISH", northDistrict.getLanguage().getName());
-
-    }
-
-    /**
      * To verify that multiple states can be mapped to one circle.
      */
     @Test
