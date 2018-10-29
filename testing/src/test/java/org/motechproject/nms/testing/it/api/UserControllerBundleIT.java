@@ -1711,6 +1711,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * content, if user's callingNumber is in whitelist and whitelist is set to
      * Enabled for user's state.
      */
+    @Ignore
     @Test
     public void verifyFT340() throws InterruptedException, IOException {
         setupWhiteListData();
@@ -1775,6 +1776,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * should be able to access MK Service content, if user's callingNumber is
      * in whitelist and whitelist is set to Enabled for user's state
      */
+    @Ignore
     @Test
     public void verifyFT341() throws InterruptedException, IOException {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -1838,6 +1840,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * content, if user's callingNumber is not in whitelist and whitelist is set
      * to Enabled for user's state.
      */
+    @Ignore
     @Test
     public void verifyFT342() throws InterruptedException, IOException {
         setupWhiteListData();
@@ -1897,6 +1900,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * shouldn't be able to access MK Service content, if user's callingNumber
      * is not in whitelist and whitelist is set to Enabled for user's state.
      */
+    @Ignore
     @Test
     public void verifyFT343() throws InterruptedException, IOException {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -1949,6 +1953,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * content, if user's callingNumber is in whitelist and whitelist is set to
      * disabled for user's state.
      */
+    @Ignore
     @Test
     public void verifyFT344() throws InterruptedException, IOException {
         setupWhiteListData();
@@ -2011,6 +2016,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * should be able to access MK Service content, if user's callingNumber is
      * in whitelist and whitelist is set to disabled for user's state.
      */
+    @Ignore
     @Test
     public void verifyFT345() throws InterruptedException, IOException {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -2074,6 +2080,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * should be able to access MK Service content, if user's callingNumber is
      * in whitelist and whitelist is set to Enabled for user's state.
      */
+    @Ignore
     @Test
     public void verifyFT346() throws InterruptedException, IOException {
         setupWhiteListData();
@@ -2106,6 +2113,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * shouldn't be able to access MK Service content, if user's callingNumber
      * is not in whitelist and whitelist is set to Enabled for user's state.
      */
+    @Ignore
     @Test
     public void verifyFT347() throws InterruptedException, IOException {
         setupWhiteListData();
@@ -2545,6 +2553,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * <p>
      * To verify that MK maxallowedUsageInPulses counter is set successfully.
      */
+    @Ignore
     @Test
     public void verifyFT329_427() throws IOException, InterruptedException {
         rh.delhiState();
@@ -2599,6 +2608,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * To verify that MK service  shall allow unlimited usage when cappingType is set to "No Capping"  for
      * user who has not listened  welcome message completely.
      */
+    @Ignore
     @Test
     public void verifyFT332() throws IOException, InterruptedException {
         rh.newDelhiDistrict();
@@ -2639,6 +2649,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * To verify that MK service  shall allow unlimited usage when cappingType is set to "No Capping"  for
      * user who has listened  welcome message completely earlier.
      */
+    @Ignore
     @Test
     public void verifyFT333() throws IOException, InterruptedException {
         rh.newDelhiDistrict();
@@ -2689,6 +2700,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * To verify that Anonymous user belongs to circle having one state should  be able to listen MK content and
      * service deployment status is set to deploy in that particular state.
      */
+    @Ignore
     @Test
     public void verifyFT334() throws IOException, InterruptedException {
         rh.delhiCircle();
@@ -2773,6 +2785,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * To verify that Inactive user should  be able to listen MK content if service
      * deploy status is set to deploy in a particular state.
      */
+    @Ignore
     @Test
     public void verifyFT336_1() throws IOException, InterruptedException {
         rh.delhiCircle();
@@ -2813,6 +2826,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * To verify that Active user should  be able to listen MK content if service
      * deploy status is set to deploy in a particular state.
      */
+    @Ignore
     @Test
     public void verifyFT336_2() throws IOException, InterruptedException {
         rh.delhiCircle();
@@ -2880,6 +2894,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * To verify that Anonymous user belonging to circle having multiple state should not  be able to
      * listen MK content if service deploy status is set to not deploy in a particular state.
      */
+    @Ignore
     @Test
     public void verifyFT338() throws IOException, InterruptedException {
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
@@ -2957,6 +2972,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * To verify that Active user should not  be able to listen MK content if service
      * deploy status is set to not deploy in a particular state.
      */
+    @Ignore
     @Test
     public void verifyFT339_2() throws IOException, InterruptedException {
         rh.delhiCircle();
@@ -3284,6 +3300,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * To get the details of the Anonymous user using getuserdetails API 
      * when circle and operator are missing.
      */
+    @Ignore
     @Test
     public void verifyFT351() throws IOException, InterruptedException {
     	//Used this method to set up mobile_kunji environment 
@@ -3342,6 +3359,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     /*
      * To verify that getuserdetails API is rejected when mandatory parameter callId is missing.
      */
+    @Ignore
     @Test
     public void verifyFT353() throws IOException, InterruptedException {
     	//Used this method to set up mobile_kunji environment
@@ -3366,6 +3384,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * To verify that getuserdetails API is rejected when mandatory parameter 
      * callingNumber is having invalid value
      */
+    @Ignore
     @Test
     public void verifyFT354() throws IOException, InterruptedException {
         HttpGet httpGet = createHttpGet(
@@ -3386,6 +3405,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     /*
      * To verify that getuserdetails API is rejected when optional parameter circle is having invalid value
      */
+    @Ignore
     @Test
     public void verifyFT355() throws IOException, InterruptedException {
     	//Used this method to set up mobile_kunji environment
@@ -3419,6 +3439,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * To verify that getuserdetails API is rejected when mandatory parameter 
      * callId is having invalid value
      */
+    @Ignore
     @Test
     public void verifyFT356() throws IOException, InterruptedException {
     	//Used this method to set up mobile_kunji environment
@@ -3444,6 +3465,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * To get the details of the inactive user using getuserdetails API 
      * when languageLocation code is retrieved based on state and district.
      */
+    @Ignore
     @Test
     public void verifyFT357() throws IOException, InterruptedException {
     	createFlwWithStatusInactive();
@@ -3478,6 +3500,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * To get the details of the active user using getuserdetails API 
      * when languageLocation code is retrieved based on state and district.
      */
+    @Ignore
     @Test
     public void verifyFT358() throws IOException, InterruptedException {
     	createFlwWithStatusActive();
@@ -3601,6 +3624,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     // Verify if a circle has multiple states and the service is not deployed in any of them than the call
     // should be rejected
+    @Ignore
     @Test
     public void verifyNIP160() throws IOException, InterruptedException {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -4436,6 +4460,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * To verify that endOfusagePrompt counter incremented when cappingType is
      * set to "National Capping" having usage pulses exhausted.
      */
+    @Ignore
     @Test
     public void verifyFT327() throws IOException, InterruptedException {
         rh.newDelhiDistrict();
@@ -4540,6 +4565,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * To verify that endOfUsagePromptCounter is incremented when cappingType is
      * set to "State Capping" having usage pulses exhausted.
      */
+    @Ignore
     @Test
     public void verifyFT330() throws IOException, InterruptedException {
         rh.newDelhiDistrict();
@@ -4645,6 +4671,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     /**
      * To verify that current usage pulses is resetted after the end of month.
      */
+    @Ignore
     @Test
     public void verifyFT328() throws IOException, InterruptedException {
         rh.newDelhiDistrict();
@@ -4729,6 +4756,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     /**
      * To verify that current usage pulses is resetted after the end of month.
      */
+    @Ignore
     @Test
     public void verifyFT331() throws IOException, InterruptedException {
         rh.newDelhiDistrict();
@@ -4809,7 +4837,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse,
                 EntityUtils.toString(response.getEntity()));
     }
-
+    @Ignore
     @Test
     public void verifyDenialWhenMctsFlwIdMissing() throws IOException, InterruptedException {
         District d = rh.newDelhiDistrict();
@@ -4942,6 +4970,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * To verify that status of flw must be set to "Anonymous" when user call first time
      * and its information does not exist in NMS DB.
      */
+    @Ignore
     @Test
     public void verifyFT511() throws IOException, InterruptedException {
         rh.newDelhiDistrict();
