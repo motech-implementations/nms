@@ -501,7 +501,8 @@ public class SubscriberServiceImpl implements SubscriberService {
 
         liveBirthChildDeathCheck(finalSubscription, record);
 
-        return childRejectionMcts(convertMapToChild(record), true, null, action);
+        childRejectionMcts(convertMapToChild(record), true, null, action);
+        return null;
 
     }
 
@@ -656,7 +657,8 @@ public class SubscriberServiceImpl implements SubscriberService {
 
         liveBirthChildDeathCheck(finalSubscription, record);
 
-        return childRejectionRch(convertMapToRchChild(record), true, null, action);
+        childRejectionRch(convertMapToRchChild(record), true, null, action);
+        return null;
     }
 
     public Subscription updateOrCreateSubscription(Subscriber subscriber, Subscription subscription, DateTime dateTime, SubscriptionPack pack, Language language, Circle circle, SubscriptionOrigin origin, Boolean greaterCaseNo) { // NO CHECKSTYLE Cyclomatic Complexity

@@ -726,7 +726,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         long currentActive = subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
         LOGGER.info("Found {} active subscriptions", currentActive);
 
-        long openSlots = maxActiveSubscriptions - subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
+        final long openSlots = maxActiveSubscriptions - subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
         if (openSlots < 1) {
             LOGGER.info("No open slots found for hold subscription activation. Slots: {}", openSlots);
             return false;
@@ -736,7 +736,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             @Override
             public String getSqlQuery() {
                 String query = "UPDATE nms_subscriptions SET status='ACTIVE', activationDate = :now, " +
-                                "modificationDate = :now WHERE status='PENDING_ACTIVATION' AND startDate < :upto";
+                                "modificationDate = :now WHERE status='PENDING_ACTIVATION' AND startDate < :upto limit :count";
                 LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
                 return query;
             }
@@ -746,6 +746,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 Map params = new HashMap();
                 params.put("now", DateTime.now().toString(KilkariConstants.TIME_FORMATTER));
                 params.put("upto", upToDateTime.toString(KilkariConstants.TIME_FORMATTER));
+                params.put("count", openSlots);
                 query.executeWithMap(params);
                 return null;
             }
