@@ -270,7 +270,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 subscriptionService.deactivateSubscription(subscription, DeactivationReason.MATERNAL_DEATH);
             }
             LOGGER.debug("MotherImportRejection::importMotherRecord Start synchronized block " + beneficiaryId);
-            return createUpdateMotherRejections(flagForMcts, record, action, null, true);
+            createUpdateMotherRejections(flagForMcts, record, action, null, true);
+            return null;
 
         }
     }
