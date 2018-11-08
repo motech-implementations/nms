@@ -1425,4 +1425,47 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
 
         transactionManager.commit(status);
     }
+
+    /*Verify welcome message playing for week #1 for pregnancy pack*/
+    @Test
+    public void testWelcomeMessageFormotherSubscription() {
+        DateTime now = DateTime.now();
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setLastMenstrualPeriod(now.minusDays(90)); //so the startDate should be today
+        subscriberDataService.create(mctsSubscriber);
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+
+        Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
+
+        // initially, the welcome message should be played
+        SubscriptionPackMessage message = subscription.nextScheduledMessage(now);
+        assertEquals("w1_1", message.getWeekId());
+    }
+
+    /*Verify welcome message playing for week #1 for child pack*/
+
+    @Test
+    public void testWelcomeMessageForchildSubscription() {
+        DateTime now = DateTime.now();
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(1)); //so the startDate should be today
+        subscriberDataService.create(mctsSubscriber);
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+
+        Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
+
+        // initially, the welcome message should be played
+        SubscriptionPackMessage message = subscription.nextScheduledMessage(now);
+        assertEquals("w1_1", message.getWeekId());
+    }
 }

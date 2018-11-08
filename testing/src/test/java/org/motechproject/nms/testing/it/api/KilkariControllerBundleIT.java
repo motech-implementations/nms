@@ -1352,7 +1352,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
 
     /*
-     * To verify the behavior of Get Inbox Details API if provided beneficiary's callId is not valid: more than 15 digits.
+     * To verify the behavior of Get Inbox Details API if provided beneficiary's callingnumber is not valid : alphanumeric
      */
     @Test
     public void verifyFT85() throws IOException, InterruptedException {
@@ -4434,4 +4434,96 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 newchildPackPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+    /**
+     * To verify that DeactivateSubscriptionRequest API request fails if the mandatory
+     *subscriptionid is missing
+     */
+    @Test
+    public void testDeactivateSubscriptionRequestSubscriptionIdmissing() throws IOException, InterruptedException {
+
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, rh.airtelOperator(), rh.delhiCircle().getName(),
+                VALID_CALL_ID, null);
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = createFailureResponseJson("<subscriptionId: Not Present>");
+
+
+        HttpDeleteWithBody httpDelete = new HttpDeleteWithBody(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpDelete.setHeader("Content-type", "application/json");
+        httpDelete.setEntity(new StringEntity(subscriptionRequestJson));
+
+        // Should return HTTP 404 (Not Found) because the subscription ID won't be found
+        assertTrue(SimpleHttpClient.execHttpRequest(httpDelete, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME,
+                ADMIN_PASSWORD));
+
+    }
+   /* To verify that DeactivateSubscriptionRequest API request fails if
+   provided parameter is Invalid : subscriptionid less than 32 digits
+    */
+    @Test
+    public void testDeactivateSubscriptionRequestSubscriptionIdlessthan32digits() throws IOException, InterruptedException {
+
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, rh.airtelOperator(), rh.delhiCircle().getName(),
+                VALID_CALL_ID, "77f13128-037e-4f98-8651-285fa618d9");
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = createFailureResponseJson("<subscriptionId: Invalid>");
+
+
+        HttpDeleteWithBody httpDelete = new HttpDeleteWithBody(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpDelete.setHeader("Content-type", "application/json");
+        httpDelete.setEntity(new StringEntity(subscriptionRequestJson));
+
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpDelete, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME,
+                ADMIN_PASSWORD));
+
+    }
+    /* To verify that DeactivateSubscriptionRequest API request fails if
+  provided parameter is Invalid : subscriptionid more than 32 digits
+   */
+    @Test
+    public void testDeactivateSubscriptionRequestSubscriptionIdmorethan32digits() throws IOException, InterruptedException {
+
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, rh.airtelOperator(), rh.delhiCircle().getName(),
+                VALID_CALL_ID, "0871ef3e-905f-4708-875f-77182733b03d22");
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = createFailureResponseJson("<subscriptionId: Invalid>");
+
+
+        HttpDeleteWithBody httpDelete = new HttpDeleteWithBody(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpDelete.setHeader("Content-type", "application/json");
+        httpDelete.setEntity(new StringEntity(subscriptionRequestJson));
+
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpDelete, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME,
+                ADMIN_PASSWORD));
+
+    }
+    /* To verify that DeactivateSubscriptionRequest API request fails if
+       mandatory parameter callingnumber is missing */
+
+    @Test
+    public void testDeactivateSubscriptionRequestwithNocallingNumber() throws IOException, InterruptedException {
+
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(null, rh.airtelOperator(), rh.delhiCircle().getName(),
+                VALID_CALL_ID, "77f13128-037e-4f98-8651-285fa618d94a");
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
+
+        HttpDeleteWithBody httpDelete = new HttpDeleteWithBody(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpDelete.setHeader("Content-type", "application/json");
+        httpDelete.setEntity(new StringEntity(subscriptionRequestJson));
+
+        // Should return HTTP 404 (Not Found) because the callingnumber won't be found
+        assertTrue(SimpleHttpClient.execHttpRequest(httpDelete, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME,
+                ADMIN_PASSWORD));
+    }
+
+
+
+
+
 }
