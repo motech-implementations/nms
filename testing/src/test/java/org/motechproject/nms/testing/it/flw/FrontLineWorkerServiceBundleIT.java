@@ -334,7 +334,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
     /**
      * To disable automatic deletion of all records of beneficiary which were
      * marked invalid 6 weeks ago.
-     * 
+     *
      * @throws InterruptedException
      */
     // TODO https://applab.atlassian.net/browse/NMS-257
@@ -351,7 +351,7 @@ public class FrontLineWorkerServiceBundleIT extends BasePaxIT {
         flw.setStatus(FrontLineWorkerStatus.INVALID);
         flw.setInvalidationDate(DateTime.now().minusWeeks(7));
         frontLineWorkerService.update(flw);
-        
+
         //call purge event
         frontLineWorkerService.purgeOldInvalidFLWs(motechEvent);
 

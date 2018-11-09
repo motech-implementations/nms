@@ -20,18 +20,34 @@ import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.repository.ContactNumberAuditDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
-import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.mobileacademy.domain.CourseCompletionRecord;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.repository.CourseCompletionRecordDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
-import org.motechproject.nms.region.domain.*;
+import org.motechproject.nms.region.domain.Circle;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.HealthBlock;
+import org.motechproject.nms.region.domain.HealthFacility;
+import org.motechproject.nms.region.domain.HealthFacilityType;
+import org.motechproject.nms.region.domain.HealthSubFacility;
+import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.Taluka;
+import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.repository.CircleDataService;
 import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.service.*;
+import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.HealthBlockService;
+import org.motechproject.nms.region.service.HealthFacilityService;
+import org.motechproject.nms.region.service.HealthSubFacilityService;
+import org.motechproject.nms.region.service.LanguageService;
+import org.motechproject.nms.region.service.TalukaService;
+import org.motechproject.nms.region.service.VillageService;
 import org.motechproject.nms.rejectionhandler.domain.FlwImportRejection;
 import org.motechproject.nms.rejectionhandler.repository.FlwImportRejectionDataService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
@@ -49,14 +65,29 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
-import static org.motechproject.nms.testing.it.utils.RegionHelper.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createCircle;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthBlock;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacility;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthFacilityType;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createHealthSubFacility;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createLanguage;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createTaluka;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createVillage;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -371,7 +402,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     /**
      * To verify FLW record is rejected when DistrictID and District name are null.
      */
-    @Ignore //assertion mismatch(Bug) needs to be fixed by dev
+    @Ignore //TODO //assertion mismatch(Bug) needs to be fixed by Vishnu
     @Test
     public void districtIDAndDistrictNameNull() throws Exception {
         importCsvFileForFLW("flw1.txt");
@@ -410,13 +441,13 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT542() throws Exception {
-            importCsvFileForFLW("flw_name_missing.txt");
-            // Assert audit trail log
-            CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
-                    .get(0);
-            assertEquals("/flwUpdate/import", csvAuditRecord.getEndpoint());
-            assertEquals("Failure: The number of columns to be processed (4) must match the number of CellProcessors (5): check that the number of CellProcessors you have defined matches the expected number of columns being read/written", csvAuditRecord.getOutcome());
-            assertEquals("flw_name_missing.txt", csvAuditRecord.getFile());
+        importCsvFileForFLW("flw_name_missing.txt");
+        // Assert audit trail log
+        CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
+                .get(0);
+        assertEquals("/flwUpdate/import", csvAuditRecord.getEndpoint());
+        assertEquals("Failure: The number of columns to be processed (4) must match the number of CellProcessors (5): check that the number of CellProcessors you have defined matches the expected number of columns being read/written", csvAuditRecord.getOutcome());
+        assertEquals("flw_name_missing.txt", csvAuditRecord.getFile());
     }
 
     /**
@@ -431,7 +462,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     /**
      * To verify FLW upload is rejected when Asha type has invalid value
      */
-    @Ignore //assertion mismatch(Bug) needs to be fixed by dev
+    @Ignore    //TODO //assertion mismatch(Bug) needs to be fixed by Vishnu
     @Test
     public void ashaTypeInvalid() throws Exception {
         Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t11\t18-08-2016\tMother\tActive");
@@ -446,7 +477,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     /**
      * To verify FLW upload is rejected when Asha type is null
      */
-    @Ignore //assertion mismatch(Bug) needs to be fixed by dev
+    @Ignore //TODO //assertion mismatch(Bug) needs to be fixed by Vishnu
     @Test
     public void ashaTypeIsNull() throws Exception {
         Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t11\t18-08-2016\t\tActive");
@@ -461,7 +492,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     /**
      * To verify FLW upload is rejected when GF_Status is Invalid
      */
-    @Ignore //assertion mismatch(Bug) needs to be fixed by dev
+    @Ignore //TODO //assertion mismatch(Bug) needs to be fixed by Vishnu
     @Test
     public void testGF_StatusIsInvalid() throws Exception {
         Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t11\t18-08-2016\tASHA\tTest");
@@ -476,7 +507,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     /**
      * To verify FLW upload is rejected when GF_Status is InActive
      */
-    @Ignore //assertion mismatch(Bug) needs to be fixed by dev
+    @Ignore //TODO //assertion mismatch(Bug) needs to be fixed by Vishnu
     @Test
     public void testGF_StatusIsInActive() throws Exception {
         Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t11\t18-08-2016\tASHA\tINACTIVE");
@@ -491,7 +522,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     /**
      * To verify FLW upload is rejected when GF_Status is null
      */
-    @Ignore //assertion mismatch(Bug) needs to be fixed by dev
+    @Ignore //TODO //assertion mismatch(Bug) needs to be fixed by Vishnu
     @Test
     public void testGF_StatusIsNull() throws Exception {
         Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t11\t18-08-2016\tASHA\t");
@@ -506,7 +537,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     /**
      * To verify FLW upload is rejected when parameter GF_ID has invalid value
      */
-    @Ignore //assertion mismatch(Bug) needs to be fixed by dev
+    @Ignore //TODO //assertion mismatch(Bug) needs to be fixed by Vishnu
     @Test
     public void invalidGFID() throws Exception {
         Reader reader = createReaderWithHeaders("#@12%\t1234567890\tFLW 1\t11\t18-08-2016\tASHA\tActive");
@@ -533,7 +564,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     /**
      * To verify FLW upload is rejected when parameter GF_ID has null value
      */
-    @Test(expected = CsvImportDataException.class)
+    @Test (expected = CsvImportDataException.class)
     public void testNullGFName() throws Exception {
         Reader reader = createReaderWithHeaders("#1\t1234567890\t\t11\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
@@ -589,7 +620,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         }
         return new StringReader(builder.toString());
     }
-    
+
     private Reader createReaderWithHeadersWithNoState(String... lines) {
         StringBuilder builder = new StringBuilder();
         builder.append("\n");
@@ -776,7 +807,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test(expected = CsvImportDataException.class) //adding expected result
     public void flwImportwithinvalidState() throws Exception {
         Reader reader = createReaderWithHeadersInvalidState("#0\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive"); //creating a flw with invalid state code
-       frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
     }
 
