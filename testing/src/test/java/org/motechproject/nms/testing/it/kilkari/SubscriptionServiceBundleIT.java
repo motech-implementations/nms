@@ -1,6 +1,7 @@
 package org.motechproject.nms.testing.it.kilkari;
 
 import org.joda.time.DateTime;
+import org.joda.time.Days;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -55,6 +56,7 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
+import java.io.Reader;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -1426,5 +1428,128 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriptionService.activateHoldSubscriptions(10000);
 
         transactionManager.commit(status);
+
+        // verify that the subscriptions on hold are set to active after the active subscriptions limit is removed
+        assertEquals(SubscriptionStatus.ACTIVE, hold1.getStatus());
+        assertEquals(SubscriptionStatus.ACTIVE, hold2.getStatus());
+
+    }
+
+    @Test
+    public void testLmpChangeFromActiveToCompleted() throws Exception {
+        DateTime now = DateTime.now();
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        Subscriber mctsSubscriber = new Subscriber(9439986187L);
+        mctsSubscriber.setLastMenstrualPeriod(now.minusDays(180));
+
+        subscriberDataService.create(mctsSubscriber);
+
+        subscriptionService.createSubscription(mctsSubscriber, 9439986187L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+
+        Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
+
+        assertEquals(now.minusDays(90).withTimeAtStartOfDay(), subscription.getStartDate());
+        assert(subscription.getStatus() == SubscriptionStatus.ACTIVE);
+
+        mctsSubscriber.setLastMenstrualPeriod(now.minusDays(650));
+        subscriberService.updateStartDate(mctsSubscriber);
+
+        mctsSubscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        subscription = mctsSubscriber.getSubscriptions().iterator().next();
+
+        assertEquals(now.minusDays(560).withTimeAtStartOfDay(), subscription.getStartDate());
+        assert(subscription.getStatus() == SubscriptionStatus.COMPLETED);
+
+        transactionManager.commit(status);
+    }
+
+
+    @Test
+    public void testMaxNoOfActiveKkSubscriberHasNoImpactOnAlreadyCreatedSubscriber() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        subscriptionService.toggleMctsSubscriptionCreation(1);
+
+        // sub1
+        Subscriber mctsSubscriber1 = new Subscriber(9999911122L);
+        mctsSubscriber1.setDateOfBirth(DateTime.now().minusDays(14));
+        subscriberDataService.create(mctsSubscriber1);
+
+        Subscription hold1 = subscriptionService.createSubscription(mctsSubscriber1, 9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+
+       // set active subscriptions to zero
+        subscriptionService.toggleMctsSubscriptionCreation(0);
+
+        // sub2
+        Subscriber mctsSubscriber2 = new Subscriber(9999911123L);
+        mctsSubscriber2.setDateOfBirth(DateTime.now().minusDays(14));
+        subscriberDataService.create(mctsSubscriber2);
+
+        // creation subscriptions
+
+        Subscription hold2 = subscriptionService.createSubscription(mctsSubscriber2, 9999911123L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+
+        // verify their status before removing the limit
+        assertEquals(SubscriptionStatus.ACTIVE, hold1.getStatus());
+        assertEquals(SubscriptionStatus.HOLD, hold2.getStatus());
+
+        subscriptionService.toggleMctsSubscriptionCreation(10000); // set activation to active
+        subscriptionService.activateHoldSubscriptions(10000);
+
+        transactionManager.commit(status);
+
+        // verify that sub2 is set to active after the active subscriptions limit is removed, and no change in active sub
+        assertEquals(SubscriptionStatus.ACTIVE, hold1.getStatus());
+        assertEquals(SubscriptionStatus.ACTIVE, hold2.getStatus());
+
+    }
+
+    /*Verify welcome message playing for week #1 for pregnancy pack*/
+    @Test
+    public void testWelcomeMessageFormotherSubscription() {
+        DateTime now = DateTime.now();
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setLastMenstrualPeriod(now.minusDays(90)); //so the startDate should be today
+        subscriberDataService.create(mctsSubscriber);
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+
+        Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
+
+        // initially, the welcome message should be played
+        SubscriptionPackMessage message = subscription.nextScheduledMessage(now);
+        assertEquals("w1_1", message.getWeekId());
+    }
+
+    /*Verify welcome message playing for week #1 for child pack*/
+
+    @Test
+    public void testWelcomeMessageForchildSubscription() {
+        DateTime now = DateTime.now();
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setDateOfBirth(DateTime.now().minusDays(1)); //so the startDate should be today
+        subscriberDataService.create(mctsSubscriber);
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.childPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+
+        Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
+
+        // initially, the welcome message should be played
+        SubscriptionPackMessage message = subscription.nextScheduledMessage(now);
+        assertEquals("w1_1", message.getWeekId());
     }
 }

@@ -5093,7 +5093,29 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(inactiveJobCallAuditDataService.findByNumber(flw.getContactNumber()).size(), 1);
         assertEquals(HttpStatus.SC_FORBIDDEN, response.getStatusLine().getStatusCode());
 
-
     }
+
+    @Test
+    public void verifylanguageexists() throws IOException, InterruptedException {
+        createKilkariTestData();
+        HttpGet httpGet = createHttpGet(
+                true, "kilkari",                    // service
+                true, "8802586284",                 // callingNumber
+                true, "A",                         // operator
+                true, rh.delhiCircle().getName(),   // circle
+                true, VALID_CALL_ID                 // callId
+        );
+        String expectedJsonResponse = createKilkariUserResponseJson(rh.hindiLanguage().getCode(), // defaultLanguageLocationCode
+                null,// locationCode
+                Collections.singletonList(rh.hindiLanguage().getCode()), // allowedLanguageLocationCodes
+                new HashSet<String>() // subscriptionPackList
+        );
+        HttpResponse response = SimpleHttpClient.httpRequestAndResponse(
+                httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
+        assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
+        assertEquals(expectedJsonResponse,
+                EntityUtils.toString(response.getEntity()));
+    }
+
 
 }
