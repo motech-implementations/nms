@@ -1136,7 +1136,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(SubscriptionStatus.ACTIVE, fetch.getStatus());
 
         // run update script
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscriptionService.completePastDueSubscriptions();
+        transactionManager.commit(status);
         Subscription fetchUpdate = subscriptionDataService.findById(subscriptionId);
         assertEquals(SubscriptionStatus.COMPLETED, fetchUpdate.getStatus());
     }
@@ -1196,7 +1198,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(SubscriptionStatus.ACTIVE, fetch.getStatus());
 
         // run update script
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscriptionService.completePastDueSubscriptions();
+        transactionManager.commit(status);
         Subscription fetchUpdate = subscriptionDataService.findById(subscriptionId);
         assertEquals(SubscriptionStatus.COMPLETED, fetchUpdate.getStatus());
     }
@@ -1226,7 +1230,9 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         assertEquals(SubscriptionStatus.ACTIVE, fetch.getStatus());
 
         // run update script
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscriptionService.completePastDueSubscriptions();
+        transactionManager.commit(status);
         Subscription fetchUpdate = subscriptionDataService.findById(subscriptionId);
         assertEquals(SubscriptionStatus.COMPLETED, fetchUpdate.getStatus());
     }

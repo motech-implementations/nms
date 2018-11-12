@@ -6,18 +6,22 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.commons.date.util.DateUtil;
 import org.motechproject.event.MotechEvent;
+import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.imi.service.SettingsService;
 import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
-import org.motechproject.nms.mcts.utils.Constants;
+import org.motechproject.nms.rch.utils.Constants;
 import org.motechproject.nms.rch.service.RchWebServiceFacade;
 import org.motechproject.nms.rch.service.RchWsImportService;
 import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
+import org.motechproject.nms.rejectionhandler.domain.FlwImportRejection;
 import org.motechproject.nms.rejectionhandler.repository.ChildRejectionDataService;
+import org.motechproject.nms.rejectionhandler.repository.FlwImportRejectionDataService;
 import org.motechproject.nms.rejectionhandler.repository.MotherRejectionDataService;
 import org.motechproject.nms.testing.it.rch.util.*;
 import org.motechproject.nms.testing.service.TestingService;
@@ -83,8 +87,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     @Inject
     private MctsMotherDataService mctsMotherDataService;
 
+    @Inject
+    private FlwImportRejectionDataService flwImportRejectionDataService;
 
-
+    @Inject
+    FrontLineWorkerDataService frontLineWorkerDataService;
 
 
 
@@ -210,6 +217,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     @Test
     public void checkForZeroMother() throws IOException {
         String response = RchImportTestHelper.getRchChildrenResponseDataForZeroMother();
+
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
         String url = simpleServer.start("rchEndpoint", 200, response);
 
@@ -228,6 +236,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params.put(Constants.END_DATE_PARAM, yesterday);
         params.put(Constants.STATE_ID_PARAM, 21L);
         params.put(Constants.ENDPOINT_PARAM, endpoint);
+
         List<Long> a = new ArrayList<>();
         a.add(21L);
         MotechEvent event = new MotechEvent("foobar", params);
@@ -249,7 +258,6 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
         assertEquals(0, childImportRejections.size());
         List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
-        assertEquals(2, mothers.size());
+        assertEquals(0, mothers.size());
     }
-
 }
