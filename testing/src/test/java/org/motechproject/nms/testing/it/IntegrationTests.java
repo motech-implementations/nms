@@ -41,90 +41,90 @@ import org.motechproject.nms.testing.it.tracking.TrackOneToManyChangesBundleIT;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-//    /**
-//     * API
-//     */
-//    LanguageControllerBundleIT.class,
-//    UserControllerBundleIT.class,
-//    CallDetailsControllerBundleIT.class,
-//    KilkariControllerBundleIT.class,
-//    MobileAcademyControllerBundleIT.class,
-//    OpsControllerBundleIT.class,
-//
-//    /**
-//     * FLW
-//     */
-//    ServiceUsageServiceBundleIT.class,
-//    ServiceUsageCapServiceBundleIT.class,
-//    WhiteListServiceBundleIT.class,
-//    FrontLineWorkerServiceBundleIT.class,
-//
-//    /**
-//     * FLW UPDATE
-//     */
-//    FrontLineWorkerImportServiceBundleIT.class,
-//    FrontLineWorkerUpdateImportServiceBundleIT.class,
-//
-//    /**
-//     * IMI
-//     * https://github.com/motech-implementations/mim/issues/381 (Re-enable)
-//     */
-//    ImiControllerCdrBundleIT.class,
-//    ImiControllerObdBundleIT.class,
-//    TargetFileServiceBundleIT.class,
-//    CdrFileServiceBundleIT.class,
-//
-//    /**
-//     * Kilkari
-//     */
-//    SubscriptionServiceBundleIT.class,
-//    SubscriberServiceBundleIT.class,
-//    CsrServiceBundleIT.class,
-//    MctsBeneficiaryImportServiceBundleIT.class,
-//
-//    /**
-//     * Mobile Academy
-//     */
-//    MobileAcademyServiceBundleIT.class,
-//
-//    /**
-//     * Props
-//     */
-//    PropertyServiceBundleIT.class,
-//
-//    /**
-//     * Region
-//     */
-//    LocationServiceBundleIT.class,
-//    CircleServiceBundleIT.class,
-//    NationalDefaultLanguageLocationBundleIT.class,
-//    LocationDataImportServiceBundleIT.class,
-//    LanguageLocationCodesImportServiceBundleIT.class,
-//    LanguageServiceBundleIT.class,
-//
-//    /**
-//     * MCTS
-//     */
-//    MctsWebServiceFacadeBundleIT.class,
-//    MctsImportBundleIT.class,
+    /**
+     * API
+     */
+    LanguageControllerBundleIT.class,
+    UserControllerBundleIT.class,
+    CallDetailsControllerBundleIT.class,
+    KilkariControllerBundleIT.class,
+    MobileAcademyControllerBundleIT.class,
+    OpsControllerBundleIT.class,
+
+    /**
+     * FLW
+     */
+    ServiceUsageServiceBundleIT.class,
+    ServiceUsageCapServiceBundleIT.class,
+    WhiteListServiceBundleIT.class,
+    FrontLineWorkerServiceBundleIT.class,
+
+    /**
+     * FLW UPDATE
+     */
+    FrontLineWorkerImportServiceBundleIT.class,
+    FrontLineWorkerUpdateImportServiceBundleIT.class,
+
+    /**
+     * IMI
+     * https://github.com/motech-implementations/mim/issues/381 (Re-enable)
+     */
+    ImiControllerCdrBundleIT.class,
+    ImiControllerObdBundleIT.class,
+    TargetFileServiceBundleIT.class,
+    CdrFileServiceBundleIT.class,
+
+    /**
+     * Kilkari
+     */
+    SubscriptionServiceBundleIT.class,
+    SubscriberServiceBundleIT.class,
+    CsrServiceBundleIT.class,
+    MctsBeneficiaryImportServiceBundleIT.class,
+
+    /**
+     * Mobile Academy
+     */
+    MobileAcademyServiceBundleIT.class,
+
+    /**
+     * Props
+     */
+    PropertyServiceBundleIT.class,
+
+    /**
+     * Region
+     */
+    LocationServiceBundleIT.class,
+    CircleServiceBundleIT.class,
+    NationalDefaultLanguageLocationBundleIT.class,
+    LocationDataImportServiceBundleIT.class,
+    LanguageLocationCodesImportServiceBundleIT.class,
+    LanguageServiceBundleIT.class,
+
+    /**
+     * MCTS
+     */
+    MctsWebServiceFacadeBundleIT.class,
+    MctsImportBundleIT.class,
 
     /**
      * RCH
      */
     RchBeneficiaryImportServiceBundleIT.class,
-//    RchWebServiceFacadeBundleIT.class,
-//
-//    /**
-//     * Testing
-//     */
-//    BundleIT.class,
-//
-//    /**
-//     * Tracking
-//     */
-//    TrackChangesBundleIT.class,
-//    TrackOneToManyChangesBundleIT.class,
-//    TrackManyToManyChangesBundleIT.class,
+    RchWebServiceFacadeBundleIT.class,
+
+    /**
+     * Testing
+     */
+    BundleIT.class,
+
+    /**
+     * Tracking
+     */
+    TrackChangesBundleIT.class,
+    TrackOneToManyChangesBundleIT.class,
+    TrackManyToManyChangesBundleIT.class,
 })
 public class IntegrationTests {
 }
