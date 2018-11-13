@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * This class Models data for District location records
  */
-@Entity(maxFetchDepth = -1, tableName = "nms_districts")
+@Entity(tableName = "nms_districts")
 @Unique(name = "UNIQUE_STATE_CODE", members = { "state", "code" })
 @TrackClass
 @TrackFields

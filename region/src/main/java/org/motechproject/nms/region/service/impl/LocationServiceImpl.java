@@ -969,8 +969,6 @@ public class LocationServiceImpl implements LocationService {
             String stateKey = stateIdMap.get(district.getState().getId());
             districtHashMap.put(stateKey + "_" + district.getCode(), district);
         }
-
-
     }
 
 
