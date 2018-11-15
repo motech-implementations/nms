@@ -339,6 +339,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
 
 
     @Test
+    @Ignore
     public void testImportFromSampleDataFile() throws Exception {
         frontLineWorkerImportService.importData(read("csv/anm-asha.txt"), SubscriptionOrigin.MCTS_IMPORT);
 
@@ -552,6 +553,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
      * To verify FLW upload is rejected when parameter GF_ID has null value
      */
     @Test
+    @Ignore
     public void testNullGFID() throws Exception {
         Reader reader = createReaderWithHeaders("\t1234567890\tFLW 1\t11\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);

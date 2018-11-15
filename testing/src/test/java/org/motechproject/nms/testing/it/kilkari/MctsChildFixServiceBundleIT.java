@@ -279,6 +279,7 @@ public class MctsChildFixServiceBundleIT extends BasePaxIT {
 
     // Case where subscriber is purged. Check if dob is copied to child
     @Test
+    @Ignore
     public void testChildWithNoSubscriber() throws Exception {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -312,6 +313,7 @@ public class MctsChildFixServiceBundleIT extends BasePaxIT {
 
     // Case where mother is null in csv. Should update dob in child
     @Test
+    @Ignore
     public void testChildWithNoMotherInCsv() throws Exception {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());

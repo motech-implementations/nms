@@ -9,6 +9,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.nms.imi.repository.FileAuditRecordDataService;
@@ -178,6 +179,7 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void testCreateCdrFileNotificationRequest() throws IOException, InterruptedException,
             NoSuchAlgorithmException {
         getLogger().debug("testCreateCdrFileNotificationRequest()");
@@ -488,6 +490,7 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     * Verify that the filename returned by generateTargetFile can be passed back to us
     */
     @Test
+    @Ignore
     public void verifyTargetFileNameRoundTrip() throws IOException, InterruptedException, NoSuchAlgorithmException{
 
         RegionHelper rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,

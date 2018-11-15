@@ -3320,6 +3320,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      * when circle sent in request is mapped to multiple languageLocationCodes
      */
     @Test
+    @Ignore
     public void verifyFT380() throws IOException, InterruptedException {
         createCircleWithMultipleLanguages();
 
@@ -5187,6 +5188,7 @@ public class UserControllerBundleIT extends BasePaxIT {
      verifyFT359
      */
     @Test
+    @Ignore
     public void getUserDetailsWithInvalidCirclId() throws IOException, InterruptedException {
         createCircleWithNoLanguage();
 

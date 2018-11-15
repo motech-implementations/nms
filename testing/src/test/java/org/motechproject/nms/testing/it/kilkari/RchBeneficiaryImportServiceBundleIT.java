@@ -1088,6 +1088,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void testMotherUpdateWithInvalidCaseNo2() throws Exception {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());

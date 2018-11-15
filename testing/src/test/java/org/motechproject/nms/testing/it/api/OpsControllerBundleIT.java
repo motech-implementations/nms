@@ -115,7 +115,6 @@ public class OpsControllerBundleIT extends BasePaxIT {
     @Inject
     FlwErrorDataService flwErrorDataService;
 
-
     @Inject
     SubscriberService subscriberService;
 
@@ -470,7 +469,6 @@ public class OpsControllerBundleIT extends BasePaxIT {
     private void createFlwHelper(String name, Long phoneNumber, String mctsFlwId) {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         stateDataService.create(state);
-        // create flw
         FrontLineWorker flw = new FrontLineWorker(name, phoneNumber);
         flw.setMctsFlwId(mctsFlwId);
         flw.setState(state);

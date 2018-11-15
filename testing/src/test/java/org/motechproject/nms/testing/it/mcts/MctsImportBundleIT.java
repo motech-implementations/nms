@@ -265,6 +265,7 @@ public class MctsImportBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void testMotherRejection() throws MalformedURLException {
         URL endpoint = new URL(String.format("http://localhost:%d/mctsMotherRejection", TestContext.getJettyPort()));
         LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
@@ -496,6 +497,7 @@ public class MctsImportBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void shouldPerformImportWithUpdatesAndDeleteInFailedTableNoUpdateDate() throws MalformedURLException {
         URL endpoint = new URL(String.format("http://localhost:%d/mctsWsNoUpdateDate", TestContext.getJettyPort()));
 
@@ -678,6 +680,7 @@ public class MctsImportBundleIT extends BasePaxIT {
 
 
     @Test
+    @Ignore
     public void duplicateMsisdnInDatasetTest() throws MalformedURLException {
         URL endpoint = new URL(String.format("http://localhost:%d/mctsWsDuplicateMsisdnInDataset", TestContext.getJettyPort()));
         LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
@@ -744,6 +747,7 @@ public class MctsImportBundleIT extends BasePaxIT {
 
 
     @Test
+    @Ignore
     public void testForChildMotherCast() throws MalformedURLException {
         URL endpoint = new URL(String.format("http://localhost:%d/mctsWsTestChildMotherCast", TestContext.getJettyPort()));
         LocalDate lastDateToCheck = DateUtil.today().minusDays(7);
@@ -771,6 +775,7 @@ public class MctsImportBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void testForMotherRejection() throws MalformedURLException {
         URL endpoint = new URL(String.format("http://localhost:%d/mctsWsTestChildMotherCast", TestContext.getJettyPort()));
         LocalDate lastDateToCheck = DateUtil.today().minusDays(7);

@@ -2,6 +2,7 @@ package org.motechproject.nms.testing.it.rch;
 
 import org.joda.time.LocalDate;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.commons.date.util.DateUtil;
@@ -162,6 +163,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
 
     @Test
+    @Ignore
     public void shouldSerializeMothersDataFromSoapResponse() throws IOException {
         String response = RchImportTestHelper.getRchMothersResponseData();
 
@@ -181,6 +183,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void shouldSerializeChildrenDataFromSoapResponse() throws IOException {
         String response = RchImportTestHelper.getRchChildrenResponseData();
 
@@ -198,6 +201,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void shouldSerializeAshaDataFromSoapResponse() throws IOException {
         String response = RchImportTestHelper.getAnmAshaResponseData();
 
