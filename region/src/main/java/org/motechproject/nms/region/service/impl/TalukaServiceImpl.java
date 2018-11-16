@@ -125,7 +125,7 @@ public class TalukaServiceImpl implements TalukaService {
                 String talukaKey = record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                         record.get(LocationConstants.TALUKA_ID).toString().trim();
                 talukaKeys.add(talukaKey);
-                LOGGER.debug("TalukaServiceImpl:: Adding to talukaKeysMap : " + talukaKey );
+                LOGGER.info("TalukaServiceImpl:: Adding to talukaKeysMap : " + talukaKey );
             }
         }
         Map<String, Taluka> talukaHashMap = new HashMap<>();
@@ -145,22 +145,22 @@ public class TalukaServiceImpl implements TalukaService {
             public String getSqlQuery() {
                 String query = "SELECT * from nms_talukas where";
                 int count = talukaKeys.size();
-                LOGGER.debug("Count of talukakeys is " + count);
+                LOGGER.info("Count of talukakeys is " + count);
                 for (String talukaString : talukaKeys) {
                     String[] ids = talukaString.split("_");
-                    LOGGER.debug("After splitting with _  , size is "  + ids.length);
+                    LOGGER.info("After splitting with _  , size is "  + ids.length);
                     District district = districtHashMap.get(ids[0] + "_" + ids[1]);
                     if (district != null && district.getId() != null) {
                         if (count != talukaKeys.size()) {
                             query += LocationConstants.OR_SQL_STRING;
                         }
                         query += LocationConstants.CODE_SQL_STRING + ids[2] + " and district_id_oid = " + district.getId() + ")";
-                        LOGGER.debug("Query is ::  " + query);
+                        LOGGER.info("Query is ::  " + query);
                         count--;
                     }
                 }
 
-                LOGGER.debug("TALUKA Query: {}", query);
+                LOGGER.info("TALUKA Query: {}", query);
                 return query;
             }
 
@@ -181,7 +181,7 @@ public class TalukaServiceImpl implements TalukaService {
         if (!districtHashMap.isEmpty() && !talukaKeys.isEmpty()) {
             talukas = dataService.executeSQLQuery(queryExecution);
         }
-        LOGGER.debug("TALUKA Query time: {}", queryTimer.time());
+        LOGGER.info("TALUKA Query time: {}", queryTimer.time());
         if (talukas != null && !talukas.isEmpty()) {
             for (Taluka taluka : talukas) {
                 String districtKey = districtIdMap.get(taluka.getDistrict().getId());
