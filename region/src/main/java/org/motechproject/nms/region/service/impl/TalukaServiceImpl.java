@@ -125,7 +125,7 @@ public class TalukaServiceImpl implements TalukaService {
                 String talukaKey = record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                         record.get(LocationConstants.TALUKA_ID).toString().trim();
                 talukaKeys.add(talukaKey);
-                LOGGER.info("TalukaServiceImpl:: Adding to talukaKeysMap : " + talukaKey );
+                LOGGER.debug("TalukaServiceImpl:: Adding to talukaKeysMap : " + talukaKey );
             }
         }
         Map<String, Taluka> talukaHashMap = new HashMap<>();
@@ -145,22 +145,22 @@ public class TalukaServiceImpl implements TalukaService {
             public String getSqlQuery() {
                 String query = "SELECT * from nms_talukas where";
                 int count = talukaKeys.size();
-                LOGGER.info("Count of talukakeys is " + count);
+                LOGGER.debug("Count of talukakeys is " + count);
                 for (String talukaString : talukaKeys) {
                     String[] ids = talukaString.split("_");
-                    LOGGER.info("After splitting with _  , size is "  + ids.length);
+                    LOGGER.debug("After splitting with _  , size is "  + ids.length);
                     District district = districtHashMap.get(ids[0] + "_" + ids[1]);
                     if (district != null && district.getId() != null) {
                         if (count != talukaKeys.size()) {
                             query += LocationConstants.OR_SQL_STRING;
                         }
                         query += LocationConstants.CODE_SQL_STRING + ids[2] + " and district_id_oid = " + district.getId() + ")";
-                        LOGGER.info("Query is ::  " + query);
+                        LOGGER.debug("Query is ::  " + query);
                         count--;
                     }
                 }
 
-                LOGGER.info("TALUKA Query: {}", query);
+                LOGGER.debug("TALUKA Query: {}", query);
                 return query;
             }
 
