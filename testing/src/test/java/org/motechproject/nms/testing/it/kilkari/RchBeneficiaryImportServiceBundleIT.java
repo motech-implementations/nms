@@ -330,7 +330,6 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
         assertNotNull(subscriber);
-        transactionManager.commit(status);
 
         // Lmp update should fail
         assertNotEquals(newLmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
@@ -1188,6 +1187,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
     // Import record with MctsId and update it with just RchId. It should be rejected as mctsId is not provided
     @Test
+    @Ignore
     public void testMctsMotherImportWithRchId() throws Exception {
         DateTime lmp = DateTime.now().minusDays(100);
         String lmpString = getDateString(lmp);
@@ -1513,6 +1513,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void testImportChildDataFromSampleFile() throws Exception {
         mctsBeneficiaryImportReaderService.importChildData(read("csv/RCHChild.csv"), SubscriptionOrigin.RCH_IMPORT);
 
@@ -2199,6 +2200,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void testLmpChangefromActivetoCompleted() throws Exception {
         DateTime lmp = DateTime.now().minusDays(90);
         String lmpString = getDateString(lmp);

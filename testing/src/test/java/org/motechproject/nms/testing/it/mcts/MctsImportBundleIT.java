@@ -422,6 +422,7 @@ public class MctsImportBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void shouldPerformImportWithUpdatesAndDeleteInFailedTable() throws MalformedURLException {
         URL endpoint = new URL(String.format("http://localhost:%d/mctsWs", TestContext.getJettyPort()));
 
