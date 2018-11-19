@@ -293,7 +293,7 @@ public class MctsWebServiceFacadeImpl implements MctsWebServiceFacade {
                 String[] fileNameSplitter =  f.getName().split("_");
                 if(Objects.equals(fileNameSplitter[2], stateId.toString()) && fileNameSplitter[3].equalsIgnoreCase(mctsUserType.toString())){
                     try {
-                        FileItem fileItem = new DiskFileItem("file", Files.probeContentType(file.toPath()), false, file.getName(), (int) file.length(), file.getParentFile());
+                        FileItem fileItem = new DiskFileItem("file", Files.probeContentType(f.toPath()), false, f.getName(), (int) f.length(), f.getParentFile());
                         IOUtils.copy(new FileInputStream(file), fileItem.getOutputStream());
                         MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
                         csvFilesByStateIdAndMctsUserType.add(multipartFile);
