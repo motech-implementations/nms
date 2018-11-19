@@ -155,7 +155,7 @@ public class BeneficiaryUpdateServiceImpl implements BeneficiaryUpdateService {
                 String[] fileNameSplitter =  f.getName().split("_");
                 if(Objects.equals(fileNameSplitter[3], stateId.toString()) && fileNameSplitter[4].equalsIgnoreCase(rchUserType.toString())){
                     try {
-                        FileItem fileItem = new DiskFileItem("file",  "text/plain", false, file.getName(), (int) file.length(), file.getParentFile());
+                        FileItem fileItem = new DiskFileItem("file",  "text/plain", false, f.getName(), (int) f.length(), f.getParentFile());
                         IOUtils.copy(new FileInputStream(file), fileItem.getOutputStream());
                         MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
                         csvFilesByStateIdAndRchUserType.add(multipartFile);
