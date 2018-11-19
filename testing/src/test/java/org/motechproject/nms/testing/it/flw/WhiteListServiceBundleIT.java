@@ -53,7 +53,6 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
 
     private void setupData() {
         testingService.clearDatabase();
-
         whitelistEntryDataService.deleteAll();
         serviceUsageCapDataService.deleteAll();
         whitelistStateDataService.deleteAll();
@@ -150,21 +149,7 @@ public class WhiteListServiceBundleIT extends BasePaxIT {
     // Test with non-whitelist state + whitelist number and non-whitelist state + non-whitelist number
     @Test
     public void testNumberInWhitelistForStateButWhitelistNotOnForState() throws Exception {
-        whitelistEntryDataService.deleteAll();
-        serviceUsageCapDataService.deleteAll();
-        whitelistStateDataService.deleteAll();
-        stateDataService.deleteAll();
-
-        whitelistState = new State("New Jersey", 1l);
-        stateDataService.create(whitelistState);
-
-        whitelistStateDataService.create(new WhitelistState(whitelistState));
-
-        nonWhitelistState = new State("Washington", 2l);
-        stateDataService.create(nonWhitelistState);
-
-        WhitelistEntry entry = new WhitelistEntry(WHITELIST_CONTACT_NUMBER, nonWhitelistState);
-        whitelistEntryDataService.create(entry);
+       setupData();
 
         boolean result = whitelistService.numberWhitelistedForState(nonWhitelistState, WHITELIST_CONTACT_NUMBER);
         assertTrue(result);

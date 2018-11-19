@@ -101,6 +101,8 @@ public final class Constants {
     public static final String RCH_VILLAGE_READ_SUBJECT = BASE_RCH_SUBJECT + ".village.read";
     public static final String RCH_VILLAGE_HEALTHSUBFACILITY_READ_SUBJECT = BASE_RCH_SUBJECT + ".villagehealthsubfacility.read";
 
+    public static final String REMOTE_LOCATION = "remoteLocation";
+    public static final String FILE_NAME = "fileName";
     public static final String STATE_ID_PARAM = "stateId";
     public static final String ENDPOINT_PARAM = "endpoint";
     public static final String STATE_NAME_PARAM = "stateName";
