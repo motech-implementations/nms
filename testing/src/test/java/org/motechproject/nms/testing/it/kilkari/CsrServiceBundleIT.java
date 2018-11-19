@@ -12,6 +12,7 @@ import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.Alert;
 import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
+import org.motechproject.nms.imi.repository.CallDetailRecordDataService;
 import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.CallStage;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
@@ -89,7 +90,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
     TestingService testingService;
     @Inject
     AlertService alertService;
-
+    @Inject
+    CallDetailRecordDataService callDetailRecordDataService;
 
     private RegionHelper rh;
     private SubscriptionHelper sh;
@@ -1252,4 +1254,34 @@ public class CsrServiceBundleIT extends BasePaxIT {
         assertEquals(1, subscriptions.size());
         assertEquals(false,subscriptions.get(0).getNeedsWelcomeMessageViaObd());
     }
+    /*
+     * To verify 48Weeks Pack is marked completed after the Service Pack runs for its scheduled
+     * duration */
+    @Test
+    public void childpackcompletedafterscheduledduration() {
+        int days = sh.childPack().getWeeks() * 7;
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(days),
+                SubscriptionPackType.CHILD);
+        int index = sh.getLastMessageIndex(subscription);
+        String contentFileName = sh.getContentMessageFile(subscription, index);
+        String weekId = sh.getWeekId(subscription, index);
+
+
+        processCsr(new CallSummaryRecordDto(
+                subscription,
+                StatusCode.OBD_SUCCESS_CALL_CONNECTED,
+                FinalCallStatus.SUCCESS,
+                contentFileName,
+                weekId,
+                rh.hindiLanguage(),
+                rh.delhiCircle(),
+                "20151119124330"));
+
+        subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertTrue(SubscriptionStatus.COMPLETED == subscription.getStatus());
+
+
+    }
+
+
 }
