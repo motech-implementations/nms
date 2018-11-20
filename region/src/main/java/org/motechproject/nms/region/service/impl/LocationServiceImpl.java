@@ -836,7 +836,7 @@ public class LocationServiceImpl implements LocationService {
                 if(fileNameSplitter[1].equalsIgnoreCase(stateId.toString()) && fileNameSplitter[0].equalsIgnoreCase(locationType)){
                     try {
                         FileItem fileItem = new DiskFileItem("file",  "text/plain", false, f.getName(), (int) f.length(), f.getParentFile());
-                        IOUtils.copy(new FileInputStream(file), fileItem.getOutputStream());
+                        IOUtils.copy(new FileInputStream(f), fileItem.getOutputStream());
                         MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
                         csvFilesByStateIdAndRchUserType = multipartFile;
                     }catch(IOException e) {

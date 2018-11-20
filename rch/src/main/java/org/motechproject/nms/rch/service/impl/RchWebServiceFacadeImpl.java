@@ -2911,7 +2911,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 if(Objects.equals(fileNameSplitter[2], stateId.toString()) && fileNameSplitter[3].equalsIgnoreCase(rchUserType.toString())){
                     try {
                         FileItem fileItem = new DiskFileItem("file",  "text/plain", false, f.getName(), (int) f.length(), f.getParentFile());
-                        IOUtils.copy(new FileInputStream(file), fileItem.getOutputStream());
+                        IOUtils.copy(new FileInputStream(f), fileItem.getOutputStream());
                         MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
                         csvFilesByStateIdAndRchUserType.add(multipartFile);
                     }catch(IOException e) {
