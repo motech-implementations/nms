@@ -20,15 +20,17 @@ import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.exception.InvalidLocationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.jdo.annotations.Transactional;
 import java.util.Map;
 
 @Service("mctsBeneficiaryValueProcessor")
 public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValueProcessor {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryValueProcessorImpl.class);
     @Autowired
     private MctsMotherDataService mctsMotherDataService;
 
@@ -243,6 +245,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
     @Override // NO CHECKSTYLE Cyclomatic Complexity
     public void setLocationFieldsCSV(LocationFinder locationFinder, Map<String, Object> record, MctsBeneficiary beneficiary) throws InvalidLocationException {
 
+        LOGGER.debug("Enter:: setLocationFieldsCSV %s" , beneficiary.getId());
         StringBuffer mapKey = new StringBuffer(record.get(KilkariConstants.STATE_ID).toString());
         if (isValidID(record, KilkariConstants.STATE_ID) && (locationFinder.getStateHashMap().get(mapKey.toString()) != null)) {
             beneficiary.setState(locationFinder.getStateHashMap().get(mapKey.toString()));
@@ -268,6 +271,8 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                 String healthFacilityCode = record.get(KilkariConstants.PHC_ID) == null ? "0" : record.get(KilkariConstants.PHC_ID).toString();
                 String healthSubFacilityCode = record.get(KilkariConstants.SUB_CENTRE_ID) == null ? "0" : record.get(KilkariConstants.SUB_CENTRE_ID).toString();
 
+                LOGGER.debug("State:%s, District:%s, Taluka:%s, VilageSvid:%s, VillageCode:%s, HB:%s, HF:%s, HSF:%s", record.get(KilkariConstants.STATE_ID).toString(), districtCode,
+                        talukaCode.toString(), villageSvid, villageCode, healthBlockCode, healthFacilityCode, healthSubFacilityCode);
                 Village village = locationFinder.getVillageHashMap().get(mapKey.toString() + "_" + Long.parseLong(villageCode) + "_" + Long.parseLong(villageSvid));
                 if (village != null && village.getId() != null) {
                     beneficiary.setVillage(village);
@@ -305,6 +310,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
         } else {
             throw new InvalidLocationException(String.format(KilkariConstants.INVALID_LOCATION, KilkariConstants.STATE_ID, record.get(KilkariConstants.STATE_ID)));
         }
+        LOGGER.debug("Exit:: setLocationFieldsCSV");
     }
 
     private boolean isValidID(final Map<String, Object> map, final String key) {

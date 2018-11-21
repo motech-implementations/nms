@@ -5,12 +5,12 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.38</version>
+        <version>1.0.38.1</version>
         <relativePath>../</relativePath>
     </parent>
 
     <artifactId>region</artifactId>
-    <version>1.0.38</version>
+    <version>1.0.38.1</version>
     <packaging>bundle</packaging>
     <name>Region Module</name>
 
@@ -47,11 +47,11 @@
             <version>4.1.0-release</version>
         </dependency>
 
-       <!-- <dependency>
-            <groupId>javax.persistence</groupId>
-            <artifactId>persistence-api</artifactId>
-            <version>1.0</version>
-        </dependency>-->
+        <!-- <dependency>
+             <groupId>javax.persistence</groupId>
+             <artifactId>persistence-api</artifactId>
+             <version>1.0</version>
+         </dependency>-->
         <dependency>
             <groupId>org.apache.servicemix.bundles</groupId>
             <artifactId>org.apache.servicemix.bundles.spring-test</artifactId>
@@ -69,7 +69,7 @@
 
     <build>
         <plugins>
-           
+
 
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -167,8 +167,8 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
-					<complianceLevel>1.8</complianceLevel>
-                        
+                    <complianceLevel>1.8</complianceLevel>
+
                     <aspectLibraries>
                         <dependency>
                             <groupId>org.motechproject.nms</groupId>
