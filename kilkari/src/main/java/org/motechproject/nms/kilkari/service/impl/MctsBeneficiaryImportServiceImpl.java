@@ -164,7 +164,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.DATA_INTEGRITY_ERROR, false);
         }
 
-        boolean isInvalidLMP = (mother.getId() == null || (mother.getId() != null && mother.getLastMenstrualPeriod() == null)) && !validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, importOrigin);
+        boolean isInvalidLMP = !validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, importOrigin);
 
         if (isInvalidLMP) {
             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.INVALID_LMP_DATE, false);
@@ -338,7 +338,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.DATA_INTEGRITY_ERROR, false);
         }
 
-        boolean isInValidDOB = child.getId() == null && !validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, importOrigin);
+        boolean isInValidDOB = !validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, importOrigin);
         if (isInValidDOB) {
             return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.INVALID_DOB, false);
         }
@@ -532,7 +532,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
 
         if (packType == SubscriptionPackType.PREGNANCY) {
+            LOGGER.debug("here2");
             String referenceDateValidationError = pregnancyPack.isReferenceDateValidForPack(referenceDate);
+            LOGGER.debug("Result: {}", referenceDateValidationError);
             if (!referenceDateValidationError.isEmpty()) {
                 return false;
             }
