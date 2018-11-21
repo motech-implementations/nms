@@ -651,6 +651,7 @@ public class LocationServiceImpl implements LocationService {
                 partNumber++;
                 if (recordListPart.size()>0) {
                     totalUpdatedRecords += createLocationPart(recordListPart, locationType, rchImportFile.getOriginalFilename(), partNumber);
+
                 }
                 recordListPart.clear();
             }
@@ -861,6 +862,9 @@ public class LocationServiceImpl implements LocationService {
         Map<String, Object> record;
         while (null != (record = csvImporter.read())) {
             recordList.add(record);
+            LOGGER.info("CSV READing .....");
+            for(String key : record.keySet())
+            LOGGER.info(key + "-" + record.get(key));
             count++;
         }
         LOGGER.debug("{} records added to object", count);
