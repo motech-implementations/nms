@@ -68,8 +68,12 @@ public class StateServiceImpl implements StateService {
         for(Map<String, Object> record : recordList) {
             if (record.get(CSV_STATE_ID) != null) {
                 stateKeys.add(record.get(CSV_STATE_ID).toString());
+                LOGGER.info("Adding to StateKeys" + record.get(CSV_STATE_ID).toString());
             }
         }
+
+        LOGGER.info("StateKeys Size" + stateKeys.size());
+
         Map<String, State> stateHashMap = new HashMap<>();
         Timer queryTimer = new Timer();
 
@@ -92,15 +96,17 @@ public class StateServiceImpl implements StateService {
             public String getSqlQuery() {
                 String query = "SELECT * from nms_states where";
                 int count = stateKeys.size();
+                LOGGER.info("StateKeys Size " + count);
                 for (String stateString : stateKeys) {
                     count--;
                     query += " code = " + stateString;
                     if (count > 0) {
                         query += OR_SQL_STRING;
                     }
+                    LOGGER.info("Query " + query);
                 }
 
-                LOGGER.debug("STATE Query: {}", query);
+                LOGGER.info("STATE Query: {}", query);
                 return query;
             }
 
