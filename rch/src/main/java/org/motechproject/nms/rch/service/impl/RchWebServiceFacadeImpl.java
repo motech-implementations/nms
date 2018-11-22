@@ -1859,7 +1859,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rejectedMothers.put(motherImportRejection.getRegistrationNo(), motherImportRejection);
                 rejectionStatus.put(motherImportRejection.getRegistrationNo(), motherImportRejection.getAccepted());
             } else {
-                if ((mother.getId() == null || (mother.getId() != null && mother.getLastMenstrualPeriod() == null)) && !mctsBeneficiaryImportService.validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, SubscriptionOrigin.MCTS_IMPORT)) {
+                if (!mctsBeneficiaryImportService.validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, SubscriptionOrigin.MCTS_IMPORT)) {
                     motherImportRejection = motherRejectionRch(convertMapToRchMother(recordMap), false, RejectionReasons.INVALID_LMP_DATE.toString(), action);
                     rejectedMothers.put(motherImportRejection.getRegistrationNo(), motherImportRejection);
                     rejectionStatus.put(motherImportRejection.getRegistrationNo(), motherImportRejection.getAccepted());
@@ -2001,7 +2001,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rejectedChilds.put(childImportRejection.getRegistrationNo(), childImportRejection);
                 rejectionStatus.put(childImportRejection.getRegistrationNo(), childImportRejection.getAccepted());
             } else {
-                if (child.getId() == null && !mctsBeneficiaryImportService.validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, SubscriptionOrigin.RCH_IMPORT)) {
+                if (!mctsBeneficiaryImportService.validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, SubscriptionOrigin.RCH_IMPORT)) {
                     childImportRejection = childRejectionRch(convertMapToRchChild(recordMap), false, RejectionReasons.INVALID_DOB.toString(), action);
                     rejectedChilds.put(childImportRejection.getRegistrationNo(), childImportRejection);
                     rejectionStatus.put(childImportRejection.getRegistrationNo(), childImportRejection.getAccepted());
@@ -2047,7 +2047,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 Long msisdn = Long.parseLong(record.getMobileNo());
                 String flwId = record.getGfId().toString();
                 FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
-                if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || state != flw.getState()))  && flw.getStatus() != FrontLineWorkerStatus.ANONYMOUS) {
+                if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || !state.equals(flw.getState())))  && !FrontLineWorkerStatus.ANONYMOUS.equals(flw.getStatus())) {
                     LOGGER.debug("Existing FLW with same MSISDN but different MCTS ID");
                     flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
                     rejected++;
@@ -2066,13 +2066,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                             LOGGER.warn("Invalid location for FLW: ", e);
                             flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.INVALID_LOCATION.toString(), action));
                             rejected++;
-                        } catch (FlwImportException e) {
+                        } catch (FlwExistingRecordException e) {
                             LOGGER.debug("Existing FLW with same MSISDN but different RCH ID", e);
                             flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
-                            rejected++;
-                        } catch (FlwExistingRecordException e) {
-                            LOGGER.error("Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}", record.getGfId(), record.getMobileNo(), e);
-                            flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS.toString(), action));
                             rejected++;
                         } catch (Exception e) {
                             LOGGER.error("RCH Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}",
@@ -2910,8 +2906,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 String[] fileNameSplitter =  f.getName().split("_");
                 if(Objects.equals(fileNameSplitter[2], stateId.toString()) && fileNameSplitter[3].equalsIgnoreCase(rchUserType.toString())){
                     try {
-                        FileItem fileItem = new DiskFileItem("file",  "text/plain", false, file.getName(), (int) file.length(), file.getParentFile());
-                        IOUtils.copy(new FileInputStream(file), fileItem.getOutputStream());
+                        FileItem fileItem = new DiskFileItem("file",  "text/plain", false, f.getName(), (int) f.length(), f.getParentFile());
+                        IOUtils.copy(new FileInputStream(f), fileItem.getOutputStream());
                         MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
                         csvFilesByStateIdAndRchUserType.add(multipartFile);
                     }catch(IOException e) {

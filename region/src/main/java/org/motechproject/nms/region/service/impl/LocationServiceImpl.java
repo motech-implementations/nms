@@ -651,6 +651,7 @@ public class LocationServiceImpl implements LocationService {
                 partNumber++;
                 if (recordListPart.size()>0) {
                     totalUpdatedRecords += createLocationPart(recordListPart, locationType, rchImportFile.getOriginalFilename(), partNumber);
+
                 }
                 recordListPart.clear();
             }
@@ -835,8 +836,8 @@ public class LocationServiceImpl implements LocationService {
                 String[] fileNameSplitter =  f.getName().split("_");
                 if(fileNameSplitter[1].equalsIgnoreCase(stateId.toString()) && fileNameSplitter[0].equalsIgnoreCase(locationType)){
                     try {
-                        FileItem fileItem = new DiskFileItem("file",  "text/plain", false, file.getName(), (int) file.length(), file.getParentFile());
-                        IOUtils.copy(new FileInputStream(file), fileItem.getOutputStream());
+                        FileItem fileItem = new DiskFileItem("file",  "text/plain", false, f.getName(), (int) f.length(), f.getParentFile());
+                        IOUtils.copy(new FileInputStream(f), fileItem.getOutputStream());
                         MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
                         csvFilesByStateIdAndRchUserType = multipartFile;
                     }catch(IOException e) {
@@ -861,6 +862,9 @@ public class LocationServiceImpl implements LocationService {
         Map<String, Object> record;
         while (null != (record = csvImporter.read())) {
             recordList.add(record);
+            LOGGER.info("CSV READing .....");
+            for(String key : record.keySet())
+            LOGGER.info(key + "-" + record.get(key));
             count++;
         }
         LOGGER.debug("{} records added to object", count);
@@ -969,8 +973,6 @@ public class LocationServiceImpl implements LocationService {
             String stateKey = stateIdMap.get(district.getState().getId());
             districtHashMap.put(stateKey + "_" + district.getCode(), district);
         }
-
-
     }
 
 

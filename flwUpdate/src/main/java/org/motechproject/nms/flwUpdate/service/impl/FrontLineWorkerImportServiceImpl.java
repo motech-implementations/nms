@@ -216,7 +216,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             }
         } else {
             FrontLineWorker frontLineWorker = frontLineWorkerService.getByContactNumber(msisdn);
-            if (frontLineWorker != null && frontLineWorker.getStatus().equals(FrontLineWorkerStatus.ACTIVE)) {
+            if (frontLineWorker != null && FrontLineWorkerStatus.ACTIVE.equals(frontLineWorker.getStatus())) {
                 // check if anonymous FLW
                 if (frontLineWorker.getMctsFlwId() == null) {
                     FrontLineWorker flwInstance = updateFlw(frontLineWorker, record, location, SubscriptionOrigin.RCH_IMPORT);
@@ -227,7 +227,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                     flwErrorDataService.create(new FlwError(flwId, (long) record.get(FlwConstants.STATE_ID), (long) record.get(FlwConstants.DISTRICT_ID), FlwErrorReason.PHONE_NUMBER_IN_USE));
                     throw new FlwExistingRecordException("Msisdn already in use.");
                 }
-            } else if (frontLineWorker != null && frontLineWorker.getStatus().equals(FrontLineWorkerStatus.ANONYMOUS)) {
+            } else if (frontLineWorker != null && FrontLineWorkerStatus.ANONYMOUS.equals(frontLineWorker.getStatus())) {
                 FrontLineWorker flwInstance = updateFlw(frontLineWorker, record, location, SubscriptionOrigin.RCH_IMPORT);
                 frontLineWorkerService.update(flwInstance);
             } else {
@@ -293,7 +293,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                         return true;
                     } else if ((!existingFlwByFlwId.getMctsFlwId().equalsIgnoreCase(existingFlwByNumber.getMctsFlwId()) ||
                             !existingFlwByFlwId.getState().equals(existingFlwByNumber.getState())) &&
-                            existingFlwByNumber.getJobStatus().equals(FlwJobStatus.INACTIVE)) {
+                            FlwJobStatus.INACTIVE.equals(existingFlwByNumber.getJobStatus())) {
                         LOGGER.debug("Updating existing user with same phone number");
                         frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOrigin.MCTS_IMPORT));
                         flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), true, null, action));
@@ -368,7 +368,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                         return true;
                     } else if ((!existingFlwByFlwId.getMctsFlwId().equalsIgnoreCase(existingFlwByNumber.getMctsFlwId()) ||
                             !existingFlwByFlwId.getState().equals(existingFlwByNumber.getState())) &&
-                            existingFlwByNumber.getJobStatus().equals(FlwJobStatus.INACTIVE)) {
+                            FlwJobStatus.INACTIVE.equals(existingFlwByNumber.getJobStatus())) {
                         LOGGER.debug("Updating existing user with same phone number");
                         frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOrigin.RCH_IMPORT));
                         flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), true, null, action));
@@ -399,7 +399,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                         frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByNumber, flw, location, SubscriptionOrigin.RCH_IMPORT));
                         flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), true, null, action));
                         return true;
-                    } else if (existingFlwByNumber.getJobStatus().equals(FlwJobStatus.INACTIVE)) {
+                    } else if (FlwJobStatus.INACTIVE.equals(existingFlwByNumber.getJobStatus())) {
                         LOGGER.debug("Adding new RCH flw user");
                         FrontLineWorker frontLineWorker = FlwMapper.createRchFlw(flw, location);
                         if (frontLineWorker != null) {
