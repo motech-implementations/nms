@@ -22,6 +22,7 @@ import org.motechproject.nms.flw.repository.ContactNumberAuditDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.mobileacademy.domain.CourseCompletionRecord;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
@@ -47,6 +48,8 @@ import org.motechproject.nms.region.service.HealthSubFacilityService;
 import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.motechproject.nms.region.service.VillageService;
+import org.motechproject.nms.rejectionhandler.domain.FlwImportRejection;
+import org.motechproject.nms.rejectionhandler.repository.FlwImportRejectionDataService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -125,6 +128,8 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     ActivityDataService activityDataService;
     @Inject
     MobileAcademyService maService;
+    @Inject
+    FlwImportRejectionDataService flwImportRejectionDataService;
     @Inject
     CourseCompletionRecordDataService courseCompletionRecordDataService;
 
@@ -321,7 +326,6 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     }
 
 
-    //This is a change in requirement -- hence this wouldnt pass
     @Test
     @Ignore
     public void testImportFromSampleDataFile() throws Exception {

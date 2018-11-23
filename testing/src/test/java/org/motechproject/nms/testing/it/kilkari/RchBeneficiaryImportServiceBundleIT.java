@@ -330,7 +330,6 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
         assertNotNull(subscriber);
-        transactionManager.commit(status);
 
         // Lmp update should fail
         assertNotEquals(newLmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
@@ -339,6 +338,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Assert.assertEquals(1, motherImportRejections.size());
         Assert.assertEquals("9439986187", motherImportRejections.get(0).getMobileNo());
         Assert.assertEquals(RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS.toString(), motherImportRejections.get(0).getRejectionReason());
+        transactionManager.commit(status);
     }
 
     /* Ignored as it is failing due to Null Pointer Exception
@@ -894,7 +894,6 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
     //Test an existing mother subscriber through IVR doesn't get updated by RCH
     @Test
-    @Ignore
     public void testUpdateIVRMother() throws Exception {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriberIVR = subscriberDataService.create(new Subscriber(5000000000L));
@@ -1088,6 +1087,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void testMotherUpdateWithInvalidCaseNo2() throws Exception {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -1544,14 +1544,9 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
 
         //second subscriber should have been rejected
-
-        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         List<Subscriber> subscribersByMsisdn = subscriberDataService.findByNumber(9439986187L);
         assertEquals(1, subscribersByMsisdn.size());
         assertChild(subscribersByMsisdn.get(0), "7000000000", dob, "Baby1 of Lilima Kua", stateDataService.findByCode(21L), districtService.findByStateAndCode(stateDataService.findByCode(21L), 3L));
-        transactionManager.commit(status);
-
-
         List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
         Assert.assertEquals(1, childImportRejections.size());
         Assert.assertEquals("9439986187", childImportRejections.get(0).getMobileNo());

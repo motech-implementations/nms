@@ -1352,7 +1352,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
 
     /*
-     * To verify the behavior of Get Inbox Details API if provided beneficiary's callId is not valid: more than 15 digits.
+     * To verify the behavior of Get Inbox Details API if provided beneficiary's callingnumber is not valid : alphanumeric
      */
     @Test
     public void verifyFT85() throws IOException, InterruptedException {

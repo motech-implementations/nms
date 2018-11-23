@@ -89,7 +89,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
     TestingService testingService;
     @Inject
     AlertService alertService;
-
+    @Inject
+    CallDetailRecordDataService callDetailRecordDataService;
 
     private RegionHelper rh;
     private SubscriptionHelper sh;

@@ -9,6 +9,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.mtraining.domain.ActivityState;
@@ -225,7 +226,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         assertNull(flw);
     }
 
-    // Create valid new flw
+    @Ignore //since this requirement is changed, a talkua can't be created
     @Test
     public void testCreateNewFlwTalukaVillage() throws IOException, InterruptedException {
 
@@ -386,6 +387,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
     }
 
 
+    @Ignore //since this requirement is changed, a talkua can't be created
     @Test
     public void testUpdateNoTaluka() throws IOException, InterruptedException {
 
@@ -466,7 +468,6 @@ public class OpsControllerBundleIT extends BasePaxIT {
     private void createFlwHelper(String name, Long phoneNumber, String mctsFlwId) {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         stateDataService.create(state);
-        // create flw
         FrontLineWorker flw = new FrontLineWorker(name, phoneNumber);
         flw.setMctsFlwId(mctsFlwId);
         flw.setState(state);
@@ -668,6 +669,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
     }
 
     //Test deactivation of specific msisdn - 5000000000L as IVR and 6000000000L as MCTS import
+    @Ignore //invalid usecase as there no case of deactivating flw based on "WEEKLY_CALLS_NOT_ANSWERED", "LOW_LISTENERSHIP"
     @Test
     public void testDeactivateSpecificValidMsisdn() throws IOException, InterruptedException, URISyntaxException {
         createSubscriberHelper();
@@ -763,8 +765,8 @@ public class OpsControllerBundleIT extends BasePaxIT {
     @Test
     public void testFlwCsvImportRejection() throws IOException, InterruptedException {
 
-        createFlwHelper("Dipika Pegu", 8473877695L, "57856");
-        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(8473877695L);
+        createFlwHelper("Dipika Pegu", 8473811195L, "57856");
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(8473811195L);
         assertNotNull(flw.getState());
         assertNotNull(flw.getDistrict());
         assertNull(flw.getTaluka());    // null since we don't create it by default in helper
@@ -777,12 +779,14 @@ public class OpsControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
 
         // refetch and check that taluka and village are set
-        flw = frontLineWorkerService.getByContactNumber(8473877695L);
+        flw = frontLineWorkerService.getByContactNumber(8473811195L);
         assertNotNull(flw.getState());
         assertNotNull(flw.getDistrict());
-        assertNotNull(flw.getTaluka());
-        assertNotNull(flw.getVillage());
+        assertNull(flw.getTaluka());
+        assertNull(flw.getVillage());
         List<FlwImportRejection> flwImportRejectionList = flwImportRejectionDataService.retrieveAll();
-        assertEquals(0, flwImportRejectionList.size());
+        assertEquals(1, flwImportRejectionList.size());
+        List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
+        assertEquals(1, frontLineWorkers.size());
     }
 }
