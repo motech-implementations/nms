@@ -26,7 +26,7 @@ import java.util.Set;
  * sourced from MCTS, the mother and child fields will be populated with demographic data.
  */
 // TODO: Remove maxFetchDepth once https://applab.atlassian.net/browse/MOTECH-1678 is resolved
-@Entity(tableName = "nms_subscribers")
+@Entity(maxFetchDepth = -1,tableName = "nms_subscribers")
 public class Subscriber extends MdsEntity {
     @Field
     @Min(value = 1000000000L, message = "callingNumber must be 10 digits")
