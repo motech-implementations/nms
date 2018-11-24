@@ -146,7 +146,7 @@ public class ImiController {
 
         LOGGER.debug("/generateTargetFile (GET)");
         TargetFileNotification tfn = targetFileService.generateTargetFile();
-        LOGGER.debug("targetFileService.generateTargetFile() returned {}", tfn.toString());
+        LOGGER.debug("targetFileService.generateTargetFile() done");
 
         return tfn == null ? "null" : tfn.getFileName();
     }
