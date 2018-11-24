@@ -138,7 +138,8 @@
                             org.motechproject.nms.mcts.soap;version=${project.version},
                             org.motechproject.nms.mcts.contract;version=${project.version},
                             org.motechproject.nms.mcts.repository;version=${project.version},
-                            org.motechproject.nms.mcts.domain;version=${project.version}
+                            org.motechproject.nms.mcts.domain;version=${project.version},
+                            org.motechproject.nms.mcts.utils;version=${project.version}
                         </Export-Package>
                         <Import-Package>
                             org.apache.axis.*,

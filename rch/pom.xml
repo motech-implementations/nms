@@ -170,6 +170,8 @@
                             org.datanucleus.enhancement,
                             org.springframework.transaction.annotation,
                             org.springframework.validation.beanvalidation,
+                            org.motechproject.nms.mcts.utils,
+                            org.motechproject.nms.api.web.service,
                             *
                         </Import-Package>
                     </instructions>
