@@ -370,13 +370,14 @@ public class TargetFileServiceImpl implements TargetFileService {
         do {
             List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, offset, maxQueryBlock);
 
+            LOGGER.debug("Subsciptions size "  + subscriptions.size());
             if (subscriptions.size() == 0) {
                 break;
             }
 
             Timer rowTimer = new Timer("file row", "file rows");
             for (Subscription subscription : subscriptions) {
-
+                LOGGER.debug("Handling Subscription " + subscription.getId());
                 offset = subscription.getId();
 
                 Subscriber subscriber = subscription.getSubscriber();
