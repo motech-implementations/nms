@@ -421,7 +421,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                     String message = se.toString();
                     alertService.create(subscription.getSubscriptionId(), "IllegalStateException", message,
                             AlertType.HIGH, AlertStatus.NEW, 0, null);
-                    LOGGER.error(message);
+                    LOGGER.error(message,se);
                 }
             }
 
@@ -533,7 +533,7 @@ public class TargetFileServiceImpl implements TargetFileService {
             checksum = ChecksumHelper.checksum(targetFile);
 
         } catch (IOException e) {
-            LOGGER.error(e.getMessage());
+            LOGGER.error(e.getMessage(),e);
             alert(targetFile.toString(), "targetFile", e.getMessage());
             fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, targetFile.getName(),
                     false, e.getMessage(), null, null));
@@ -589,7 +589,7 @@ public class TargetFileServiceImpl implements TargetFileService {
             } catch (ExecException e) {
                 String error = String.format("Error copying target file %s: %s", tfn.getFileName(),
                         e.getMessage());
-                LOGGER.error(error);
+                LOGGER.error(error,e);
                 fileAuditRecordDataService.create(new FileAuditRecord(
                         FileType.TARGET_FILE,
                         tfn.getFileName(),
