@@ -495,6 +495,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     /**
      * 4.4.1 Target File Format
      */
+    @Transactional
     public TargetFileNotification generateTargetFile() {
         LOGGER.info("generateTargetFile()");
         DateTime today = DateTime.now();
