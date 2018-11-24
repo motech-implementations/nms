@@ -326,6 +326,7 @@
                             org.springframework.core,
                             org.springframework.cglib.proxy,
                             org.springframework.cglib.core,
+                            org.motechproject.nms.api.web.domain,
                             *
                         </Import-Package>
                     </instructions>
