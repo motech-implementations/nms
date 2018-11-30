@@ -106,6 +106,7 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
         request.setHeader("Key", settingsFacade.getProperty(SMS_AUTH_KEY));
 
         String template = getStringFromStream(settingsFacade.getRawConfig(SMS_TEMPLATE_FILE));
+        LOGGER.info("Sms Template"+ template);
         if (template == null) {
             LOGGER.error("Unable to find sms template. Check IMI sms template file");
             alertService.create("settingsFacade", "template", "Could not get sms template",
