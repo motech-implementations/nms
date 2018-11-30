@@ -12,6 +12,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackMessageDataService;
+import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
@@ -35,13 +36,15 @@ public class SubscriptionHelper {
     private static final int TWO_MINUTES = 120;
     private static final int TEN_SECS = 10;
 
+    private SubscriberService subscriberService;
     private SubscriptionService subscriptionService;
     private SubscriberDataService subscriberDataService;
     private SubscriptionPackDataService subscriptionPackDataService;
     private RegionHelper regionHelper;
 
-    public SubscriptionHelper(SubscriptionService subscriptionService,
-                              SubscriberDataService subscriberDataService,
+    public SubscriptionHelper( SubscriberService subscriberService,
+                               SubscriptionService subscriptionService,
+                               SubscriberDataService subscriberDataService,
                               SubscriptionPackDataService subscriptionPackDataService,
                               LanguageDataService languageDataService,
                               LanguageService languageService,
@@ -49,7 +52,7 @@ public class SubscriptionHelper {
                               StateDataService stateDataService,
                               DistrictDataService districtDataService,
                               DistrictService districtService) {
-
+        this.subscriberService = subscriberService;
         this.subscriptionService = subscriptionService;
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
@@ -144,7 +147,7 @@ public class SubscriptionHelper {
     public Subscription mksub(SubscriptionOrigin origin, DateTime startDate, SubscriptionPackType packType, Long number) {
 
         Subscription subscription;
-        List<Subscriber> subscribers = subscriberDataService.findByNumber(number);
+        List<Subscriber> subscribers = subscriberService.getSubscriber(number);
         Subscriber subscriber;
 
         if (!subscribers.isEmpty()) {

@@ -11,6 +11,6 @@ public interface SubscriberDataService extends MotechDataService<Subscriber> {
 
     //Bad performance: does a table scan - should only be used in ITs
 
-    @Lookup
-    List<Subscriber> findByNumber(@LookupField(name = "callingNumber") Long callingNumber);
+//    @Lookup
+//    List<Subscriber> findByNumber(@LookupField(name = "callingNumber") Long callingNumber);
 }

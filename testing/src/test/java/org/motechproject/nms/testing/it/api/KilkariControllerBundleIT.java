@@ -137,7 +137,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
 
-        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+        sh = new SubscriptionHelper(subscriberService,subscriptionService, subscriberDataService, subscriptionPackDataService,
                 languageDataService, languageService, circleDataService, stateDataService, districtDataService,
                 districtService);
 
@@ -201,7 +201,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        Subscriber subscriber = subscriberDataService.findByNumber(1000000000L).get(0); // 1 subscription
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L).get(0); // 1 subscription
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
 
         // override the default start date (today + 1 day) in order to see a non-empty inbox
@@ -238,7 +238,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // create subscription to child pack
         Subscription child = subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
         child.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(child);
 
@@ -387,7 +387,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 SubscriptionOrigin.MCTS_IMPORT);
         child.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(child);
-        subscriber = subscriberDataService.findByNumber(2000000000L).get(0);
+        subscriber = subscriberService.getSubscriber(2000000000L).get(0);
 
         // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
         // create a second subscription for this subscriber
@@ -401,7 +401,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mother.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(mother);
 
-        subscriber = subscriberDataService.findByNumber(2000000000L).get(0);
+        subscriber = subscriberService.getSubscriber(2000000000L).get(0);
         assertEquals(2, subscriber.getActiveAndPendingSubscriptions().size());
         assertEquals(4, subscriber.getAllSubscriptions().size());
 
@@ -832,9 +832,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        Subscriber subscriber1 = subscriberDataService.findByNumber(1000000000L).get(0);
+        Subscriber subscriber1 = subscriberService.getSubscriber(1000000000L).get(0);
         Subscription subscription1 = subscriber1.getAllSubscriptions().iterator().next();
-        Subscriber subscriber2 = subscriberDataService.findByNumber(2000000000L).get(0);
+        Subscriber subscriber2 = subscriberService.getSubscriber(2000000000L).get(0);
         Subscription subscription2 = subscriber2.getAllSubscriptions().iterator().next();
 
         transactionManager.commit(status);
@@ -1012,7 +1012,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(),
                         sh.childPack(),
                         SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // due to subscription rules detailed in #157, we need to clear out the
         // DOB and set an LMP in order to
@@ -1070,7 +1070,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 rh.hindiLanguage(),
                 sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
         // create a second subscription for this MCTS subscriber
@@ -1129,7 +1129,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.updateStartDate(childPackSubscription, DateTime
                 .now().minusDays(337));
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // due to subscription rules detailed in #157, we need to clear out the
         // DOB and set an LMP in order to
@@ -1188,7 +1188,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.updateStartDate(childPackSubscription, DateTime
                 .now().minusDays(344));
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // due to subscription rules detailed in #157, we need to clear out the
         // DOB and set an LMP in order to
@@ -1647,7 +1647,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(1), SubscriptionOrigin.MCTS_IMPORT);
         subscriptionService.deactivateSubscription(oldSubscription, DeactivationReason.DEACTIVATED_BY_USER);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription for pregnancy pack in Active state such that next OBD date falls on current date
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90));
@@ -1696,7 +1696,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.updateStartDate(oldSubscription, DateTime.now().minusDays(512 + 90));
         oldSubscription.setNeedsWelcomeMessageViaObd(false);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription to pregnancy pack in Active state such that next OBD date falls on current date
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90));
@@ -1939,8 +1939,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        Subscriber subscriber = subscriberDataService
-                .findByNumber(9999911122L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber
+        (9999911122L).get(0);
         assertNotNull(subscriber);
         assertNotNull(subscriber.getSubscriptions());
 
@@ -2021,8 +2021,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine()
                 .getStatusCode());
-        Subscriber subscriber = subscriberDataService
-                .findByNumber(9999911122L).get(0);
+        Subscriber subscriber = subscriberService
+                .getSubscriber(9999911122L).get(0);
         assertNotNull(subscriber);
 
     }
@@ -4041,7 +4041,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         childPackSubscription.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(childPackSubscription);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription for pregnancy pack in Active state
         mctsSubscriber.setDateOfBirth(null);
@@ -4095,7 +4095,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         childPackSubscription.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(childPackSubscription);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription for pregnancy pack in Active state
         mctsSubscriber.setDateOfBirth(null);
@@ -4153,7 +4153,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.deactivateSubscription(oldSubscription,
                 DeactivationReason.DEACTIVATED_BY_USER);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription for child pack in Active state such that
         // next OBD date falls on current date
@@ -4204,7 +4204,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.updateStartDate(oldSubscription, DateTime.now()
                 .minusDays(505 + 90));
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription for child pack in Active state such that
         // next OBD date falls on current date
@@ -4260,7 +4260,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.deactivateSubscription(oldSubscription,
                 DeactivationReason.DEACTIVATED_BY_USER);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription for pregnancy pack in Active state such that
         // next OBD date falls on current date
@@ -4310,7 +4310,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.updateStartDate(oldSubscription, DateTime.now()
                 .minusDays(344));
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription for pregnancy pack in Active state such that
         // next OBD date falls on current date
@@ -4357,7 +4357,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.deactivateSubscription(oldSubscription,
                 DeactivationReason.DEACTIVATED_BY_USER);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription for child pack in Active state such that
         // next OBD date falls on current date
@@ -4406,7 +4406,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.updateStartDate(oldSubscription, DateTime.now()
                 .minusDays(337));
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription to child pack in Active state such that
         // next OBD date falls on current date

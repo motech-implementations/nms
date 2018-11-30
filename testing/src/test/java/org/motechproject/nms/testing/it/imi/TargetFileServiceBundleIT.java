@@ -78,6 +78,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     @Inject
     TargetFileService targetFileService;
     @Inject
+    SubscriberService subscriberService;
+    @Inject
     SubscriptionService subscriptionService;
     @Inject
     SubscriptionDataService subscriptionDataService;
@@ -99,8 +101,6 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
     DistrictDataService districtDataService;
     @Inject
     DistrictService districtService;
-    @Inject
-    SubscriberService subscriberService;
     @Inject
     SettingsService settingsService;
     @Inject
@@ -124,7 +124,7 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
 
-        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+        sh = new SubscriptionHelper(subscriberService,subscriptionService, subscriberDataService, subscriptionPackDataService,
                 languageDataService, languageService, circleDataService, stateDataService, districtDataService,
                 districtService);
     }
@@ -426,7 +426,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         assertTrue("w5_1".equals(contents.get(0)));
 
         //update the date of birth of the subscriber
-        Subscriber subscriber2 = subscriberDataService.findByNumber(1111111111L).get(0);
+
+        Subscriber subscriber2 = subscriberService.getSubscriber(1111111111L).get(0);
         subscriber2.setDateOfBirth(DateTime.now().minusDays(21)); // weekId will be W4_1
         subscriberService.updateStartDate(subscriber2);
 
