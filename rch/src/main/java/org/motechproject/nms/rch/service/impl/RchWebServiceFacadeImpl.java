@@ -400,6 +400,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 ) {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
+            eventParams.put(Constants.REMOTE_LOCATION, null);
+            eventParams.put(Constants.FILE_NAME, null);
             eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_DISTRICT_READ_SUBJECT, eventParams));
         }
     }
@@ -408,13 +410,20 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     @Transactional
     public void readDistrictResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
+        String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
+        String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         LOGGER.info("Copying RCH district response file from remote server to local directory.");
         try {
             List<RchImportFacilitator> rchImportFacilitatorsDistricts = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.DISTRICT);
             for (RchImportFacilitator rchImportFacilitatorsDistrict: rchImportFacilitatorsDistricts
                  ) {
                 ArrayList<Map<String, Object>> districtArrList = new ArrayList<>();
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsDistrict.getFileName());
+                File localResponseFile ;
+                if (fileName == null) {
+                    localResponseFile = scpResponseToLocal(rchImportFacilitatorsDistrict.getFileName(), remoteLocation);
+                } else {
+                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                }
                 if (localResponseFile != null) {
                     LOGGER.info("RCH district response file successfully copied from remote server to local directory.");
                     String result = readResponsesFromXml(localResponseFile);
@@ -491,6 +500,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         } finally {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
+            eventParams.put(Constants.REMOTE_LOCATION, null);
+            eventParams.put(Constants.FILE_NAME, null);
             eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_TALUKA_READ_SUBJECT, eventParams));
         }
     }
@@ -501,12 +512,19 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     public void readTalukaResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         LOGGER.info("Copying RCH taluka response file from remote server to local directory.");
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
+        String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
+        String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         try {
             List<RchImportFacilitator> rchImportFacilitatorsTalukas = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.TALUKA);
             for (RchImportFacilitator rchImportFacilitatorsTaluka: rchImportFacilitatorsTalukas
                     ) {
                 ArrayList<Map<String, Object>> talukaArrList = new ArrayList<>();
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsTaluka.getFileName());
+                File localResponseFile ;
+                if (fileName == null) {
+                    localResponseFile = scpResponseToLocal(rchImportFacilitatorsTaluka.getFileName(), remoteLocation);
+                } else {
+                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                }
                 if (localResponseFile != null) {
                     LOGGER.info("RCH Taluka response file successfully copied from remote server to local directory.");
                     String result = readResponsesFromXml(localResponseFile);
@@ -583,6 +601,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         } finally {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
+            eventParams.put(Constants.REMOTE_LOCATION, null);
+            eventParams.put(Constants.FILE_NAME, null);
             eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_HEALTHBLOCK_READ_SUBJECT, eventParams));
         }
     }
@@ -591,13 +611,20 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     @Transactional
     public void readVillageResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
+        String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
+        String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         LOGGER.info("Copying RCH village response file from remote server to local directory.");
         try {
             List<RchImportFacilitator> rchImportFacilitatorsVillages = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.VILLAGE);
             for (RchImportFacilitator rchImportFacilitatorsVillage: rchImportFacilitatorsVillages
                  ) {
                 ArrayList<Map<String, Object>> villageArrList = new ArrayList<>();
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsVillage.getFileName());
+                File localResponseFile ;
+                if (fileName == null) {
+                    localResponseFile = scpResponseToLocal(rchImportFacilitatorsVillage.getFileName(), remoteLocation);
+                } else {
+                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                }
                 if (localResponseFile != null) {
                     LOGGER.info("RCH village response file successfully copied from remote server to local directory.");
                     String result = readResponsesFromXml(localResponseFile);
@@ -674,6 +701,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         } finally {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
+            eventParams.put(Constants.REMOTE_LOCATION, null);
+            eventParams.put(Constants.FILE_NAME, null);
             eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_VILLAGE_HEALTHSUBFACILITY_READ_SUBJECT, eventParams));
         }
     }
@@ -688,6 +717,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 ) {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
+            eventParams.put(Constants.REMOTE_LOCATION, null);
+            eventParams.put(Constants.FILE_NAME, null);
             eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_MOTHER_READ, eventParams));
         }
     }
@@ -695,12 +726,19 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     @MotechListener(subjects = Constants.RCH_MOTHER_READ) //NO CHECKSTYLE Cyclomatic Complexity
     public void readMotherResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
+        String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
+        String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         try {
             LOGGER.info("Copying RCH mother response file from remote server to local directory.");
             List<RchImportFacilitator> rchImportFacilitatorMothers = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.MOTHER);
             for (RchImportFacilitator rchImportFacilitatorMother: rchImportFacilitatorMothers
                  ) {
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorMother.getFileName());
+                File localResponseFile ;
+                if (fileName == null) {
+                    localResponseFile = scpResponseToLocal(rchImportFacilitatorMother.getFileName(), remoteLocation);
+                } else {
+                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                }
                 if (localResponseFile != null) {
                     LOGGER.info("RCH Mother response file successfully copied from remote server to local directory.");
                     String result = readResponsesFromXml(localResponseFile);
@@ -811,6 +849,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 ) {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
+            eventParams.put(Constants.REMOTE_LOCATION, null);
+            eventParams.put(Constants.FILE_NAME, null);
             eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_CHILD_READ, eventParams));
         }
     }
@@ -818,12 +858,20 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     @MotechListener(subjects = Constants.RCH_CHILD_READ)
     public void readChildResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
+        String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
+        String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         LOGGER.info("Copying RCH child response file from remote server to local directory.");
         try {
             List<RchImportFacilitator> rchImportFacilitatorChildren = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.CHILD);
             for (RchImportFacilitator rchImportFacilitatorChild: rchImportFacilitatorChildren
                  ) {
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorChild.getFileName());
+                File localResponseFile ;
+                if (fileName == null) {
+                    localResponseFile = scpResponseToLocal(rchImportFacilitatorChild    .getFileName(), remoteLocation);
+                } else {
+                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                }
+
                 String result = readResponsesFromXml(localResponseFile);
                 State state = stateDataService.findByCode(stateId);
 
@@ -928,6 +976,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 ) {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
+            eventParams.put(Constants.REMOTE_LOCATION, null);
+            eventParams.put(Constants.FILE_NAME, null);
             eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_ASHA_READ, eventParams));
         }
     }
@@ -935,14 +985,20 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     @MotechListener(subjects = Constants.RCH_ASHA_READ)
     public void readAshaResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
+        String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
+        String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         LOGGER.info("RCH Asha file import entry point");
         LOGGER.info("Copying RCH Asha response file from remote server to local directory.");
-
         try {
             List<RchImportFacilitator> rchImportFacilitatorAshas = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.ASHA);
             for (RchImportFacilitator rchImportFacilitatorAsha: rchImportFacilitatorAshas
-                 ) {
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorAsha.getFileName());
+                    ) {
+                File localResponseFile ;
+                if (fileName == null) {
+                    localResponseFile = scpResponseToLocal(rchImportFacilitatorAsha.getFileName(), remoteLocation);
+                } else {
+                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                }
                 String result = readResponsesFromXml(localResponseFile);
                 State importState = stateDataService.findByCode(stateId);
 
@@ -1042,21 +1098,26 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     public void readHealthBlockResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         LOGGER.info("Copying RCH healthblock response file from remote server to local directory.");
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
+        String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
+        String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         try {
             List<RchImportFacilitator> rchImportFacilitatorsHealthBlocks = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.HEALTHBLOCK);
             for (RchImportFacilitator rchImportFacilitatorsHealthBlock: rchImportFacilitatorsHealthBlocks
                  ) {
                 ArrayList<Map<String, Object>> healthBlockArrList = new ArrayList<>();
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsHealthBlock.getFileName());
+                File localResponseFile ;
+                if (fileName == null) {
+                    localResponseFile = scpResponseToLocal(rchImportFacilitatorsHealthBlock.getFileName(), remoteLocation);
+                } else {
+                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                }
                 if (localResponseFile != null) {
                     LOGGER.info("RCH healthblock response file successfully copied from remote server to local directory.");
                     String result = readResponsesFromXml(localResponseFile);
-                    LOGGER.debug("stateId={}", stateId);
                     State state = stateDataService.findByCode(stateId);
 
                     String stateName = state.getName() != null ? state.getName() : " ";
                     Long stateCode = state.getCode() != null ? state.getCode() : 1L;
-                    LOGGER.debug("stateCode={}", stateCode);
 
                     LocalDate startDate = rchImportFacilitatorsHealthBlock.getStartDate();
                     LocalDate endDate = rchImportFacilitatorsHealthBlock.getEndDate();
@@ -1122,6 +1183,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         } finally {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
+            eventParams.put(Constants.REMOTE_LOCATION, null);
+            eventParams.put(Constants.FILE_NAME, null);
             eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_TALUKA_HEALTHBLOCK_READ_SUBJECT, eventParams));
         }
     }
@@ -1169,12 +1232,19 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     public void readTalukaHealthBlockResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         LOGGER.info("Copying RCH taluka-healthblock response file from remote server to local directory.");
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
+        String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
+        String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         try {
             List<RchImportFacilitator> rchImportFacilitatorsTalukaHealthBlocks = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.TALUKAHEALTHBLOCK);
             for (RchImportFacilitator rchImportFacilitatorsTalukaHealthBlock: rchImportFacilitatorsTalukaHealthBlocks
                  ) {
                 ArrayList<Map<String, Object>> talukaHealthBlockArrList = new ArrayList<>();
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsTalukaHealthBlock.getFileName());
+                File localResponseFile ;
+                if (fileName == null) {
+                    localResponseFile = scpResponseToLocal(rchImportFacilitatorsTalukaHealthBlock.getFileName(), remoteLocation);
+                } else {
+                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                }
                 if (localResponseFile != null) {
                     LOGGER.info("RCH Taluka-healthblock response file successfully copied from remote server to local directory.");
                     String result = readResponsesFromXml(localResponseFile);
@@ -1248,6 +1318,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         } finally {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
+            eventParams.put(Constants.REMOTE_LOCATION, null);
+            eventParams.put(Constants.FILE_NAME, null);
             eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_HEALTHFACILITY_READ_SUBJECT, eventParams));
         }
     }
@@ -1371,12 +1443,19 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     public void readHealthFacilityResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         LOGGER.info("Copying RCH healthfacility response file from remote server to local directory.");
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
+        String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
+        String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         try {
             List<RchImportFacilitator> rchImportFacilitatorsHealthFacilities = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.HEALTHFACILITY);
             for (RchImportFacilitator rchImportFacilitatorsHealthFacility: rchImportFacilitatorsHealthFacilities
                  ) {
                 ArrayList<Map<String, Object>> healthFacilityArrList = new ArrayList<>();
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsHealthFacility.getFileName());
+                File localResponseFile ;
+                if (fileName == null) {
+                    localResponseFile = scpResponseToLocal(rchImportFacilitatorsHealthFacility.getFileName(), remoteLocation);
+                } else {
+                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                }
                 if (localResponseFile != null) {
                     LOGGER.info("RCH healthfacility response file successfully copied from remote server to local directory.");
                     String result = readResponsesFromXml(localResponseFile);
@@ -1452,6 +1531,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         } finally {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
+            eventParams.put(Constants.REMOTE_LOCATION, null);
+            eventParams.put(Constants.FILE_NAME, null);
             eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_HEALTHSUBFACILITY_READ_SUBJECT, eventParams));
         }
     }
@@ -1460,13 +1541,20 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     @Transactional
     public void readHealthSubFacilityResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
+        String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
+        String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         LOGGER.info("Copying RCH healthsubfacility response file from remote server to local directory.");
         try {
             List<RchImportFacilitator> rchImportFacilitatorsHealthSubFacilities = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.HEALTHSUBFACILITY);
             for (RchImportFacilitator rchImportFacilitatorsHealthSubFacility: rchImportFacilitatorsHealthSubFacilities
                  ) {
                 ArrayList<Map<String, Object>> healthSubFacilityArrList = new ArrayList<>();
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsHealthSubFacility.getFileName());
+                File localResponseFile ;
+                if (fileName == null) {
+                    localResponseFile = scpResponseToLocal(rchImportFacilitatorsHealthSubFacility.getFileName(), remoteLocation);
+                } else {
+                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                }
                 if (localResponseFile != null) {
                     LOGGER.info("RCH healthsubfacility response file successfully copied from remote server to local directory.");
                     String result = readResponsesFromXml(localResponseFile);
@@ -1542,6 +1630,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         } finally {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
+            eventParams.put(Constants.REMOTE_LOCATION, null);
+            eventParams.put(Constants.FILE_NAME, null);
             eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_VILLAGE_READ_SUBJECT, eventParams));
         }
     }
@@ -1550,13 +1640,20 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     @Transactional
     public void readVillageHealthSubFacilityResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
+        String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
+        String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         LOGGER.info("Copying RCH villageHealthsubfacility response file from remote server to local directory.");
         try {
             List<RchImportFacilitator> rchImportFacilitatorsVillageHealthSubFacilities = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.VILLAGEHEALTHSUBFACILITY);
             for (RchImportFacilitator rchImportFacilitatorsVillageHealthSubFacility: rchImportFacilitatorsVillageHealthSubFacilities
                  ) {
                 ArrayList<Map<String, Object>> villageHealthSubFacilityArrList = new ArrayList<>();
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsVillageHealthSubFacility.getFileName());
+                File localResponseFile ;
+                if (fileName == null) {
+                    localResponseFile = scpResponseToLocal(rchImportFacilitatorsVillageHealthSubFacility.getFileName(), remoteLocation);
+                } else {
+                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                }
                 if (localResponseFile != null) {
                     LOGGER.info("RCH villageHealthsubfacility response file successfully copied from remote server to local directory.");
                     String result = readResponsesFromXml(localResponseFile);
@@ -2326,17 +2423,17 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         execHelper.exec(command, getScpTimeout());
     }
 
-    private File scpResponseToLocal(String fileName) {
+    private File scpResponseToLocal(String fileName, String remoteLocation) {
         String localDir = settingsFacade.getProperty(LOCAL_RESPONSE_DIR);
 
-        String command = "scp " + remoteResponseFile(fileName) + " " + localDir;
+        String command = "scp " + remoteResponseFile(fileName, remoteLocation) + " " + localDir;
         ExecutionHelper execHelper = new ExecutionHelper();
         execHelper.exec(command, getScpTimeout());
         return new File(localResponseFile(fileName));
     }
 
     private File fileForLocUpdate(String fileName) {
-        return new File(remoteResponseFile(fileName));
+        return new File(remoteResponseFile(fileName, null));
     }
 
     private File fileForXmlLocUpdate(String fileName) {
@@ -2350,11 +2447,13 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return localFile;
     }
 
-    public String remoteResponseFile(String file) {
-        String remoteFile = settingsFacade.getProperty(REMOTE_RESPONSE_DIR);
-        remoteFile += remoteFile.endsWith("/") ? "" : "/";
-        remoteFile += file;
-        return remoteFile;
+    public String remoteResponseFile(String file, String remoteLocation) {
+        if (remoteLocation == null) {
+            remoteLocation = settingsFacade.getProperty(REMOTE_RESPONSE_DIR);
+        }
+        remoteLocation += remoteLocation.endsWith("/") ? "" : "/";
+        remoteLocation += file;
+        return remoteLocation;
     }
 
     public String remoteResponseFileForXml(String file) {
