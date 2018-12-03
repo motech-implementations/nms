@@ -29,11 +29,9 @@ import org.motechproject.nms.flw.service.CallDetailRecordService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.service.ServiceUsageService;
 import org.motechproject.nms.flw.service.WhitelistService;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -155,6 +153,9 @@ public class UserControllerBundleIT extends BasePaxIT {
 
     @Inject
     InactiveJobCallAuditDataService inactiveJobCallAuditDataService;
+
+    @Inject
+    SubscriptionDataService subscriptionDataService;
 
     public static final Long WHITELIST_CONTACT_NUMBER = 1111111111l;
     public static final Long NOT_WHITELIST_CONTACT_NUMBER = 9000000000l;
@@ -5218,6 +5219,29 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
+    @Test
+    public void verifySelfDeactivationStatus() throws IOException,
+            InterruptedException {
+        createKilkariTestData();
+        // subscriber 4000000000L subscribed to both pack and Pregnancy pack is
+        // deactivated
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(4000000000L, rh.hindiLanguage()));
+        subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(),
+                rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
+
+        Subscription pregnancyPack = subscriptionService.createSubscription(
+                subscriber, subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.IVR);
+        subscriptionService.deactivateSubscription(pregnancyPack,
+                DeactivationReason.DEACTIVATED_BY_USER);
+
+        transactionManager.commit(status);
+        Subscription subscription = subscriptionDataService.findBySubscriptionId(pregnancyPack.getSubscriptionId());
+        assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
+        assertEquals(DeactivationReason.DEACTIVATED_BY_USER, subscription.getDeactivationReason());
+
+    }
 
 }
