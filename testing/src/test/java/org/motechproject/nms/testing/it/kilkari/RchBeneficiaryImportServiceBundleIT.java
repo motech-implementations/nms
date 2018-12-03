@@ -2270,7 +2270,69 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         // although our MCTS data file contains 10 children, we only create 8 subscribers due to -1 duplicate phone numbers and
         // -1 for old dob which has no messages
         assertEquals(8, subscriberDataService.count());
-}
+    }
+    /*
+     * To verify RCH upload is rejected when MSISDN number already exist
+     * for subscriber with new rch id.
+     */
+    @Test
+    public void verifyMotherImportWithSameMsisdnDifferentState() throws Exception {
+
+        DateTime lmp = DateTime.now().minusDays(100);
+        String lmpString = getDateString(lmp);
+        Reader rchReader = createRchMotherDataReader("21\t3\t\t\t\t\t\t1234567890\t240\tShanti Ekka\t9439986187\t\t" +
+                lmpString + "\t\t\t\t\t8");
+        mctsBeneficiaryImportReaderService.importMotherData(rchReader, SubscriptionOrigin.RCH_IMPORT);
 
 
+        // attempt to create subscriber with same msisdn but different rch id.
+        State state20 = createState(20L, "State 20");
+        stateDataService.create(state20);
+        District district = createDistrict(state20, 3L, "EXAMPLE DISTRICT");
+        districtDataService.create(district);
+        rchReader = createRchMotherDataReader("20\t3\t\t\t\t\t\t200101000811500030\t121004563170\tPoonam Ekka\t9439986187\t\t" +
+                lmpString + "\t\t\t\t\t4");
+        mctsBeneficiaryImportReaderService.importMotherData(rchReader, SubscriptionOrigin.RCH_IMPORT);
+
+        //second subscriber should have been rejected
+
+        List<MotherImportRejection> motherImportRejections = motherRejectionDataService.retrieveAll();
+        Assert.assertEquals(1, motherImportRejections.size());
+        Assert.assertEquals("9439986187", motherImportRejections.get(0).getMobileNo());
+        Assert.assertEquals(RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), motherImportRejections.get(0).getRejectionReason());
+        assertEquals("121004563170", motherImportRejections.get(0).getRegistrationNo());
+    }
+
+    /*
+     * To verify RCH upload is rejected when MSISDN number already exist
+     * for subscriber with new rch id.
+     */
+    @Test
+    public void verifyChildImportWithSameMsisdnDifferentState() throws Exception {
+
+        DateTime dob = DateTime.now();
+        String dobString = getDateString(dob);
+
+        // create subscriber and subscription
+        Reader reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t9876453210\t9439986187\t"
+                + dobString + "\t7000000000\t2000000000\t\t");
+        mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
+
+        // attempt to create subscriber with same msisdn but different rch id.
+        State state20 = createState(20L, "State 20");
+        stateDataService.create(state20);
+        District district = createDistrict(state20, 3L, "EXAMPLE DISTRICT");
+        districtDataService.create(district);
+        reader = createRchChildDataReader("20\t3\t\t\t\t\t1234567891\tBaby2 of Lilima Kua\t9876453210\t9439986187\t"
+                + dobString + "\t8000000000\t2000000000\t\t");
+        mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
+
+        //second subscriber should have been rejected
+
+        List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
+        Assert.assertEquals(1, childImportRejections.size());
+        Assert.assertEquals("9439986187", childImportRejections.get(0).getMobileNo());
+        Assert.assertEquals(RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), childImportRejections.get(0).getRejectionReason());
+        Assert.assertEquals("8000000000", childImportRejections.get(0).getRegistrationNo());
+    }
 }
