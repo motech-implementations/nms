@@ -1560,4 +1560,34 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         SubscriptionPackMessage message = subscription.nextScheduledMessage(now);
         assertEquals("w1_1", message.getWeekId());
     }
+
+    @Test
+    public void verifyHoldToPendingActivation() {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        subscriptionService.toggleMctsSubscriptionCreation(0);
+
+        DateTime now = DateTime.now();
+
+
+
+        Subscriber mctsSubscriber = new Subscriber(9999911122L);
+        mctsSubscriber.setLastMenstrualPeriod(now.minusDays(70)); //so the startDate should be today
+        subscriberDataService.create(mctsSubscriber);
+        subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.MCTS_IMPORT);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
+
+        Subscription subscription = mctsSubscriber.getSubscriptions().iterator().next();
+
+        // verify that they are on hold
+        assertEquals(SubscriptionStatus.HOLD, subscription.getStatus());
+
+
+        subscriptionService.toggleMctsSubscriptionCreation(10000); // set activation to active
+        subscriptionService.activateHoldSubscriptions(10000);
+
+        transactionManager.commit(status);
+
+        assertEquals(SubscriptionStatus.PENDING_ACTIVATION, subscription.getStatus());
+    }
 }
