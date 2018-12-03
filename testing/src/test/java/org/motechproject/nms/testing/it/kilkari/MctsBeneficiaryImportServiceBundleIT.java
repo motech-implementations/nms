@@ -2523,68 +2523,9 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
     }
 
-    /*
-     * To verify MCTS upload is rejected when MSISDN number already exist
-     * for subscriber with new mctsid (beneficiary id) in 2 different states.
-     */
-    @Test
-    public void verifyMotherImportWithSameMsisdnDifferentStates() throws Exception {
 
-        DateTime lmp = DateTime.now().minusDays(110);
-        String lmpString = getDateString(lmp);
 
-        // create subscriber and subscription
-        Reader reader = createMotherDataReader("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
-                lmpString + "\t\t\t\t");
-        mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
-        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        // attempt to create subscriber with same msisdn but different mcts in another state
-        State state20 = createState(20L, "State 20");
-        stateDataService.create(state20);
-        District district = createDistrict(state20, 3L, "EXAMPLE DISTRICT");
-        districtDataService.create(district);
-        reader = createMotherDataReader("20\t3\t\t\t\t\t1234567891\tPooja Shanthi\t9439986187\t\t" +
-                lmpString + "\t\t\t\t");
-        mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
-        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        //rejected entry should be in nms_mother_rejects with reason 'ALREADY_SUBSCRIBED'.
-        List<MotherImportRejection> motherImportRejections = motherRejectionDataService.retrieveAll();
-        assertEquals(1, motherImportRejections.size());
-        assertEquals("9439986187", motherImportRejections.get(0).getMobileNo());
-        assertEquals(RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), motherImportRejections.get(0).getRejectionReason());
-        transactionManager.commit(status);
-    }
-
-    @Test
-    public void verifyChildImportWithSameMsisdnDifferentStates() throws Exception {
-
-        DateTime dob = DateTime.now();
-        String dobString = getDateString(dob);
-
-        // create subscriber and subscription
-        Reader reader = createChildDataReader("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t9876453210\t9439986187\t"
-                + dobString + "\t\t");
-        mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
-        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-
-        // attempt to create subscriber with same msisdn but different mcts.
-        State state20 = createState(20L, "State 20");
-        stateDataService.create(state20);
-        District district = createDistrict(state20, 3L, "EXAMPLE DISTRICT");
-        districtDataService.create(district);
-        reader = createChildDataReader("20\t3\t\t\t\t\t1234567891\tBaby1 of Lilima Kua\t9876453211\t9439986187\t"
-                + dobString + "\t\t");
-        mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
-        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-
-        //rejected entry should be in nms_child_rejects with reason 'ALREADY_SUBSCRIBED'.
-        List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
-        assertEquals(1, childImportRejections.size());
-        assertEquals("9439986187", childImportRejections.get(0).getMobileNo());
-        assertEquals(RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), childImportRejections.get(0).getRejectionReason());
-        transactionManager.commit(status);
-    }
 
 }
