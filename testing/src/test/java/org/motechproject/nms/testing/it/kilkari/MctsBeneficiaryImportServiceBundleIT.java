@@ -2599,7 +2599,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         //Mark subscription deactivate
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.DEACTIVATED_BY_USER);
         transactionManager.commit(status);

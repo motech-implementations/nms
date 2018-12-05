@@ -264,6 +264,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void testChildRCHImport() throws IOException {
         String response = RchImportTestHelper.getRchChildrenResponseData();
         String remoteLocation = "/home/beehyv/IdeaProjects/nsp/testing/src/test/resources/rch";
