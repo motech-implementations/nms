@@ -5220,6 +5220,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
+
     @Test
     public void verifyFT183_1() throws IOException,
             InterruptedException {
@@ -5230,7 +5231,7 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         Subscriber subscriber = subscriberDataService.create(new Subscriber(4000000000L, rh.hindiLanguage()));
         subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(),
-                rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
+                rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
 
         Subscription pregnancyPack = subscriptionService.createSubscription(
                 subscriber, subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
