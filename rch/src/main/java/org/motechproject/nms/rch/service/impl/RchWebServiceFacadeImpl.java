@@ -28,7 +28,7 @@ import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
-import org.motechproject.nms.flw.exception.FlwImportException;
+import org.motechproject.nms.flw.exception.GfStatusInactiveException;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.kilkari.contract.RchAnmAshaRecord;
 import org.motechproject.nms.kilkari.contract.RchChildRecord;
@@ -2067,6 +2067,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                         } catch (FlwExistingRecordException e) {
                             LOGGER.debug("Existing FLW with same MSISDN but different RCH ID", e);
                             flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
+                            rejected++;
+                        } catch (GfStatusInactiveException e) {
+                            flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.GF_STATUS_INACTIVE.toString(), action));
                             rejected++;
                         } catch (Exception e) {
                             LOGGER.error("RCH Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}",

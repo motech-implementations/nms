@@ -121,7 +121,6 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
     @Override
     public Boolean getDeathFromString(String value) {
-        LOGGER.debug("Value: {}", value);
         if (value != null) {
             return "9".equals(value.trim()) || "Death".equalsIgnoreCase(value.trim()); // 9 indicates beneficiary death; other values do not
         } else {
