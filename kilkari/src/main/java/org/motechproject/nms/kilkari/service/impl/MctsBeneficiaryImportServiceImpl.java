@@ -333,7 +333,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         String name = (String) record.get(KilkariConstants.BENEFICIARY_NAME);
         DateTime dob = (DateTime) record.get(KilkariConstants.DOB);
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
-        LOGGER.debug("Death: {}", death);
         MctsChild childById = mctsChildDataService.findByBeneficiaryId(childId);
 
         if ((child == null)) {
