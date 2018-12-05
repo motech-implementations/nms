@@ -84,7 +84,7 @@ public class ChildRecord {
     private String childEIDTime;
     private String fatherName;
     private String birthCertificateNumber;
-    private Integer entryType;
+    private String entryType;
 
     public Long getStateID() {
         return stateID;
@@ -762,12 +762,12 @@ public class ChildRecord {
         this.birthCertificateNumber = birthCertificateNumber;
     }
 
-    public Integer getEntryType() {
+    public String getEntryType() {
         return entryType;
     }
 
     @XmlElement(name = "Entry_Type")
-    public void setEntryType(Integer entryType) {
+    public void setEntryType(String entryType) {
         this.entryType = entryType;
     }
 }

@@ -27,7 +27,7 @@ public class RchChildRecord {
     private String birthdate;
     private String registrationNo;
     private String motherRegistrationNo;
-    private Integer entryType;
+    private String entryType;
     private String mctsId;
     private String mctsMotherIdNo;
     private String execDate;
@@ -213,12 +213,12 @@ public class RchChildRecord {
         this.mctsMotherIdNo = mctsMotherIdNo;
     }
 
-    public Integer getEntryType() {
+    public String getEntryType() {
         return entryType;
     }
 
     @XmlElement(name = "Entry_Type")
-    public void setEntryType(Integer entryType) {
+    public void setEntryType(String entryType) {
         this.entryType = entryType;
     }
 
