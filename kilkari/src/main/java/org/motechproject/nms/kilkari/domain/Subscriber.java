@@ -50,7 +50,7 @@ public class Subscriber extends MdsEntity {
     @Field
     @Persistent(mappedBy = "subscriber", defaultFetchGroup = "false")
     @JsonManagedReference
-    private Set<Subscription> subscriptions;
+    private HashSet<Subscription> subscriptions;
 
     @Field
     private MctsMother mother;
@@ -114,11 +114,11 @@ public class Subscriber extends MdsEntity {
         this.language = language;
     }
 
-    public Set<Subscription> getSubscriptions() {
+    public HashSet<Subscription> getSubscriptions() {
         return subscriptions;
     }
 
-    public void setSubscriptions(Set<Subscription> subscriptions) {
+    public void setSubscriptions(HashSet<Subscription> subscriptions) {
         this.subscriptions = subscriptions;
     }
 

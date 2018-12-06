@@ -263,4 +263,40 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         assertEquals(0, mothers.size());
     }
 
+    @Test
+    @Ignore
+    public void testChildRCHImport() throws IOException {
+        String response = RchImportTestHelper.getRchChildrenResponseData();
+        String remoteLocation = "/home/beehyv/IdeaProjects/nsp/testing/src/test/resources/rch";
+        String fileName = "RCH_StateID_21_Child_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("childendpoint", 200, response);
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName);
+        List<Long> a = new ArrayList<>();
+        a.add(21L);
+        // MotechEvent event = new MotechEvent("foobar", params);
+        rchWsImportService.importChildFromRch(a, yesterday, endpoint);
+        MotechEvent event1 = new MotechEvent(Constants.RCH_CHILD_READ, params);
+        try {
+            rchWebServiceFacade.readChildResponseFromFile(event1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl);
+        List<ChildImportRejection> childImportRejectionList = childRejectionDataService.retrieveAll();
+        assertEquals(1, childImportRejectionList.size());
+
+    }
+
 }
