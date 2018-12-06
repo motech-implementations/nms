@@ -158,7 +158,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         testingService.clearDatabase();
         createLocationData();
 
-        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+        sh = new SubscriptionHelper(subscriberService,subscriptionService, subscriberDataService, subscriptionPackDataService,
                 languageDataService, languageService, circleDataService, stateDataService, districtDataService,
                 districtService);
         rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
@@ -253,7 +253,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertNotNull(subscriber);
         assertEquals(lmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
         assertEquals("Shanti Ekka", subscriber.getMother().getName());
@@ -274,7 +274,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
                 lmpString + "\t\t\t\t");
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertNotNull(subscriber);
         assertEquals(lmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
     }
@@ -288,7 +288,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertNotNull(subscriber);
         assertEquals(lmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
         assertEquals("Shanti Ekka", subscriber.getMother().getName());
@@ -304,7 +304,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertNotNull(subscriber);
         assertEquals(newLmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
         subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
@@ -325,7 +325,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertNotNull(subscriber);
         assertEquals(lmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
         assertEquals("Shanti Ekka", subscriber.getMother().getName());
@@ -340,7 +340,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertNotNull(subscriber);
 
         // Lmp update should fail
@@ -374,7 +374,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        List<Subscriber> subscriber = subscriberDataService.findByNumber(9439986187L);
+        List<Subscriber> subscriber = subscriberService.getSubscriber(9439986187L);
         assertEquals(1, subscriber.size());
         transactionManager.commit(status);
     }
@@ -389,7 +389,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        List<Subscriber> subscriber = subscriberDataService.findByNumber(9439986187L);
+        List<Subscriber> subscriber = subscriberService.getSubscriber(9439986187L);
         assertEquals(1, subscriber.size());
         assertEquals(lmp.toLocalDate(), subscriber.get(0).getLastMenstrualPeriod().toLocalDate());
         Set<Subscription> subscriptions = subscriber.get(0).getActiveAndPendingSubscriptions();
@@ -404,7 +404,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberDataService.findByNumber(9439986187L);
+        subscriber = subscriberService.getSubscriber(9439986187L);
         assertEquals(1, subscriber.size());
         assertEquals(dob.toLocalDate(), subscriber.get(0).getDateOfBirth().toLocalDate());
 
@@ -431,7 +431,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
         assertEquals(1, subscriptions.size());
 
@@ -450,7 +450,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         subscriptions = subscriber.getAllSubscriptions();
         assertEquals(1, subscriptions.size());
 
@@ -472,7 +472,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
         assertEquals(1, subscriptions.size());
 
@@ -491,7 +491,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         subscriptions = subscriber.getAllSubscriptions();
         assertEquals(1, subscriptions.size());
 
@@ -511,7 +511,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
         assertEquals(1, subscriptions.size());
 
@@ -530,7 +530,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         subscriptions = subscriber.getAllSubscriptions();
         assertEquals(1, subscriptions.size());
 
@@ -553,7 +553,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
         assertEquals(1, subscriptions.size());
 
@@ -572,7 +572,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         subscriptions = subscriber.getAllSubscriptions();
         assertEquals(1, subscriptions.size());
 
@@ -591,7 +591,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         State expectedState = stateDataService.findByCode(21L);
         District expectedDistrict4 = districtService.findByStateAndCode(expectedState, 4L);
 
-        Subscriber subscriber1 = subscriberDataService.findByNumber(9439998253L).get(0);
+        Subscriber subscriber1 = subscriberService.getSubscriber(9439998253L).get(0);
         assertChild(subscriber1, "210404600521400116", getDateTime("2/12/2017"), "Baby1 of PANI HEMRAM", expectedState,
                 expectedDistrict4);
 
@@ -611,7 +611,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         sh.mksub(SubscriptionOrigin.IVR, new DateTime(), sh.pregnancyPack().getType(), 2222222221L);
 
-        Subscriber subscriber = subscriberDataService.findByNumber(2222222221L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(2222222221L).get(0);
         assertNotNull(subscriber);
 
         mctsBeneficiaryImportReaderService.importMotherData(read("csv/nip94.csv"), SubscriptionOrigin.MCTS_IMPORT);
@@ -619,7 +619,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         State expectedState = rh.delhiState();
         District expectedDistrict = rh.newDelhiDistrict();
 
-        subscriber = subscriberDataService.findByNumber(2222222221L).get(0);
+        subscriber = subscriberService.getSubscriber(2222222221L).get(0);
         assertMother(subscriber, "11111222299999999", getDateTime("28/2/2017"), "Shanti", expectedState, expectedDistrict);
     }
 
@@ -854,7 +854,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         //Make subscription completed
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         subscriber.setLastMenstrualPeriod(lmp.minusDays(650));
         subscriberService.updateStartDate(subscriber);
         transactionManager.commit(status);
@@ -866,7 +866,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertEquals(2, subscriber.getAllSubscriptions().size());
         assertEquals(1, subscriber.getActiveAndPendingSubscriptions().size());
         assertEquals(lmpString, getDateString(subscriber.getLastMenstrualPeriod()));
@@ -891,7 +891,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         //Mark subscription deactivate
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.MISCARRIAGE_OR_ABORTION);
         transactionManager.commit(status);
@@ -903,7 +903,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertEquals(1, subscriber.getAllSubscriptions().size());
         assertEquals(0, subscriber.getActiveAndPendingSubscriptions().size());
         assertEquals(lmpString, getDateString(subscriber.getLastMenstrualPeriod()));
@@ -984,7 +984,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         //Mark subscription deactivate
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.STILL_BIRTH);
 
@@ -995,7 +995,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertEquals(1, subscriber.getAllSubscriptions().size());
         assertEquals(0, subscriber.getActiveAndPendingSubscriptions().size());
         assertEquals(dobString, getDateString(subscriber.getDateOfBirth()));
@@ -1016,7 +1016,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         //Make subscription completed
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         subscriber.setDateOfBirth(dob.minusDays(500));
         subscriberService.updateStartDate(subscriber);
         transactionManager.commit(status);
@@ -1028,7 +1028,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertEquals(2, subscriber.getAllSubscriptions().size());
         assertEquals(1, subscriber.getActiveAndPendingSubscriptions().size());
         assertEquals(dobString, getDateString(subscriber.getDateOfBirth()));
@@ -1048,7 +1048,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertNotNull(subscriber);
         assertEquals(dob.toLocalDate(), subscriber.getDateOfBirth().toLocalDate());
         assertEquals("Baby1 of Lilima Kua", subscriber.getChild().getName());
@@ -1066,7 +1066,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertNotNull(subscriber);
         assertEquals(newDob.toLocalDate(), subscriber.getDateOfBirth().toLocalDate());
         subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
@@ -1091,7 +1091,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertNotNull(subscriber);
         assertEquals(lmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
         Set<Subscription> subscriptions = subscriber.getActiveAndPendingSubscriptions();
@@ -1106,7 +1106,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         subscriptions = subscriber.getActiveAndPendingSubscriptions();
         Subscription childSubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.CHILD);
         Subscription pregnancySubscription = subscriptionService
@@ -1132,7 +1132,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertNotNull(subscriber);
         assertEquals(lmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
         assertEquals("Shanti Ekka", subscriber.getMother().getName());
@@ -1149,7 +1149,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertNotNull(subscriber);
         assertEquals(newLmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
         subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
@@ -1168,11 +1168,11 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         State expectedState = stateDataService.findByCode(21L);
         District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
 
-        Subscriber subscriber1 = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber1 = subscriberService.getSubscriber(9439986187L).get(0);
         assertMother(subscriber1, "210302604211400029", getDateTime("22/11/2016"), "Shanti Ekka", expectedState,
                 expectedDistrict);
 
-        Subscriber subscriber2 = subscriberDataService.findByNumber(7894221701L).get(0);
+        Subscriber subscriber2 = subscriberService.getSubscriber(7894221701L).get(0);
         assertMother(subscriber2, "210302604611400025", getDateTime("9/12/2016"), "Sanjukta Bhainsa", expectedState,
                 expectedDistrict);
 
@@ -1202,7 +1202,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
     }
 
     private void assertNoSubscriber(long callingNumber) {
-        List<Subscriber> subscriber = subscriberDataService.findByNumber(callingNumber);
+        List<Subscriber> subscriber = subscriberService.getSubscriber(callingNumber);
         assertTrue(subscriber.isEmpty());
     }
 
@@ -1479,7 +1479,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        List<Subscriber> subscribers = subscriberDataService.findByNumber(9439986187L);
+        List<Subscriber> subscribers = subscriberService.getSubscriber(9439986187L);
         Set<Subscription> subscriptions = subscribers.get(0).getAllSubscriptions();
         assertEquals(1, subscriptions.size());
         Subscription subscription = subscriptions.iterator().next();
@@ -1487,7 +1487,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         //Deactivate child subscription
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.CHILD_DEATH);
-        subscribers = subscriberDataService.findByNumber(9439986187L);
+        subscribers = subscriberService.getSubscriber(9439986187L);
         subscriptions = subscribers.get(0).getAllSubscriptions();
         subscription = subscriptions.iterator().next();
         assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
@@ -1503,7 +1503,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         //pregnancy record should be activated.
-        subscribers = subscriberDataService.findByNumber(9439986187L);
+        subscribers = subscriberService.getSubscriber(9439986187L);
         assertEquals(2, subscribers.size());
         for (Subscriber subscriber : subscribers) {
             if (subscriber.getLastMenstrualPeriod() == null) {
@@ -1531,10 +1531,10 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
                         lmpString + "\t\t\t\t");
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
-        List<Subscriber> subscriber = subscriberDataService.findByNumber(9439986187L);
+        List<Subscriber> subscriber = subscriberService.getSubscriber(9439986187L);
         assertTrue(subscriber.isEmpty());
 
-        subscriber = subscriberDataService.findByNumber(9439986188L);
+        subscriber = subscriberService.getSubscriber(9439986188L);
         assertNotNull(subscriber.get(0));
         assertEquals("Square", subscriber.get(0).getCircle().getName());
     }
@@ -1556,7 +1556,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
 
         Subscription childSubscription = subscriptionService
@@ -1585,7 +1585,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertNotNull(subscriber);
         assertEquals(dob.toLocalDate(), subscriber.getDateOfBirth().toLocalDate());
         List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
@@ -1599,7 +1599,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertNotNull(subscriber);
         // Update DOB should fail
         assertNotEquals(newdob.toLocalDate(), subscriber.getDateOfBirth().toLocalDate());
@@ -1620,7 +1620,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        List<Subscriber> subscriber = subscriberDataService.findByNumber(9439986187L);
+        List<Subscriber> subscriber = subscriberService.getSubscriber(9439986187L);
         Set<Subscription> subscriptions = subscriber.get(0).getAllSubscriptions();
         transactionManager.commit(status);
 
@@ -1638,7 +1638,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         subscriptionService.purgeOldInvalidSubscriptions();
         transactionManager.commit(status);
 
-        subscriber = subscriberDataService.findByNumber(9439986187L);
+        subscriber = subscriberService.getSubscriber(9439986187L);
         assertTrue(subscriber.isEmpty());
         List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
         assertEquals(1,mothers.size());
@@ -1652,10 +1652,10 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
                 lmpString + "\t\t\t\t");
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberDataService.findByNumber(9439986187L);
+        subscriber = subscriberService.getSubscriber(9439986187L);
         assertEquals(1, subscriber.size());
-        Subscriber subscriber1 = subscriberDataService.findByNumber(9439986140L).get(0);
-        Subscriber subscriber2 = subscriberDataService.findByNumber(7894221701L).get(0);
+        Subscriber subscriber1 = subscriberService.getSubscriber(9439986140L).get(0);
+        Subscriber subscriber2 = subscriberService.getSubscriber(7894221701L).get(0);
         assertNotNull(subscriber1);
         assertNotNull(subscriber2);
         transactionManager.commit(status);
@@ -1679,10 +1679,10 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         assertEquals(newLmp.toLocalDate(), mctsMotherDataService.findByBeneficiaryId("1234567890").getLastMenstrualPeriod().toLocalDate());
-        List<Subscriber> subscriber = subscriberDataService.findByNumber(9439986187L);
+        List<Subscriber> subscriber = subscriberService.getSubscriber(9439986187L);
         assertTrue(subscriber.isEmpty());
 
-        subscriber = subscriberDataService.findByNumber(9439986188L);
+        subscriber = subscriberService.getSubscriber(9439986188L);
         assertNotNull(subscriber.get(0));
 
         List<SubscriberMsisdnTracker> msisdnTrackers = subscriberMsisdnTrackerDataService.retrieveAll();
@@ -1710,9 +1710,9 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         assertEquals(newDob.toLocalDate(), mctsChildDataService.findByBeneficiaryId("9876543210").getDateOfBirth().toLocalDate());
-        List<Subscriber> subscribers = subscriberDataService.findByNumber(9439986187L);
+        List<Subscriber> subscribers = subscriberService.getSubscriber(9439986187L);
         assertEquals(0, subscribers.size());
-        subscribers = subscriberDataService.findByNumber(9439986188L);
+        subscribers = subscriberService.getSubscriber(9439986188L);
         assertEquals(1, subscribers.size());
         assertEquals(newDob.toLocalDate(), subscribers.get(0).getDateOfBirth().toLocalDate());
 
@@ -1749,10 +1749,10 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        List<Subscriber> subscribers = subscriberDataService.findByNumber(6000000000L);
+        List<Subscriber> subscribers = subscriberService.getSubscriber(6000000000L);
         assertEquals(1, subscribers.size());
         assertEquals(dobChild.toLocalDate(), subscribers.get(0).getDateOfBirth().toLocalDate());
-        subscribers = subscriberDataService.findByNumber(7000000000L);
+        subscribers = subscriberService.getSubscriber(7000000000L);
         assertEquals(0, subscribers.size());
         List<SubscriberMsisdnTracker> msisdnTrackers = subscriberMsisdnTrackerDataService.retrieveAll();
         assertEquals(0, msisdnTrackers.size());
@@ -1764,9 +1764,9 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscribers = subscriberDataService.findByNumber(6000000000L);
+        subscribers = subscriberService.getSubscriber(6000000000L);
         assertEquals(0, subscribers.size());
-        subscribers = subscriberDataService.findByNumber(7000000000L);
+        subscribers = subscriberService.getSubscriber(7000000000L);
         assertEquals(1, subscribers.size());
         assertEquals(dob.toLocalDate(), subscribers.get(0).getDateOfBirth().toLocalDate());
         assertNotEquals(dobChild.toLocalDate(), subscribers.get(0).getDateOfBirth().toLocalDate());
@@ -1802,7 +1802,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         assertEquals(lmp.toLocalDate(), mctsMotherDataService.findByBeneficiaryId("1234567890").getLastMenstrualPeriod().toLocalDate());
-        List<Subscriber> subscribers = subscriberDataService.findByNumber(5000000000L);
+        List<Subscriber> subscribers = subscriberService.getSubscriber(5000000000L);
         assertEquals(1, subscribers.size());
         assertEquals(lmp.toLocalDate(), subscribers.get(0).getLastMenstrualPeriod().toLocalDate());
         assertNotNull(subscribers.get(0).getMother());
@@ -1834,7 +1834,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         assertEquals(dob.toLocalDate(), mctsChildDataService.findByBeneficiaryId("9876543210").getDateOfBirth().toLocalDate());
-        List<Subscriber> subscribers = subscriberDataService.findByNumber(5000000000L);
+        List<Subscriber> subscribers = subscriberService.getSubscriber(5000000000L);
         assertEquals(1, subscribers.size());
         assertEquals(dob.toLocalDate(), subscribers.get(0).getDateOfBirth().toLocalDate());
         assertNotNull(subscribers.get(0).getMother());
@@ -1864,7 +1864,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         assertEquals(dob.toLocalDate(), mctsChildDataService.findByBeneficiaryId("9876543210").getDateOfBirth().toLocalDate());
-        List<Subscriber> subscribers = subscriberDataService.findByNumber(5000000000L);
+        List<Subscriber> subscribers = subscriberService.getSubscriber(5000000000L);
         assertEquals(2, subscribers.size());
         assertEquals(dob.toLocalDate(), subscribers.get(1).getDateOfBirth().toLocalDate());
         assertNotNull(subscribers.get(1).getMother());
@@ -1904,7 +1904,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         assertEquals(lmp.toLocalDate(), mctsMotherDataService.findByBeneficiaryId("1234567890").getLastMenstrualPeriod().toLocalDate());
-        List<Subscriber> subscribers = subscriberDataService.findByNumber(5000000000L);
+        List<Subscriber> subscribers = subscriberService.getSubscriber(5000000000L);
         assertEquals(2, subscribers.size());
         assertEquals(lmp.toLocalDate(), subscribers.get(1).getLastMenstrualPeriod().toLocalDate());
         assertNotNull(subscribers.get(1).getMother());
@@ -1931,7 +1931,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        List<Subscriber> subscriber = subscriberDataService.findByNumber(9439986187L);
+        List<Subscriber> subscriber = subscriberService.getSubscriber(9439986187L);
         assertNotNull(subscriber.get(0));
         assertEquals(lmp.toLocalDate(), mctsMotherDataService.findByBeneficiaryId("1234567890").getLastMenstrualPeriod().toLocalDate());
 
@@ -1974,9 +1974,9 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        List<Subscriber> subscribers = subscriberDataService.findByNumber(9439986187L);
+        List<Subscriber> subscribers = subscriberService.getSubscriber(9439986187L);
         assertTrue(subscribers.isEmpty());
-        subscribers = subscriberDataService.findByNumber(5000000000L);
+        subscribers = subscriberService.getSubscriber(5000000000L);
         assertNotNull(subscribers.get(0).getChild());
         assertNotNull(subscribers.get(0).getMother());
         assertEquals(dob.toLocalDate(), mctsChildDataService.findByBeneficiaryId("9876543210").getDateOfBirth().toLocalDate());
@@ -1995,7 +1995,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         assertNotEquals("8876543210", subscribers.get(0).getChild().getBeneficiaryId());
-        subscribers = subscriberDataService.findByNumber(6000000000L);
+        subscribers = subscriberService.getSubscriber(6000000000L);
         assertTrue(subscribers.isEmpty());
         assertNull(mctsChildDataService.findByBeneficiaryId("8876543210"));
         transactionManager.commit(status);
@@ -2012,7 +2012,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscribers = subscriberDataService.findByNumber(5000000000L);
+        subscribers = subscriberService.getSubscriber(5000000000L);
         assertNotEquals("8876543210", subscribers.get(0).getChild().getBeneficiaryId());
         assertNull(mctsChildDataService.findByBeneficiaryId("8876543210"));
         transactionManager.commit(status);
@@ -2036,7 +2036,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         //Mark subscription deactivate
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.DEACTIVATED_BY_USER);
         transactionManager.commit(status);
@@ -2047,7 +2047,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
                 + "\t\t\t\t");
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertEquals(1, subscriber.getAllSubscriptions().size());
         assertEquals(0, subscriber.getActiveAndPendingSubscriptions().size());
         transactionManager.commit(status);
@@ -2064,7 +2064,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
                 + dobString + "\t\t");
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
-        Subscriber subscriber = subscriberDataService.findByNumber(6000000000L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(6000000000L).get(0);
         assertNotNull(subscriber);
         State expectedState = stateDataService.findByCode(21L);
         District expectedDistrict = districtService.findByStateAndCode(expectedState, 3L);
@@ -2097,7 +2097,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         //Mark subscription deactivate
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         testDeactivationRequestByMsisdn(9439986187L, "WEEKLY_CALLS_NOT_ANSWERED", HttpStatus.SC_OK);
         transactionManager.commit(status);
 
@@ -2112,7 +2112,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         reader = createMotherDataReader("21\t3\t\t\t\t\t1234512345\tShanti Ekka\t9439986187\t\t" + lmpString
                 + "\t\t\t\t");
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
-        List<Subscriber> subscribers = subscriberDataService.findByNumber(9439986187L);
+        List<Subscriber> subscribers = subscriberService.getSubscriber(9439986187L);
 
         // when property is set to true in kilkari.properties
         assertNull(blockedMsisdnRecordDataService.findByNumber(9439986187L));
@@ -2304,7 +2304,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertNotNull(subscriber);
         assertEquals(lmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
         assertEquals("Shanti Pooja", subscriber.getMother().getName());
@@ -2324,7 +2324,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertNotNull(subscriber);
         assertEquals(lmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
         assertEquals("Shanti Ekka", subscriber.getMother().getName());
@@ -2341,7 +2341,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberDataService.findByNumber(9439986187L).get(0);
+        subscriber = subscriberService.getSubscriber(9439986187L).get(0);
         assertNotNull(subscriber);
         assertEquals(newLmp.toLocalDate(), subscriber.getLastMenstrualPeriod().toLocalDate());
         subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
@@ -2368,7 +2368,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
                 lmpString + "\t\t\t\t");
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
         //import of the second record should fail as a record with the same MSISDN exists through MCTS import
-        List<Subscriber> subscribers = subscriberDataService.findByNumber(9439986187L);
+        List<Subscriber> subscribers = subscriberService.getSubscriber(9439986187L);
         assertEquals(1, subscribers.size());
         assertSubscriptionError(9439986187L, SubscriptionPackType.PREGNANCY,
                 SubscriptionRejectionReason.MSISDN_ALREADY_SUBSCRIBED);
@@ -2417,19 +2417,19 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Reader reader = createChildDataReader("21\t3\t\t\t\t\t9876543210\tBaby1 of Shanti Ekka\t1234567890\t7000000000\t"
                 + dobString + "\t\t");
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
-        List<Subscriber> subscribers = subscriberDataService.findByNumber(6000000000L);
+        List<Subscriber> subscribers = subscriberService.getSubscriber(6000000000L);
         assertEquals(1, subscribers.size());
         assertEquals(dobChild.toLocalDate(), subscribers.get(0).getDateOfBirth().toLocalDate());
-        subscribers = subscriberDataService.findByNumber(7000000000L);
+        subscribers = subscriberService.getSubscriber(7000000000L);
         assertEquals(0, subscribers.size());
         List<SubscriberMsisdnTracker> msisdnTrackers = subscriberMsisdnTrackerDataService.retrieveAll();
         assertEquals(0, msisdnTrackers.size());
         transactionManager.commit(status);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscribers = subscriberDataService.findByNumber(6000000000L);
+        subscribers = subscriberService.getSubscriber(6000000000L);
         assertEquals(0, subscribers.size());
-        subscribers = subscriberDataService.findByNumber(7000000000L);
+        subscribers = subscriberService.getSubscriber(7000000000L);
         assertEquals(1, subscribers.size());
         assertEquals(dob.toLocalDate(), subscribers.get(0).getDateOfBirth().toLocalDate());
         assertNotEquals(dobChild.toLocalDate(), subscribers.get(0).getDateOfBirth().toLocalDate());
@@ -2523,9 +2523,90 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
     }
 
+    /*
+     * To verify MCTS upload is rejected when MSISDN number already exist
+     * for subscriber with new mctsid (beneficiary id) in 2 different states.
+     */
+    @Test
+    public void verifyImportMotherWithSameMsisdnDifferentState() throws Exception {
 
+        DateTime lmp = DateTime.now().minusDays(110);
+        String lmpString = getDateString(lmp);
 
+        // create subscriber and subscription
+        Reader reader = createMotherDataReader("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
+                lmpString + "\t\t\t\t");
+        mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
+        // attempt to create subscriber with same msisdn but different mcts in another state
+        State state20 = createState(20L, "State 20");
+        stateDataService.create(state20);
+        District district = createDistrict(state20, 3L, "EXAMPLE DISTRICT");
+        districtDataService.create(district);
+        reader = createMotherDataReader("20\t3\t\t\t\t\t1234567891\tPooja Shanthi\t9439986187\t\t" +
+                lmpString + "\t\t\t\t");
+        mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
+        //rejected entry should be in nms_mother_rejects with reason 'ALREADY_SUBSCRIBED'.
+        List<MotherImportRejection> motherImportRejections = motherRejectionDataService.retrieveAll();
+        assertEquals(1, motherImportRejections.size());
+        assertEquals("9439986187", motherImportRejections.get(0).getMobileNo());
+        assertEquals(RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), motherImportRejections.get(0).getRejectionReason());
+        transactionManager.commit(status);
+    }
 
+    @Test
+    public void verifyChildImportWithSameMsisdnDifferentState() throws Exception {
+
+        DateTime dob = DateTime.now();
+        String dobString = getDateString(dob);
+
+        // create subscriber and subscription
+        Reader reader = createChildDataReader("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t9876453210\t9439986187\t"
+                + dobString + "\t\t");
+        mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        // attempt to create subscriber with same msisdn but different mcts.
+        State state20 = createState(20L, "State 20");
+        stateDataService.create(state20);
+        District district = createDistrict(state20, 3L, "EXAMPLE DISTRICT");
+        districtDataService.create(district);
+        reader = createChildDataReader("20\t3\t\t\t\t\t1234567891\tBaby1 of Lilima Kua\t9876453211\t9439986187\t"
+                + dobString + "\t\t");
+        mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        //rejected entry should be in nms_child_rejects with reason 'ALREADY_SUBSCRIBED'.
+        List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
+        assertEquals(1, childImportRejections.size());
+        assertEquals("9439986187", childImportRejections.get(0).getMobileNo());
+        assertEquals(RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), childImportRejections.get(0).getRejectionReason());
+        transactionManager.commit(status);
+    }
+
+    @Test
+    public void verifySelfDeactivatedUserStatus() throws Exception {
+        DateTime lmp = DateTime.now().minus(100);
+        String lmpString = getDateString(lmp);
+
+        // create subscriber and subscription
+        Reader reader = createMotherDataReader("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
+                lmpString + "\t\t\t\t");
+        mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        //Mark subscription deactivate
+        Subscriber subscriber = subscriberService.getSubscriber(9439986187L).get(0);
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
+        subscriptionService.deactivateSubscription(subscription, DeactivationReason.DEACTIVATED_BY_USER);
+        transactionManager.commit(status);
+
+        subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
+        assertEquals(DeactivationReason.DEACTIVATED_BY_USER, subscription.getDeactivationReason());
+
+    }
 }

@@ -29,12 +29,11 @@ import org.motechproject.nms.flw.service.CallDetailRecordService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flw.service.ServiceUsageService;
 import org.motechproject.nms.flw.service.WhitelistService;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.DeployedService;
 import org.motechproject.nms.props.domain.Service;
@@ -100,6 +99,8 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Inject
     SubscriptionService subscriptionService;
     @Inject
+    SubscriberService subscriberService;
+    @Inject
     SubscriberDataService subscriberDataService;
     @Inject
     SubscriptionPackDataService subscriptionPackDataService;
@@ -153,6 +154,10 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Inject
     InactiveJobCallAuditDataService inactiveJobCallAuditDataService;
 
+    @Inject
+    SubscriptionDataService subscriptionDataService;
+
+
     public static final Long WHITELIST_CONTACT_NUMBER = 1111111111l;
     public static final Long NOT_WHITELIST_CONTACT_NUMBER = 9000000000l;
 
@@ -170,7 +175,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
 
-        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+        sh = new SubscriptionHelper(subscriberService,subscriptionService, subscriberDataService, subscriptionPackDataService,
                 languageDataService, languageService, circleDataService, stateDataService, districtDataService,
                 districtService);
     }
@@ -179,7 +184,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     private void createKilkariTestData() {
 
         rh.delhiCircle();
-            
+
         deployedServiceDataService.create(new DeployedService(rh.delhiState(), Service.KILKARI));
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -1627,7 +1632,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         Subscriber subscriber = subscriberDataService.create(new Subscriber(4000000000L, rh.hindiLanguage()));
         subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(),
                 rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
-        
+
         Subscription pregnancyPack = subscriptionService.createSubscription(
                 subscriber, subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.IVR);
@@ -1673,10 +1678,10 @@ public class UserControllerBundleIT extends BasePaxIT {
 
         // subscriber subscribed to both packs and Pregnancy pack is completed
         Subscriber subscriber = subscriberDataService.create(new Subscriber(5000000000L, rh.hindiLanguage()));
-        
+
         subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(),
                 rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.IVR);
-        
+
         Subscription pregnancyPack=subscriptionService.createSubscription(
                 subscriber, subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
                 SubscriptionOrigin.IVR);
@@ -1785,7 +1790,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine()
                 .getStatusCode());
     }
-    
+
     /**
      * To verify anonymous User belongs to a circle that has multiple states,
      * should be able to access MK Service content, if user's callingNumber is
@@ -2378,7 +2383,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_FORBIDDEN, httpResponse.getStatusLine()
                 .getStatusCode());
     }
-    
+
     /**
      * To verify anonymous User belongs to a circle that has multiple states,
      * if user's callingNumber is not in whitelist and whitelist is set to Enabled for user's state.
@@ -3113,11 +3118,11 @@ public class UserControllerBundleIT extends BasePaxIT {
         // assert for FLW status
         flw = frontLineWorkerService.getByContactNumber(1200000001l);
         assertTrue(FrontLineWorkerStatus.INACTIVE == flw.getStatus());
-        
+
         Circle circle = rh.karnatakaCircle();
         circle.setDefaultLanguage(rh.kannadaLanguage());
         circleDataService.update(circle);
-        
+
         deployedServiceDataService.create(new
                 DeployedService(rh.karnatakaState(), Service.MOBILE_ACADEMY));
 
@@ -3196,17 +3201,17 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
-    
+
     private void createCircleWithNoLanguage(){
     	Circle circle = new Circle("AA");
         circle.setDefaultLanguage(rh.hindiLanguage());
         circleDataService.create(circle);
-        
+
         ServiceUsageCap serviceUsageCap = new ServiceUsageCap(null, Service.MOBILE_KUNJI, 3600);
         serviceUsageCapDataService.create(serviceUsageCap);
-        
+
     }
-    
+
     private void createFlwWithStatusActive(){
     	// create anonymous FLW record
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
@@ -3227,7 +3232,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         deployedServiceDataService.create(new DeployedService(rh
                 .karnatakaState(), Service.MOBILE_KUNJI));
     }
-    
+
     private void createFlwWithStatusInactive(){
     	// create Invalid FLW record
         FrontLineWorker flw = new FrontLineWorker("Frank Llyod Wright", 1111111111L);
@@ -3240,13 +3245,13 @@ public class UserControllerBundleIT extends BasePaxIT {
         Circle circle = rh.karnatakaCircle();
         circle.setDefaultLanguage(rh.kannadaLanguage());
         circleDataService.update(circle);
-        
+
         deployedServiceDataService.create(new
         DeployedService(rh.karnatakaState(), Service.MOBILE_KUNJI));
     }
-    
+
     /*
-     * To get the details of the Anonymous user using getuserdetails API 
+     * To get the details of the Anonymous user using getuserdetails API
      * when circle sent in request is not mapped to any languageLocation.
      */
     @Ignore
@@ -3277,9 +3282,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
-    
+
     /*
-     * To get the details of the Anonymous user using getuserdetails API 
+     * To get the details of the Anonymous user using getuserdetails API
      * when circle sent in request is mapped to multiple languageLocationCodes
      */
     @Ignore
@@ -3314,7 +3319,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 .toString(response.getEntity()), FlwUserResponse.class);
         assertEquals(expectedResponse, actual);
     }
-    
+
     /*
      * To get the details of the Anonymous user using getuserdetails API
      * when circle sent in request is mapped to multiple languageLocationCodes
@@ -3359,9 +3364,9 @@ public class UserControllerBundleIT extends BasePaxIT {
     @Ignore
     @Test
     public void verifyFT351() throws IOException, InterruptedException {
-    	//Used this method to set up mobile_kunji environment 
+    	//Used this method to set up mobile_kunji environment
     	createCircleWithLanguage();
-    	
+
         HttpGet httpGet = createHttpGet(
                 true, "mobilekunji",      //service
                 true, "1111111112",       //callingNumber
@@ -3381,7 +3386,7 @@ public class UserControllerBundleIT extends BasePaxIT {
                 -1,  //maxAllowedUsageInPulses
                 2      //maxAllowedEndOfUsagePrompt
         );
-        
+
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
 
@@ -3390,9 +3395,9 @@ public class UserControllerBundleIT extends BasePaxIT {
                 .toString(response.getEntity()), FlwUserResponse.class);
         assertEquals(expectedResponse, actual);
     }
-    
+
     /*
-     * To verify that getuserdetails API is rejected when mandatory parameter 
+     * To verify that getuserdetails API is rejected when mandatory parameter
      * callingNumber is missing.
      */
     @Ignore
@@ -3412,7 +3417,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
-    
+
     /*
      * To verify that getuserdetails API is rejected when mandatory parameter callId is missing.
      */
@@ -3421,7 +3426,7 @@ public class UserControllerBundleIT extends BasePaxIT {
     public void verifyFT353() throws IOException, InterruptedException {
     	//Used this method to set up mobile_kunji environment
     	createCircleWithLanguage();
-    	
+
         HttpGet httpGet = createHttpGet(
                 true, "mobilekunji",    //service
                 true, "1111111111", //callingNumber
@@ -3436,9 +3441,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
-    
+
     /*
-     * To verify that getuserdetails API is rejected when mandatory parameter 
+     * To verify that getuserdetails API is rejected when mandatory parameter
      * callingNumber is having invalid value
      */
     @Ignore
@@ -3458,7 +3463,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
-    
+
     /*
      * To verify that getuserdetails API is rejected when optional parameter circle is having invalid value
      */
@@ -3491,9 +3496,9 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
-    
+
     /*
-     * To verify that getuserdetails API is rejected when mandatory parameter 
+     * To verify that getuserdetails API is rejected when mandatory parameter
      * callId is having invalid value
      */
     @Ignore
@@ -3510,16 +3515,16 @@ public class UserControllerBundleIT extends BasePaxIT {
                 true, "22222222222222222" //callId
         );
 
-        
+
         String expectedJsonResponse = createFailureResponseJson("<callId: Invalid>");
 
         HttpResponse response = SimpleHttpClient.httpRequestAndResponse(httpGet, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
-    
+
     /*
-     * To get the details of the inactive user using getuserdetails API 
+     * To get the details of the inactive user using getuserdetails API
      * when languageLocation code is retrieved based on state and district.
      */
     @Ignore
@@ -3552,16 +3557,16 @@ public class UserControllerBundleIT extends BasePaxIT {
                 EntityUtils.toString(response.getEntity()));
 
     }
-    
+
     /*
-     * To get the details of the active user using getuserdetails API 
+     * To get the details of the active user using getuserdetails API
      * when languageLocation code is retrieved based on state and district.
      */
     @Ignore
     @Test
     public void verifyFT358() throws IOException, InterruptedException {
     	createFlwWithStatusActive();
-    	
+
         HttpGet httpGet = createHttpGet(true, "mobilekunji", // service
                 true, "1111111111", // callingNumber
                 true, "OP", // operator
@@ -3586,7 +3591,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
         assertEquals(expectedJsonResponse,
                 EntityUtils.toString(response.getEntity()));
-        
+
     }
 
     /**
@@ -4057,12 +4062,12 @@ public class UserControllerBundleIT extends BasePaxIT {
         District d = rh.newDelhiDistrict();
         deployedServiceDataService.create(new DeployedService(rh
                 .delhiState(), Service.MOBILE_ACADEMY));
-        
+
         // State Capping
         ServiceUsageCap stateUsageCap = new ServiceUsageCap(rh.delhiState(),
                 Service.MOBILE_ACADEMY, 6000);
         serviceUsageCapDataService.create(stateUsageCap);
-        
+
         //national capping
         ServiceUsageCap nationalUsageCap = new ServiceUsageCap(null,
                 Service.MOBILE_ACADEMY, 5000);
@@ -4121,14 +4126,14 @@ public class UserControllerBundleIT extends BasePaxIT {
         rh.delhiCircle();
         deployedServiceDataService.create(new DeployedService(rh.delhiState(),
                 Service.MOBILE_ACADEMY));
-        
+
         // Create FLW with no usage
         FrontLineWorker flw = ApiTestHelper.createFlw("Frank Lol Wright", 1200000000l, "123", FrontLineWorkerStatus.ACTIVE);
         flw.setDistrict(district);
         flw.setState(district.getState());
         flw.setLanguage(rh.hindiLanguage());
         frontLineWorkerService.add(flw);
-        
+
         // invoke get user detail API
         HttpGet httpGet = createHttpGet(true, "mobileacademy", // service
                 true, "1200000000", // callingNumber
@@ -4209,7 +4214,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse,
                 EntityUtils.toString(response.getEntity()));
     }
-    
+
     /**
      * To verify that current usage pulses is resetted after the end of month.
      * For national capping
@@ -4220,7 +4225,7 @@ public class UserControllerBundleIT extends BasePaxIT {
         rh.delhiCircle();
         deployedServiceDataService.create(new DeployedService(rh.delhiState(),
                 Service.MOBILE_ACADEMY));
-        
+
         // national capping
         ServiceUsageCap nationalUsageCap = new ServiceUsageCap(null,
                 Service.MOBILE_ACADEMY, 500);
@@ -5216,5 +5221,29 @@ public class UserControllerBundleIT extends BasePaxIT {
         assertEquals(expectedJsonResponse, EntityUtils.toString(response.getEntity()));
     }
 
+    @Test
+    public void verifyFT183_1() throws IOException,
+            InterruptedException {
+        createKilkariTestData();
+        // subscriber 4000000000L subscribed to both pack and Pregnancy pack is
+        // deactivated
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        Subscriber subscriber = subscriberDataService.create(new Subscriber(4000000000L, rh.hindiLanguage()));
+        subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(),
+                rh.hindiLanguage(), sh.childPack(), SubscriptionOrigin.MCTS_IMPORT);
+
+        Subscription pregnancyPack = subscriptionService.createSubscription(
+                subscriber, subscriber.getCallingNumber(), rh.hindiLanguage(), sh.pregnancyPack(),
+                SubscriptionOrigin.IVR);
+        subscriptionService.deactivateSubscription(pregnancyPack,
+                DeactivationReason.DEACTIVATED_BY_USER);
+
+        transactionManager.commit(status);
+        Subscription subscription = subscriptionDataService.findBySubscriptionId(pregnancyPack.getSubscriptionId());
+        assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
+        assertEquals(DeactivationReason.DEACTIVATED_BY_USER, subscription.getDeactivationReason());
+
+    }
 
 }
