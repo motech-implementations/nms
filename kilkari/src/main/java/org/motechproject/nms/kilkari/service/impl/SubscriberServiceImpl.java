@@ -531,6 +531,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         Subscriber subscriberByRchId = getSubscriberByBeneficiary(childUpdate);
         Subscription finalSubscription = null;
         String motherRchId;
+        String name = childUpdate.getName();
         if (childUpdate.getMother() != null) {
             motherRchId = childUpdate.getMother().getRchId();
         } else {
@@ -549,6 +550,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 }
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                 subscriberByRchId.setDateOfBirth(dob);
+                subscriberByRchId.getChild().setName(name);
                 subscriberByRchId.getChild().setModificationDate(DateTime.now());
                 finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
             } else {
@@ -563,6 +565,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                         subscriberByRchId.setDateOfBirth(dob);
                         subscriberByRchId.getChild().setModificationDate(DateTime.now());
                         subscriberByRchId.getChild().setDateOfBirth(dob);
+                        subscriberByRchId.getChild().setName(name);
                         subscriberByRchId.setModificationDate(DateTime.now());
                         finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
                     } else {
@@ -580,6 +583,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                         }
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                         subscriberByRchId.setDateOfBirth(dob);
+                        subscriberByRchId.getChild().setName(name);
                         subscriberByRchId.getChild().setModificationDate(DateTime.now());
                         subscriberByRchId.setModificationDate(DateTime.now());
                         finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
@@ -617,6 +621,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                         subscriber.setChild(childUpdate);
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriber, pack.getType());
                         subscriber.getChild().setModificationDate(DateTime.now());
+                        subscriberByRchId.getChild().setName(name);
                         finalSubscription = updateOrCreateSubscription(subscriber, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
                     } else {
                         if (subscriptionService.activeSubscriptionByMsisdnRch(msisdn, SubscriptionPackType.CHILD, motherRchId, childUpdate.getRchId())) {
