@@ -32,6 +32,8 @@ public final class Constants {
     public static final String START_DATE_PARAM = "start_date";
     public static final String END_DATE_PARAM = "end_date";
     public static final String STATE_PARAM = "state";
+    public static final String FILE_NAME = "fileName";
+    public static final String REMOTE_LOCATION = "remotelocation";
 
     /**
      * Scheduler

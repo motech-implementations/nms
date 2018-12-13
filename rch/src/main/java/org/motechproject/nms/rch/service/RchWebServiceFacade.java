@@ -42,6 +42,10 @@ public interface RchWebServiceFacade {
 
     void locationUpdateInTable(Long stateId, RchUserType rchUserType);
 
+    void readVillageResponseFromFile(MotechEvent event) throws RchFileManipulationException;
+
+    void readHealthSubFacilityResponseFromFile(MotechEvent event) throws RchFileManipulationException;
+
     void locationUpdateInTableFromCsv(Long stateId, RchUserType rchUserType) throws IOException;
 
     String getBeneficiaryLocationUpdateDirectory();

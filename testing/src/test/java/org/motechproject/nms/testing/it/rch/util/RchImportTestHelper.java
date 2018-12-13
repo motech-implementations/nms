@@ -58,6 +58,15 @@ public final class RchImportTestHelper {
     public static String getAnmAshaResponseDataForOneUpdateDate() throws IOException {
         return readRchFile("rch-anm-asha-data-one-exec-date.xml");
     }
+    public static String getVillageLocationdataResponse() throws IOException {
+        return readRchFile("RCH_StateID_21_Village_Response.xml");
+    }
+    public static String getHealthSubFacilityLocationdataResponse() throws IOException {
+        return readRchFile("RCH_StateID_23_HealthSubFacility_Response.xml");
+    }
+    public static String getDistrictLocationdataResponse() throws IOException {
+        return readRchFile("RCH_StateID_20_District_Response.xml");
+    }
 
     private static String readRchFile(String fileName) throws IOException {
         try (InputStream in = RchImportTestHelper.class.getResourceAsStream("/rch/" + fileName)) {

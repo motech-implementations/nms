@@ -15,7 +15,9 @@ import org.motechproject.nms.rch.service.RchWebServiceFacade;
 import org.motechproject.nms.rch.service.RchWsImportService;
 import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.repository.DistrictDataService;
+import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
 import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.repository.VillageDataService;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.repository.ChildRejectionDataService;
 import org.motechproject.nms.rejectionhandler.repository.MotherRejectionDataService;
@@ -83,6 +85,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     @Inject
     private MctsMotherDataService mctsMotherDataService;
 
+    @Inject
+    private VillageDataService villageDataService;
+
+    @Inject
+    private HealthSubFacilityDataService HealthSubFacilityDataService;
 
 
 
@@ -249,7 +256,81 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
         assertEquals(0, childImportRejections.size());
         List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
-        assertEquals(2, mothers.size());
+        assertEquals(0, mothers.size());
     }
+    @Test
+    public void testVillagexmlRCHImport() throws IOException{
+        String response = RchImportTestHelper.getVillageLocationdataResponse();
+        String remoteLocation = "/home/beehyv/IdeaProjects/nsp/testing/target/test-classes/rch";
+        String fileName =  "RCH_StateID_21_Village_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("villageendpoint", 200, response);
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName);
+        List<Long> a = new ArrayList<>();
+        a.add(21L);
+        // MotechEvent event = new MotechEvent("foobar", params);
+        rchWsImportService.importVillageFromRch(a, yesterday, endpoint);
+        MotechEvent event1 = new MotechEvent(org.motechproject.nms.rch.utils.Constants.RCH_VILLAGE_READ_SUBJECT, params);
+        try {
+            rchWebServiceFacade.readVillageResponseFromFile(event1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl);
+        List villages = villageDataService.retrieveAll();
+        assertEquals(0, villages.size());
+
+
+
+}
+    @Test
+    public void testHealthSubFacilityxmlRCHImport() throws IOException{
+        String response = RchImportTestHelper.getHealthSubFacilityLocationdataResponse();
+        String remoteLocation = "/home/beehyv/IdeaProjects/nsp/testing/target/test-classes/rch";
+        String fileName =  "RCH_StateID_23_HealthSubFacility_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("healthsubfacilityendpoint", 200, response);
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 23L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName);
+        List<Long> a = new ArrayList<>();
+        a.add(23L);
+        // MotechEvent event = new MotechEvent("foobar", params);
+        rchWsImportService.importHealthSubFacilityFromRch(a, yesterday, endpoint);
+        MotechEvent event1 = new MotechEvent(org.motechproject.nms.rch.utils.Constants.RCH_HEALTHSUBFACILITY_READ_SUBJECT, params);
+        try {
+            rchWebServiceFacade.readHealthSubFacilityResponseFromFile(event1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl);
+        List HealthSubFacility = HealthSubFacilityDataService.retrieveAll();
+        assertEquals(0, HealthSubFacility.size());
+
+
+
+    }
+
+
 
 }
