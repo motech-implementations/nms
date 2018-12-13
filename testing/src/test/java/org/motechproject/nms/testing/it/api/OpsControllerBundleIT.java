@@ -9,6 +9,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.motechproject.mtraining.domain.ActivityState;
@@ -114,11 +115,12 @@ public class OpsControllerBundleIT extends BasePaxIT {
     @Inject
     FlwErrorDataService flwErrorDataService;
 
-
     @Inject
     SubscriberService subscriberService;
+
     @Inject
     SubscriptionService subscriptionService;
+
     @Inject
     SubscriberDataService subscriberDataService;
     @Inject
@@ -225,7 +227,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         assertNull(flw);
     }
 
-    // Create valid new flw
+    @Ignore //since this requirement is changed, a talkua can't be created
     @Test
     public void testCreateNewFlwTalukaVillage() throws IOException, InterruptedException {
 
@@ -386,6 +388,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
     }
 
 
+    @Ignore //since this requirement is changed, a talkua can't be created
     @Test
     public void testUpdateNoTaluka() throws IOException, InterruptedException {
 
@@ -466,7 +469,6 @@ public class OpsControllerBundleIT extends BasePaxIT {
     private void createFlwHelper(String name, Long phoneNumber, String mctsFlwId) {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         stateDataService.create(state);
-        // create flw
         FrontLineWorker flw = new FrontLineWorker(name, phoneNumber);
         flw.setMctsFlwId(mctsFlwId);
         flw.setState(state);
@@ -529,15 +531,15 @@ public class OpsControllerBundleIT extends BasePaxIT {
     }
 
     private AddFlwRequest getAddRequestInactiveGfStatus() {
-            AddFlwRequest request = new AddFlwRequest();
-            request.setContactNumber(9876543210L);
-            request.setName("Chinkoo Devi");
-            request.setMctsFlwId("123");
-            request.setStateId(state.getCode());
-            request.setDistrictId(district.getCode());
-            request.setType("ASHA");
-            request.setGfStatus("Inactive");
-            return request;
+        AddFlwRequest request = new AddFlwRequest();
+        request.setContactNumber(9876543210L);
+        request.setName("Chinkoo Devi");
+        request.setMctsFlwId("123");
+        request.setStateId(state.getCode());
+        request.setDistrictId(district.getCode());
+        request.setType("ASHA");
+        request.setGfStatus("Inactive");
+        return request;
     }
 
     // helper to create location data
@@ -606,7 +608,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         // create subscription for a msisdn
         rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
-        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+        sh = new SubscriptionHelper(subscriberService,subscriptionService, subscriberDataService, subscriptionPackDataService,
                 languageDataService, languageService, circleDataService, stateDataService, districtDataService,
                 districtService);
 
@@ -614,7 +616,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         subscriberIVR.setLastMenstrualPeriod(DateTime.now().plusWeeks(70));
         subscriberIVR = subscriberDataService.update(subscriberIVR);
 
-       subscriptionService.createSubscription(subscriberIVR, subscriberIVR.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
+        subscriptionService.createSubscription(subscriberIVR, subscriberIVR.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
 
         Subscriber subscriberMCTS = subscriberDataService.create(new Subscriber(6000000000L));
@@ -630,14 +632,14 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        Subscriber subscriberIVR = subscriberDataService.findByNumber(5000000000L).get(0);
+        Subscriber subscriberIVR = subscriberService.getSubscriber(5000000000L).get(0);
         Set<Subscription> subscriptionsIVR = ( Set<Subscription> ) subscriberDataService.getDetachedField(subscriberIVR, "subscriptions");
         for (Subscription subscriptionIVR : subscriptionsIVR) {
             Assert.assertTrue(subscriptionIVR.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED));
             Assert.assertTrue(subscriptionIVR.getStatus().equals(SubscriptionStatus.DEACTIVATED));
         }
 
-        Subscriber subscriberMCTS = subscriberDataService.findByNumber(6000000000L).get(0);
+        Subscriber subscriberMCTS = subscriberService.getSubscriber(6000000000L).get(0);
         Set<Subscription> subscriptionsMCTS = ( Set<Subscription> ) subscriberDataService.getDetachedField(subscriberMCTS, "subscriptions");
         for (Subscription subscriptionMCTS : subscriptionsMCTS) {
             Assert.assertTrue(subscriptionMCTS.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED) || subscriptionMCTS.getDeactivationReason().equals(DeactivationReason.LOW_LISTENERSHIP));
@@ -668,6 +670,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
     }
 
     //Test deactivation of specific msisdn - 5000000000L as IVR and 6000000000L as MCTS import
+    @Ignore //invalid usecase as there no case of deactivating flw based on "WEEKLY_CALLS_NOT_ANSWERED", "LOW_LISTENERSHIP"
     @Test
     public void testDeactivateSpecificValidMsisdn() throws IOException, InterruptedException, URISyntaxException {
         createSubscriberHelper();
@@ -702,7 +705,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         BlockedMsisdnRecord blockedMsisdnRecord = blockedMsisdnRecordDataService.findByNumber(msisdn);
         assertNotNull(blockedMsisdnRecord);
 
-        Subscriber subscriber = subscriberDataService.findByNumber(msisdn).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(msisdn).get(0);
         Subscription subscription = subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
         Assert.assertNull(subscription);
@@ -763,8 +766,8 @@ public class OpsControllerBundleIT extends BasePaxIT {
     @Test
     public void testFlwCsvImportRejection() throws IOException, InterruptedException {
 
-        createFlwHelper("Dipika Pegu", 8473877695L, "57856");
-        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(8473877695L);
+        createFlwHelper("Dipika Pegu", 8473811195L, "57856");
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(8473811195L);
         assertNotNull(flw.getState());
         assertNotNull(flw.getDistrict());
         assertNull(flw.getTaluka());    // null since we don't create it by default in helper
@@ -777,12 +780,14 @@ public class OpsControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_BAD_REQUEST, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
 
         // refetch and check that taluka and village are set
-        flw = frontLineWorkerService.getByContactNumber(8473877695L);
+        flw = frontLineWorkerService.getByContactNumber(8473811195L);
         assertNotNull(flw.getState());
         assertNotNull(flw.getDistrict());
-        assertNotNull(flw.getTaluka());
-        assertNotNull(flw.getVillage());
+        assertNull(flw.getTaluka());
+        assertNull(flw.getVillage());
         List<FlwImportRejection> flwImportRejectionList = flwImportRejectionDataService.retrieveAll();
-        assertEquals(0, flwImportRejectionList.size());
+        assertEquals(1, flwImportRejectionList.size());
+        List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
+        assertEquals(1, frontLineWorkers.size());
     }
 }

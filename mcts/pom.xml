@@ -6,12 +6,12 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.38</version>
+        <version>1.0.38.1</version>
         <relativePath>../</relativePath>
     </parent>
 
     <artifactId>mcts</artifactId>
-    <version>1.0.38</version>
+    <version>1.0.38.1</version>
     <packaging>bundle</packaging>
     <name>Mother Children Tracking Service</name>
 
@@ -138,7 +138,8 @@
                             org.motechproject.nms.mcts.soap;version=${project.version},
                             org.motechproject.nms.mcts.contract;version=${project.version},
                             org.motechproject.nms.mcts.repository;version=${project.version},
-                            org.motechproject.nms.mcts.domain;version=${project.version}
+                            org.motechproject.nms.mcts.domain;version=${project.version},
+                            org.motechproject.nms.mcts.utils;version=${project.version}
                         </Export-Package>
                         <Import-Package>
                             org.apache.axis.*,

@@ -18,7 +18,7 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
 
-@Entity(maxFetchDepth = -1, tableName = "nms_subscriptions")
+@Entity(maxFetchDepth = -1,tableName = "nms_subscriptions")
 @Index(name = "status_endDate_composit_idx", members = { "status", "endDate" })
 @TrackClass
 @InstanceLifecycleListeners

@@ -370,13 +370,14 @@ public class TargetFileServiceImpl implements TargetFileService {
         do {
             List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, offset, maxQueryBlock);
 
+            LOGGER.debug("Subsciptions size "  + subscriptions.size());
             if (subscriptions.size() == 0) {
                 break;
             }
 
             Timer rowTimer = new Timer("file row", "file rows");
             for (Subscription subscription : subscriptions) {
-
+                LOGGER.debug("Handling Subscription " + subscription.getId());
                 offset = subscription.getId();
 
                 Subscriber subscriber = subscription.getSubscriber();
@@ -421,7 +422,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                     String message = se.toString();
                     alertService.create(subscription.getSubscriptionId(), "IllegalStateException", message,
                             AlertType.HIGH, AlertStatus.NEW, 0, null);
-                    LOGGER.error(message);
+                    LOGGER.error(message,se);
                 }
             }
 
@@ -495,6 +496,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     /**
      * 4.4.1 Target File Format
      */
+    @Transactional
     public TargetFileNotification generateTargetFile() {
         LOGGER.info("generateTargetFile()");
         DateTime today = DateTime.now();
@@ -532,7 +534,7 @@ public class TargetFileServiceImpl implements TargetFileService {
             checksum = ChecksumHelper.checksum(targetFile);
 
         } catch (IOException e) {
-            LOGGER.error(e.getMessage());
+            LOGGER.error(e.getMessage(),e);
             alert(targetFile.toString(), "targetFile", e.getMessage());
             fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, targetFile.getName(),
                     false, e.getMessage(), null, null));
@@ -588,7 +590,7 @@ public class TargetFileServiceImpl implements TargetFileService {
             } catch (ExecException e) {
                 String error = String.format("Error copying target file %s: %s", tfn.getFileName(),
                         e.getMessage());
-                LOGGER.error(error);
+                LOGGER.error(error,e);
                 fileAuditRecordDataService.create(new FileAuditRecord(
                         FileType.TARGET_FILE,
                         tfn.getFileName(),

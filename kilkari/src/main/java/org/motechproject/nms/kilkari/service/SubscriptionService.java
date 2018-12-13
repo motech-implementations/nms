@@ -217,9 +217,9 @@ public interface SubscriptionService {
      */
     Subscription getIVRSubscription(Set<Subscription> subscriptions, SubscriptionPackType packType);
 
-    Boolean activeSubscriptionByMsisdnMcts(Long msisdn, SubscriptionPackType packType, String motherBeneficiaryId, String childBeneficiaryId);
+    Boolean activeSubscriptionByMsisdnMcts(Subscriber subscriber, Long msisdn, SubscriptionPackType packType, String motherBeneficiaryId, String childBeneficiaryId);
 
-    Boolean activeSubscriptionByMsisdnRch(Long msisdn, SubscriptionPackType packType, String motherRchId, String childRchId);
+    Boolean activeSubscriptionByMsisdnRch(List<Subscriber> subscribers, Long msisdn, SubscriptionPackType packType, String motherRchId, String childRchId);
 
 
 

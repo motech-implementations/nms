@@ -327,7 +327,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                 rejectedMothers.put(motherImportRejection.getIdNo(), motherImportRejection);
                 rejectionStatus.put(motherImportRejection.getIdNo(), motherImportRejection.getAccepted());
             } else {
-                boolean isValidLMP =  (mother.getId() == null || (mother.getId() != null && mother.getLastMenstrualPeriod() == null)) && !mctsBeneficiaryImportService.validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, SubscriptionOrigin.MCTS_IMPORT);
+                boolean isValidLMP =  (!mctsBeneficiaryImportService.validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, SubscriptionOrigin.MCTS_IMPORT));
                         if (isValidLMP) {
                             motherImportRejection = motherRejectionMcts(convertMapToMother(recordMap), false, RejectionReasons.INVALID_LMP_DATE.toString(), action);
                             rejectedMothers.put(motherImportRejection.getIdNo(), motherImportRejection);
@@ -503,7 +503,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                 rejectedChilds.put(childImportRejection.getIdNo(), childImportRejection);
                 rejectionStatus.put(childImportRejection.getIdNo(), childImportRejection.getAccepted());
             } else {
-                boolean isInValidDOB = child.getId() == null && !mctsBeneficiaryImportService.validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, SubscriptionOrigin.MCTS_IMPORT);
+                boolean isInValidDOB = !mctsBeneficiaryImportService.validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, SubscriptionOrigin.MCTS_IMPORT);
                 if (isInValidDOB) {
                     childImportRejection = childRejectionMcts(convertMapToChild(recordMap), false, RejectionReasons.INVALID_DOB.toString(), action);
                     rejectedChilds.put(childImportRejection.getIdNo(), childImportRejection);
@@ -609,7 +609,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                 Long msisdn = Long.parseLong(record.getContactNo());
                 String mctsFlwId = record.getId().toString();
                 FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
-                if (flw != null && ((!mctsFlwId.equals(flw.getMctsFlwId()) || state.getId() != flw.getState().getId())) && flw.getStatus() != FrontLineWorkerStatus.ANONYMOUS) {
+                if (flw != null && ((!mctsFlwId.equals(flw.getMctsFlwId()) || !state.getId().equals(flw.getState().getId()))) && !FrontLineWorkerStatus.ANONYMOUS.equals(flw.getStatus())) {
                     LOGGER.debug("Existing FLW with same MSISDN but different MCTS ID");
                     flwRejectionService.createUpdate(flwRejectionMcts(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
                     rejected++;

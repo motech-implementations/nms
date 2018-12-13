@@ -416,7 +416,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             for (RchImportFacilitator rchImportFacilitatorsDistrict: rchImportFacilitatorsDistricts
                  ) {
                 ArrayList<Map<String, Object>> districtArrList = new ArrayList<>();
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsDistrict.getFileName());
+                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsDistrict.getFileName(), null);
                 if (localResponseFile != null) {
                     LOGGER.info("RCH district response file successfully copied from remote server to local directory.");
                     String result = readResponsesFromXml(localResponseFile);
@@ -508,7 +508,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             for (RchImportFacilitator rchImportFacilitatorsTaluka: rchImportFacilitatorsTalukas
                     ) {
                 ArrayList<Map<String, Object>> talukaArrList = new ArrayList<>();
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsTaluka.getFileName());
+                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsTaluka.getFileName(), null);
                 if (localResponseFile != null) {
                     LOGGER.info("RCH Taluka response file successfully copied from remote server to local directory.");
                     String result = readResponsesFromXml(localResponseFile);
@@ -599,7 +599,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             for (RchImportFacilitator rchImportFacilitatorsVillage: rchImportFacilitatorsVillages
                  ) {
                 ArrayList<Map<String, Object>> villageArrList = new ArrayList<>();
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsVillage.getFileName());
+                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsVillage.getFileName(), null);
                 if (localResponseFile != null) {
                     LOGGER.info("RCH village response file successfully copied from remote server to local directory.");
                     String result = readResponsesFromXml(localResponseFile);
@@ -701,8 +701,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("Copying RCH mother response file from remote server to local directory.");
             List<RchImportFacilitator> rchImportFacilitatorMothers = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.MOTHER);
             for (RchImportFacilitator rchImportFacilitatorMother: rchImportFacilitatorMothers
-                 ) {
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorMother.getFileName());
+            ) {
+                File localResponseFile = scpResponseToLocal(rchImportFacilitatorMother.getFileName(), null);
                 if (localResponseFile != null) {
                     LOGGER.info("RCH Mother response file successfully copied from remote server to local directory.");
                     String result = readResponsesFromXml(localResponseFile);
@@ -813,6 +813,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 ) {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
+            eventParams.put(Constants.REMOTE_LOCATION, null);
             eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_CHILD_READ, eventParams));
         }
     }
@@ -820,12 +821,13 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     @MotechListener(subjects = Constants.RCH_CHILD_READ)
     public void readChildResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
+        String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         LOGGER.info("Copying RCH child response file from remote server to local directory.");
         try {
             List<RchImportFacilitator> rchImportFacilitatorChildren = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.CHILD);
             for (RchImportFacilitator rchImportFacilitatorChild: rchImportFacilitatorChildren
-                 ) {
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorChild.getFileName());
+            ) {
+                File localResponseFile = scpResponseToLocal(rchImportFacilitatorChild.getFileName(), remoteLocation);
                 String result = readResponsesFromXml(localResponseFile);
                 State state = stateDataService.findByCode(stateId);
 
@@ -930,6 +932,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 ) {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
+            eventParams.put(Constants.REMOTE_LOCATION, null);
+            eventParams.put(Constants.FILE_NAME, null);
             eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_ASHA_READ, eventParams));
         }
     }
@@ -937,14 +941,26 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     @MotechListener(subjects = Constants.RCH_ASHA_READ)
     public void readAshaResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
+        String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
+        String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         LOGGER.info("RCH Asha file import entry point");
         LOGGER.info("Copying RCH Asha response file from remote server to local directory.");
-
+        String targetFileName = targetFileName(TIME_FORMATTER.print(DateTime.now()), RchUserType.ASHA, stateId);
+        LocalDate endDate = (LocalDate) event.getParameters().get(org.motechproject.nms.mcts.utils.Constants.END_DATE_PARAM);
+        LocalDate startDate = (LocalDate)   event.getParameters().get(org.motechproject.nms.mcts.utils.Constants.START_DATE_PARAM);
+        RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(targetFileName,endDate ,startDate,stateId, RchUserType.ASHA, LocalDate.now());
+        rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
         try {
             List<RchImportFacilitator> rchImportFacilitatorAshas = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.ASHA);
             for (RchImportFacilitator rchImportFacilitatorAsha: rchImportFacilitatorAshas
-                 ) {
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorAsha.getFileName());
+            ) {
+                File localResponseFile ;
+                if (fileName == null) {
+                    localResponseFile = scpResponseToLocal(rchImportFacilitatorAsha.getFileName(), remoteLocation);
+                } else {
+                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                }
+
                 String result = readResponsesFromXml(localResponseFile);
                 State importState = stateDataService.findByCode(stateId);
 
@@ -1049,7 +1065,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             for (RchImportFacilitator rchImportFacilitatorsHealthBlock: rchImportFacilitatorsHealthBlocks
                  ) {
                 ArrayList<Map<String, Object>> healthBlockArrList = new ArrayList<>();
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsHealthBlock.getFileName());
+                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsHealthBlock.getFileName(), null);
                 if (localResponseFile != null) {
                     LOGGER.info("RCH healthblock response file successfully copied from remote server to local directory.");
                     String result = readResponsesFromXml(localResponseFile);
@@ -1176,7 +1192,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             for (RchImportFacilitator rchImportFacilitatorsTalukaHealthBlock: rchImportFacilitatorsTalukaHealthBlocks
                  ) {
                 ArrayList<Map<String, Object>> talukaHealthBlockArrList = new ArrayList<>();
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsTalukaHealthBlock.getFileName());
+                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsTalukaHealthBlock.getFileName(), null);
                 if (localResponseFile != null) {
                     LOGGER.info("RCH Taluka-healthblock response file successfully copied from remote server to local directory.");
                     String result = readResponsesFromXml(localResponseFile);
@@ -1378,7 +1394,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             for (RchImportFacilitator rchImportFacilitatorsHealthFacility: rchImportFacilitatorsHealthFacilities
                  ) {
                 ArrayList<Map<String, Object>> healthFacilityArrList = new ArrayList<>();
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsHealthFacility.getFileName());
+                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsHealthFacility.getFileName(), null);
                 if (localResponseFile != null) {
                     LOGGER.info("RCH healthfacility response file successfully copied from remote server to local directory.");
                     String result = readResponsesFromXml(localResponseFile);
@@ -1468,7 +1484,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             for (RchImportFacilitator rchImportFacilitatorsHealthSubFacility: rchImportFacilitatorsHealthSubFacilities
                  ) {
                 ArrayList<Map<String, Object>> healthSubFacilityArrList = new ArrayList<>();
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsHealthSubFacility.getFileName());
+                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsHealthSubFacility.getFileName(), null);
                 if (localResponseFile != null) {
                     LOGGER.info("RCH healthsubfacility response file successfully copied from remote server to local directory.");
                     String result = readResponsesFromXml(localResponseFile);
@@ -1558,7 +1574,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             for (RchImportFacilitator rchImportFacilitatorsVillageHealthSubFacility: rchImportFacilitatorsVillageHealthSubFacilities
                  ) {
                 ArrayList<Map<String, Object>> villageHealthSubFacilityArrList = new ArrayList<>();
-                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsVillageHealthSubFacility.getFileName());
+                File localResponseFile = scpResponseToLocal(rchImportFacilitatorsVillageHealthSubFacility.getFileName(), null);
                 if (localResponseFile != null) {
                     LOGGER.info("RCH villageHealthsubfacility response file successfully copied from remote server to local directory.");
                     String result = readResponsesFromXml(localResponseFile);
@@ -1859,7 +1875,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rejectedMothers.put(motherImportRejection.getRegistrationNo(), motherImportRejection);
                 rejectionStatus.put(motherImportRejection.getRegistrationNo(), motherImportRejection.getAccepted());
             } else {
-                if ((mother.getId() == null || (mother.getId() != null && mother.getLastMenstrualPeriod() == null)) && !mctsBeneficiaryImportService.validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, SubscriptionOrigin.MCTS_IMPORT)) {
+                if (!mctsBeneficiaryImportService.validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, SubscriptionOrigin.MCTS_IMPORT)) {
                     motherImportRejection = motherRejectionRch(convertMapToRchMother(recordMap), false, RejectionReasons.INVALID_LMP_DATE.toString(), action);
                     rejectedMothers.put(motherImportRejection.getRegistrationNo(), motherImportRejection);
                     rejectionStatus.put(motherImportRejection.getRegistrationNo(), motherImportRejection.getAccepted());
@@ -2001,7 +2017,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rejectedChilds.put(childImportRejection.getRegistrationNo(), childImportRejection);
                 rejectionStatus.put(childImportRejection.getRegistrationNo(), childImportRejection.getAccepted());
             } else {
-                if (child.getId() == null && !mctsBeneficiaryImportService.validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, SubscriptionOrigin.RCH_IMPORT)) {
+                if (!mctsBeneficiaryImportService.validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, SubscriptionOrigin.RCH_IMPORT)) {
                     childImportRejection = childRejectionRch(convertMapToRchChild(recordMap), false, RejectionReasons.INVALID_DOB.toString(), action);
                     rejectedChilds.put(childImportRejection.getRegistrationNo(), childImportRejection);
                     rejectionStatus.put(childImportRejection.getRegistrationNo(), childImportRejection.getAccepted());
@@ -2047,7 +2063,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 Long msisdn = Long.parseLong(record.getMobileNo());
                 String flwId = record.getGfId().toString();
                 FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
-                if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || state != flw.getState()))  && flw.getStatus() != FrontLineWorkerStatus.ANONYMOUS) {
+                if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || !state.equals(flw.getState())))  && !FrontLineWorkerStatus.ANONYMOUS.equals(flw.getStatus())) {
                     LOGGER.debug("Existing FLW with same MSISDN but different MCTS ID");
                     flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
                     rejected++;
@@ -2066,13 +2082,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                             LOGGER.warn("Invalid location for FLW: ", e);
                             flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.INVALID_LOCATION.toString(), action));
                             rejected++;
-                        } catch (FlwImportException e) {
+                        } catch (FlwExistingRecordException e) {
                             LOGGER.debug("Existing FLW with same MSISDN but different RCH ID", e);
                             flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
-                            rejected++;
-                        } catch (FlwExistingRecordException e) {
-                            LOGGER.error("Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}", record.getGfId(), record.getMobileNo(), e);
-                            flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS.toString(), action));
                             rejected++;
                         } catch (Exception e) {
                             LOGGER.error("RCH Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}",
@@ -2332,17 +2344,17 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         execHelper.exec(command, getScpTimeout());
     }
 
-    private File scpResponseToLocal(String fileName) {
+    private File scpResponseToLocal(String fileName, String remoteLocation) {
         String localDir = settingsFacade.getProperty(LOCAL_RESPONSE_DIR);
 
-        String command = "scp " + remoteResponseFile(fileName) + " " + localDir;
+        String command = "scp " + remoteResponseFile(fileName, remoteLocation) + " " + localDir;
         ExecutionHelper execHelper = new ExecutionHelper();
         execHelper.exec(command, getScpTimeout());
         return new File(localResponseFile(fileName));
     }
 
     private File fileForLocUpdate(String fileName) {
-        return new File(remoteResponseFile(fileName));
+        return new File(remoteResponseFile(fileName, null));
     }
 
     private File fileForXmlLocUpdate(String fileName) {
@@ -2356,11 +2368,13 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return localFile;
     }
 
-    public String remoteResponseFile(String file) {
-        String remoteFile = settingsFacade.getProperty(REMOTE_RESPONSE_DIR);
-        remoteFile += remoteFile.endsWith("/") ? "" : "/";
-        remoteFile += file;
-        return remoteFile;
+    public String remoteResponseFile(String file, String remoteLocation) {
+        if (remoteLocation == null) {
+            remoteLocation = settingsFacade.getProperty(REMOTE_RESPONSE_DIR);
+        }
+        remoteLocation += remoteLocation.endsWith("/") ? "" : "/";
+        remoteLocation += file;
+        return remoteLocation;
     }
 
     public String remoteResponseFileForXml(String file) {
@@ -2549,44 +2563,44 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     @Transactional
     public void locationUpdateInTableFromCsv(Long stateId, RchUserType rchUserType) throws IOException {
 
-            List<MultipartFile> rchImportFiles = findByStateIdAndRchUserType(stateId, rchUserType);
+        List<MultipartFile> rchImportFiles = findByStateIdAndRchUserType(stateId, rchUserType);
 
-            Collections.sort(rchImportFiles, new Comparator<MultipartFile>() {
-                public int compare(MultipartFile m1, MultipartFile m2) {
-                    Date file1Date;
-                    Date file2Date;
-                    int flag = 1;
-                    try {
-                        file1Date = getDateFromFileName(m1.getOriginalFilename());
-                        file2Date = getDateFromFileName(m2.getOriginalFilename());
-                        flag = file1Date.compareTo(file2Date);
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
-                    return flag; //ascending order
+        Collections.sort(rchImportFiles, new Comparator<MultipartFile>() {
+            public int compare(MultipartFile m1, MultipartFile m2) {
+                Date file1Date;
+                Date file2Date;
+                int flag = 1;
+                try {
+                    file1Date = getDateFromFileName(m1.getOriginalFilename());
+                    file2Date = getDateFromFileName(m2.getOriginalFilename());
+                    flag = file1Date.compareTo(file2Date);
+                } catch (ParseException e) {
+                    e.printStackTrace();
                 }
-            });
+                return flag; //ascending order
+            }
+        });
 
-            for (MultipartFile rchImportFile : rchImportFiles) {
-                    try (InputStream in = rchImportFile.getInputStream()) {
+        for (MultipartFile rchImportFile : rchImportFiles) {
+            try (InputStream in = rchImportFile.getInputStream()) {
 
-                        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
-                        Map<String, CellProcessor> cellProcessorMapper;
-                        List<Map<String, Object>> recordList;
-                        LOGGER.debug("Started reading file {}.", rchImportFile.getOriginalFilename());
-                        if (rchUserType == RchUserType.MOTHER) {
-                            cellProcessorMapper = mctsBeneficiaryImportService.getRchMotherProcessorMapping();
-                            recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
-                            motherLocUpdateFromCsv(recordList, stateId, rchUserType);
-                        } else if (rchUserType == RchUserType.CHILD) {
-                            cellProcessorMapper = mctsBeneficiaryImportReaderService.getRchChildProcessorMapping();
-                            recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
-                            childLocUpdateFromCsv(recordList, stateId, rchUserType);
-                        } else if (rchUserType == RchUserType.ASHA) {
-                            cellProcessorMapper = mctsBeneficiaryImportService.getRchAshaProcessorMapping();
-                            recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
-                            ashaLocUpdateFromCsv(recordList, stateId, rchUserType);
-                        }
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
+                Map<String, CellProcessor> cellProcessorMapper;
+                List<Map<String, Object>> recordList;
+                LOGGER.debug("Started reading file {}.", rchImportFile.getOriginalFilename());
+                if (rchUserType == RchUserType.MOTHER) {
+                    cellProcessorMapper = mctsBeneficiaryImportService.getRchMotherProcessorMapping();
+                    recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
+                    motherLocUpdateFromCsv(recordList, stateId, rchUserType);
+                } else if (rchUserType == RchUserType.CHILD) {
+                    cellProcessorMapper = mctsBeneficiaryImportReaderService.getRchChildProcessorMapping();
+                    recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
+                    childLocUpdateFromCsv(recordList, stateId, rchUserType);
+                } else if (rchUserType == RchUserType.ASHA) {
+                    cellProcessorMapper = mctsBeneficiaryImportService.getRchAshaProcessorMapping();
+                    recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
+                    ashaLocUpdateFromCsv(recordList, stateId, rchUserType);
+                }
 
                     }
             }
@@ -2910,8 +2924,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 String[] fileNameSplitter =  f.getName().split("_");
                 if(Objects.equals(fileNameSplitter[2], stateId.toString()) && fileNameSplitter[3].equalsIgnoreCase(rchUserType.toString())){
                     try {
-                        FileItem fileItem = new DiskFileItem("file",  "text/plain", false, file.getName(), (int) file.length(), file.getParentFile());
-                        IOUtils.copy(new FileInputStream(file), fileItem.getOutputStream());
+                        FileItem fileItem = new DiskFileItem("file",  "text/plain", false, f.getName(), (int) f.length(), f.getParentFile());
+                        IOUtils.copy(new FileInputStream(f), fileItem.getOutputStream());
                         MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
                         csvFilesByStateIdAndRchUserType.add(multipartFile);
                     }catch(IOException e) {
@@ -3225,9 +3239,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             @Override
             public String getSqlQuery() {
                 String query = "SELECT * FROM nms_front_line_workers WHERE state_id_OID = " + stateID +
-                            " and mctsFlwId IN (SELECT mctsFlwId from nms_front_line_workers WHERE state_id_OID = " + stateID +
-                            " group by mctsFlwId having count(*) = 1) " +
-                            " and  mctsFlwId IN " + queryIdListAsha(ashaRecords);
+                        " and mctsFlwId IN (SELECT mctsFlwId from nms_front_line_workers WHERE state_id_OID = " + stateID +
+                        " group by mctsFlwId having count(*) = 1) " +
+                        " and  mctsFlwId IN " + queryIdListAsha(ashaRecords);
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }

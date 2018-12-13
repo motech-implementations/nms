@@ -625,7 +625,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         List<CallSummaryRecordDto> csrDtos;
 
         try {
-            csrDtos = mapper.readValue(json, new TypeReference() { });
+            csrDtos = mapper.readValue(json, new TypeReference<List<CallSummaryRecordDto>>() {});
 
             LOGGER.debug("Processing {} ({} csrs)", name, csrDtos.size());
 

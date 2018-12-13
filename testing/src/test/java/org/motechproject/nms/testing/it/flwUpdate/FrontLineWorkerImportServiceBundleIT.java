@@ -22,6 +22,7 @@ import org.motechproject.nms.flw.repository.ContactNumberAuditDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.mobileacademy.domain.CourseCompletionRecord;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
@@ -47,6 +48,8 @@ import org.motechproject.nms.region.service.HealthSubFacilityService;
 import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.motechproject.nms.region.service.VillageService;
+import org.motechproject.nms.rejectionhandler.domain.FlwImportRejection;
+import org.motechproject.nms.rejectionhandler.repository.FlwImportRejectionDataService;
 import org.motechproject.nms.testing.it.api.utils.RequestBuilder;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -125,6 +128,8 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     ActivityDataService activityDataService;
     @Inject
     MobileAcademyService maService;
+    @Inject
+    FlwImportRejectionDataService flwImportRejectionDataService;
     @Inject
     CourseCompletionRecordDataService courseCompletionRecordDataService;
 
@@ -288,6 +293,18 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         assertEquals(9,flws.size());
     }
 
+
+    @Ignore //Before Asha_csv import the duplicate records are removed
+    @Test  //To test duplicate dataset validation
+    public void testDuplicateDataSetvalidation() throws Exception {
+        frontLineWorkerImportService.importData(read("csv/anm-asha1.txt"), SubscriptionOrigin.MCTS_IMPORT);
+        List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
+        List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
+        assertEquals(2, frontLineWorkers.size());
+        assertEquals(3, flwImportRejections.size());
+
+    }
+
     /**
      * VerifyFT513  verify that status of flw must be set to "inactive" when the flw data is imported into
      * the NMS DB and the user has not yet called
@@ -385,6 +402,25 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     }
 
     /**
+     * To verify FLW record is rejected when DistrictID and District name are null.
+     */
+    @Ignore //TODO //assertion mismatch(Bug) needs to be fixed by Vishnu
+    @Test
+    public void districtIDAndDistrictNameNull() throws Exception {
+        importCsvFileForFLW("flw1.txt");
+        FrontLineWorker flw1 = frontLineWorkerService.getByContactNumber(1234567899L);
+        assertFLW(flw1, "1", 1234567899L, "Aisha Bibi", "", "L1");
+        assertEquals("State{name='State 1', code=1}", flw1.getState().toString());
+        assertEquals(FrontLineWorkerStatus.INACTIVE, flw1.getStatus());
+        // Assert audit trail log
+        CsvAuditRecord csvAuditRecord = csvAuditRecordDataService.retrieveAll()
+                .get(0);
+        assertEquals("/flwUpdate/import", csvAuditRecord.getEndpoint());
+        assertEquals(SUCCESS, csvAuditRecord.getOutcome());
+        assertEquals("flw.txt", csvAuditRecord.getFile());
+    }
+
+    /**
      * To verify FLW upload is rejected when mandatory parameter MSISDN is missing.
      */
     @Test(expected = CsvImportDataException.class)
@@ -423,6 +459,119 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     public void verifyFT543() throws Exception {
         Reader reader = createReaderWithHeaders("#1\t123456789\tFLW 1\t11\t18-08-2016\tASHA\tActive");
         frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+    }
+
+    /**
+     * To verify FLW upload is rejected when Asha type has invalid value
+     */
+    @Ignore    //TODO //assertion mismatch(Bug) needs to be fixed by Vishnu
+    @Test
+    public void ashaTypeInvalid() throws Exception {
+        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t11\t18-08-2016\tMother\tActive");
+        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
+        List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
+        assertEquals(0, frontLineWorkers.size());
+        assertEquals(1, flwImportRejections.size());
+        assertEquals(RejectionReasons.FLW_TYPE_NOT_ASHA.toString(), flwImportRejections.get(0).getRejectionReason());
+    }
+
+    /**
+     * To verify FLW upload is rejected when Asha type is null
+     */
+    @Ignore //TODO //assertion mismatch(Bug) needs to be fixed by Vishnu
+    @Test
+    public void ashaTypeIsNull() throws Exception {
+        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t11\t18-08-2016\t\tActive");
+        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
+        List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
+        assertEquals(0, frontLineWorkers.size());
+        assertEquals(1, flwImportRejections.size());
+        assertEquals(RejectionReasons.FLW_TYPE_NOT_ASHA.toString(), flwImportRejections.get(0).getRejectionReason());
+    }
+
+    /**
+     * To verify FLW upload is rejected when GF_Status is Invalid
+     */
+    @Ignore //TODO //assertion mismatch(Bug) needs to be fixed by Vishnu
+    @Test
+    public void testGF_StatusIsInvalid() throws Exception {
+        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t11\t18-08-2016\tASHA\tTest");
+        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
+        List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
+        assertEquals(0, frontLineWorkers.size());
+        assertEquals(1, flwImportRejections.size());
+        assertEquals(RejectionReasons.GF_STATUS_EMPTY_OR_WRONG_FORMAT.toString(), flwImportRejections.get(0).getRejectionReason());
+    }
+
+    /**
+     * To verify FLW upload is rejected when GF_Status is InActive
+     */
+    @Ignore //TODO //assertion mismatch(Bug) needs to be fixed by Vishnu
+    @Test
+    public void testGF_StatusIsInActive() throws Exception {
+        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t11\t18-08-2016\tASHA\tINACTIVE");
+        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
+        List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
+        assertEquals(0, frontLineWorkers.size());
+        assertEquals(1, flwImportRejections.size());
+        assertEquals(RejectionReasons.GF_STATUS_EMPTY_OR_WRONG_FORMAT.toString(), flwImportRejections.get(0).getRejectionReason());
+    }
+
+    /**
+     * To verify FLW upload is rejected when GF_Status is null
+     */
+    @Ignore //TODO //assertion mismatch(Bug) needs to be fixed by Vishnu
+    @Test
+    public void testGF_StatusIsNull() throws Exception {
+        Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t11\t18-08-2016\tASHA\t");
+        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
+        List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
+        assertEquals(0, frontLineWorkers.size());
+        assertEquals(1, flwImportRejections.size());
+        assertEquals(RejectionReasons.GF_STATUS_EMPTY_OR_WRONG_FORMAT.toString(), flwImportRejections.get(0).getRejectionReason());
+    }
+
+    /**
+     * To verify FLW upload is rejected when parameter GF_ID has invalid value
+     */
+    @Ignore //TODO //assertion mismatch(Bug) needs to be fixed by Vishnu
+    @Test
+    public void invalidGFID() throws Exception {
+        Reader reader = createReaderWithHeaders("#@12%\t1234567890\tFLW 1\t11\t18-08-2016\tASHA\tActive");
+        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
+        List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
+        assertEquals(0, frontLineWorkers.size());
+        assertEquals(1, flwImportRejections.size());
+    }
+
+    /**
+     * To verify FLW upload is rejected when parameter GF_ID has null value
+     */
+    @Test
+    @Ignore
+    public void testNullGFID() throws Exception {
+        Reader reader = createReaderWithHeaders("\t1234567890\tFLW 1\t11\t18-08-2016\tASHA\tActive");
+        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
+        List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
+        assertEquals(0, frontLineWorkers.size());
+        assertEquals(1, flwImportRejections.size());
+    }
+
+    /**
+     * To verify FLW upload is rejected when parameter GF_ID has null value
+     */
+    @Test (expected = CsvImportDataException.class)
+    public void testNullGFName() throws Exception {
+        Reader reader = createReaderWithHeaders("#1\t1234567890\t\t11\t18-08-2016\tASHA\tActive");
+        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+
     }
 
     /**
@@ -642,4 +791,27 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         assertEquals(oldMsisdn, contactNumberAudits.get(0).getOldCallingNumber());
         assertEquals(newMsisdn, contactNumberAudits.get(0).getNewCallingNumber());
     }
+
+    private Reader createReaderWithHeadersInvalidState(String... lines) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("\n");
+        builder.append("State Name : State 5").append("\n");
+        builder.append("\n");
+        builder.append("ID\tContact_No\tName\tDistrict_ID\tUpdated_On\tType\tGF_Status").append("\n");
+        for (String line : lines) {
+            builder.append(line).append("\n");
+        }
+        return new StringReader(builder.toString());
+    }
+
+    /**
+     * To verify FLW import when invalid state
+     */
+    @Test(expected = CsvImportDataException.class) //adding expected result
+    public void flwImportwithinvalidState() throws Exception {
+        Reader reader = createReaderWithHeadersInvalidState("#0\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive"); //creating a flw with invalid state code
+        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+
+    }
+
 }
