@@ -1,6 +1,7 @@
 package org.motechproject.nms.testing.it.api;
 
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpRequest;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
@@ -213,6 +214,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
     @Test
     public void testInactiveGfUpdate() throws IOException, InterruptedException {
+
         stateDataService.create(state);
         districtDataService.create(district);
         AddFlwRequest addFlwRequest = getAddRequestASHA();
@@ -223,8 +225,10 @@ public class OpsControllerBundleIT extends BasePaxIT {
         addFlwRequest = getAddRequestInactiveGfStatus();
         httpRequest = RequestBuilder.createPostRequest(addFlwEndpoint, addFlwRequest);
         assertTrue(SimpleHttpClient.execHttpRequest(httpRequest, HttpStatus.SC_OK, RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD));
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         flw = frontLineWorkerService.getByContactNumber(9876543210L);
         assertNull(flw);
+        transactionManager.commit(status);
     }
 
     @Ignore //since this requirement is changed, a talkua can't be created
@@ -790,4 +794,6 @@ public class OpsControllerBundleIT extends BasePaxIT {
         List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
         assertEquals(1, frontLineWorkers.size());
     }
+
+
 }
