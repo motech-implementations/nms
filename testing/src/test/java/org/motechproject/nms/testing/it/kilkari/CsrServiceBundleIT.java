@@ -26,6 +26,7 @@ import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.CsrService;
+import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.StatusCode;
@@ -64,6 +65,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
     @Inject
     CsrService csrService;
+    @Inject
+    SubscriberService subscriberService;
     @Inject
     SubscriptionService subscriptionService;
     @Inject
@@ -105,7 +108,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
         rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
 
-        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+        sh = new SubscriptionHelper(subscriberService,subscriptionService, subscriberDataService, subscriptionPackDataService,
                 languageDataService, languageService, circleDataService, stateDataService, districtDataService,
                 districtService);
 
@@ -392,7 +395,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
-        CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriptionPackDataService,
+        CsrHelper helper = new CsrHelper(timestamp,subscriberService, subscriptionService, subscriptionPackDataService,
                 subscriberDataService, languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
 
@@ -1239,7 +1242,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
         String timestamp = DateTime.now().toString(TIME_FORMATTER);
 
-        CsrHelper helper = new CsrHelper(timestamp, subscriptionService, subscriptionPackDataService,
+        CsrHelper helper = new CsrHelper(timestamp, subscriberService,subscriptionService, subscriptionPackDataService,
                 subscriberDataService, languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
 

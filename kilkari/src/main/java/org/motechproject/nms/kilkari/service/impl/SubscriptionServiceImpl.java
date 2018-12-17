@@ -86,6 +86,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService;
     private SubscriberMsisdnTrackerDataService subscriberMsisdnTrackerDataService;
 
+
     @Autowired
     public SubscriptionServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade, // NO CHECKSTYLE More than 7 parameters
                                    SubscriberDataService subscriberDataService,
@@ -256,13 +257,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    public Boolean activeSubscriptionByMsisdnMcts(Long msisdn, SubscriptionPackType packType, String motherBeneficiaryId, String childBeneficiaryId) {
-        List<Subscriber> subscribers = subscriberDataService.findByNumber(msisdn);
+    public Boolean activeSubscriptionByMsisdnMcts(Subscriber subscriber,Long msisdn, SubscriptionPackType packType, String motherBeneficiaryId, String childBeneficiaryId) {
+        //List<Subscriber> subscribers = subscriberService.getSubscriber(msisdn);
         int subscriptionsSize = 0;
         if (packType == SubscriptionPackType.PREGNANCY) {
-            if (subscribers.size() != 0) {
-                for (Subscriber subscriber : subscribers
-                        ) {
+            //if (subscribers.size() != 0) {
+//                for (Subscriber subscriber : subscribers
+//                        ) {
                     List<Subscription> subscriptions = getActiveSubscriptionBySubscriber(subscriber);
                     subscriptionsSize = subscriptions.size();
                     if (subscriptionsSize != 0) {
@@ -276,14 +277,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                             return (subscriber.getMother() != null && !subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId));
                         }
                     }
-                }
-            } else {
-                return false;
-            }
+                //}
+//            } else {
+//                return false;
+//            }
         } else {
-            if (subscribers.size() != 0) {
-                for (Subscriber subscriber : subscribers
-                        ) {
+            //if (subscribers.size() != 0) {
+//                for (Subscriber subscriber : subscribers
+//                        ) {
                     List<Subscription> subscriptions = getActiveSubscriptionBySubscriber(subscriber);
                     subscriptionsSize = subscriptions.size();
                     if (subscriptionsSize != 0) {
@@ -299,17 +300,17 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                             return ((subscriber.getChild() != null && !subscriber.getChild().getBeneficiaryId().equals(childBeneficiaryId)) || (subscriber.getMother() != null && !subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId)));
                         }
                     }
-                }
-            } else {
-                return false;
-            }
+//                }
+//            } else {
+//                return false;
+//            }
         }
         return false;
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    public Boolean activeSubscriptionByMsisdnRch(Long msisdn, SubscriptionPackType packType, String motherRchId, String childRchId) {
-        List<Subscriber> subscribers = subscriberDataService.findByNumber(msisdn);
+    public Boolean activeSubscriptionByMsisdnRch(List<Subscriber> subscribers,Long msisdn, SubscriptionPackType packType, String motherRchId, String childRchId) {
+        //List<Subscriber> subscribers = subscriberDataService.getSubscriber(msisdn);
         int subscriptionsSize = 0;
         if (packType == SubscriptionPackType.PREGNANCY) {
             if (subscribers.size() != 0) {

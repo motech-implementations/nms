@@ -16,6 +16,7 @@ import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.repository.SubscriberDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
 import org.motechproject.nms.kilkari.service.MctsChildFixService;
+import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.District;
@@ -96,6 +97,9 @@ public class MctsChildFixServiceBundleIT extends BasePaxIT {
     MctsChildFixService mctsChildFixService;
 
     @Inject
+    SubscriberService subscriberService;
+
+    @Inject
     PlatformTransactionManager transactionManager;
 
     SubscriptionHelper sh;
@@ -106,7 +110,7 @@ public class MctsChildFixServiceBundleIT extends BasePaxIT {
         testingService.clearDatabase();
         createLocationData();
 
-        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+        sh = new SubscriptionHelper(subscriberService,subscriptionService, subscriberDataService, subscriptionPackDataService,
                 languageDataService, languageService, circleDataService, stateDataService, districtDataService,
                 districtService);
         rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
@@ -211,7 +215,7 @@ public class MctsChildFixServiceBundleIT extends BasePaxIT {
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        childSubscriber = subscriberDataService.findByNumber(5000000000L).get(0);
+        childSubscriber = subscriberService.getSubscriber(5000000000L).get(0);
         assertNotNull(childSubscriber);
         assertNotNull(childSubscriber.getMother());
         assertEquals(childSubscriber.getDateOfBirth(), childSubscriber.getChild().getDateOfBirth());
@@ -250,7 +254,7 @@ public class MctsChildFixServiceBundleIT extends BasePaxIT {
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        List<Subscriber>  subscribers = subscriberDataService.findByNumber(5000000000L);
+        List<Subscriber>  subscribers = subscriberService.getSubscriber(5000000000L);
        assertEquals(2, subscribers.size());
         // first subscriber is of mother
         assertEquals(mother.getBeneficiaryId(), subscribers.get(0).getMother().getBeneficiaryId());
@@ -292,7 +296,7 @@ public class MctsChildFixServiceBundleIT extends BasePaxIT {
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        List<Subscriber>  subscribers = subscriberDataService.findByNumber(5000000000L);
+        List<Subscriber>  subscribers = subscriberService.getSubscriber(5000000000L);
         assertTrue(subscribers.isEmpty());
         child = mctsChildDataService.findByBeneficiaryId("9876543210");
         assertEquals("08-01-2016", child.getDateOfBirth().toLocalDate().toString());
@@ -327,7 +331,7 @@ public class MctsChildFixServiceBundleIT extends BasePaxIT {
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        List<Subscriber>  subscribers = subscriberDataService.findByNumber(5000000000L);
+        List<Subscriber>  subscribers = subscriberService.getSubscriber(5000000000L);
         assertTrue(subscribers.isEmpty());
         child = mctsChildDataService.findByBeneficiaryId("9876543210");
         assertNull(child.getMother());
@@ -345,7 +349,7 @@ public class MctsChildFixServiceBundleIT extends BasePaxIT {
         mctsChildFixService.updateMotherChild(reader);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscribers = subscriberDataService.findByNumber(5000000000L);
+        subscribers = subscriberService.getSubscriber(5000000000L);
         assertNotNull(subscribers.get(0));
         assertEquals(dob.toLocalDate(), subscribers.get(0).getDateOfBirth().toLocalDate());
         assertEquals(dob.toLocalDate(), subscribers.get(0).getChild().getDateOfBirth().toLocalDate());

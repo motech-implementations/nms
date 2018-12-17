@@ -608,7 +608,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         // create subscription for a msisdn
         rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
-        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+        sh = new SubscriptionHelper(subscriberService,subscriptionService, subscriberDataService, subscriptionPackDataService,
                 languageDataService, languageService, circleDataService, stateDataService, districtDataService,
                 districtService);
 
@@ -632,14 +632,14 @@ public class OpsControllerBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        Subscriber subscriberIVR = subscriberDataService.findByNumber(5000000000L).get(0);
+        Subscriber subscriberIVR = subscriberService.getSubscriber(5000000000L).get(0);
         Set<Subscription> subscriptionsIVR = ( Set<Subscription> ) subscriberDataService.getDetachedField(subscriberIVR, "subscriptions");
         for (Subscription subscriptionIVR : subscriptionsIVR) {
             Assert.assertTrue(subscriptionIVR.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED));
             Assert.assertTrue(subscriptionIVR.getStatus().equals(SubscriptionStatus.DEACTIVATED));
         }
 
-        Subscriber subscriberMCTS = subscriberDataService.findByNumber(6000000000L).get(0);
+        Subscriber subscriberMCTS = subscriberService.getSubscriber(6000000000L).get(0);
         Set<Subscription> subscriptionsMCTS = ( Set<Subscription> ) subscriberDataService.getDetachedField(subscriberMCTS, "subscriptions");
         for (Subscription subscriptionMCTS : subscriptionsMCTS) {
             Assert.assertTrue(subscriptionMCTS.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED) || subscriptionMCTS.getDeactivationReason().equals(DeactivationReason.LOW_LISTENERSHIP));
@@ -705,7 +705,7 @@ public class OpsControllerBundleIT extends BasePaxIT {
         BlockedMsisdnRecord blockedMsisdnRecord = blockedMsisdnRecordDataService.findByNumber(msisdn);
         assertNotNull(blockedMsisdnRecord);
 
-        Subscriber subscriber = subscriberDataService.findByNumber(msisdn).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(msisdn).get(0);
         Subscription subscription = subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
                 sh.pregnancyPack(), SubscriptionOrigin.IVR);
         Assert.assertNull(subscription);
