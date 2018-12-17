@@ -904,6 +904,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
             SubscriptionServiceImpl.createDeactivatedUser(deactivatedBeneficiaryDataService, subscription, reason, false);
 
+            LOGGER.debug("Created the deactivated user " + subscriptionDeativated.getSubscriptionId());
+
             // Let's not retry calling subscribers with deactivated subscriptions
             deleteCallRetry(subscription.getSubscriptionId());
         }
