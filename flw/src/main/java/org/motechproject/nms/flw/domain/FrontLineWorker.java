@@ -18,6 +18,7 @@ import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.domain.validation.ValidFullLocation;
 import org.motechproject.nms.tracking.annotation.TrackClass;
+import org.motechproject.nms.tracking.annotation.TrackField;
 import org.motechproject.nms.tracking.annotation.TrackFields;
 
 import javax.jdo.annotations.Column;
@@ -31,39 +32,47 @@ import javax.validation.constraints.Min;
 @Entity(tableName = "nms_front_line_workers")
 @Index(name = "status_invalidationDate_composit_idx", members = { "status", "invalidationDate" })
 @TrackClass
-@TrackFields
 @InstanceLifecycleListeners
 public class FrontLineWorker extends MdsEntity implements FullLocation {
 
     @Field
+    @TrackField
     private String flwId;
 
     @Field
+    @TrackField
     private String mctsFlwId;
 
     @Field
     @Min(value = 1000000000L, message = "contactNumber must be 10 digits")
     @Max(value = 9999999999L, message = "contactNumber must be 10 digits")
     @Column(length = 10)
+    @TrackField
     private Long contactNumber;
 
     @Field
+    @TrackField
     private String name;
 
     @Field
+    @TrackField
     private FrontLineWorkerStatus status;
 
     @Field
+    @TrackField
     private DateTime invalidationDate;
 
     @Field
+    @TrackField
     private Language language;
 
     @Field
+    @TrackField
     private LocalDate updatedDateNic;
 
     @Field
     @Persistent(defaultFetchGroup = "true")
+    @TrackField
     private State state;
 
     @Field
@@ -72,30 +81,37 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
 
     @Field
     @Persistent(defaultFetchGroup = "true")
+    @TrackField
     private Taluka taluka;
 
     @Field
     @Persistent(defaultFetchGroup = "true")
+    @TrackField
     private Village village;
 
     @Field
     @Persistent(defaultFetchGroup = "true")
+    @TrackField
     private HealthBlock healthBlock;
 
     @Field
     @Persistent(defaultFetchGroup = "true")
+    @TrackField
     private HealthFacility healthFacility;
 
     @Field
     @Persistent(defaultFetchGroup = "true")
+    @TrackField
     private HealthSubFacility healthSubFacility;
 
     @Field
     @Column(length = 20)
+    @TrackField
     private String designation;
 
     @Field
     @Persistent(defaultFetchGroup = "true")
+    @TrackField
     private FlwJobStatus jobStatus;
 
 

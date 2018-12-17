@@ -1,5 +1,6 @@
 package org.motechproject.nms.flw.service.impl;
 
+import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.DateTime;
 import org.joda.time.Weeks;
 import org.joda.time.format.DateTimeFormat;
@@ -8,6 +9,7 @@ import org.motechproject.commons.date.util.DateUtil;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryExecution;
+import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
@@ -17,9 +19,7 @@ import org.motechproject.nms.flw.domain.UpdateStatusType;
 import org.motechproject.nms.flw.repository.FlwStatusUpdateAuditDataService;
 import org.motechproject.nms.flw.repository.FrontLineWorkerDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.Language;
-import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.service.LanguageService;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
@@ -32,10 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.jdo.Query;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Simple implementation of the {@link org.motechproject.nms.flw.service.FrontLineWorkerService} interface.
@@ -187,26 +184,48 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
 
     @Override
     public FrontLineWorker getByMctsFlwIdAndState(final String mctsFlwId, final State state) {
+
+
         if (mctsFlwId == null || state == null) {
             LOGGER.error(String.format("Attempt to look up FLW by a null mctsFlwId (%s) or state (%s)",
                     mctsFlwId, state == null ? "null" : state.getName()));
             return null;
         }
 
-        @SuppressWarnings("unchecked")
-        QueryExecution<FrontLineWorker> queryExecution = new QueryExecution<FrontLineWorker>() {
+        SqlQueryExecution<FrontLineWorker> queryExecution = new SqlQueryExecution<FrontLineWorker>() {
+
             @Override
-            public FrontLineWorker execute(Query query, InstanceSecurityRestriction restriction) {
-                query.setFilter("mctsFlwId == _mctsFlwId && state == _state");
-                query.declareParameters("String _mctsFlwId, org.motechproject.nms.region.domain.State _state");
+            public String getSqlQuery() {
+                return "Select * FROM nms_front_line_workers WHERE mctsFlwId = ? AND state_id_OID = ?";
+            }
+
+            @Override
+            public FrontLineWorker execute(Query query) {
                 query.setClass(FrontLineWorker.class);
                 query.setUnique(true);
-
-                return (FrontLineWorker) query.execute(mctsFlwId, state);
+                return (FrontLineWorker) query.execute(mctsFlwId, state.getId());
             }
         };
 
-        return frontLineWorkerDataService.executeQuery(queryExecution);
+         //JQL could be used instead of query -- in 4.1.0 datanucleus wrong inner joins are used.
+//                @SuppressWarnings("unchecked")
+//                QueryExecution<FrontLineWorker> queryExecution = new QueryExecution<FrontLineWorker>() {
+//                    @Override
+//                    public FrontLineWorker execute(Query query, InstanceSecurityRestriction restriction) {
+//
+//                        query.setFilter("mctsFlwId == _mctsFlwId && state == _state");
+//                        query.declareParameters("String _mctsFlwId, org.motechproject.nms.region.domain.State _state");
+//                        query.setClass(FrontLineWorker.class);
+//                        query.setUnique(true);
+//                        query.getFetchPlan().setMaxFetchDepth(1);
+//                        return (FrontLineWorker) query.execute(mctsFlwId, state);
+//                    }
+//                };
+
+
+
+        FrontLineWorker frontLineWorker = frontLineWorkerDataService.executeSQLQuery(queryExecution);
+        return frontLineWorker;
     }
 
     @Override
@@ -216,7 +235,30 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
 
     @Override
     public FrontLineWorker getByContactNumber(Long contactNumber) {
-        List<FrontLineWorker> flws = frontLineWorkerDataService.findByContactNumberAndJobStatus(contactNumber, FlwJobStatus.ACTIVE);
+
+        SqlQueryExecution<List<FrontLineWorker>> queryExecution = new SqlQueryExecution<List<FrontLineWorker>>() {
+
+            @Override
+            public String getSqlQuery() {
+                return "select *  FROM \n" +
+                        "nms_front_line_workers A0 " +
+                        " WHERE A0.contactNumber = ? AND A0.jobStatus = 'ACTIVE'";
+            }
+
+            @Override
+            public List<FrontLineWorker> execute(Query query) {
+                query.setClass(FrontLineWorker.class);
+                query.getFetchPlan().setMaxFetchDepth(-1);
+                return (List<FrontLineWorker>) query.execute(contactNumber);
+            }
+        };
+
+        List<FrontLineWorker> flws = new ArrayList<>();
+        flws.addAll(frontLineWorkerDataService.executeSQLQuery(queryExecution));
+
+        // JQL could be used instead of query -- in 4.1.0 datanucleus wrong inner joins are used.
+        // frontLineWorkerDataService.findByContactNumberAndJobStatus(contactNumber, FlwJobStatus.ACTIVE);
+
         Collections.sort(flws, new Comparator<FrontLineWorker>() {
             @Override
             public int compare(FrontLineWorker t1, FrontLineWorker t2) {
@@ -292,9 +334,7 @@ public class FrontLineWorkerServiceImpl implements FrontLineWorkerService {
                 return;
             }
         }
-
         frontLineWorkerDataService.update(record);
-
     }
 
     @Override
