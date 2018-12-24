@@ -838,7 +838,8 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
             subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
             subscriptionDataService.update(subscription);
         }
-
+        transactionManager.commit(status);
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscriptionService.purgeOldInvalidSubscriptions();
         transactionManager.commit(status);
 
@@ -2004,12 +2005,16 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
         assertChild(subscriber, "7000000000", dob, "Baby1 of Lilima Kua", stateDataService.findByCode(21L), districtService.findByStateAndCode(stateDataService.findByCode(21L), 3L));
         transactionManager.commit(status);
-
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         //deactivate child subscription due to death
         subscription.setStatus(SubscriptionStatus.DEACTIVATED);
         subscription.setEndDate(new DateTime().withDate(2016, 8, 1));
         subscriptionDataService.update(subscription);
+        transactionManager.commit(status);
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscriptionService.purgeOldInvalidSubscriptions();
+        transactionManager.commit(status);
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         //import a new child record for the same mother with same msisdn
         dob = DateTime.now().minusDays(30);
@@ -2017,6 +2022,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567891\tBaby2 of Lilima Kua\t9876453210\t9439986188\t"
                 + dobString + "\t8000000000\t2000000000\t\t");
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
+        transactionManager.commit(status);
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         List<Subscriber> subscribers = subscriberService.getSubscriber(9439986188L);
         assertEquals(1, subscribers.size());

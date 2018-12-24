@@ -230,14 +230,21 @@ public class SubscriptionServiceBundleIT extends BasePaxIT {
         subscriptions = subscriber.get(0).getSubscriptions();
         assertEquals(2, subscriptions.size());
 
+        transactionManager.commit(status);
+
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
         subscriptionService.purgeOldInvalidSubscriptions();
 
+        transactionManager.commit(status);
+
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscriber = subscriberService.getSubscriber(1000000002L);
 //        assertNull(subscriber);
         assertTrue(subscriber.isEmpty());
 
         subscriber = subscriberService.getSubscriber(1000000003L);
-        //assertNull(subscriber);
+//        assertNull(subscriber);
         assertTrue(subscriber.isEmpty());
 
         transactionManager.commit(status);

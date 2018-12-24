@@ -164,7 +164,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             if (subscriber.getSubscriptions().size() == 0) {
                 LOGGER.debug("Purging subscriber for subscription {} as it was the last subscription for that subscriber",
                         subscriptionId);
-                subscriberDataService.delete(subscriber);
+                deleteSubscriber(subscriber.getId());
                 purgedSubscribers++;
             }
         }
@@ -1058,5 +1058,26 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             service.create(deactivatedUser);
         }
     }
+
+    @Override
+    public void deleteSubscriber(Long id) {
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                return KilkariConstants.DELETE_SUBSCRIBER_BY_ID;
+            }
+
+            @Override
+            public Long execute(Query query) {
+                query.setClass(Subscriber.class);
+                return (Long) query.execute(id);
+            }
+        };
+
+        subscriberDataService.executeSQLQuery(queryExecution);
+
+    }
+
 
 }

@@ -1634,14 +1634,18 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
             subscription.setEndDate(new DateTime().withDate(2011, 8, 1));
             subscriptionDataService.update(subscription);
         }
-
-        subscriptionService.purgeOldInvalidSubscriptions();
         transactionManager.commit(status);
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        subscriptionService.purgeOldInvalidSubscriptions();
 
+        transactionManager.commit(status);
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscriber = subscriberService.getSubscriber(9439986187L);
         assertTrue(subscriber.isEmpty());
         List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
         assertEquals(1,mothers.size());
+
+        transactionManager.commit(status);
 
 //        import mother again. This time subscriber should not get created due to NullPointerException.
         reader = createMotherDataReader("21\t3\t\t\t\t\t1234567890\tShanti Ekka\t9439986187\t\t" +
