@@ -24,6 +24,7 @@ import org.motechproject.nms.rejectionhandler.domain.FlwImportRejection;
 import org.motechproject.nms.rejectionhandler.repository.ChildRejectionDataService;
 import org.motechproject.nms.rejectionhandler.repository.FlwImportRejectionDataService;
 import org.motechproject.nms.rejectionhandler.repository.MotherRejectionDataService;
+import org.motechproject.nms.testing.it.helperUtils.HelperUtils;
 import org.motechproject.nms.testing.it.rch.util.*;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.scheduler.service.MotechSchedulerService;
@@ -259,7 +260,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
         assertEquals(0, childImportRejections.size());
-        List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
+        List<MctsMother> mothers = HelperUtils.retrieveAllMothers(mctsMotherDataService);
         assertEquals(0, mothers.size());
     }
 

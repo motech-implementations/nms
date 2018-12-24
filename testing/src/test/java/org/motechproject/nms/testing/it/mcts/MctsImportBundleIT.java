@@ -34,6 +34,7 @@ import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
 import org.motechproject.nms.rejectionhandler.repository.ChildRejectionDataService;
 import org.motechproject.nms.rejectionhandler.repository.FlwImportRejectionDataService;
 import org.motechproject.nms.rejectionhandler.repository.MotherRejectionDataService;
+import org.motechproject.nms.testing.it.helperUtils.HelperUtils;
 import org.motechproject.nms.testing.it.mcts.util.*;
 import org.motechproject.nms.testing.service.TestingService;
 import org.motechproject.testing.osgi.BasePaxIT;
@@ -488,7 +489,7 @@ public class MctsImportBundleIT extends BasePaxIT {
             assertEquals(1, children.size());
             assertEquals("Name 3", children.get(0).getName());
 
-            List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
+            List<MctsMother> mothers = HelperUtils.retrieveAllMothers(mctsMotherDataService);
             assertEquals(2, mothers.size());  // 2 records from mother import and 2 from child
             assertEquals("Name 3", mothers.get(0).getName());
         } finally {
@@ -618,7 +619,7 @@ public class MctsImportBundleIT extends BasePaxIT {
             assertEquals(1, children.size());
             assertEquals("Name y", children.get(0).getName());
 
-            List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
+            List<MctsMother> mothers = HelperUtils.retrieveAllMothers(mctsMotherDataService);
             assertEquals(2, mothers.size());  // 1 record from mother import and 1 from child
             assertEquals("Name x", mothers.get(0).getName());
 
