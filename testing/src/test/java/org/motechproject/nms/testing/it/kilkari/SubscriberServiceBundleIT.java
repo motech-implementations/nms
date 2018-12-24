@@ -120,7 +120,7 @@ public class SubscriberServiceBundleIT extends BasePaxIT {
         subscriptionDataService.update(subscription);
 
         exception.expect(JdoListenerInvocationException.class);
-        subscriberDataService.delete(subscriber.get(0));
+        subscriptionService.deleteSubscriber(subscriber.get(0).getId());
     }
 
 
@@ -139,6 +139,6 @@ public class SubscriberServiceBundleIT extends BasePaxIT {
             subscriptionDataService.update(subscription);
         }
 
-        subscriberDataService.delete(subscriber.get(0));
+        subscriptionService.deleteSubscriber(subscriber.get(0).getId());
     }
 }

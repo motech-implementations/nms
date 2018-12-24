@@ -221,6 +221,10 @@ public interface SubscriptionService {
 
     Boolean activeSubscriptionByMsisdnRch(List<Subscriber> subscribers, Long msisdn, SubscriptionPackType packType, String motherRchId, String childRchId);
 
-
+    /**
+     * deletes the subscriber by its id -- the mds default query is not working because of  inner join bug
+     * @param subscriberId
+     */
+    void deleteSubscriber(Long subscriberId);
 
 }
