@@ -57,6 +57,7 @@ import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
 import org.motechproject.nms.rejectionhandler.repository.ChildRejectionDataService;
 import org.motechproject.nms.rejectionhandler.repository.MotherRejectionDataService;
+import org.motechproject.nms.testing.it.helperUtils.HelperUtils;
 import org.motechproject.nms.testing.it.utils.RegionHelper;
 import org.motechproject.nms.testing.it.utils.SubscriptionHelper;
 import org.motechproject.nms.testing.service.TestingService;
@@ -846,7 +847,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscriber = subscriberService.getSubscriber(9439986187L);
         assertTrue(subscriber.isEmpty());
-        List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
+        List<MctsMother> mothers = HelperUtils.retrieveAllMothers(mctsMotherDataService);
         Assert.assertEquals(1, mothers.size());
         transactionManager.commit(status);
 
