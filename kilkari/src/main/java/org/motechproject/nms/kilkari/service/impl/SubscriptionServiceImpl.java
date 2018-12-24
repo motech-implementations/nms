@@ -173,6 +173,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
 
+
     @Override
     public void completePastDueSubscriptions() {
 
@@ -927,10 +928,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
 
-    @Override
-    public List<SubscriptionPack> getSubscriptionPacks() {
-        return subscriptionPackDataService.retrieveAll();
-    }
+//    @Override
+//    public List<SubscriptionPack> getSubscriptionPacks() {
+//        return subscriptionPackDataService.retrieveAll();
+//    }
 
 
     public Subscription create(Subscription subscription) {
@@ -1010,10 +1011,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         LOGGER.info("Set allow new mcts subscriptions to {}", value);
     }
 
-    @Override
-    public List<Subscription> retrieveAll() {
-        return subscriptionDataService.retrieveAll();
-    }
+//    @Override
+//    public List<Subscription> retrieveAll() {
+//        return subscriptionDataService.retrieveAll();
+//    }
 
     @Override
     public Subscription getIVRSubscription(Set<Subscription> subscriptions, SubscriptionPackType packType) {

@@ -131,7 +131,7 @@ public interface SubscriptionService {
 
     List<Subscription> getActiveSubscriptionBySubscriber(Subscriber subscriber);
 
-    List<SubscriptionPack> getSubscriptionPacks();
+    //List<SubscriptionPack> getSubscriptionPacks();
 
     /**
      * Create the specified subscription in the database. To be used only by test code.
@@ -207,7 +207,7 @@ public interface SubscriptionService {
      * Retrieves all subscriptions in the database
      *
      */
-    List<Subscription> retrieveAll();
+    //List<Subscription> retrieveAll();
 
     /**
      * Helper method that determines the subscription based on its origin and packType
