@@ -892,66 +892,6 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         transactionManager.commit(status);
     }
 
-    //Test an existing mother subscriber through IVR doesn't get updated by RCH
-    @Test
-    public void testUpdateIVRMother() throws Exception {
-        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriberIVR = subscriberDataService.create(new Subscriber(5000000000L));
-        subscriberIVR = subscriberDataService.update(subscriberIVR);
-        subscriptionService.createSubscription(subscriberIVR, subscriberIVR.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
-                sh.pregnancyPack(), SubscriptionOrigin.IVR);
-        assertNull(subscriberIVR.getMother()); // change this to get subscriber and then mother
-        transactionManager.commit(status);
-
-        DateTime lmp = DateTime.now().minusDays(100);
-        String lmpString = getDateString(lmp);
-        Reader reader = createRchMotherDataReader("21\t3\t\t\t\t\t\t1234567890\t240\tShanti Ekka\t5000000000\t\t" +
-                lmpString + "\t\t\t\t\t8");
-        mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.RCH_IMPORT);
-
-        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Assert.assertNull(mctsMotherDataService.findByBeneficiaryId("1234567890"));
-        List<Subscriber> subscribers = subscriberService.getSubscriber(5000000000L);
-        Assert.assertEquals(1, subscribers.size());
-        assertNull(subscribers.get(0).getMother());
-        Set<Subscription> subscriptions = subscribers.get(0).getActiveAndPendingSubscriptions();
-        Assert.assertEquals(1, subscriptions.size());
-        Assert.assertEquals(SubscriptionOrigin.IVR, subscriptions.iterator().next().getOrigin());
-        transactionManager.commit(status);
-    }
-
-    // Test Mother RCH import when a child through IVR already exists with same msisdn
-    @Test
-    public void testImportMotherWhenIVRChildExists() throws Exception {
-        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriberIVR = subscriberDataService.create(new Subscriber(5000000000L));
-        subscriberIVR = subscriberDataService.update(subscriberIVR);
-        subscriptionService.createSubscription(subscriberIVR, subscriberIVR.getCallingNumber(), rh.kannadaLanguage(), rh.karnatakaCircle(),
-                sh.childPack(), SubscriptionOrigin.IVR);
-        assertNull(subscriberIVR.getChild());
-        assertNull(subscriberIVR.getMother());
-        transactionManager.commit(status);
-
-        DateTime lmp = DateTime.now().minusDays(100);
-        String lmpString = getDateString(lmp);
-        Reader reader = createRchMotherDataReader("21\t3\t\t\t\t\t\t1234567890\t240\tShanti Ekka\t5000000000\t\t" +
-                lmpString + "\t\t\t\t\t8");
-        mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.RCH_IMPORT);
-
-        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Assert.assertNull(mctsMotherDataService.findByBeneficiaryId("1234567890")); //mother data is not imported as child is already present in database with the same MSISDN
-        List<Subscriber> subscribers = subscriberService.getSubscriber(5000000000L);
-        Assert.assertEquals(1, subscribers.size());
-
-
-        List<Subscription> subscriptions = subscriptionDataService.retrieveAll();
-        Assert.assertEquals(1, subscriptions.size());
-        Assert.assertEquals(subscribers.get(0), subscriptions.get(0).getSubscriber());
-        Assert.assertEquals(SubscriptionPackType.CHILD, subscriptions.get(0).getSubscriptionPack().getType());
-        Assert.assertEquals(SubscriptionOrigin.IVR, subscriptions.get(0).getOrigin());
-        transactionManager.commit(status);
-    }
-
     // Create a mother and try to update msisdn which is blocked
     @Test
     public void testMotherBlockedMsisdnUpdate() throws Exception {
@@ -1582,6 +1522,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Reader reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567890\tBaby1 of Lilima Kua\t9876453210\t9439986187\t"
                 + dobString + "\t7000000000\t2000000000\t\t");
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         // attempt to create subscriber with same msisdn but different rch id.
         reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567891\tBaby2 of Lilima Kua\t9876453210\t9439986187\t"
@@ -1597,6 +1538,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Assert.assertEquals("9439986187", childImportRejections.get(0).getMobileNo());
         Assert.assertEquals(RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), childImportRejections.get(0).getRejectionReason());
         Assert.assertEquals("8000000000", childImportRejections.get(0).getRegistrationNo());
+        transactionManager.commit(status);
     }
 
     /*
