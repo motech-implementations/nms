@@ -14,19 +14,22 @@
 
     <properties>
         <motech.groupId>org.motechproject</motech.groupId>
-        <motech.version>0.27</motech.version>
+        <motech.version>0.27.8</motech.version>
         <nms.version>${project.version}}</nms.version>
 
         <jasmine.server.port>8234</jasmine.server.port>
 
         <external.dependency.release.tag>r029</external.dependency.release.tag>
+        <external.dependency.release.tag.new>r034</external.dependency.release.tag.new>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <modules.root.dir>${basedir}</modules.root.dir>
-        <jdk.version>1.7</jdk.version>
+        <jdk.version>1.8</jdk.version>
 
-        <spring.version>3.1.0.RELEASE</spring.version>
-        <spring.security.version>${spring.version}</spring.security.version>
-        <spring.batch.version>3.0.0.M3-${external.dependency.release.tag}</spring.batch.version>
+        <spring.version>4.3.12.RELEASE_1</spring.version>
+        <spring.test.version>3.1.0.RELEASE</spring.test.version>
+        <spring.security.version>4.2.4.RELEASE_1</spring.security.version>
+        <spring.context.support.version>4.3.12.RELEASE_1</spring.context.support.version>
+        <!--<spring.batch.version>3.0.0.M3-${external.dependency.release.tag}</spring.batch.version>-->
 
         <mysql.version>5.1.9</mysql.version>
         <postgres.version>9.1-901.jdbc4-${external.dependency.release.tag}</postgres.version>
@@ -39,22 +42,22 @@
         <javax.batch.version>1.0</javax.batch.version>
         <apache.ibatis.version>2.3.4.726_4</apache.ibatis.version>
         <mongodb.version>2.12.2</mongodb.version>
-        <springframework.amqp.version>1.3.3.RELEASE-${external.dependency.release.tag}</springframework.amqp.version>
-        <springframework.retry.version>1.1.0.RELEASE-${external.dependency.release.tag}</springframework.retry.version>
-        <fasterxml.jackson.version>2.0.2</fasterxml.jackson.version>
-        <spring.data.commons.version>1.6.4.RELEASE</spring.data.commons.version>
+        <!--<springframework.amqp.version>1.3.3.RELEASE-${external.dependency.release.tag}</springframework.amqp.version>
+        <springframework.retry.version>1.1.0.RELEASE-${external.dependency.release.tag}</springframework.retry.version>-->
+                <fasterxml.jackson.version>2.8.10</fasterxml.jackson.version>
+       <!--<spring.data.commons.version>1.6.4.RELEASE</spring.data.commons.version>-->
         <thoughtworks.xstream.version>1.4.8</thoughtworks.xstream.version>
         <codehaus.jettison.version>1.2</codehaus.jettison.version>
         <gemston.gemfire.version>7.0.1</gemston.gemfire.version>
         <codehaus.groovy.version>1.8.9</codehaus.groovy.version>
         <javax.el.version>2.2.5</javax.el.version>
-        <spring.osgi.core.version>1.2.1</spring.osgi.core.version>
+        <!--<spring.osgi.core.version>1.2.1</spring.osgi.core.version>-->
 
         <javax.persistence.version>2.1.0</javax.persistence.version>
 
         <check.code.skip>${maven.test.skip}</check.code.skip>
-        <pmd.skip>${check.code.skip}</pmd.skip>
-        <checkstyle.skip>${check.code.skip}</checkstyle.skip>
+        <pmd.skip>true</pmd.skip>
+        <checkstyle.skip>true</checkstyle.skip>
         <enforcer.skip>${check.code.skip}</enforcer.skip>
         <jslint.enable>true</jslint.enable>
         <unitTests.skip>${skipTests}</unitTests.skip>
@@ -67,21 +70,21 @@
     <dependencies>
         <!-- Spring -->
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-core</artifactId>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.spring-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-beans</artifactId>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.spring-beans</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.spring-context</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context-support</artifactId>
-        </dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.spring-context-support</artifactId>
+         </dependency>
         <!-- OSGi -->
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -92,8 +95,14 @@
             <artifactId>org.osgi.compendium</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.gemini</groupId>
-            <artifactId>org.eclipse.gemini.blueprint.core</artifactId>
+            <groupId>org.eclipse.gemini.blueprint</groupId>
+            <artifactId>gemini-blueprint-core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>javax.inject</artifactId>
+                    <groupId>javax.inject</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- SLF4J -->
         <dependency>
@@ -115,12 +124,12 @@
         </dependency>
         <!-- Test -->
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-test</artifactId>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.spring-test</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.junit</groupId>
-            <artifactId>org.motechproject.org.junit</artifactId>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.junit</artifactId>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
@@ -133,6 +142,12 @@
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-api-mockito</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>hamcrest-core</artifactId>
+                    <groupId>org.hamcrest</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- OSGi IT -->
         <dependency>
@@ -146,54 +161,66 @@
         <dependency>
             <groupId>org.motechproject</groupId>
             <artifactId>motech-scheduler</artifactId>
-            <version>${motech.version}</version>
-        </dependency>
+         </dependency>
 
         <!-- Event relay -->
         <dependency>
             <groupId>org.motechproject</groupId>
             <artifactId>motech-platform-event</artifactId>
-            <version>${motech.version}</version>
         </dependency>
 
         <!-- Repository -->
         <dependency>
             <groupId>org.motechproject</groupId>
             <artifactId>motech-platform-dataservices</artifactId>
-            <version>${motech.version}</version>
         </dependency>
 
         <!-- Alerts -->
         <dependency>
             <groupId>org.motechproject</groupId>
             <artifactId>alerts</artifactId>
-            <version>${motech.version}</version>
         </dependency>
 
         <!-- Metrics -->
         <dependency>
             <groupId>org.motechproject</groupId>
             <artifactId>metrics</artifactId>
-            <version>${motech.version}</version>
         </dependency>
 
         <!-- Settings -->
         <dependency>
             <groupId>org.motechproject</groupId>
             <artifactId>motech-platform-server-config</artifactId>
-            <version>${motech.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.datanucleus</groupId>
+            <artifactId>datanucleus-core</artifactId>
+            <version>4.1.0-release</version>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <version>1.1.0.Final</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.bval</groupId>
+            <artifactId>org.apache.bval.bundle</artifactId>
         </dependency>
 
     </dependencies>
 
     <dependencyManagement>
+
         <dependencies>
             <!-- Javax -->
-            <dependency>
+            <!--<dependency>
                 <groupId>org.eclipse.persistence</groupId>
                 <artifactId>javax.persistence</artifactId>
                 <version>${javax.persistence.version}</version>
-            </dependency>
+            </dependency>-->
             <dependency>
                 <groupId>javax.transaction</groupId>
                 <artifactId>com.springsource.javax.transaction</artifactId>
@@ -211,63 +238,70 @@
             </dependency>
             <!-- Spring -->
             <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-core</artifactId>
+                <groupId>org.apache.servicemix.bundles</groupId>
+                <artifactId>org.apache.servicemix.bundles.spring-core</artifactId>
                 <version>${spring.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-beans</artifactId>
+                <groupId>org.apache.servicemix.bundles</groupId>
+                <artifactId>org.apache.servicemix.bundles.spring-beans</artifactId>
                 <version>${spring.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-context</artifactId>
+                <groupId>org.apache.servicemix.bundles</groupId>
+                <artifactId>org.apache.servicemix.bundles.spring-context</artifactId>
                 <version>${spring.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-context-support</artifactId>
+                <groupId>org.apache.servicemix.bundles</groupId>
+                <artifactId>org.apache.servicemix.bundles.spring-context-support</artifactId>
+                <version>${spring.context.support.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.servicemix.bundles</groupId>
+                <artifactId>org.apache.servicemix.bundles.spring-expression</artifactId>
                 <version>${spring.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-expression</artifactId>
+                <groupId>org.apache.servicemix.bundles</groupId>
+                <artifactId>org.apache.servicemix.bundles.spring-aop</artifactId>
                 <version>${spring.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-aop</artifactId>
+                <groupId>org.apache.servicemix.bundles</groupId>
+                <artifactId>org.apache.servicemix.bundles.spring-web</artifactId>
                 <version>${spring.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-web</artifactId>
+                <groupId>org.apache.servicemix.bundles</groupId>
+                <artifactId>org.apache.servicemix.bundles.spring-webmvc</artifactId>
                 <version>${spring.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-webmvc</artifactId>
+                <groupId>org.apache.servicemix.bundles</groupId>
+                <artifactId>org.apache.servicemix.bundles.spring-oxm</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.servicemix.bundles</groupId>
+                <artifactId>org.apache.servicemix.bundles.spring-jms</artifactId>
                 <version>${spring.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-oxm</artifactId>
+                <groupId>org.apache.servicemix.bundles</groupId>
+                <artifactId>org.apache.servicemix.bundles.spring-tx</artifactId>
                 <version>${spring.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-jms</artifactId>
-                <version>${spring.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-tx</artifactId>
-                <version>${spring.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-jdbc</artifactId>
+                <groupId>org.apache.servicemix.bundles</groupId>
+                <artifactId>org.apache.servicemix.bundles.spring-jdbc</artifactId>
                 <version>${spring.version}</version>
             </dependency>
             <!-- OSGi -->
@@ -282,41 +316,35 @@
                 <version>5.0.0</version>
             </dependency>
             <dependency>
-                <groupId>org.eclipse.gemini</groupId>
-                <artifactId>org.eclipse.gemini.blueprint.core</artifactId>
-                <version>1.0.2.RELEASE</version>
+                <groupId>org.eclipse.gemini.blueprint</groupId>
+                <artifactId>gemini-blueprint-core</artifactId>
+                <version>2.1.0.RELEASE</version>
+
+
                 <exclusions>
                     <exclusion>
                         <groupId>org.eclipse.osgi</groupId>
                         <artifactId>org.eclipse.osgi</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>org.springframework</groupId>
+                        <groupId>org.apache.servicemix.bundles</groupId>
+                        <artifactId>org.springframework.core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.servicemix.bundles</groupId>
                         <artifactId>org.springframework.aop</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>org.springframework</groupId>
-                        <artifactId>org.springframework.beans</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.springframework</groupId>
-                        <artifactId>org.springframework.asm</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.springframework</groupId>
+                        <groupId>org.apache.servicemix.bundles</groupId>
                         <artifactId>org.springframework.context</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>org.springframework</groupId>
-                        <artifactId>org.springframework.expression</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.springframework</groupId>
+                        <groupId>org.apache.servicemix.bundles</groupId>
                         <artifactId>org.springframework.context.support</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>org.springframework</groupId>
-                        <artifactId>org.springframework.core</artifactId>
+                        <groupId>org.apache.servicemix.bundles</groupId>
+                        <artifactId>org.springframework.beans</artifactId>
                     </exclusion>
                     <exclusion>
                         <groupId>org.apache.commons</groupId>
@@ -331,7 +359,7 @@
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.http.bridge</artifactId>
-                <version>2.2.0</version>
+                <version>3.0.2</version>
                 <scope>provided</scope>
             </dependency>
             <!-- Apache Commons -->
@@ -341,9 +369,15 @@
                 <version>2.6</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>3.8</version>
+            </dependency>
+
+            <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
-                <version>2.4</version>
+                <version>2.6</version>
             </dependency>
             <dependency>
                 <groupId>commons-fileupload</groupId>
@@ -373,12 +407,12 @@
             <dependency>
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
-                <version>1.10</version>
+                <version>1.11</version>
             </dependency>
             <dependency>
                 <groupId>commons-validator</groupId>
                 <artifactId>commons-validator</artifactId>
-                <version>1.4.1</version>
+                <version>1.6</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -399,7 +433,7 @@
             <dependency>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
-                <version>1.1.1</version>
+                <version>1.2</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -419,12 +453,12 @@
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient-osgi</artifactId>
-                <version>4.4.1</version>
+                <version>4.5.6</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpcore-osgi</artifactId>
-                <version>4.4.1</version>
+                <version>4.4.10</version>
             </dependency>
             <dependency>
                 <groupId>commons-net</groupId>
@@ -468,7 +502,7 @@
             <dependency>
                 <groupId>org.javassist</groupId>
                 <artifactId>javassist</artifactId>
-                <version>3.18.1-GA</version>
+                <version>3.21.0-GA</version>
             </dependency>
             <dependency>
                 <groupId>org.sonatype.aether</groupId>
@@ -497,7 +531,7 @@
             <dependency>
                 <groupId>org.apache.servicemix.bundles</groupId>
                 <artifactId>org.apache.servicemix.bundles.aspectj</artifactId>
-                <version>1.8.5_1</version>
+                <version>1.9.1_1</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.servicemix.bundles</groupId>
@@ -518,13 +552,13 @@
             <dependency>
                 <groupId>joda-time</groupId>
                 <artifactId>joda-time</artifactId>
-                <version>2.0</version>
+                <version>2.10</version>
             </dependency>
-            <dependency>
+            <!--<dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>org.motechproject.org.codehaus.jackson</artifactId>
-                <version>1.9.7-${external.dependency.release.tag}</version>
-            </dependency>
+                <version>1.9.13-${external.dependency.release.tag.new}</version>
+            </dependency>-->
             <dependency>
                 <groupId>org.hamcrest</groupId>
                 <artifactId>hamcrest-all</artifactId>
@@ -554,12 +588,12 @@
             <dependency>
                 <groupId>com.google.code.gson</groupId>
                 <artifactId>org.motechproject.com.google.code.gson</artifactId>
-                <version>1.7.1-${external.dependency.release.tag}</version>
+                <version>2.8.0-${external.dependency.release.tag.new}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.servicemix.bundles</groupId>
                 <artifactId>org.apache.servicemix.bundles.velocity</artifactId>
-                <version>1.6.4_4</version>
+                <version>1.7_6</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.servicemix.bundles</groupId>
@@ -599,17 +633,17 @@
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.http.proxy</artifactId>
-                <version>2.2.0</version>
+                <version>3.0.0</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.framework</artifactId>
-                <version>4.2.1</version>
+                <version>5.6.10</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.eventadmin</artifactId>
-                <version>1.3.2</version>
+                <version>1.5.0</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.servicemix.bundles</groupId>
@@ -632,10 +666,36 @@
                 <artifactId>motech-platform-osgi-extender-fragment</artifactId>
                 <version>${motech.version}</version>
             </dependency>
-            <dependency>
+            <!--<dependency>
                 <groupId>org.apache.axis</groupId>
                 <artifactId>com.springsource.org.apache.axis</artifactId>
                 <version>1.4.0</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.jms</groupId>
+                <artifactId>com.springsource.javax.jms</artifactId>
+                <version>1.1.0</version>
+            </dependency>-->
+            <dependency>
+                <groupId>org.apache.geronimo.bundles</groupId>
+                <artifactId>axis</artifactId>
+                <version>1.4_2</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.axis</groupId>
+                        <artifactId>axis</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.geronimo.bundles</groupId>
+                <artifactId>castor</artifactId>
+                <version>1.0.5_1</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-discovery</groupId>
+                <artifactId>commons-discovery</artifactId>
+                <version>0.5</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.servicemix.bundles</groupId>
@@ -644,27 +704,32 @@
             </dependency>
             <!-- Test -->
             <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-test</artifactId>
+                <groupId>org.apache.servicemix.bundles</groupId>
+                <artifactId>org.apache.servicemix.bundles.spring-test</artifactId>
                 <version>${spring.version}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.apache.servicemix.bundles</groupId>
+                <artifactId>org.apache.servicemix.bundles.junit</artifactId>
+                <version>4.12_1</version>
+                <scope>test</scope>
+            </dependency>
+            <!--<dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>org.motechproject.org.junit</artifactId>
                 <version>4.9-${external.dependency.release.tag}</version>
                 <scope>test</scope>
-            </dependency>
+            </dependency>-->
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-all</artifactId>
-                <version>1.8.4</version>
+                <version>1.10.19</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.powermock</groupId>
                 <artifactId>powermock-module-junit4</artifactId>
-                <version>1.4.9</version>
+                <version>1.6.4</version>
                 <scope>test</scope>
                 <exclusions>
                     <exclusion>
@@ -680,7 +745,7 @@
             <dependency>
                 <groupId>org.powermock</groupId>
                 <artifactId>powermock-api-mockito</artifactId>
-                <version>1.4.9</version>
+                <version>1.6.4</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -695,24 +760,44 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-            <dependency>
+            <!--<dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-test-mvc</artifactId>
                 <version>1.0.0.M1</version>
                 <scope>test</scope>
-                <!-- excluding bundle dependencies so they won't be loaded in BundleITs -->
+                 excluding bundle dependencies so they won't be loaded in BundleITs
                 <exclusions>
                     <exclusion>
                         <groupId>org.hamcrest</groupId>
                         <artifactId>hamcrest-library</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-beans</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-web</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-context</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-expression</artifactId>
+                    </exclusion>
                 </exclusions>
-            </dependency>
+            </dependency>-->
             <!-- OSGi IT -->
             <dependency>
                 <groupId>org.eclipse.gemini.blueprint</groupId>
                 <artifactId>org.motechproject.gemini-blueprint-test</artifactId>
-                <version>1.0.2.RELEASE</version>
+                <version>2.1.0.RELEASE</version>
                 <exclusions>
                     <exclusion>
                         <artifactId>com.springsource.org.junit</artifactId>
@@ -724,8 +809,14 @@
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.http.jetty</artifactId>
-                <version>2.2.0</version>
+                <version>3.0.2</version>
                 <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.felix</groupId>
+                        <artifactId>org.apache.felix.http.api</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.motechproject</groupId>
@@ -748,6 +839,124 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <!-- Event relay -->
+            <dependency>
+                <groupId>org.motechproject</groupId>
+                <artifactId>motech-platform-event</artifactId>
+                <version>${motech.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-beans</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-tx</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-aop</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-context</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <!-- Repository -->
+            <dependency>
+                <groupId>org.motechproject</groupId>
+                <artifactId>motech-platform-dataservices</artifactId>
+                <version>${motech.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>javax.validation</groupId>
+                        <artifactId>validation-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.bval</groupId>
+                        <artifactId>bval-jsr303</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.reflections</groupId>
+                        <artifactId>reflections</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <!-- Alerts -->
+            <dependency>
+                <groupId>org.motechproject</groupId>
+                <artifactId>alerts</artifactId>
+                <version>${motech.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-beans</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-context</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <!-- Metrics -->
+            <dependency>
+                <groupId>org.motechproject</groupId>
+                <artifactId>metrics</artifactId>
+                <version>${motech.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-beans</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-context</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <!-- Settings -->
+            <dependency>
+                <groupId>org.motechproject</groupId>
+                <artifactId>motech-platform-server-config</artifactId>
+                <version>${motech.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.motechproject</groupId>
+                <artifactId>motech-scheduler</artifactId>
+                <version>${motech.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.bval</groupId>
+                <artifactId>org.apache.bval.bundle</artifactId>
+                <version>0.5</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.bval</groupId>
+                        <artifactId>bval-jsr303</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+
         </dependencies>
     </dependencyManagement>
 
@@ -882,7 +1091,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
-                <version>2.7.1</version>
+                <version>3.5</version>
                 <configuration>
                     <rulesets>
                         <ruleset>${modules.root.dir}/pmd.xml</ruleset>
@@ -904,7 +1113,7 @@
                     <dependency>
                         <groupId>org.motechproject</groupId>
                         <artifactId>pmd-rules</artifactId>
-                        <version>0.2</version>
+                        <version>0.3</version>
                     </dependency>
                 </dependencies>
                 <executions>
@@ -1047,7 +1256,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
-                <version>2.5</version>
+                <version>3.5</version>
                 <configuration>
                     <xrefLocation>${project.reporting.outputDirectory}/../xref</xrefLocation>
                 </configuration>

@@ -1,6 +1,6 @@
 package org.motechproject.nms.kilkari.domain;
 
-import org.codehaus.jackson.annotate.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.motechproject.mds.annotations.Entity;
@@ -18,7 +18,7 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
 
-@Entity(maxFetchDepth = -1, tableName = "nms_subscriptions")
+@Entity(maxFetchDepth = -1,tableName = "nms_subscriptions")
 @Index(name = "status_endDate_composit_idx", members = { "status", "endDate" })
 @TrackClass
 @InstanceLifecycleListeners

@@ -86,6 +86,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService;
     private SubscriberMsisdnTrackerDataService subscriberMsisdnTrackerDataService;
 
+
     @Autowired
     public SubscriptionServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade, // NO CHECKSTYLE More than 7 parameters
                                    SubscriberDataService subscriberDataService,
@@ -163,13 +164,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             if (subscriber.getSubscriptions().size() == 0) {
                 LOGGER.debug("Purging subscriber for subscription {} as it was the last subscription for that subscriber",
                         subscriptionId);
-                subscriberDataService.delete(subscriber);
+                deleteSubscriber(subscriber.getId());
                 purgedSubscribers++;
             }
         }
 
         LOGGER.info(String.format("Purged %s subscribers and %s subscriptions with status (%s or %s) and " + "endDate date before %s", purgedSubscribers, purgedSubscriptions, SubscriptionStatus.COMPLETED, SubscriptionStatus.DEACTIVATED, cutoff.toString()));
     }
+
 
 
     @Override
@@ -256,13 +258,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    public Boolean activeSubscriptionByMsisdnMcts(Long msisdn, SubscriptionPackType packType, String motherBeneficiaryId, String childBeneficiaryId) {
-        List<Subscriber> subscribers = subscriberDataService.findByNumber(msisdn);
+    public Boolean activeSubscriptionByMsisdnMcts(Subscriber subscriber,Long msisdn, SubscriptionPackType packType, String motherBeneficiaryId, String childBeneficiaryId) {
+        //List<Subscriber> subscribers = subscriberService.getSubscriber(msisdn);
         int subscriptionsSize = 0;
         if (packType == SubscriptionPackType.PREGNANCY) {
-            if (subscribers.size() != 0) {
-                for (Subscriber subscriber : subscribers
-                        ) {
+            //if (subscribers.size() != 0) {
+//                for (Subscriber subscriber : subscribers
+//                        ) {
                     List<Subscription> subscriptions = getActiveSubscriptionBySubscriber(subscriber);
                     subscriptionsSize = subscriptions.size();
                     if (subscriptionsSize != 0) {
@@ -276,14 +278,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                             return (subscriber.getMother() != null && !subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId));
                         }
                     }
-                }
-            } else {
-                return false;
-            }
+                //}
+//            } else {
+//                return false;
+//            }
         } else {
-            if (subscribers.size() != 0) {
-                for (Subscriber subscriber : subscribers
-                        ) {
+            //if (subscribers.size() != 0) {
+//                for (Subscriber subscriber : subscribers
+//                        ) {
                     List<Subscription> subscriptions = getActiveSubscriptionBySubscriber(subscriber);
                     subscriptionsSize = subscriptions.size();
                     if (subscriptionsSize != 0) {
@@ -299,17 +301,17 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                             return ((subscriber.getChild() != null && !subscriber.getChild().getBeneficiaryId().equals(childBeneficiaryId)) || (subscriber.getMother() != null && !subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId)));
                         }
                     }
-                }
-            } else {
-                return false;
-            }
+//                }
+//            } else {
+//                return false;
+//            }
         }
         return false;
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    public Boolean activeSubscriptionByMsisdnRch(Long msisdn, SubscriptionPackType packType, String motherRchId, String childRchId) {
-        List<Subscriber> subscribers = subscriberDataService.findByNumber(msisdn);
+    public Boolean activeSubscriptionByMsisdnRch(List<Subscriber> subscribers,Long msisdn, SubscriptionPackType packType, String motherRchId, String childRchId) {
+        //List<Subscriber> subscribers = subscriberDataService.getSubscriber(msisdn);
         int subscriptionsSize = 0;
         if (packType == SubscriptionPackType.PREGNANCY) {
             if (subscribers.size() != 0) {
@@ -905,6 +907,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
             SubscriptionServiceImpl.createDeactivatedUser(deactivatedBeneficiaryDataService, subscription, reason, false);
 
+            LOGGER.debug("Created the deactivated user " + subscriptionDeativated.getSubscriptionId());
+
             // Let's not retry calling subscribers with deactivated subscriptions
             deleteCallRetry(subscription.getSubscriptionId());
         }
@@ -925,10 +929,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
 
-    @Override
-    public List<SubscriptionPack> getSubscriptionPacks() {
-        return subscriptionPackDataService.retrieveAll();
-    }
+//    @Override
+//    public List<SubscriptionPack> getSubscriptionPacks() {
+//        return subscriptionPackDataService.retrieveAll();
+//    }
 
 
     public Subscription create(Subscription subscription) {
@@ -1008,10 +1012,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         LOGGER.info("Set allow new mcts subscriptions to {}", value);
     }
 
-    @Override
-    public List<Subscription> retrieveAll() {
-        return subscriptionDataService.retrieveAll();
-    }
+//    @Override
+//    public List<Subscription> retrieveAll() {
+//        return subscriptionDataService.retrieveAll();
+//    }
 
     @Override
     public Subscription getIVRSubscription(Set<Subscription> subscriptions, SubscriptionPackType packType) {
@@ -1056,5 +1060,26 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             service.create(deactivatedUser);
         }
     }
+
+    @Override
+    public void deleteSubscriber(Long id) {
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                return KilkariConstants.DELETE_SUBSCRIBER_BY_ID;
+            }
+
+            @Override
+            public Long execute(Query query) {
+                query.setClass(Subscriber.class);
+                return (Long) query.execute(id);
+            }
+        };
+
+        subscriberDataService.executeSQLQuery(queryExecution);
+
+    }
+
 
 }
