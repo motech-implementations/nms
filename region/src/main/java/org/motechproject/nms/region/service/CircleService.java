@@ -8,7 +8,7 @@ import java.util.Set;
 
 public interface CircleService {
     Circle getByName(String name);
-    List<Circle> getAll();
+    //List<Circle> getAll();
     Set<Circle> getAllInState(final State state);
     boolean circleNameExists(String circleName);
 }

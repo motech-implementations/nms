@@ -117,12 +117,15 @@ public class TalukaServiceImpl implements TalukaService {
 
     @Override
     public Map<String, Taluka> fillTalukaIds(List<Map<String, Object>> recordList, final Map<String, District> districtHashMap) {
+        LOGGER.debug("TalukaServiceImpl::fillTalukaIds");
         final Set<String> talukaKeys = new HashSet<>();
         for(Map<String, Object> record : recordList) {
             if (record.get(LocationConstants.CSV_STATE_ID) != null && record.get(LocationConstants.DISTRICT_ID) != null
                     && record.get(LocationConstants.TALUKA_ID) != null) {
-                talukaKeys.add(record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
-                        record.get(LocationConstants.TALUKA_ID).toString().trim());
+                String talukaKey = record.get(LocationConstants.CSV_STATE_ID).toString() + "_" + record.get(LocationConstants.DISTRICT_ID).toString() + "_" +
+                        record.get(LocationConstants.TALUKA_ID).toString().trim();
+                talukaKeys.add(talukaKey);
+                LOGGER.debug("TalukaServiceImpl:: Adding to talukaKeysMap : " + talukaKey );
             }
         }
         Map<String, Taluka> talukaHashMap = new HashMap<>();
@@ -142,14 +145,17 @@ public class TalukaServiceImpl implements TalukaService {
             public String getSqlQuery() {
                 String query = "SELECT * from nms_talukas where";
                 int count = talukaKeys.size();
+                LOGGER.debug("Count of talukakeys is " + count);
                 for (String talukaString : talukaKeys) {
                     String[] ids = talukaString.split("_");
+                    LOGGER.debug("After splitting with _  , size is "  + ids.length);
                     District district = districtHashMap.get(ids[0] + "_" + ids[1]);
                     if (district != null && district.getId() != null) {
                         if (count != talukaKeys.size()) {
                             query += LocationConstants.OR_SQL_STRING;
                         }
                         query += LocationConstants.CODE_SQL_STRING + ids[2] + " and district_id_oid = " + district.getId() + ")";
+                        LOGGER.debug("Query is ::  " + query);
                         count--;
                     }
                 }
@@ -175,7 +181,7 @@ public class TalukaServiceImpl implements TalukaService {
         if (!districtHashMap.isEmpty() && !talukaKeys.isEmpty()) {
             talukas = dataService.executeSQLQuery(queryExecution);
         }
-        LOGGER.debug("TALUKA Query time: {}", queryTimer.time());
+        LOGGER.info("TALUKA Query time: {}", queryTimer.time());
         if (talukas != null && !talukas.isEmpty()) {
             for (Taluka taluka : talukas) {
                 String districtKey = districtIdMap.get(taluka.getDistrict().getId());

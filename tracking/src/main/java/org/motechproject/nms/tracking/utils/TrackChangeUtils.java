@@ -32,9 +32,9 @@ public final class TrackChangeUtils {
         if (collection != null) {
             CollectionChange collectionChange = getCollectionChange(target, property);
             if (collection instanceof List) {
-                return new TrackedListDecorator((List) collection, collectionChange);
+                return collection;// new TrackedListDecorator((List) collection, collectionChange);
             } else if (collection instanceof Set) {
-                return new TrackedSetDecorator((Set) collection, collectionChange);
+                return collection; //new TrackedSetDecorator((Set) collection, collectionChange);
             } else {
                 LOGGER.error("Cannot find suitable decorator for collection of type {} ({}.{})",
                         collection.getClass().getName(), target.getClass().getName(), property);
