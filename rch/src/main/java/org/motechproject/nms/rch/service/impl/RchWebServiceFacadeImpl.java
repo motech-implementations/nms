@@ -414,97 +414,111 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
-        LOGGER.info("Copying RCH district response file from remote server to local directory.");
+        LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
+        LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
+        LOGGER.info("RCH District file import entry point");
+        LOGGER.info("Copying RCH District response file from remote server to local directory.");
         try {
-            List<RchImportFacilitator> rchImportFacilitatorsDistricts = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.DISTRICT);
-            for (RchImportFacilitator rchImportFacilitatorsDistrict: rchImportFacilitatorsDistricts
-                 ) {
-                ArrayList<Map<String, Object>> districtArrList = new ArrayList<>();
-                File localResponseFile ;
-                if (fileName == null) {
-                    localResponseFile = scpResponseToLocal(rchImportFacilitatorsDistrict.getFileName(), remoteLocation);
-                } else {
-                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                }
-                if (localResponseFile != null) {
-                    LOGGER.info("RCH district response file successfully copied from remote server to local directory.");
-                    String result = readResponsesFromXml(localResponseFile);
-                    State state = stateDataService.findByCode(stateId);
+            List<RchImportFacilitator> rchImportFacilitatorDistricts = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.DISTRICT);
+            File localResponseFile ;
+            if (rchImportFacilitatorDistricts.isEmpty()) {
+                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                String result = readResponsesFromXml(localResponseFile);
+                State importState = stateDataService.findByCode(stateId);
+                String stateName = importState.getName();
+                Long stateCode = importState.getCode();
 
-                    String stateName = state.getName() != null ? state.getName() : " ";
-                    Long stateCode = state.getCode() != null ? state.getCode() : 1L;
-
-                    LocalDate startDate = rchImportFacilitatorsDistrict.getStartDate();
-                    LocalDate endDate = rchImportFacilitatorsDistrict.getEndDate();
-
-                    try {
-
-                        if (result.contains(RECORDS)) {
-                            RchDistrictDataSet districtDataSet = (result == null) ?
-                                    null :
-                                    (RchDistrictDataSet) MarshallUtils.unmarshall(result, RchDistrictDataSet.class);
-
-                            LOGGER.info("Starting RCH district import");
-                            StopWatch stopWatch = new StopWatch();
-                            stopWatch.start();
-
-                            if (districtDataSet == null || districtDataSet.getRecords() == null) {
-                                String warning = String.format("No district data set received from RCH for %s state", stateName);
-                                LOGGER.warn(warning);
-                                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, warning));
-                            } else {
-                                List<RchDistrictRecord> districtRecords = districtDataSet.getRecords();
-                                for (RchDistrictRecord record : districtRecords) {
-                                    Map<String, Object> locMap = new HashMap<>();
-                                    toMapDistrict(locMap, record, stateCode);
-                                    districtArrList.add(locMap);
-
-                                }
-                            }
-                            int count = 0;
-                            int partNumber = 0;
-                            Long totalUpdatedRecords = 0L;
-                            while (count < districtArrList.size()) {
-                                List<Map<String, Object>> recordListPart = new ArrayList<>();
-                                while (recordListPart.size() < LOCATION_PART_SIZE && count < districtArrList.size()) {
-                                    recordListPart.add(districtArrList.get(count));
-                                    count++;
-                                }
-                                partNumber++;
-                                totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.DISTRICT, rchImportFacilitatorsDistrict.getFileName(), partNumber);
-                                recordListPart.clear();
-                            }
-
-                            LOGGER.debug("File {} processed. {} records updated", rchImportFacilitatorsDistrict.getFileName(), totalUpdatedRecords);
-
-                        } else {
-                            String warning = String.format("No district data set received from RCH for %d stateId", stateId);
-                            LOGGER.warn(warning);
-                        }
-
-                    } catch (JAXBException e) {
-                        throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH district data from %s location.", stateId), e);
-                    } catch (RchInvalidResponseStructureException e) {
-                        String error = String.format("Cannot read RCH districts data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
-                        LOGGER.error(error, e);
-                        alertService.create(RCH_WEB_SERVICE, "RCH Web Service District Import", e
-                                .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                        rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, error));
-                        rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
-                    } catch (NullPointerException e) {
-                        LOGGER.error("No files saved a : ", e);
+                LocalDate startReferenceDate = startDate;
+                LocalDate endReferenceDate = endDate;
+                districtFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+            } else {
+                for (RchImportFacilitator rchImportFacilitatorDistrict: rchImportFacilitatorDistricts
+                ) {
+                    if (fileName == null) {
+                        localResponseFile = scpResponseToLocal(rchImportFacilitatorDistrict.getFileName(), remoteLocation);
+                    } else {
+                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                    }
+                    if (localResponseFile != null) {
+                        String result = readResponsesFromXml(localResponseFile);
+                        State importState = stateDataService.findByCode(stateId);
+                        String stateName = importState.getName();
+                        Long stateCode = importState.getCode();
+                        LocalDate startReferenceDate = rchImportFacilitatorDistrict.getStartDate();
+                        LocalDate endReferenceDate = rchImportFacilitatorDistrict.getEndDate();
+                        districtFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
                     }
                 }
             }
-
         } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy file from remote server to local directory." + e);
+            LOGGER.error("Failed to copy response file from remote server to local directory.");
         } finally {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
             eventParams.put(Constants.REMOTE_LOCATION, null);
             eventParams.put(Constants.FILE_NAME, null);
             eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_TALUKA_READ_SUBJECT, eventParams));
+        }
+    }
+
+    private void districtFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
+        try {
+
+            ArrayList<Map<String, Object>> districtArrList = new ArrayList<>();
+            if (result.contains(RECORDS)) {
+                RchDistrictDataSet districtDataSet = (result == null) ?
+                        null :
+                        (RchDistrictDataSet) MarshallUtils.unmarshall(result, RchDistrictDataSet.class);
+
+                LOGGER.info("Starting RCH district import");
+                StopWatch stopWatch = new StopWatch();
+                stopWatch.start();
+
+                if (districtDataSet == null || districtDataSet.getRecords() == null) {
+                    String warning = String.format("No district data set received from RCH for %s state", stateName);
+                    LOGGER.warn(warning);
+                    rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, warning));
+                } else {
+                    List<RchDistrictRecord> districtRecords = districtDataSet.getRecords();
+                    for (RchDistrictRecord record : districtRecords) {
+                        Map<String, Object> locMap = new HashMap<>();
+                        toMapDistrict(locMap, record, stateCode);
+                        districtArrList.add(locMap);
+
+                    }
+                }
+                int count = 0;
+                int partNumber = 0;
+                Long totalUpdatedRecords = 0L;
+                while (count < districtArrList.size()) {
+                    List<Map<String, Object>> recordListPart = new ArrayList<>();
+                    while (recordListPart.size() < LOCATION_PART_SIZE && count < districtArrList.size()) {
+                        recordListPart.add(districtArrList.get(count));
+                        count++;
+                    }
+                    partNumber++;
+                    totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.DISTRICT, fileName, partNumber);
+                    recordListPart.clear();
+                }
+
+                LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
+
+            } else {
+                String warning = String.format("No district data set received from RCH for %d stateId", stateId);
+                LOGGER.warn(warning);
+            }
+
+        } catch (JAXBException e) {
+            throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH district data from %s location.", stateId), e);
+        } catch (RchInvalidResponseStructureException e) {
+            String error = String.format("Cannot read RCH districts data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service District Import", e
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
+        } catch (NullPointerException e) {
+            LOGGER.error("No files saved a : ", e);
         }
     }
 
@@ -516,90 +530,44 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
+        LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
+        LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
+        LOGGER.info("RCH Taluka file import entry point");
+        LOGGER.info("Copying RCH Taluka response file from remote server to local directory.");
         try {
-            List<RchImportFacilitator> rchImportFacilitatorsTalukas = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.TALUKA);
-            for (RchImportFacilitator rchImportFacilitatorsTaluka: rchImportFacilitatorsTalukas
-                    ) {
-                ArrayList<Map<String, Object>> talukaArrList = new ArrayList<>();
-                File localResponseFile ;
-                if (fileName == null) {
-                    localResponseFile = scpResponseToLocal(rchImportFacilitatorsTaluka.getFileName(), remoteLocation);
-                } else {
-                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                }
-                if (localResponseFile != null) {
-                    LOGGER.info("RCH Taluka response file successfully copied from remote server to local directory.");
-                    String result = readResponsesFromXml(localResponseFile);
-                    State state = stateDataService.findByCode(stateId);
+            List<RchImportFacilitator> rchImportFacilitatorTalukas = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.TALUKA);
+            File localResponseFile ;
+            if (rchImportFacilitatorTalukas.isEmpty()) {
+                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                String result = readResponsesFromXml(localResponseFile);
+                State importState = stateDataService.findByCode(stateId);
+                String stateName = importState.getName();
+                Long stateCode = importState.getCode();
 
-                    String stateName = state.getName() != null ? state.getName() : " ";
-                    Long stateCode = state.getCode() != null ? state.getCode() : 1L;
-
-                    LocalDate startDate = rchImportFacilitatorsTaluka.getStartDate();
-                    LocalDate endDate = rchImportFacilitatorsTaluka.getEndDate();
-
-                    try {
-
-                        if (result.contains(RECORDS)) {
-                            RchTalukaDataSet talukaDataSet = (result == null) ?
-                                    null :
-                                    (RchTalukaDataSet) MarshallUtils.unmarshall(result, RchTalukaDataSet.class);
-
-                            LOGGER.info("Starting RCH taluka import");
-                            StopWatch stopWatch = new StopWatch();
-                            stopWatch.start();
-
-                            if (talukaDataSet == null || talukaDataSet.getRecords() == null) {
-                                String warning = String.format("No taluka data set received from RCH for %s state", stateName);
-                                LOGGER.warn(warning);
-                                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, warning));
-                            } else {
-                                List<RchTalukaRecord> talukaRecords = talukaDataSet.getRecords();
-                                for (RchTalukaRecord record : talukaRecords) {
-                                    Map<String, Object> locMap = new HashMap<>();
-                                    toMapTaluka(locMap, record, stateCode);
-                                    talukaArrList.add(locMap);
-
-                                }
-                            }
-                            int count = 0;
-                            int partNumber = 0;
-                            Long totalUpdatedRecords = 0L;
-                            while (count < talukaArrList.size()) {
-                                List<Map<String, Object>> recordListPart = new ArrayList<>();
-                                while (recordListPart.size() < LOCATION_PART_SIZE && count < talukaArrList.size()) {
-                                    recordListPart.add(talukaArrList.get(count));
-                                    count++;
-                                }
-                                partNumber++;
-                                totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.TALUKA, rchImportFacilitatorsTaluka.getFileName(), partNumber);
-                                recordListPart.clear();
-                            }
-
-                            LOGGER.debug("File {} processed. {} records updated", rchImportFacilitatorsTaluka.getFileName(), totalUpdatedRecords);
-
-                        } else {
-                            String warning = String.format("No Taluka data set received from RCH for %d stateId", stateId);
-                            LOGGER.warn(warning);
-                        }
-
-                    } catch (JAXBException e) {
-                        throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH taluka data from %s location.", stateId), e);
-                    } catch (RchInvalidResponseStructureException e) {
-                        String error = String.format("Cannot read RCH taluka data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
-                        LOGGER.error(error, e);
-                        alertService.create(RCH_WEB_SERVICE, "RCH Web Service taluka Import", e
-                                .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                        rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, error));
-                        rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
-                    } catch (NullPointerException e) {
-                        LOGGER.error("No files saved a : ", e);
+                LocalDate startReferenceDate = startDate;
+                LocalDate endReferenceDate = endDate;
+                talukaFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+            } else {
+                for (RchImportFacilitator rchImportFacilitatorTaluka: rchImportFacilitatorTalukas
+                ) {
+                    if (fileName == null) {
+                        localResponseFile = scpResponseToLocal(rchImportFacilitatorTaluka.getFileName(), remoteLocation);
+                    } else {
+                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                    }
+                    if (localResponseFile != null) {
+                        String result = readResponsesFromXml(localResponseFile);
+                        State importState = stateDataService.findByCode(stateId);
+                        String stateName = importState.getName();
+                        Long stateCode = importState.getCode();
+                        LocalDate startReferenceDate = rchImportFacilitatorTaluka.getStartDate();
+                        LocalDate endReferenceDate = rchImportFacilitatorTaluka.getEndDate();
+                        talukaFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
                     }
                 }
             }
-
         } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy file from remote server to local directory." + e);
+            LOGGER.error("Failed to copy response file from remote server to local directory.");
         } finally {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
@@ -609,103 +577,177 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
     }
 
+    private void talukaFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
+        try {
+
+            ArrayList<Map<String, Object>> talukaArrList = new ArrayList<>();
+            if (result.contains(RECORDS)) {
+                RchTalukaDataSet talukaDataSet = (result == null) ?
+                        null :
+                        (RchTalukaDataSet) MarshallUtils.unmarshall(result, RchTalukaDataSet.class);
+
+                LOGGER.info("Starting RCH taluka import");
+                StopWatch stopWatch = new StopWatch();
+                stopWatch.start();
+
+                if (talukaDataSet == null || talukaDataSet.getRecords() == null) {
+                    String warning = String.format("No taluka data set received from RCH for %s state", stateName);
+                    LOGGER.warn(warning);
+                    rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, warning));
+                } else {
+                    List<RchTalukaRecord> talukaRecords = talukaDataSet.getRecords();
+                    for (RchTalukaRecord record : talukaRecords) {
+                        Map<String, Object> locMap = new HashMap<>();
+                        toMapTaluka(locMap, record, stateCode);
+                        talukaArrList.add(locMap);
+
+                    }
+                }
+                int count = 0;
+                int partNumber = 0;
+                Long totalUpdatedRecords = 0L;
+                while (count < talukaArrList.size()) {
+                    List<Map<String, Object>> recordListPart = new ArrayList<>();
+                    while (recordListPart.size() < LOCATION_PART_SIZE && count < talukaArrList.size()) {
+                        recordListPart.add(talukaArrList.get(count));
+                        count++;
+                    }
+                    partNumber++;
+                    totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.TALUKA, fileName, partNumber);
+                    recordListPart.clear();
+                }
+
+                LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
+
+            } else {
+                String warning = String.format("No Taluka data set received from RCH for %d stateId", stateId);
+                LOGGER.warn(warning);
+            }
+
+        } catch (JAXBException e) {
+            throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH taluka data from %s location.", stateId), e);
+        } catch (RchInvalidResponseStructureException e) {
+            String error = String.format("Cannot read RCH taluka data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service taluka Import", e
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
+        } catch (NullPointerException e) {
+            LOGGER.error("No files saved a : ", e);
+        }
+    }
+
     @MotechListener(subjects = Constants.RCH_VILLAGE_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void readVillageResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
+        LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
+        LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
+        LOGGER.info("RCH village file import entry point");
         LOGGER.info("Copying RCH village response file from remote server to local directory.");
         try {
-            List<RchImportFacilitator> rchImportFacilitatorsVillages = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.VILLAGE);
-            for (RchImportFacilitator rchImportFacilitatorsVillage: rchImportFacilitatorsVillages
-                 ) {
-                ArrayList<Map<String, Object>> villageArrList = new ArrayList<>();
-                File localResponseFile ;
-                if (fileName == null) {
-                    localResponseFile = scpResponseToLocal(rchImportFacilitatorsVillage.getFileName(), remoteLocation);
-                } else {
-                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                }
-                if (localResponseFile != null) {
-                    LOGGER.info("RCH village response file successfully copied from remote server to local directory.");
-                    String result = readResponsesFromXml(localResponseFile);
-                    State state = stateDataService.findByCode(stateId);
+            List<RchImportFacilitator> rchImportFacilitatorvillages = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.VILLAGE);
+            File localResponseFile ;
+            if (rchImportFacilitatorvillages.isEmpty()) {
+                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                String result = readResponsesFromXml(localResponseFile);
+                State importState = stateDataService.findByCode(stateId);
+                String stateName = importState.getName();
+                Long stateCode = importState.getCode();
 
-                    String stateName = state.getName() != null ? state.getName() : " ";
-                    Long stateCode = state.getCode() != null ? state.getCode() : 1L;
-
-                    LocalDate startDate = rchImportFacilitatorsVillage.getStartDate();
-                    LocalDate endDate = rchImportFacilitatorsVillage.getEndDate();
-
-                    try {
-
-                        if (result.contains(RECORDS)) {
-                            RchVillageDataSet villageDataSet = (result == null) ?
-                                    null :
-                                    (RchVillageDataSet) MarshallUtils.unmarshall(result, RchVillageDataSet.class);
-
-                            LOGGER.info("Starting RCH village import");
-                            StopWatch stopWatch = new StopWatch();
-                            stopWatch.start();
-
-                            if (villageDataSet == null || villageDataSet.getRecords() == null) {
-                                String warning = String.format("No village data set received from RCH for %s state", stateName);
-                                LOGGER.warn(warning);
-                                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, warning));
-                            } else {
-                                List<RchVillageRecord> villageRecords = villageDataSet.getRecords();
-                                for (RchVillageRecord record : villageRecords) {
-                                    Map<String, Object> locMap = new HashMap<>();
-                                    toMapVillage(locMap, record, stateCode);
-                                    villageArrList.add(locMap);
-
-                                }
-                            }
-                            int count = 0;
-                            int partNumber = 0;
-                            Long totalUpdatedRecords = 0L;
-                            while (count < villageArrList.size()) {
-                                List<Map<String, Object>> recordListPart = new ArrayList<>();
-                                while (recordListPart.size() < LOCATION_PART_SIZE && count < villageArrList.size()) {
-                                    recordListPart.add(villageArrList.get(count));
-                                    count++;
-                                }
-                                partNumber++;
-                                totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.VILLAGE, rchImportFacilitatorsVillage.getFileName(), partNumber);
-                                recordListPart.clear();
-                            }
-
-                            LOGGER.debug("File {} processed. {} records updated", rchImportFacilitatorsVillage.getFileName(), totalUpdatedRecords);
-
-                        } else {
-                            String warning = String.format("No Village data set received from RCH for %d stateId", stateId);
-                            LOGGER.warn(warning);
-                        }
-
-                    } catch (JAXBException e) {
-                        throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH Village data from %s location.", stateId), e);
-                    } catch (RchInvalidResponseStructureException e) {
-                        String error = String.format("Cannot read RCH Village data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
-                        LOGGER.error(error, e);
-                        alertService.create(RCH_WEB_SERVICE, "RCH Web Service Village Import", e
-                                .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                        rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, error));
-                        rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGE, stateId));
-                    } catch (NullPointerException e) {
-                        LOGGER.error("No files saved a : ", e);
+                LocalDate startReferenceDate = startDate;
+                LocalDate endReferenceDate = endDate;
+                villageFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+            } else {
+                for (RchImportFacilitator rchImportFacilitatorvillage: rchImportFacilitatorvillages
+                ) {
+                    if (fileName == null) {
+                        localResponseFile = scpResponseToLocal(rchImportFacilitatorvillage.getFileName(), remoteLocation);
+                    } else {
+                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                    }
+                    if (localResponseFile != null) {
+                        String result = readResponsesFromXml(localResponseFile);
+                        State importState = stateDataService.findByCode(stateId);
+                        String stateName = importState.getName();
+                        Long stateCode = importState.getCode();
+                        LocalDate startReferenceDate = rchImportFacilitatorvillage.getStartDate();
+                        LocalDate endReferenceDate = rchImportFacilitatorvillage.getEndDate();
+                        villageFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
                     }
                 }
             }
-
         } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy file from remote server to local directory." + e);
+            LOGGER.error("Failed to copy response file from remote server to local directory.");
         } finally {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
             eventParams.put(Constants.REMOTE_LOCATION, null);
             eventParams.put(Constants.FILE_NAME, null);
             eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_VILLAGE_HEALTHSUBFACILITY_READ_SUBJECT, eventParams));
+        }
+    }
+
+    private void villageFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
+        try {
+            ArrayList<Map<String, Object>> villageArrList = new ArrayList<>();
+            if (result.contains(RECORDS)) {
+                RchVillageDataSet villageDataSet = (result == null) ?
+                        null :
+                        (RchVillageDataSet) MarshallUtils.unmarshall(result, RchVillageDataSet.class);
+
+                LOGGER.info("Starting RCH village import");
+                StopWatch stopWatch = new StopWatch();
+                stopWatch.start();
+
+                if (villageDataSet == null || villageDataSet.getRecords() == null) {
+                    String warning = String.format("No village data set received from RCH for %s state", stateName);
+                    LOGGER.warn(warning);
+                    rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, warning));
+                } else {
+                    List<RchVillageRecord> villageRecords = villageDataSet.getRecords();
+                    for (RchVillageRecord record : villageRecords) {
+                        Map<String, Object> locMap = new HashMap<>();
+                        toMapVillage(locMap, record, stateCode);
+                        villageArrList.add(locMap);
+
+                    }
+                }
+                int count = 0;
+                int partNumber = 0;
+                Long totalUpdatedRecords = 0L;
+                while (count < villageArrList.size()) {
+                    List<Map<String, Object>> recordListPart = new ArrayList<>();
+                    while (recordListPart.size() < LOCATION_PART_SIZE && count < villageArrList.size()) {
+                        recordListPart.add(villageArrList.get(count));
+                        count++;
+                    }
+                    partNumber++;
+                    totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.VILLAGE, fileName, partNumber);
+                    recordListPart.clear();
+                }
+
+                LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
+
+            } else {
+                String warning = String.format("No Village data set received from RCH for %d stateId", stateId);
+                LOGGER.warn(warning);
+            }
+
+        } catch (JAXBException e) {
+            throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH Village data from %s location.", stateId), e);
+        } catch (RchInvalidResponseStructureException e) {
+            String error = String.format("Cannot read RCH Village data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service Village Import", e
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGE, stateId));
+        } catch (NullPointerException e) {
+            LOGGER.error("No files saved a : ", e);
         }
     }
 
@@ -730,76 +772,90 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
+        LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
+        LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
+        LOGGER.info("RCH Asha file import entry point");
+        LOGGER.info("Copying RCH Asha response file from remote server to local directory.");
         try {
-            LOGGER.info("Copying RCH mother response file from remote server to local directory.");
             List<RchImportFacilitator> rchImportFacilitatorMothers = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.MOTHER);
-            for (RchImportFacilitator rchImportFacilitatorMother: rchImportFacilitatorMothers
-                 ) {
-                File localResponseFile ;
-                if (fileName == null) {
-                    localResponseFile = scpResponseToLocal(rchImportFacilitatorMother.getFileName(), remoteLocation);
-                } else {
-                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                }
-                if (localResponseFile != null) {
-                    LOGGER.info("RCH Mother response file successfully copied from remote server to local directory.");
-                    String result = readResponsesFromXml(localResponseFile);
-                    State state = stateDataService.findByCode(stateId);
+            File localResponseFile ;
+            if (rchImportFacilitatorMothers.isEmpty()) {
+                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                String result = readResponsesFromXml(localResponseFile);
+                State importState = stateDataService.findByCode(stateId);
+                String stateName = importState.getName();
+                Long stateCode = importState.getCode();
 
-                    String stateName = state.getName() != null ? state.getName() : " ";
-                    Long stateCode = state.getCode() != null ? state.getCode() : 1L;
-
-                    LocalDate startDate = rchImportFacilitatorMother.getStartDate();
-                    LocalDate endDate = rchImportFacilitatorMother.getEndDate();
-
-                    try {
-                        if (result.contains(RECORDS)) {
-                            RchMothersDataSet mothersDataSet = (result == null) ?
-                                    null :
-                                    (RchMothersDataSet) MarshallUtils.unmarshall(result, RchMothersDataSet.class);
-
-                            LOGGER.info("Starting RCH mother import");
-                            StopWatch stopWatch = new StopWatch();
-                            stopWatch.start();
-
-                            if (mothersDataSet == null || mothersDataSet.getRecords() == null) {
-                                String warning = String.format("No mother data set received from RCH for %s state", stateName);
-                                LOGGER.warn(warning);
-                                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, warning));
-                            } else {
-                                LOGGER.info("Received {} mother records from RCH for {} state", sizeNullSafe(mothersDataSet.getRecords()), stateName);
-
-                                RchImportAudit audit = saveImportedMothersData(mothersDataSet, stateName, stateCode, startDate, endDate);
-                                rchImportAuditDataService.create(audit);
-                                stopWatch.stop();
-                                double seconds = stopWatch.getTime() / THOUSAND;
-                                LOGGER.info("Finished RCH mother import dispatch in {} seconds. Accepted {} mothers, Rejected {} mothers",
-                                        seconds, audit.getAccepted(), audit.getRejected());
-
-                                LOGGER.info("fromDate for delete {} {}", startDate, endDate);
-                                deleteRchImportFailRecords(startDate, endDate, RchUserType.MOTHER, stateId);
-                            }
-                        } else {
-                            String warning = String.format("No Mother data set received from RCH for %d stateId", stateId);
-                            LOGGER.warn(warning);
-                        }
-                    } catch (JAXBException e) {
-                        throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH mother data from %s location.", stateId), e);
-                    } catch (RchInvalidResponseStructureException e) {
-                        String error = String.format("Cannot read RCH mothers data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
-                        LOGGER.error(error, e);
-                        alertService.create(RCH_WEB_SERVICE, "RCH Web Service Mother Import", e
-                                .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                        rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
-                        rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.MOTHER, stateId));
-                    } catch (NullPointerException e) {
-                        LOGGER.error("No files saved a : ", e);
+                LocalDate startReferenceDate = startDate;
+                LocalDate endReferenceDate = endDate;
+                motherFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+            } else {
+                for (RchImportFacilitator rchImportFacilitatorMother: rchImportFacilitatorMothers
+                ) {
+                    if (fileName == null) {
+                        localResponseFile = scpResponseToLocal(rchImportFacilitatorMother.getFileName(), remoteLocation);
+                    } else {
+                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                    }
+                    if (localResponseFile != null) {
+                        String result = readResponsesFromXml(localResponseFile);
+                        State importState = stateDataService.findByCode(stateId);
+                        String stateName = importState.getName();
+                        Long stateCode = importState.getCode();
+                        LocalDate startReferenceDate = rchImportFacilitatorMother.getStartDate();
+                        LocalDate endReferenceDate = rchImportFacilitatorMother.getEndDate();
+                        motherFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
                     }
                 }
             }
-
         } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy file from remote server to local directory." + e);
+            LOGGER.error("Failed to copy response file from remote server to local directory.");
+        }
+    }
+
+    private void motherFileProcess(String result, Long stateId, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
+        try {
+            if (result.contains(RECORDS)) {
+                RchMothersDataSet mothersDataSet = (result == null) ?
+                        null :
+                        (RchMothersDataSet) MarshallUtils.unmarshall(result, RchMothersDataSet.class);
+
+                LOGGER.info("Starting RCH mother import");
+                StopWatch stopWatch = new StopWatch();
+                stopWatch.start();
+
+                if (mothersDataSet == null || mothersDataSet.getRecords() == null) {
+                    String warning = String.format("No mother data set received from RCH for %s state", stateName);
+                    LOGGER.warn(warning);
+                    rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, warning));
+                } else {
+                    LOGGER.info("Received {} mother records from RCH for {} state", sizeNullSafe(mothersDataSet.getRecords()), stateName);
+
+                    RchImportAudit audit = saveImportedMothersData(mothersDataSet, stateName, stateCode, startReferenceDate, endReferenceDate);
+                    rchImportAuditDataService.create(audit);
+                    stopWatch.stop();
+                    double seconds = stopWatch.getTime() / THOUSAND;
+                    LOGGER.info("Finished RCH mother import dispatch in {} seconds. Accepted {} mothers, Rejected {} mothers",
+                            seconds, audit.getAccepted(), audit.getRejected());
+
+                    LOGGER.info("fromDate for delete {} {}", startReferenceDate, endReferenceDate);
+                    deleteRchImportFailRecords(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateId);
+                }
+            } else {
+                String warning = String.format("No Mother data set received from RCH for %d stateId", stateId);
+                LOGGER.warn(warning);
+            }
+        } catch (JAXBException e) {
+            throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH mother data from %s location.", stateId), e);
+        } catch (RchInvalidResponseStructureException e) {
+            String error = String.format("Cannot read RCH mothers data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service Mother Import", e
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.MOTHER, stateId));
+        } catch (NullPointerException e) {
+            LOGGER.error("No files saved a : ", e);
         }
     }
 
@@ -862,71 +918,89 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
-        LOGGER.info("Copying RCH child response file from remote server to local directory.");
+        LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
+        LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
+        LOGGER.info("RCH Asha file import entry point");
+        LOGGER.info("Copying RCH Asha response file from remote server to local directory.");
         try {
             List<RchImportFacilitator> rchImportFacilitatorChildren = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.CHILD);
-            for (RchImportFacilitator rchImportFacilitatorChild: rchImportFacilitatorChildren
-                 ) {
-                File localResponseFile ;
-                if (fileName == null) {
-                    localResponseFile = scpResponseToLocal(rchImportFacilitatorChild    .getFileName(), remoteLocation);
-                } else {
-                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                }
-
+            File localResponseFile ;
+            if (rchImportFacilitatorChildren.isEmpty()) {
+                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
                 String result = readResponsesFromXml(localResponseFile);
-                State state = stateDataService.findByCode(stateId);
+                State importState = stateDataService.findByCode(stateId);
+                String stateName = importState.getName();
+                Long stateCode = importState.getCode();
 
-                String stateName = state.getName();
-                Long stateCode = state.getCode();
-
-                LocalDate startReferenceDate = rchImportFacilitatorChild.getStartDate();
-                LocalDate endReferenceDate = rchImportFacilitatorChild.getEndDate();
-                try {
-                    if (result.contains(RECORDS)) {
-                        RchChildrenDataSet childrenDataSet = (result == null) ?
-                                null :
-                                (RchChildrenDataSet) MarshallUtils.unmarshall(result, RchChildrenDataSet.class);
-
-                        LOGGER.info("Starting RCH children import for stateId: {}", stateId);
-                        StopWatch stopWatch = new StopWatch();
-                        stopWatch.start();
-
-                        if (childrenDataSet == null || childrenDataSet.getRecords() == null) {
-                            String warning = String.format("No child data set received from RCH for %s state", stateName);
-                            LOGGER.warn(warning);
-                            rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, warning));
-                        } else {
-                            LOGGER.info("Received {} children records from RCH for {} state", sizeNullSafe(childrenDataSet.getRecords()), stateName);
-
-                            RchImportAudit audit = saveImportedChildrenData(childrenDataSet, stateName, stateCode, startReferenceDate, endReferenceDate);
-                            rchImportAuditDataService.create(audit);
-                            stopWatch.stop();
-                            double seconds = stopWatch.getTime() / THOUSAND;
-                            LOGGER.info("Finished children import dispatch in {} seconds. Accepted {} children, Rejected {} children",
-                                    seconds, audit.getAccepted(), audit.getRejected());
-
-                            // Delete RchImportFailRecords once import is successful
-                            deleteRchImportFailRecords(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateId);
-                        }
+                LocalDate startReferenceDate = startDate;
+                LocalDate endReferenceDate = endDate;
+                childFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+            } else {
+                for (RchImportFacilitator rchImportFacilitatorChild: rchImportFacilitatorChildren
+                ) {
+                    if (fileName == null) {
+                        localResponseFile = scpResponseToLocal(rchImportFacilitatorChild.getFileName(), remoteLocation);
                     } else {
-                        String warning = String.format("No Child data set received from RCH for %d stateId", stateId);
-                        LOGGER.warn(warning);
+                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
                     }
-                } catch (JAXBException e) {
-                    throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH children data from %s location.", stateId), e);
-                } catch (RchInvalidResponseStructureException e) {
-                    String error = String.format("Cannot read RCH children data from %s state with stateId:%d. Response Deserialization Error", stateName, stateCode);
-                    LOGGER.error(error, e);
-                    alertService.create(RCH_WEB_SERVICE, "RCH Web Service Child Import", e.getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                    rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
-                    rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
-                } catch (NullPointerException e) {
-                    LOGGER.error("No files saved b : ", e);
+                    if (localResponseFile != null) {
+                        String result = readResponsesFromXml(localResponseFile);
+                        State importState = stateDataService.findByCode(stateId);
+                        String stateName = importState.getName();
+                        Long stateCode = importState.getCode();
+                        LocalDate startReferenceDate = rchImportFacilitatorChild.getStartDate();
+                        LocalDate endReferenceDate = rchImportFacilitatorChild.getEndDate();
+                        childFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                    }
                 }
             }
         } catch (ExecutionException e) {
             LOGGER.error("Failed to copy response file from remote server to local directory.");
+        }
+    }
+
+    private void childFileProcess(String result, Long stateId, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
+        try {
+            if (result.contains(RECORDS)) {
+                RchChildrenDataSet childrenDataSet = (result == null) ?
+                        null :
+                        (RchChildrenDataSet) MarshallUtils.unmarshall(result, RchChildrenDataSet.class);
+
+                LOGGER.info("Starting RCH children import for stateId: {}", stateId);
+                StopWatch stopWatch = new StopWatch();
+                stopWatch.start();
+
+                if (childrenDataSet == null || childrenDataSet.getRecords() == null) {
+                    String warning = String.format("No child data set received from RCH for %s state", stateName);
+                    LOGGER.warn(warning);
+                    rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, warning));
+                } else {
+                    LOGGER.info("Received {} children records from RCH for {} state", sizeNullSafe(childrenDataSet.getRecords()), stateName);
+
+                    RchImportAudit audit = saveImportedChildrenData(childrenDataSet, stateName, stateCode, startReferenceDate, endReferenceDate);
+                    rchImportAuditDataService.create(audit);
+                    stopWatch.stop();
+                    double seconds = stopWatch.getTime() / THOUSAND;
+                    LOGGER.info("Finished children import dispatch in {} seconds. Accepted {} children, Rejected {} children",
+                            seconds, audit.getAccepted(), audit.getRejected());
+
+                    // Delete RchImportFailRecords once import is successful
+                    deleteRchImportFailRecords(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateId);
+                }
+            } else {
+                String warning = String.format("No Child data set received from RCH for %d stateId", stateId);
+                LOGGER.warn(warning);
+            }
+        } catch (JAXBException e) {
+            throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH children data from %s location.", stateId), e);
+        } catch (RchInvalidResponseStructureException e) {
+            String error = String.format("Cannot read RCH children data from %s state with stateId:%d. Response Deserialization Error", stateName, stateCode);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service Child Import", e.getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
+        } catch (NullPointerException e) {
+            LOGGER.error("No files saved b : ", e);
         }
     }
 
@@ -1006,7 +1080,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
                 LocalDate startReferenceDate = startDate;
                 LocalDate endReferenceDate = endDate;
-                ashaFileProcess(localResponseFile, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                ashaFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
             } else {
                 for (RchImportFacilitator rchImportFacilitatorAsha: rchImportFacilitatorAshas
                         ) {
@@ -1022,7 +1096,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                         Long stateCode = importState.getCode();
                         LocalDate startReferenceDate = rchImportFacilitatorAsha.getStartDate();
                         LocalDate endReferenceDate = rchImportFacilitatorAsha.getEndDate();
-                        ashaFileProcess(localResponseFile, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                        ashaFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
                     }
                 }
             }
@@ -1031,7 +1105,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
     }
 
-    private void ashaFileProcess(File localResponseFile, String result, Long stateId, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
+    private void ashaFileProcess(String result, Long stateId, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
         try {
             if (result.contains(RECORDS)) {
                 RchAnmAshaDataSet ashaDataSet = (result == null) ?
@@ -1121,93 +1195,107 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
+        LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
+        LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
+        LOGGER.info("RCH Healthblock file import entry point");
+        LOGGER.info("Copying RCH Healthblock response file from remote server to local directory.");
         try {
-            List<RchImportFacilitator> rchImportFacilitatorsHealthBlocks = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.HEALTHBLOCK);
-            for (RchImportFacilitator rchImportFacilitatorsHealthBlock: rchImportFacilitatorsHealthBlocks
-                 ) {
-                ArrayList<Map<String, Object>> healthBlockArrList = new ArrayList<>();
-                File localResponseFile ;
-                if (fileName == null) {
-                    localResponseFile = scpResponseToLocal(rchImportFacilitatorsHealthBlock.getFileName(), remoteLocation);
-                } else {
-                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                }
+            List<RchImportFacilitator> rchImportFacilitatorHealthblocks = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.HEALTHBLOCK);
+            File localResponseFile ;
+            if (rchImportFacilitatorHealthblocks.isEmpty()) {
+                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                String result = readResponsesFromXml(localResponseFile);
+                State importState = stateDataService.findByCode(stateId);
+                String stateName = importState.getName();
+                Long stateCode = importState.getCode();
 
-                if (localResponseFile != null) {
-                    LOGGER.info("RCH healthblock response file successfully copied from remote server to local directory.");
-                    String result = readResponsesFromXml(localResponseFile);
-                    State state = stateDataService.findByCode(stateId);
-
-                    String stateName = state.getName() != null ? state.getName() : " ";
-                    Long stateCode = state.getCode() != null ? state.getCode() : 1L;
-
-                    LocalDate startDate = rchImportFacilitatorsHealthBlock.getStartDate();
-                    LocalDate endDate = rchImportFacilitatorsHealthBlock.getEndDate();
-
-                    try {
-                        if (result.contains(RECORDS)) {
-                            RchHealthBlockDataSet healthBlockDataSet = (result == null) ?
-                                    null :
-                                    (RchHealthBlockDataSet) MarshallUtils.unmarshall(result, RchHealthBlockDataSet.class);
-
-                            LOGGER.info("Starting RCH healthblock import");
-                            StopWatch stopWatch = new StopWatch();
-                            stopWatch.start();
-
-                            if (healthBlockDataSet == null || healthBlockDataSet.getRecords() == null) {
-                                String warning = String.format("No healthblock data set received from RCH for %s state", stateName);
-                                LOGGER.warn(warning);
-                                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHBLOCK, stateCode, stateName, 0, 0, warning));
-                            } else {
-                                List<RchHealthBlockRecord> rchHealthBlockRecords = healthBlockDataSet.getRecords();
-                                for (RchHealthBlockRecord record : rchHealthBlockRecords) {
-                                    Map<String, Object> locMap = new HashMap<>();
-                                    toMapHealthBlock(locMap, record, stateCode);
-                                    healthBlockArrList.add(locMap);
-
-                                }
-                            }
-                            int count = 0;
-                            int partNumber = 0;
-                            Long totalUpdatedRecords = 0L;
-                            while (count < healthBlockArrList.size()) {
-                                List<Map<String, Object>> recordListPart = new ArrayList<>();
-                                while (recordListPart.size() < LOCATION_PART_SIZE && count < healthBlockArrList.size()) {
-                                    recordListPart.add(healthBlockArrList.get(count));
-                                    count++;
-                                }
-                                partNumber++;
-                                totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.HEALTHBLOCK, rchImportFacilitatorsHealthBlock.getFileName(), partNumber);
-                                recordListPart.clear();
-                            }
-                            LOGGER.debug("File {} processed. {} records updated", rchImportFacilitatorsHealthBlock.getFileName(), totalUpdatedRecords);
-                        } else {
-                            String warning = String.format("No HealthBlock data set received from RCH for %d stateId", stateId);
-                            LOGGER.warn(warning);
-                        }
-                    } catch (JAXBException e) {
-                        throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH mother data from %s location.", stateId), e);
-                    } catch (RchInvalidResponseStructureException e) {
-                        String error = String.format("Cannot read RCH mothers data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
-                        LOGGER.error(error, e);
-                        alertService.create(RCH_WEB_SERVICE, "RCH Web Service Mother Import", e
-                                .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                        rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
-                        rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.MOTHER, stateId));
-                    } catch (NullPointerException e) {
-                        LOGGER.error("No files saved a : ", e);
+                LocalDate startReferenceDate = startDate;
+                LocalDate endReferenceDate = endDate;
+                healthblockFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+            } else {
+                for (RchImportFacilitator rchImportFacilitatorHealthblock: rchImportFacilitatorHealthblocks
+                ) {
+                    if (fileName == null) {
+                        localResponseFile = scpResponseToLocal(rchImportFacilitatorHealthblock.getFileName(), remoteLocation);
+                    } else {
+                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                    }
+                    if (localResponseFile != null) {
+                        String result = readResponsesFromXml(localResponseFile);
+                        State importState = stateDataService.findByCode(stateId);
+                        String stateName = importState.getName();
+                        Long stateCode = importState.getCode();
+                        LocalDate startReferenceDate = rchImportFacilitatorHealthblock.getStartDate();
+                        LocalDate endReferenceDate = rchImportFacilitatorHealthblock.getEndDate();
+                        healthblockFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
                     }
                 }
             }
-
         } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy file from remote server to local directory." + e);
+            LOGGER.error("Failed to copy response file from remote server to local directory.");
         } finally {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
             eventParams.put(Constants.REMOTE_LOCATION, null);
             eventParams.put(Constants.FILE_NAME, null);
             eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_TALUKA_HEALTHBLOCK_READ_SUBJECT, eventParams));
+        }
+    }
+
+    private void healthblockFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
+        try {
+            ArrayList<Map<String, Object>> healthBlockArrList = new ArrayList<>();
+            if (result.contains(RECORDS)) {
+                RchHealthBlockDataSet healthBlockDataSet = (result == null) ?
+                        null :
+                        (RchHealthBlockDataSet) MarshallUtils.unmarshall(result, RchHealthBlockDataSet.class);
+
+                LOGGER.info("Starting RCH healthblock import");
+                StopWatch stopWatch = new StopWatch();
+                stopWatch.start();
+
+                if (healthBlockDataSet == null || healthBlockDataSet.getRecords() == null) {
+                    String warning = String.format("No healthblock data set received from RCH for %s state", stateName);
+                    LOGGER.warn(warning);
+                    rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHBLOCK, stateCode, stateName, 0, 0, warning));
+                } else {
+                    List<RchHealthBlockRecord> rchHealthBlockRecords = healthBlockDataSet.getRecords();
+                    for (RchHealthBlockRecord record : rchHealthBlockRecords) {
+                        Map<String, Object> locMap = new HashMap<>();
+                        toMapHealthBlock(locMap, record, stateCode);
+                        healthBlockArrList.add(locMap);
+
+                    }
+                }
+                int count = 0;
+                int partNumber = 0;
+                Long totalUpdatedRecords = 0L;
+                while (count < healthBlockArrList.size()) {
+                    List<Map<String, Object>> recordListPart = new ArrayList<>();
+                    while (recordListPart.size() < LOCATION_PART_SIZE && count < healthBlockArrList.size()) {
+                        recordListPart.add(healthBlockArrList.get(count));
+                        count++;
+                    }
+                    partNumber++;
+                    totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.HEALTHBLOCK, fileName, partNumber);
+                    recordListPart.clear();
+                }
+                LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
+            } else {
+                String warning = String.format("No HealthBlock data set received from RCH for %d stateId", stateId);
+                LOGGER.warn(warning);
+            }
+        } catch (JAXBException e) {
+            throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH mother data from %s location.", stateId), e);
+        } catch (RchInvalidResponseStructureException e) {
+            String error = String.format("Cannot read RCH mothers data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service Mother Import", e
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.MOTHER, stateId));
+        } catch (NullPointerException e) {
+            LOGGER.error("No files saved a : ", e);
         }
     }
 
@@ -1256,87 +1344,44 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
+        LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
+        LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
+        LOGGER.info("RCH TalukaHealthblock file import entry point");
+        LOGGER.info("Copying RCH TalukaHealthblock response file from remote server to local directory.");
         try {
-            List<RchImportFacilitator> rchImportFacilitatorsTalukaHealthBlocks = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.TALUKAHEALTHBLOCK);
-            for (RchImportFacilitator rchImportFacilitatorsTalukaHealthBlock: rchImportFacilitatorsTalukaHealthBlocks
-                 ) {
-                ArrayList<Map<String, Object>> talukaHealthBlockArrList = new ArrayList<>();
-                File localResponseFile ;
-                if (fileName == null) {
-                    localResponseFile = scpResponseToLocal(rchImportFacilitatorsTalukaHealthBlock.getFileName(), remoteLocation);
-                } else {
-                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                }
-                if (localResponseFile != null) {
-                    LOGGER.info("RCH Taluka-healthblock response file successfully copied from remote server to local directory.");
-                    String result = readResponsesFromXml(localResponseFile);
-                    State state = stateDataService.findByCode(stateId);
+            List<RchImportFacilitator> rchImportFacilitatorTalukaHealthblocks = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.TALUKAHEALTHBLOCK);
+            File localResponseFile ;
+            if (rchImportFacilitatorTalukaHealthblocks.isEmpty()) {
+                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                String result = readResponsesFromXml(localResponseFile);
+                State importState = stateDataService.findByCode(stateId);
+                String stateName = importState.getName();
+                Long stateCode = importState.getCode();
 
-                    String stateName = state.getName() != null ? state.getName() : " ";
-                    Long stateCode = state.getCode() != null ? state.getCode() : 1L;
-
-                    LocalDate startDate = rchImportFacilitatorsTalukaHealthBlock.getStartDate();
-                    LocalDate endDate = rchImportFacilitatorsTalukaHealthBlock.getEndDate();
-
-                    try {
-                        if (result.contains(RECORDS)) {
-                            RchTalukaHealthBlockDataSet talukaHealthBlockDataSet = (result == null) ?
-                                    null :
-                                    (RchTalukaHealthBlockDataSet) MarshallUtils.unmarshall(result, RchTalukaHealthBlockDataSet.class);
-
-                            LOGGER.info("Starting RCH taluka-healthBlock import");
-                            StopWatch stopWatch = new StopWatch();
-                            stopWatch.start();
-
-                            if (talukaHealthBlockDataSet == null || talukaHealthBlockDataSet.getRecords() == null) {
-                                String warning = String.format("No taluka-healthBlock data set received from RCH for %s state", stateName);
-                                LOGGER.warn(warning);
-                                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, warning));
-                            } else {
-                                List<RchTalukaHealthBlockRecord> rchTalukaHealthBlockRecords = talukaHealthBlockDataSet.getRecords();
-                                for (RchTalukaHealthBlockRecord record : rchTalukaHealthBlockRecords) {
-                                    Map<String, Object> locMap = new HashMap<>();
-                                    toMapTalukaHealthBlock(locMap, record, stateCode);
-                                    talukaHealthBlockArrList.add(locMap);
-                                }
-                            }
-                            int count = 0;
-                            int partNumber = 0;
-                            Long totalUpdatedRecords = 0L;
-                            while (count < talukaHealthBlockArrList.size()) {
-                                List<Map<String, Object>> recordListPart = new ArrayList<>();
-                                while (recordListPart.size() < LOCATION_PART_SIZE && count < talukaHealthBlockArrList.size()) {
-                                    recordListPart.add(talukaHealthBlockArrList.get(count));
-                                    count++;
-                                }
-                                partNumber++;
-                                totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.TALUKAHEALTHBLOCK, rchImportFacilitatorsTalukaHealthBlock.getFileName(), partNumber);
-                                recordListPart.clear();
-                            }
-
-                            LOGGER.debug("File {} processed. {} records updated", rchImportFacilitatorsTalukaHealthBlock.getFileName(), totalUpdatedRecords);
-                        } else {
-                            String warning = String.format("No Taluka-HealthBlock data set received from RCH for %d stateId", stateId);
-                            LOGGER.warn(warning);
-                        }
-
-                    } catch (JAXBException e) {
-                        throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH mother data from %s location.", stateId), e);
-                    } catch (RchInvalidResponseStructureException e) {
-                        String error = String.format("Cannot read RCH taluka healthblock data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
-                        LOGGER.error(error, e);
-                        alertService.create(RCH_WEB_SERVICE, "RCH Web Service Mother Import", e
-                                .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                        rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, error));
-                        rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKAHEALTHBLOCK, stateId));
-                    } catch (NullPointerException e) {
-                        LOGGER.error("No files saved a : ", e);
+                LocalDate startReferenceDate = startDate;
+                LocalDate endReferenceDate = endDate;
+                tHFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+            } else {
+                for (RchImportFacilitator rchImportFacilitatorTalukaHealthblock: rchImportFacilitatorTalukaHealthblocks
+                ) {
+                    if (fileName == null) {
+                        localResponseFile = scpResponseToLocal(rchImportFacilitatorTalukaHealthblock.getFileName(), remoteLocation);
+                    } else {
+                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                    }
+                    if (localResponseFile != null) {
+                        String result = readResponsesFromXml(localResponseFile);
+                        State importState = stateDataService.findByCode(stateId);
+                        String stateName = importState.getName();
+                        Long stateCode = importState.getCode();
+                        LocalDate startReferenceDate = rchImportFacilitatorTalukaHealthblock.getStartDate();
+                        LocalDate endReferenceDate = rchImportFacilitatorTalukaHealthblock.getEndDate();
+                        tHFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
                     }
                 }
             }
-
         } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy file from remote server to local directory." + e);
+            LOGGER.error("Failed to copy response file from remote server to local directory.");
         } finally {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
@@ -1346,6 +1391,63 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
     }
 
+    private void tHFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
+        try {
+            ArrayList<Map<String, Object>> talukaHealthBlockArrList = new ArrayList<>();
+            if (result.contains(RECORDS)) {
+                RchTalukaHealthBlockDataSet talukaHealthBlockDataSet = (result == null) ?
+                        null :
+                        (RchTalukaHealthBlockDataSet) MarshallUtils.unmarshall(result, RchTalukaHealthBlockDataSet.class);
+
+                LOGGER.info("Starting RCH taluka-healthBlock import");
+                StopWatch stopWatch = new StopWatch();
+                stopWatch.start();
+
+                if (talukaHealthBlockDataSet == null || talukaHealthBlockDataSet.getRecords() == null) {
+                    String warning = String.format("No taluka-healthBlock data set received from RCH for %s state", stateName);
+                    LOGGER.warn(warning);
+                    rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, warning));
+                } else {
+                    List<RchTalukaHealthBlockRecord> rchTalukaHealthBlockRecords = talukaHealthBlockDataSet.getRecords();
+                    for (RchTalukaHealthBlockRecord record : rchTalukaHealthBlockRecords) {
+                        Map<String, Object> locMap = new HashMap<>();
+                        toMapTalukaHealthBlock(locMap, record, stateCode);
+                        talukaHealthBlockArrList.add(locMap);
+                    }
+                }
+                int count = 0;
+                int partNumber = 0;
+                Long totalUpdatedRecords = 0L;
+                while (count < talukaHealthBlockArrList.size()) {
+                    List<Map<String, Object>> recordListPart = new ArrayList<>();
+                    while (recordListPart.size() < LOCATION_PART_SIZE && count < talukaHealthBlockArrList.size()) {
+                        recordListPart.add(talukaHealthBlockArrList.get(count));
+                        count++;
+                    }
+                    partNumber++;
+                    totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.TALUKAHEALTHBLOCK, fileName, partNumber);
+                    recordListPart.clear();
+                }
+
+                LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
+            } else {
+                String warning = String.format("No Taluka-HealthBlock data set received from RCH for %d stateId", stateId);
+                LOGGER.warn(warning);
+            }
+
+        } catch (JAXBException e) {
+            throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH mother data from %s location.", stateId), e);
+        } catch (RchInvalidResponseStructureException e) {
+            String error = String.format("Cannot read RCH taluka healthblock data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service Mother Import", e
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKAHEALTHBLOCK, stateId));
+        } catch (NullPointerException e) {
+            LOGGER.error("No files saved a : ", e);
+        }
+    }
     @Override
     public boolean getHealthFacilityData(LocalDate from, LocalDate to, URL endpoint, Long stateId) {
         DS_DataResponseDS_DataResult result;
@@ -1467,89 +1569,44 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
+        LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
+        LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
+        LOGGER.info("RCH Healthfacility file import entry point");
+        LOGGER.info("Copying RCH Healthfacility response file from remote server to local directory.");
         try {
-            List<RchImportFacilitator> rchImportFacilitatorsHealthFacilities = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.HEALTHFACILITY);
-            for (RchImportFacilitator rchImportFacilitatorsHealthFacility: rchImportFacilitatorsHealthFacilities
-                 ) {
-                ArrayList<Map<String, Object>> healthFacilityArrList = new ArrayList<>();
-                File localResponseFile ;
-                if (fileName == null) {
-                    localResponseFile = scpResponseToLocal(rchImportFacilitatorsHealthFacility.getFileName(), remoteLocation);
-                } else {
-                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                }
-                if (localResponseFile != null) {
-                    LOGGER.info("RCH healthfacility response file successfully copied from remote server to local directory.");
-                    String result = readResponsesFromXml(localResponseFile);
-                    LOGGER.debug("stateId={}", stateId);
-                    State state = stateDataService.findByCode(stateId);
+            List<RchImportFacilitator> rchImportFacilitatorHealthfacilities = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.HEALTHFACILITY);
+            File localResponseFile ;
+            if (rchImportFacilitatorHealthfacilities.isEmpty()) {
+                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                String result = readResponsesFromXml(localResponseFile);
+                State importState = stateDataService.findByCode(stateId);
+                String stateName = importState.getName();
+                Long stateCode = importState.getCode();
 
-                    String stateName = state.getName() != null ? state.getName() : " ";
-                    Long stateCode = state.getCode() != null ? state.getCode() : 1L;
-                    LOGGER.debug("stateCode={}", stateCode);
-
-                    LocalDate startDate = rchImportFacilitatorsHealthFacility.getStartDate();
-                    LocalDate endDate = rchImportFacilitatorsHealthFacility.getEndDate();
-
-                    try {
-                        if (result.contains(RECORDS)) {
-                            RchHealthFacilityDataSet healthFacilityDataSet = (result == null) ?
-                                    null :
-                                    (RchHealthFacilityDataSet) MarshallUtils.unmarshall(result, RchHealthFacilityDataSet.class);
-
-                            LOGGER.info("Starting RCH healthfacility import");
-                            StopWatch stopWatch = new StopWatch();
-                            stopWatch.start();
-
-                            if (healthFacilityDataSet == null || healthFacilityDataSet.getRecords() == null) {
-                                String warning = String.format("No healthfacility data set received from RCH for %s state", stateName);
-                                LOGGER.warn(warning);
-                                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, warning));
-                            } else {
-                                List<RchHealthFacilityRecord> rchHealthFacilityRecords = healthFacilityDataSet.getRecords();
-                                for (RchHealthFacilityRecord record : rchHealthFacilityRecords) {
-                                    Map<String, Object> locMap = new HashMap<>();
-                                    toMapHealthFacility(locMap, record, stateCode);
-                                    healthFacilityArrList.add(locMap);
-
-                                }
-                            }
-                            int count = 0;
-                            int partNumber = 0;
-                            Long totalUpdatedRecords = 0L;
-                            while (count < healthFacilityArrList.size()) {
-                                List<Map<String, Object>> recordListPart = new ArrayList<>();
-                                while (recordListPart.size() < LOCATION_PART_SIZE && count < healthFacilityArrList.size()) {
-                                    recordListPart.add(healthFacilityArrList.get(count));
-                                    count++;
-                                }
-                                partNumber++;
-                                totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.HEALTHFACILITY, rchImportFacilitatorsHealthFacility.getFileName(), partNumber);
-                                recordListPart.clear();
-                            }
-                            LOGGER.debug("File {} processed. {} records updated", rchImportFacilitatorsHealthFacility.getFileName(), totalUpdatedRecords);
-                        } else {
-                            String warning = String.format("No Healthfacility data set received from RCH for %d stateId", stateId);
-                            LOGGER.warn(warning);
-                        }
-
-                    } catch (JAXBException e) {
-                        throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH healthfacility data from %s location.", stateId), e);
-                    } catch (RchInvalidResponseStructureException e) {
-                        String error = String.format("Cannot read RCH healthfacility data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
-                        LOGGER.error(error, e);
-                        alertService.create(RCH_WEB_SERVICE, "RCH Web Service healthfacility Import", e
-                                .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                        rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, error));
-                        rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHFACILITY, stateId));
-                    } catch (NullPointerException e) {
-                        LOGGER.error("No files saved a : ", e);
+                LocalDate startReferenceDate = startDate;
+                LocalDate endReferenceDate = endDate;
+                healthFacilityFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+            } else {
+                for (RchImportFacilitator rchImportFacilitatorHealthfacility: rchImportFacilitatorHealthfacilities
+                ) {
+                    if (fileName == null) {
+                        localResponseFile = scpResponseToLocal(rchImportFacilitatorHealthfacility.getFileName(), remoteLocation);
+                    } else {
+                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                    }
+                    if (localResponseFile != null) {
+                        String result = readResponsesFromXml(localResponseFile);
+                        State importState = stateDataService.findByCode(stateId);
+                        String stateName = importState.getName();
+                        Long stateCode = importState.getCode();
+                        LocalDate startReferenceDate = rchImportFacilitatorHealthfacility.getStartDate();
+                        LocalDate endReferenceDate = rchImportFacilitatorHealthfacility.getEndDate();
+                        healthFacilityFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
                     }
                 }
             }
-            
         } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy file from remote server to local directory." + e);
+            LOGGER.error("Failed to copy response file from remote server to local directory.");
         } finally {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
@@ -1559,96 +1616,108 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
     }
 
+    private void healthFacilityFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
+        try {
+            ArrayList<Map<String, Object>> healthFacilityArrList = new ArrayList<>();
+            if (result.contains(RECORDS)) {
+                RchHealthFacilityDataSet healthFacilityDataSet = (result == null) ?
+                        null :
+                        (RchHealthFacilityDataSet) MarshallUtils.unmarshall(result, RchHealthFacilityDataSet.class);
+
+                LOGGER.info("Starting RCH healthfacility import");
+                StopWatch stopWatch = new StopWatch();
+                stopWatch.start();
+
+                if (healthFacilityDataSet == null || healthFacilityDataSet.getRecords() == null) {
+                    String warning = String.format("No healthfacility data set received from RCH for %s state", stateName);
+                    LOGGER.warn(warning);
+                    rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, warning));
+                } else {
+                    List<RchHealthFacilityRecord> rchHealthFacilityRecords = healthFacilityDataSet.getRecords();
+                    for (RchHealthFacilityRecord record : rchHealthFacilityRecords) {
+                        Map<String, Object> locMap = new HashMap<>();
+                        toMapHealthFacility(locMap, record, stateCode);
+                        healthFacilityArrList.add(locMap);
+
+                    }
+                }
+                int count = 0;
+                int partNumber = 0;
+                Long totalUpdatedRecords = 0L;
+                while (count < healthFacilityArrList.size()) {
+                    List<Map<String, Object>> recordListPart = new ArrayList<>();
+                    while (recordListPart.size() < LOCATION_PART_SIZE && count < healthFacilityArrList.size()) {
+                        recordListPart.add(healthFacilityArrList.get(count));
+                        count++;
+                    }
+                    partNumber++;
+                    totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.HEALTHFACILITY, fileName, partNumber);
+                    recordListPart.clear();
+                }
+                LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
+            } else {
+                String warning = String.format("No Healthfacility data set received from RCH for %d stateId", stateId);
+                LOGGER.warn(warning);
+            }
+
+        } catch (JAXBException e) {
+            throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH healthfacility data from %s location.", stateId), e);
+        } catch (RchInvalidResponseStructureException e) {
+            String error = String.format("Cannot read RCH healthfacility data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service healthfacility Import", e
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHFACILITY, stateId));
+        } catch (NullPointerException e) {
+            LOGGER.error("No files saved a : ", e);
+        }
+    }
+
     @MotechListener(subjects = Constants.RCH_HEALTHSUBFACILITY_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void readHealthSubFacilityResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
-        LOGGER.info("Copying RCH healthsubfacility response file from remote server to local directory.");
+        LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
+        LocalDate startDate = (LocalDate) event.getParameters().get(Constants.START_DATE_PARAM);
+        LOGGER.info("RCH Healthsubfacility file import entry point");
+        LOGGER.info("Copying RCH Healthsubfacility response file from remote server to local directory.");
         try {
-            List<RchImportFacilitator> rchImportFacilitatorsHealthSubFacilities = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.HEALTHSUBFACILITY);
-            for (RchImportFacilitator rchImportFacilitatorsHealthSubFacility: rchImportFacilitatorsHealthSubFacilities
-                 ) {
-                ArrayList<Map<String, Object>> healthSubFacilityArrList = new ArrayList<>();
-                File localResponseFile ;
-                if (fileName == null) {
-                    localResponseFile = scpResponseToLocal(rchImportFacilitatorsHealthSubFacility.getFileName(), remoteLocation);
-                } else {
-                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                }
-                if (localResponseFile != null) {
-                    LOGGER.info("RCH healthsubfacility response file successfully copied from remote server to local directory.");
-                    String result = readResponsesFromXml(localResponseFile);
-                    LOGGER.debug("stateId={}", stateId);
-                    State state = stateDataService.findByCode(stateId);
+            List<RchImportFacilitator> rchImportFacilitatorHealthsubfacilities = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.HEALTHSUBFACILITY);
+            File localResponseFile ;
+            if (rchImportFacilitatorHealthsubfacilities.isEmpty()) {
+                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                String result = readResponsesFromXml(localResponseFile);
+                State importState = stateDataService.findByCode(stateId);
+                String stateName = importState.getName();
+                Long stateCode = importState.getCode();
 
-                    String stateName = state.getName() != null ? state.getName() : " ";
-                    Long stateCode = state.getCode() != null ? state.getCode() : 1L;
-                    LOGGER.debug("stateCode={}", stateCode);
-
-                    LocalDate startDate = rchImportFacilitatorsHealthSubFacility.getStartDate();
-                    LocalDate endDate = rchImportFacilitatorsHealthSubFacility.getEndDate();
-
-                    try {
-                        if (result.contains(RECORDS)) {
-                            RchHealthSubFacilityDataSet healthSubFacilityDataSet = (result == null) ?
-                                    null :
-                                    (RchHealthSubFacilityDataSet) MarshallUtils.unmarshall(result, RchHealthSubFacilityDataSet.class);
-
-                            LOGGER.info("Starting RCH healthsubfacility import");
-                            StopWatch stopWatch = new StopWatch();
-                            stopWatch.start();
-
-                            if (healthSubFacilityDataSet == null || healthSubFacilityDataSet.getRecords() == null) {
-                                String warning = String.format("No healthsubfacility data set received from RCH for %s state", stateName);
-                                LOGGER.warn(warning);
-                                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHSUBFACILITY, stateCode, stateName, 0, 0, warning));
-                            } else {
-                                List<RchHealthSubFacilityRecord> rchHealthFacilityRecords = healthSubFacilityDataSet.getRecords();
-                                for (RchHealthSubFacilityRecord record : rchHealthFacilityRecords) {
-                                    Map<String, Object> locMap = new HashMap<>();
-                                    toMapHealthSubFacility(locMap, record, stateCode);
-                                    healthSubFacilityArrList.add(locMap);
-
-                                }
-                            }
-                            int count = 0;
-                            int partNumber = 0;
-                            Long totalUpdatedRecords = 0L;
-                            while (count < healthSubFacilityArrList.size()) {
-                                List<Map<String, Object>> recordListPart = new ArrayList<>();
-                                while (recordListPart.size() < LOCATION_PART_SIZE && count < healthSubFacilityArrList.size()) {
-                                    recordListPart.add(healthSubFacilityArrList.get(count));
-                                    count++;
-                                }
-                                partNumber++;
-                                totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.HEALTHSUBFACILITY, rchImportFacilitatorsHealthSubFacility.getFileName(), partNumber);
-                                recordListPart.clear();
-                            }
-                            LOGGER.debug("File {} processed. {} records updated", rchImportFacilitatorsHealthSubFacility.getFileName(), totalUpdatedRecords);
-                        } else {
-                            String warning = String.format("No healthsubfacility data set received from RCH for %d stateId", stateId);
-                            LOGGER.warn(warning);
-                        }
-
-                    } catch (JAXBException e) {
-                        throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH healthsubfacility data from %s location.", stateId), e);
-                    } catch (RchInvalidResponseStructureException e) {
-                        String error = String.format("Cannot read RCH healthsubfacility data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
-                        LOGGER.error(error, e);
-                        alertService.create(RCH_WEB_SERVICE, "RCH Web Service healthsubfacility Import", e
-                                .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                        rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHSUBFACILITY, stateCode, stateName, 0, 0, error));
-                        rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHSUBFACILITY, stateId));
-                    } catch (NullPointerException e) {
-                        LOGGER.error("No files saved a : ", e);
+                LocalDate startReferenceDate = startDate;
+                LocalDate endReferenceDate = endDate;
+                healthsubfacilityFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+            } else {
+                for (RchImportFacilitator rchImportFacilitatorHealthsubfacility: rchImportFacilitatorHealthsubfacilities
+                ) {
+                    if (fileName == null) {
+                        localResponseFile = scpResponseToLocal(rchImportFacilitatorHealthsubfacility.getFileName(), remoteLocation);
+                    } else {
+                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                    }
+                    if (localResponseFile != null) {
+                        String result = readResponsesFromXml(localResponseFile);
+                        State importState = stateDataService.findByCode(stateId);
+                        String stateName = importState.getName();
+                        Long stateCode = importState.getCode();
+                        LocalDate startReferenceDate = rchImportFacilitatorHealthsubfacility.getStartDate();
+                        LocalDate endReferenceDate = rchImportFacilitatorHealthsubfacility.getEndDate();
+                        healthsubfacilityFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
                     }
                 }
             }
-
         } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy file from remote server to local directory." + e);
+            LOGGER.error("Failed to copy response file from remote server to local directory.");
         } finally {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
@@ -1658,96 +1727,167 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
     }
 
+    private void healthsubfacilityFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
+        try {
+            ArrayList<Map<String, Object>> healthSubFacilityArrList = new ArrayList<>();
+            if (result.contains(RECORDS)) {
+                RchHealthSubFacilityDataSet healthSubFacilityDataSet = (result == null) ?
+                        null :
+                        (RchHealthSubFacilityDataSet) MarshallUtils.unmarshall(result, RchHealthSubFacilityDataSet.class);
+
+                LOGGER.info("Starting RCH healthsubfacility import");
+                StopWatch stopWatch = new StopWatch();
+                stopWatch.start();
+
+                if (healthSubFacilityDataSet == null || healthSubFacilityDataSet.getRecords() == null) {
+                    String warning = String.format("No healthsubfacility data set received from RCH for %s state", stateName);
+                    LOGGER.warn(warning);
+                    rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHSUBFACILITY, stateCode, stateName, 0, 0, warning));
+                } else {
+                    List<RchHealthSubFacilityRecord> rchHealthFacilityRecords = healthSubFacilityDataSet.getRecords();
+                    for (RchHealthSubFacilityRecord record : rchHealthFacilityRecords) {
+                        Map<String, Object> locMap = new HashMap<>();
+                        toMapHealthSubFacility(locMap, record, stateCode);
+                        healthSubFacilityArrList.add(locMap);
+
+                    }
+                }
+                int count = 0;
+                int partNumber = 0;
+                Long totalUpdatedRecords = 0L;
+                while (count < healthSubFacilityArrList.size()) {
+                    List<Map<String, Object>> recordListPart = new ArrayList<>();
+                    while (recordListPart.size() < LOCATION_PART_SIZE && count < healthSubFacilityArrList.size()) {
+                        recordListPart.add(healthSubFacilityArrList.get(count));
+                        count++;
+                    }
+                    partNumber++;
+                    totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.HEALTHSUBFACILITY, fileName, partNumber);
+                    recordListPart.clear();
+                }
+                LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
+            } else {
+                String warning = String.format("No healthsubfacility data set received from RCH for %d stateId", stateId);
+                LOGGER.warn(warning);
+            }
+
+        } catch (JAXBException e) {
+            throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH healthsubfacility data from %s location.", stateId), e);
+        } catch (RchInvalidResponseStructureException e) {
+            String error = String.format("Cannot read RCH healthsubfacility data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service healthsubfacility Import", e
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHSUBFACILITY, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHSUBFACILITY, stateId));
+        } catch (NullPointerException e) {
+            LOGGER.error("No files saved a : ", e);
+        }
+    }
+
     @MotechListener(subjects = Constants.RCH_VILLAGE_HEALTHSUBFACILITY_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void readVillageHealthSubFacilityResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
-        LOGGER.info("Copying RCH villageHealthsubfacility response file from remote server to local directory.");
+        LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
+        LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
+        LOGGER.info("RCH villagehealthsubfacility file import entry point");
+        LOGGER.info("Copying RCH villagehealthsubfacility response file from remote server to local directory.");
         try {
-            List<RchImportFacilitator> rchImportFacilitatorsVillageHealthSubFacilities = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.VILLAGEHEALTHSUBFACILITY);
-            for (RchImportFacilitator rchImportFacilitatorsVillageHealthSubFacility: rchImportFacilitatorsVillageHealthSubFacilities
-                 ) {
-                ArrayList<Map<String, Object>> villageHealthSubFacilityArrList = new ArrayList<>();
-                File localResponseFile ;
-                if (fileName == null) {
-                    localResponseFile = scpResponseToLocal(rchImportFacilitatorsVillageHealthSubFacility.getFileName(), remoteLocation);
-                } else {
-                    localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                }
-                if (localResponseFile != null) {
-                    LOGGER.info("RCH villageHealthsubfacility response file successfully copied from remote server to local directory.");
-                    String result = readResponsesFromXml(localResponseFile);
-                    LOGGER.debug("stateId={}", stateId);
-                    State state = stateDataService.findByCode(stateId);
+            List<RchImportFacilitator> rchImportFacilitatorvillagehealthsubfacilities = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.VILLAGEHEALTHSUBFACILITY);
+            File localResponseFile ;
+            if (rchImportFacilitatorvillagehealthsubfacilities.isEmpty()) {
+                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                String result = readResponsesFromXml(localResponseFile);
+                State importState = stateDataService.findByCode(stateId);
+                String stateName = importState.getName();
+                Long stateCode = importState.getCode();
 
-                    String stateName = state.getName() != null ? state.getName() : " ";
-                    Long stateCode = state.getCode() != null ? state.getCode() : 1L;
-                    LOGGER.debug("stateCode={}", stateCode);
-
-                    LocalDate startDate = rchImportFacilitatorsVillageHealthSubFacility.getStartDate();
-                    LocalDate endDate = rchImportFacilitatorsVillageHealthSubFacility.getEndDate();
-
-                    try {
-                        if (result.contains(RECORDS)) {
-                            RchVillageHealthSubFacilityDataSet villageHealthSubFacilityDataSet = (result == null) ?
-                                    null :
-                                    (RchVillageHealthSubFacilityDataSet) MarshallUtils.unmarshall(result, RchVillageHealthSubFacilityDataSet.class);
-
-                            LOGGER.info("Starting RCH villageHealthsubfacility import");
-                            StopWatch stopWatch = new StopWatch();
-                            stopWatch.start();
-
-                            if (villageHealthSubFacilityDataSet == null || villageHealthSubFacilityDataSet.getRecords() == null) {
-                                String warning = String.format("No villageHealthsubfacility data set received from RCH for %s state", stateName);
-                                LOGGER.warn(warning);
-                                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, warning));
-                            } else {
-                                List<RchVillageHealthSubFacilityRecord> rchVillageHealthFacilityRecords = villageHealthSubFacilityDataSet.getRecords();
-                                for (RchVillageHealthSubFacilityRecord record : rchVillageHealthFacilityRecords) {
-                                    Map<String, Object> locMap = new HashMap<>();
-                                    toMapVillageHealthSubFacility(locMap, record, stateCode);
-                                    villageHealthSubFacilityArrList.add(locMap);
-
-                                }
-                            }
-                            int count = 0;
-                            int partNumber = 0;
-                            Long totalUpdatedRecords = 0L;
-                            while (count < villageHealthSubFacilityArrList.size()) {
-                                List<Map<String, Object>> recordListPart = new ArrayList<>();
-                                while (recordListPart.size() < LOCATION_PART_SIZE && count < villageHealthSubFacilityArrList.size()) {
-                                    recordListPart.add(villageHealthSubFacilityArrList.get(count));
-                                    count++;
-                                }
-                                partNumber++;
-                                totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.VILLAGEHEALTHSUBFACILITY, rchImportFacilitatorsVillageHealthSubFacility.getFileName(), partNumber);
-                                recordListPart.clear();
-                            }
-                            LOGGER.debug("File {} processed. {} records updated", rchImportFacilitatorsVillageHealthSubFacility.getFileName(), totalUpdatedRecords);
-                        } else {
-                            String warning = String.format("No villageHealthsubfacility data set received from RCH for %d stateId", stateId);
-                            LOGGER.warn(warning);
-                        }
-
-                    } catch (JAXBException e) {
-                        throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH villageHealthsubfacility data from %s location.", stateId), e);
-                    } catch (RchInvalidResponseStructureException e) {
-                        String error = String.format("Cannot read RCH villageHealthsubfacility data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
-                        LOGGER.error(error, e);
-                        alertService.create(RCH_WEB_SERVICE, "RCH Web Service villageHealthsubfacility Import", e
-                                .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-                        rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, error));
-                        rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId));
-                    } catch (NullPointerException e) {
-                        LOGGER.error("No files saved a : ", e);
+                LocalDate startReferenceDate = startDate;
+                LocalDate endReferenceDate = endDate;
+                vhsfFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+            } else {
+                for (RchImportFacilitator rchImportFacilitatorvillagehealthsubfacility: rchImportFacilitatorvillagehealthsubfacilities
+                ) {
+                    if (fileName == null) {
+                        localResponseFile = scpResponseToLocal(rchImportFacilitatorvillagehealthsubfacility.getFileName(), remoteLocation);
+                    } else {
+                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+                    }
+                    if (localResponseFile != null) {
+                        String result = readResponsesFromXml(localResponseFile);
+                        State importState = stateDataService.findByCode(stateId);
+                        String stateName = importState.getName();
+                        Long stateCode = importState.getCode();
+                        LocalDate startReferenceDate = rchImportFacilitatorvillagehealthsubfacility.getStartDate();
+                        LocalDate endReferenceDate = rchImportFacilitatorvillagehealthsubfacility.getEndDate();
+                        vhsfFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
                     }
                 }
             }
-
         } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy file from remote server to local directory." + e);
+            LOGGER.error("Failed to copy response file from remote server to local directory.");
+        }
+
+    }
+
+    private void vhsfFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
+        try {
+            ArrayList<Map<String, Object>> villageHealthSubFacilityArrList = new ArrayList<>();
+            if (result.contains(RECORDS)) {
+                RchVillageHealthSubFacilityDataSet villageHealthSubFacilityDataSet = (result == null) ?
+                        null :
+                        (RchVillageHealthSubFacilityDataSet) MarshallUtils.unmarshall(result, RchVillageHealthSubFacilityDataSet.class);
+
+                LOGGER.info("Starting RCH villageHealthsubfacility import");
+                StopWatch stopWatch = new StopWatch();
+                stopWatch.start();
+
+                if (villageHealthSubFacilityDataSet == null || villageHealthSubFacilityDataSet.getRecords() == null) {
+                    String warning = String.format("No villageHealthsubfacility data set received from RCH for %s state", stateName);
+                    LOGGER.warn(warning);
+                    rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, warning));
+                } else {
+                    List<RchVillageHealthSubFacilityRecord> rchVillageHealthFacilityRecords = villageHealthSubFacilityDataSet.getRecords();
+                    for (RchVillageHealthSubFacilityRecord record : rchVillageHealthFacilityRecords) {
+                        Map<String, Object> locMap = new HashMap<>();
+                        toMapVillageHealthSubFacility(locMap, record, stateCode);
+                        villageHealthSubFacilityArrList.add(locMap);
+
+                    }
+                }
+                int count = 0;
+                int partNumber = 0;
+                Long totalUpdatedRecords = 0L;
+                while (count < villageHealthSubFacilityArrList.size()) {
+                    List<Map<String, Object>> recordListPart = new ArrayList<>();
+                    while (recordListPart.size() < LOCATION_PART_SIZE && count < villageHealthSubFacilityArrList.size()) {
+                        recordListPart.add(villageHealthSubFacilityArrList.get(count));
+                        count++;
+                    }
+                    partNumber++;
+                    totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.VILLAGEHEALTHSUBFACILITY, fileName, partNumber);
+                    recordListPart.clear();
+                }
+                LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
+            } else {
+                String warning = String.format("No villageHealthsubfacility data set received from RCH for %d stateId", stateId);
+                LOGGER.warn(warning);
+            }
+
+        } catch (JAXBException e) {
+            throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH villageHealthsubfacility data from %s location.", stateId), e);
+        } catch (RchInvalidResponseStructureException e) {
+            String error = String.format("Cannot read RCH villageHealthsubfacility data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
+            LOGGER.error(error, e);
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service villageHealthsubfacility Import", e
+                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId));
+        } catch (NullPointerException e) {
+            LOGGER.error("No files saved a : ", e);
         }
     }
 
