@@ -96,7 +96,7 @@ public final class FlwMapper {
             flw.setJobStatus(jobStatus);
         }
 
-        if (FlwJobStatus.ACTIVE.equals(gfStatus)) {
+        if (FlwJobStatus.ACTIVE.toString().equalsIgnoreCase(gfStatus)) {
             setFrontLineWorkerLocation(flw, location);
         }
 
