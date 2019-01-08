@@ -1,5 +1,7 @@
 package org.motechproject.nms.region.service.impl;
 
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.io.IOUtils;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.motechproject.mds.query.SqlQueryExecution;
@@ -38,9 +40,9 @@ import org.motechproject.nms.region.service.VillageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.prefs.CsvPreference;
 
@@ -52,6 +54,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -648,6 +651,7 @@ public class LocationServiceImpl implements LocationService {
                 partNumber++;
                 if (recordListPart.size()>0) {
                     totalUpdatedRecords += createLocationPart(recordListPart, locationType, rchImportFile.getOriginalFilename(), partNumber);
+
                 }
                 recordListPart.clear();
             }
@@ -832,10 +836,11 @@ public class LocationServiceImpl implements LocationService {
                 String[] fileNameSplitter =  f.getName().split("_");
                 if(fileNameSplitter[1].equalsIgnoreCase(stateId.toString()) && fileNameSplitter[0].equalsIgnoreCase(locationType)){
                     try {
-                        FileInputStream input = new FileInputStream(f);
-                        csvFilesByStateIdAndRchUserType = new MockMultipartFile("file",
-                                f.getName(), "text/plain", IOUtils.toByteArray(input));
-                    } catch (IOException e) {
+                        FileItem fileItem = new DiskFileItem("file",  "text/plain", false, f.getName(), (int) f.length(), f.getParentFile());
+                        IOUtils.copy(new FileInputStream(f), fileItem.getOutputStream());
+                        MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
+                        csvFilesByStateIdAndRchUserType = multipartFile;
+                    }catch(IOException e) {
                         LOGGER.debug("IO Exception", e);
                     }
                 }
@@ -857,6 +862,9 @@ public class LocationServiceImpl implements LocationService {
         Map<String, Object> record;
         while (null != (record = csvImporter.read())) {
             recordList.add(record);
+            LOGGER.info("CSV READing .....");
+            for(String key : record.keySet())
+            LOGGER.info(key + "-" + record.get(key));
             count++;
         }
         LOGGER.debug("{} records added to object", count);
@@ -965,8 +973,6 @@ public class LocationServiceImpl implements LocationService {
             String stateKey = stateIdMap.get(district.getState().getId());
             districtHashMap.put(stateKey + "_" + district.getCode(), district);
         }
-
-
     }
 
 

@@ -1,8 +1,9 @@
 package org.motechproject.nms.testing.it.api.utils;
 
-import org.apache.http.annotation.NotThreadSafe;
+
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 
+import javax.annotation.concurrent.NotThreadSafe;
 import java.net.URI;
 
 /**

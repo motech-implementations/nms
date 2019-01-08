@@ -65,6 +65,9 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
 
     @Override
     public Map<String, Object> findMotherRejectionByRchId(final Set<String> rchIds) {
+        if (rchIds == null || rchIds.isEmpty()) {
+            return new HashMap<>();
+        }
         Timer queryTimer = new Timer();
 
         @SuppressWarnings("unchecked")
@@ -90,6 +93,7 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
             }
         };
 
+
         Map<String, Object> resultMap = motherRejectionDataService.executeSQLQuery(queryExecution);
         LOGGER.debug(MOTHER_LOG_STRING, queryTimer.time());
         return resultMap;
@@ -97,6 +101,9 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
 
     @Override
     public Map<String, Object> findMotherRejectionByMctsId(final Set<String> mctsIds) {
+        if (mctsIds == null || mctsIds.isEmpty()) {
+            return new HashMap<>();
+        }
         Timer queryTimer = new Timer();
 
         @SuppressWarnings("unchecked")
