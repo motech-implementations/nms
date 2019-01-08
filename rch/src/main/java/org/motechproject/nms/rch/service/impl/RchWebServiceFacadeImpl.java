@@ -72,10 +72,7 @@ import org.motechproject.nms.rch.domain.RchImportAudit;
 import org.motechproject.nms.rch.domain.RchImportFacilitator;
 import org.motechproject.nms.rch.domain.RchImportFailRecord;
 import org.motechproject.nms.rch.domain.RchUserType;
-import org.motechproject.nms.rch.exception.ExecutionException;
-import org.motechproject.nms.rch.exception.RchFileManipulationException;
-import org.motechproject.nms.rch.exception.RchInvalidResponseStructureException;
-import org.motechproject.nms.rch.exception.RchWebServiceException;
+import org.motechproject.nms.rch.exception.*;
 import org.motechproject.nms.rch.repository.RchImportAuditDataService;
 import org.motechproject.nms.rch.repository.RchImportFacilitatorDataService;
 import org.motechproject.nms.rch.repository.RchImportFailRecordDataService;
@@ -399,7 +396,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LOGGER.info("Starting location read.");
         List<Long> stateIds = getStateIds();
         for (Long stateId : stateIds
-                ) {
+        ) {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
             eventParams.put(Constants.REMOTE_LOCATION, null);
@@ -758,7 +755,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LOGGER.info("Starting Mother read.");
         List<Long> stateIds = getStateIds();
         for (Long stateId : stateIds
-                ) {
+        ) {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
             eventParams.put(Constants.REMOTE_LOCATION, null);
@@ -904,7 +901,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LOGGER.info("Starting Child read.");
         List<Long> stateIds = getStateIds();
         for (Long stateId : stateIds
-                ) {
+        ) {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
             eventParams.put(Constants.REMOTE_LOCATION, null);
@@ -1049,7 +1046,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LOGGER.info("Starting Asha read.");
         List<Long> stateIds = getStateIds();
         for (Long stateId : stateIds
-                ) {
+        ) {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
             eventParams.put(Constants.REMOTE_LOCATION, null);
@@ -2769,7 +2766,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             });
 
             for (RchImportFacilitator rchImportFile : rchImportFiles
-                    ) {
+            ) {
                 File remoteResponseFile = fileForXmlLocUpdate(rchImportFile.getFileName());
 
                 if (remoteResponseFile.exists() && !remoteResponseFile.isDirectory()) {
@@ -2844,8 +2841,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     ashaLocUpdateFromCsv(recordList, stateId, rchUserType);
                 }
 
-                    }
             }
+        }
     }
 
     @Override
@@ -3022,7 +3019,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     mctsIds.add(asha.getMctsFlwId());
                 }
                 for (RchAnmAshaRecord record : anmAshaRecords
-                     ) {
+                ) {
                     if(mctsIds.contains(record.getGfId().toString())) {
                         Map<String, Object> locMap = new HashMap<>();
                         toMapLoc(locMap, record);
@@ -3190,7 +3187,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LocationFinder locationFinder = locationService.updateLocations(locArrList);
 
         for (Map<String, Object> record : locArrList
-                ) {
+        ) {
             Map<String, Object> updatedMap = setLocationFields(locationFinder, record);
             if("asha".equalsIgnoreCase(rchUserType.toString())){
                 updatedMap.put(FlwConstants.GF_ID, record.get(FlwConstants.GF_ID));
@@ -3225,7 +3222,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
         return csvFile;
 
-        }
+    }
 
     private void csvWriterKilkari(List<Map<String, Object>> locArrList, Long stateId, RchUserType rchUserType) throws IOException { //NO CHECKSTYLE Cyclomatic Complexity //NOPMD NcssMethodCount
 
@@ -3264,7 +3261,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             writer.write(NEXT_LINE);
 
             for (Map<String, Object> map : locArrList
-                    ) {
+            ) {
                 writer.write(map.get(KilkariConstants.RCH_ID).toString());
                 writer.write(TAB);
                 writer.write(map.get(KilkariConstants.STATE_ID).toString());
@@ -3338,7 +3335,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             writer.write(FlwConstants.VILLAGE_NAME);
             writer.write(NEXT_LINE);
             for (Map<String, Object> map : locArrList
-                    ) {
+            ) {
                 writer.write(map.get(FlwConstants.ID).toString());
                 writer.write(TAB);
                 writer.write(map.get(FlwConstants.GF_ID).toString());
@@ -3546,6 +3543,3 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
 
 }
-
-
-

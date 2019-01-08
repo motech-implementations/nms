@@ -542,43 +542,51 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return true;
     }
 
-    private boolean enrollmentPreconditionCheckForUpkeep(Subscriber subscriber, SubscriptionPack pack, SubscriptionOrigin importOrigin) {
+    private Integer enrollmentPreconditionCheckForUpkeep(Subscriber subscriber, SubscriptionPack pack, SubscriptionOrigin importOrigin) {
         if (pack.getType() == SubscriptionPackType.CHILD) {
 
             if (subscriber.getDateOfBirth() == null) {
-                return false;
+                return 0;
             }
 
             if (Subscription.hasCompletedForStartDate(subscriber.getDateOfBirth(), DateTime.now(), pack)) {
-                return false;
+                return 0;
             }
 
             if (getActiveSubscriptionForUpkeep(subscriber, SubscriptionPackType.CHILD) != null) {
                 // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(), (importOrigin == SubscriptionOrigin.MCTS_IMPORT) ? subscriber.getChild().getBeneficiaryId() : subscriber.getChild().getRchId(),
                         SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD, importOrigin);
-                return false;
+                return 0;
+            }
+
+            if (Subscription.notReadyForStartDate(subscriber.getDateOfBirth(), DateTime.now(), pack)) {
+                return 1;
             }
         } else { // SubscriptionPackType.PREGNANCY
 
             if (subscriber.getLastMenstrualPeriod() == null) {
-                return false;
+                return 0;
             }
 
             if (Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(KilkariConstants.THREE_MONTHS),
                     DateUtil.now(), pack)) {
-                return false;
+                return 0;
             }
 
             if (getActiveSubscriptionForUpkeep(subscriber, SubscriptionPackType.PREGNANCY) != null) {
                 // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(), (importOrigin == SubscriptionOrigin.MCTS_IMPORT) ? subscriber.getMother().getBeneficiaryId() : subscriber.getMother().getRchId(),
                         SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY, importOrigin);
-                return false;
+                return 0;
+            }
+
+            if (Subscription.notReadyForStartDate(subscriber.getLastMenstrualPeriod().plusDays(KilkariConstants.THREE_MONTHS), DateUtil.now(), pack)) {
+                return 1;
             }
         }
 
-        return true;
+        return 2;
     }
 
     private void logRejectedSubscription(long callingNumber, String beneficiaryId, SubscriptionRejectionReason reason,
@@ -808,13 +816,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         Subscriber currentSubscriber = currentSubscription.getSubscriber();
         SubscriptionPack currentPack = currentSubscription.getSubscriptionPack();
 
-        if (enrollmentPreconditionCheckForUpkeep(currentSubscriber, currentPack, currentSubscription.getOrigin())) { // Don't need a full check but it doesn't hurt
+        if (enrollmentPreconditionCheckForUpkeep(currentSubscriber, currentPack, currentSubscription.getOrigin()) == 2) { // Don't need a full check but it doesn't hurt
             currentSubscription.setStatus(SubscriptionStatus.ACTIVE);
             subscriptionDataService.update(currentSubscription);
             return true;
+        } else if (enrollmentPreconditionCheckForUpkeep(currentSubscriber, currentPack, currentSubscription.getOrigin()) == 1) {
+            currentSubscription.setStatus(SubscriptionStatus.PENDING_ACTIVATION);
+            subscriptionDataService.update(currentSubscription);
+            return true;
+        } else {
+            LOGGER.debug("We will not be activating this Hold subscription : {}", currentSubscription.getSubscriptionId());
+            return false;
         }
-        LOGGER.debug("We will not be activating this Hold subscription : {}", currentSubscription.getSubscriptionId());
-        return false;
     }
 
     @Override
