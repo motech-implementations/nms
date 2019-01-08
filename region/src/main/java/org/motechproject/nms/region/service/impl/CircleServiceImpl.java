@@ -47,10 +47,10 @@ public class CircleServiceImpl implements CircleService {
      *
      * @return all the circles in the database
      */
-    @Override
-    public List<Circle> getAll() {
-        return circleDataService.retrieveAll();
-    }
+//    @Override
+//    public List<Circle> getAll() {
+//        return circleDataService.retrieveAll();
+//    }
 
     @Override
     public Set<Circle> getAllInState(final State state) {

@@ -86,7 +86,7 @@ public class InboxServiceBundleIT extends BasePaxIT {
 		rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
 				districtDataService, districtService);
 
-        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+        sh = new SubscriptionHelper(subscriberService,subscriptionService, subscriberDataService, subscriptionPackDataService,
 				languageDataService, languageService, circleDataService, stateDataService, districtDataService,
                 districtService);
     }

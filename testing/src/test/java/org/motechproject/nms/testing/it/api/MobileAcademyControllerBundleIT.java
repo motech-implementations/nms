@@ -7,7 +7,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -44,7 +44,9 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
@@ -820,7 +822,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine()
                 .getStatusCode());
-        String expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"3\":0,\"2\":1,\"1\":2}}";
+        String expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"1\":2,\"2\":1,\"3\":0}}";
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
                 .getEntity())));
 
@@ -837,11 +839,13 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         response = SimpleHttpClient.httpRequestAndResponse(getRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"3\":3,\"2\":1,\"1\":2}}";
+        expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"1\":2,\"2\":1,\"3\":3}}";
         String actualResponse = EntityUtils.toString(response.getEntity());
         System.out.println(actualResponse);
         assertTrue(expectedJsonResponse.equals(actualResponse));
     }
+
+
 
     /**
      * To verify that any re-attempt of the quiz by user shall lead to
@@ -879,7 +883,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 getRequest, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        String expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"3\":4,\"2\":1,\"1\":2}}";
+        String expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"1\":2,\"2\":1,\"3\":4}}";
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
                 .getEntity())));
 
@@ -896,7 +900,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
         response = SimpleHttpClient.httpRequestAndResponse(getRequest,
                 RequestBuilder.ADMIN_USERNAME, RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"3\":3,\"2\":1,\"1\":2}}";
+        expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"1\":2,\"2\":1,\"3\":3}}";
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
                 .getEntity())));
     }
@@ -938,7 +942,7 @@ public class MobileAcademyControllerBundleIT extends BasePaxIT {
                 getRequest, RequestBuilder.ADMIN_USERNAME,
                 RequestBuilder.ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-        String expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"3\":4,\"2\":1,\"1\":2}}";
+        String expectedJsonResponse = "{\"bookmark\":\"Chapter03_Lesson01\",\"scoresByChapter\":{\"1\":2,\"2\":1,\"3\":4}}";
         assertTrue(expectedJsonResponse.equals(EntityUtils.toString(response
                 .getEntity())));
 

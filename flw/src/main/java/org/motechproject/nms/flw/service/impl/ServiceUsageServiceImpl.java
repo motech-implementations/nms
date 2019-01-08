@@ -1,13 +1,17 @@
 package org.motechproject.nms.flw.service.impl;
 
+import org.datanucleus.util.StringUtils;
 import org.joda.time.DateTime;
 import org.motechproject.mds.query.QueryExecution;
+import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.nms.flw.domain.CallDetailRecord;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.ServiceUsage;
 import org.motechproject.nms.flw.repository.CallDetailRecordDataService;
 import org.motechproject.nms.flw.service.ServiceUsageService;
+import org.motechproject.nms.kilkari.domain.Subscriber;
+import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +40,7 @@ public class ServiceUsageServiceImpl implements ServiceUsageService {
 
                 query.setFilter("frontLineWorker == flw && service == flw_service && callStartTime >= monthStart");
                 query.declareParameters("org.motechproject.nms.flw.domain.FrontLineWorker flw, org.joda.time.DateTime monthStart, org.motechproject.nms.props.domain.Service flw_service");
+                query.getFetchPlan().setMaxFetchDepth(1);
 
                 return (List<CallDetailRecord>) query.execute(frontLineWorker, monthStart, service);
             }
