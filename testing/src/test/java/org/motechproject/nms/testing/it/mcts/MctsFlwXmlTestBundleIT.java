@@ -119,6 +119,7 @@ public class MctsFlwXmlTestBundleIT extends BasePaxIT {
     }
 
     @Test
+    @Ignore
     public void shouldNotAllowDuplicateASHA() throws MalformedURLException {
         URL endpoint = new URL(String.format("http://localhost:%d/mctsTest", TestContext.getJettyPort()));
         LocalDate lastDateToCheck = DateUtil.today().minusDays(7);

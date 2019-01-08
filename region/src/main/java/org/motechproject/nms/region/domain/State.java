@@ -1,6 +1,7 @@
 package org.motechproject.nms.region.domain;
 
-import org.codehaus.jackson.annotate.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import org.motechproject.mds.annotations.Cascade;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
@@ -40,7 +41,7 @@ public class State extends MdsEntity {
     @Cascade(delete = true)
     @Persistent(mappedBy = "state", defaultFetchGroup = "false")
     @JsonManagedReference
-    private Set<District> districts;
+    private HashSet<District> districts;
 
     public State() {
         this.districts = new HashSet<>();
@@ -68,11 +69,11 @@ public class State extends MdsEntity {
         this.code = code;
     }
 
-    public Set<District> getDistricts() {
+    public HashSet<District> getDistricts() {
         return districts;
     }
 
-    public void setDistricts(Set<District> districts) {
+    public void setDistricts(HashSet<District> districts) {
         this.districts = districts;
     }
 

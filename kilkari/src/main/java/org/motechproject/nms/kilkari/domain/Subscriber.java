@@ -1,7 +1,9 @@
 package org.motechproject.nms.kilkari.domain;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonManagedReference;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
@@ -24,7 +26,7 @@ import java.util.Set;
  * sourced from MCTS, the mother and child fields will be populated with demographic data.
  */
 // TODO: Remove maxFetchDepth once https://applab.atlassian.net/browse/MOTECH-1678 is resolved
-@Entity(maxFetchDepth = -1, tableName = "nms_subscribers")
+@Entity(maxFetchDepth = -1,tableName = "nms_subscribers")
 public class Subscriber extends MdsEntity {
     @Field
     @Min(value = 1000000000L, message = "callingNumber must be 10 digits")
@@ -48,7 +50,7 @@ public class Subscriber extends MdsEntity {
     @Field
     @Persistent(mappedBy = "subscriber", defaultFetchGroup = "false")
     @JsonManagedReference
-    private Set<Subscription> subscriptions;
+    private HashSet<Subscription> subscriptions;
 
     @Field
     private MctsMother mother;
@@ -112,11 +114,11 @@ public class Subscriber extends MdsEntity {
         this.language = language;
     }
 
-    public Set<Subscription> getSubscriptions() {
+    public HashSet<Subscription> getSubscriptions() {
         return subscriptions;
     }
 
-    public void setSubscriptions(Set<Subscription> subscriptions) {
+    public void setSubscriptions(HashSet<Subscription> subscriptions) {
         this.subscriptions = subscriptions;
     }
 

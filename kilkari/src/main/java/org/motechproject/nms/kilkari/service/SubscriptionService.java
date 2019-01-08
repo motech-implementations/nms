@@ -131,7 +131,7 @@ public interface SubscriptionService {
 
     List<Subscription> getActiveSubscriptionBySubscriber(Subscriber subscriber);
 
-    List<SubscriptionPack> getSubscriptionPacks();
+    //List<SubscriptionPack> getSubscriptionPacks();
 
     /**
      * Create the specified subscription in the database. To be used only by test code.
@@ -207,7 +207,7 @@ public interface SubscriptionService {
      * Retrieves all subscriptions in the database
      *
      */
-    List<Subscription> retrieveAll();
+    //List<Subscription> retrieveAll();
 
     /**
      * Helper method that determines the subscription based on its origin and packType
@@ -217,10 +217,14 @@ public interface SubscriptionService {
      */
     Subscription getIVRSubscription(Set<Subscription> subscriptions, SubscriptionPackType packType);
 
-    Boolean activeSubscriptionByMsisdnMcts(Long msisdn, SubscriptionPackType packType, String motherBeneficiaryId, String childBeneficiaryId);
+    Boolean activeSubscriptionByMsisdnMcts(Subscriber subscriber, Long msisdn, SubscriptionPackType packType, String motherBeneficiaryId, String childBeneficiaryId);
 
-    Boolean activeSubscriptionByMsisdnRch(Long msisdn, SubscriptionPackType packType, String motherRchId, String childRchId);
+    Boolean activeSubscriptionByMsisdnRch(List<Subscriber> subscribers, Long msisdn, SubscriptionPackType packType, String motherRchId, String childRchId);
 
-
+    /**
+     * deletes the subscriber by its id -- the mds default query is not working because of  inner join bug
+     * @param subscriberId
+     */
+    void deleteSubscriber(Long subscriberId);
 
 }

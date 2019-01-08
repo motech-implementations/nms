@@ -4,7 +4,7 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -261,6 +261,97 @@ public class ImiControllerObdBundleIT extends BasePaxIT {
 
         //check an alert was sent
         AlertCriteria criteria = new AlertCriteria().byExternalId("file.csv");
+        List<Alert> alerts = alertService.search(criteria);
+        assertEquals(1, alerts.size());
+        assertEquals(AlertType.CRITICAL, alerts.get(0).getAlertType());
+    }
+    /*
+     *NMS_FT_196 : To check "NotifyFileProcessedStatus" API is rejected in case the FILE_OUTSIDE_SOCIAL_HOURS
+     */
+
+    @Test
+    public void verifyFT196() throws IOException, InterruptedException {
+        getLogger().debug("testCreateFileProcessedStatusRequestWithErrorFILE_OUTSIDE_SOCIAL_HOURS()");
+
+        HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv", FileProcessedStatus.FILE_OUTSIDE_SOCIAL_HOURS.getValue());
+
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, "file.csv", false, "ERROR",
+                null, null));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
+
+        //check an alert was sent
+        AlertCriteria criteria = new AlertCriteria().byExternalId("file.csv");
+        List<Alert> alerts = alertService.search(criteria);
+        assertEquals(1, alerts.size());
+        assertEquals(AlertType.CRITICAL, alerts.get(0).getAlertType());
+    }
+    /*To check  Cdr file processed status request is successful*/
+
+    @Test
+    public void CdrFileProcessedStatusRequest() throws IOException, InterruptedException {
+        getLogger().debug("testCreateFileProcessedStatusRequest()");
+
+
+        HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv", FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY.getValue());
+
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_DETAIL_FILE, "file.csv", true, null, null,
+                null));
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
+    }
+
+    /*
+     * Invoke "NotifyFileProcessedStatus" API having mandatory parameter
+     * file name is missing
+     */
+
+    @Test
+    public void CdrFileProcessedStatusRequestFileNamemissing() throws IOException, InterruptedException {
+        getLogger().debug("CdrFileProcessedStatusRequestFileNamemissing()");
+
+
+        HttpPost httpPost = createFileProcessedStatusHttpPost(null, FileProcessedStatus.FILE_PROCESSED_SUCCESSFULLY.getValue());
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_DETAIL_FILE, "false", true, null, null,
+                null));
+
+        String expectedJsonResponse = createFailureResponseJson("<fileName: Not Present>");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
+    }
+    /*
+     * Invoke "NotifyFileProcessedStatus" API having mandatory parameter
+     *status code is missing
+     */
+    @Test
+    public void CdrFileProcessedStatusRequestNoStatusCode() throws IOException, InterruptedException {
+        getLogger().debug("testCreateFileProcessedStatusRequestNoStatusCode()");
+        HttpPost httpPost = createFileProcessedStatusHttpPost("file.csv", null);
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_DETAIL_FILE, "true", true, null, null,
+                null));
+
+        String expectedJsonResponse = createFailureResponseJson("<fileProcessedStatus: Not Present>");
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, expectedJsonResponse,
+                ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
+    }
+    /*
+     * Invoke "NotifyFileProcessedStatus" API having Invalid file name
+     *
+     */
+    @Test
+    public void verifycdrinvalidfilename() throws IOException, InterruptedException {
+        getLogger().debug("testCreateFileProcessedStatusRequestWithErrorFILE_NOT_ACCESSIBLE()");
+
+        HttpPost httpPost = createFileProcessedStatusHttpPost("file.txt", FileProcessedStatus.FILE_NOT_ACCESSIBLE.getValue());
+
+        fileAuditRecordDataService.create(new FileAuditRecord(FileType.CDR_DETAIL_FILE, "file.txt", false, "ERROR",
+                null, null));
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK, ImiTestHelper.ADMIN_USERNAME, ImiTestHelper.ADMIN_PASSWORD));
+
+        //check an alert was sent
+        AlertCriteria criteria = new AlertCriteria().byExternalId("file.txt");
         List<Alert> alerts = alertService.search(criteria);
         assertEquals(1, alerts.size());
         assertEquals(AlertType.CRITICAL, alerts.get(0).getAlertType());

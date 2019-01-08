@@ -1,6 +1,8 @@
 package org.motechproject.nms.api.web.contract.mobileAcademy;
 
-import org.codehaus.jackson.annotate.JsonRawValue;
+
+
+import com.fasterxml.jackson.annotation.JsonRawValue;
 
 import javax.validation.constraints.NotNull;
 

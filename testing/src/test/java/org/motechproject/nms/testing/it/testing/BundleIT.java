@@ -69,7 +69,7 @@ public class BundleIT extends BasePaxIT {
 
         State state = new State("Delhi", 1L);
         //the \1 is a hack - Filter should take a Long constructor
-        if (stateDataService.countForFilters(new Filters(new Filter("code", "\1"))) == 0) {
+        if (stateDataService.countForFilters(new Filters(new Filter("code", "1"))) == 0) {
                 stateDataService.create(state);
         }
 
@@ -79,7 +79,7 @@ public class BundleIT extends BasePaxIT {
         district.setName("Delhi District");
         district.setRegionalName("Delhi District");
         //the \2 is a hack - Filter should take a Long constructor
-        if (districtDataService.countForFilters(new Filters(new Filter("code", "\2"))) == 0) {
+        if (districtDataService.countForFilters(new Filters(new Filter("code",  "2"))) == 0) {
            districtDataService.create(district);
         }
     }
