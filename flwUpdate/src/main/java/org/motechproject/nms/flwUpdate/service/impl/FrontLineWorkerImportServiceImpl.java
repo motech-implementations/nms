@@ -22,6 +22,7 @@ import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.domain.ContactNumberAudit;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
+import org.motechproject.nms.flw.exception.GfStatusInactiveException;
 import org.motechproject.nms.flw.repository.ContactNumberAuditDataService;
 import org.motechproject.nms.flw.repository.FlwErrorDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
@@ -94,7 +95,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     // CHECKSTYLE:OFF
     @Override
     @Transactional
-    public void importData(Reader reader, SubscriptionOrigin importOrigin) throws IOException {
+    public void importData(Reader reader, SubscriptionOrigin importOrigin) throws IOException, GfStatusInactiveException {
         BufferedReader bufferedReader = new BufferedReader(reader);
 
         State state = importHeader(bufferedReader);
@@ -186,7 +187,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
 
     @Override //NO CHECKSTYLE CyclomaticComplexity
     @Transactional
-    public void importRchFrontLineWorker(Map<String, Object> record, State state) throws InvalidLocationException, FlwExistingRecordException {
+    public void importRchFrontLineWorker(Map<String, Object> record, State state) throws InvalidLocationException, FlwExistingRecordException, GfStatusInactiveException {
         String flwId = (String) record.get(FlwConstants.GF_ID);
         Long msisdn = (Long) record.get(FlwConstants.MOBILE_NO);
 
@@ -235,6 +236,9 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                 FrontLineWorker newFlw = createRchFlw(record, location);
                 if (newFlw != null) {
                     frontLineWorkerService.add(newFlw);
+                } else {
+                    LOGGER.debug("The flw has already resigned.");
+                    throw new GfStatusInactiveException("The gf status is inactive.");
                 }
             }
         }

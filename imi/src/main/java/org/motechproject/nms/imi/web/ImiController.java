@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -142,13 +143,20 @@ public class ImiController {
      */
     @RequestMapping("/generateTargetFile")
     @ResponseBody
+    @Transactional
     public String generateTargetFile() {
 
         LOGGER.debug("/generateTargetFile (GET)");
-        TargetFileNotification tfn = targetFileService.generateTargetFile();
-        LOGGER.debug("targetFileService.generateTargetFile() returned {}", tfn.toString());
+        try {
+            TargetFileNotification tfn = targetFileService.generateTargetFile();
+            LOGGER.debug("targetFileService.generateTargetFile() done");
 
-        return tfn == null ? "null" : tfn.getFileName();
+            return tfn == null ? "null" : tfn.getFileName();
+        } catch(Exception e) {
+            LOGGER.error(e.getMessage(),e);
+            throw e;
+        }
+
     }
 
 

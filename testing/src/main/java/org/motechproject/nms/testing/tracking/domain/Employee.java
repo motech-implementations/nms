@@ -3,6 +3,7 @@ package org.motechproject.nms.testing.tracking.domain;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.InstanceLifecycleListeners;
+import org.motechproject.mds.domain.MdsEntity;
 import org.motechproject.nms.tracking.annotation.TrackClass;
 import org.motechproject.nms.tracking.annotation.TrackFields;
 
@@ -10,7 +11,7 @@ import org.motechproject.nms.tracking.annotation.TrackFields;
 @TrackClass
 @TrackFields
 @InstanceLifecycleListeners
-public class Employee {
+public class Employee  {
 
     @Field
     private Long id;

@@ -6,7 +6,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -137,7 +137,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         rh = new RegionHelper(languageDataService, languageService, circleDataService, stateDataService,
                 districtDataService, districtService);
 
-        sh = new SubscriptionHelper(subscriptionService, subscriberDataService, subscriptionPackDataService,
+        sh = new SubscriptionHelper(subscriberService,subscriptionService, subscriberDataService, subscriptionPackDataService,
                 languageDataService, languageService, circleDataService, stateDataService, districtDataService,
                 districtService);
 
@@ -201,7 +201,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        Subscriber subscriber = subscriberDataService.findByNumber(1000000000L).get(0); // 1 subscription
+        Subscriber subscriber = subscriberService.getSubscriber(1000000000L).get(0); // 1 subscription
         Subscription subscription = subscriber.getSubscriptions().iterator().next();
 
         // override the default start date (today + 1 day) in order to see a non-empty inbox
@@ -238,7 +238,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         // create subscription to child pack
         Subscription child = subscriptionService.createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
         child.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(child);
 
@@ -387,7 +387,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 SubscriptionOrigin.MCTS_IMPORT);
         child.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(child);
-        subscriber = subscriberDataService.findByNumber(2000000000L).get(0);
+        subscriber = subscriberService.getSubscriber(2000000000L).get(0);
 
         // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
         // create a second subscription for this subscriber
@@ -401,7 +401,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         mother.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(mother);
 
-        subscriber = subscriberDataService.findByNumber(2000000000L).get(0);
+        subscriber = subscriberService.getSubscriber(2000000000L).get(0);
         assertEquals(2, subscriber.getActiveAndPendingSubscriptions().size());
         assertEquals(4, subscriber.getAllSubscriptions().size());
 
@@ -832,9 +832,9 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        Subscriber subscriber1 = subscriberDataService.findByNumber(1000000000L).get(0);
+        Subscriber subscriber1 = subscriberService.getSubscriber(1000000000L).get(0);
         Subscription subscription1 = subscriber1.getAllSubscriptions().iterator().next();
-        Subscriber subscriber2 = subscriberDataService.findByNumber(2000000000L).get(0);
+        Subscriber subscriber2 = subscriberService.getSubscriber(2000000000L).get(0);
         Subscription subscription2 = subscriber2.getAllSubscriptions().iterator().next();
 
         transactionManager.commit(status);
@@ -1012,7 +1012,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 .createSubscription(mctsSubscriber, 9999911122L, rh.hindiLanguage(),
                         sh.childPack(),
                         SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // due to subscription rules detailed in #157, we need to clear out the
         // DOB and set an LMP in order to
@@ -1070,7 +1070,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 rh.hindiLanguage(),
                 sh.childPack(),
                 SubscriptionOrigin.MCTS_IMPORT);
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // due to subscription rules detailed in #157, we need to clear out the DOB and set an LMP in order to
         // create a second subscription for this MCTS subscriber
@@ -1129,7 +1129,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.updateStartDate(childPackSubscription, DateTime
                 .now().minusDays(337));
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // due to subscription rules detailed in #157, we need to clear out the
         // DOB and set an LMP in order to
@@ -1188,7 +1188,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.updateStartDate(childPackSubscription, DateTime
                 .now().minusDays(344));
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // due to subscription rules detailed in #157, we need to clear out the
         // DOB and set an LMP in order to
@@ -1352,7 +1352,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
 
     /*
-     * To verify the behavior of Get Inbox Details API if provided beneficiary's callId is not valid: more than 15 digits.
+     * To verify the behavior of Get Inbox Details API if provided beneficiary's callingnumber is not valid : alphanumeric
      */
     @Test
     public void verifyFT85() throws IOException, InterruptedException {
@@ -1647,7 +1647,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 mctsSubscriber, 9999911122L, rh.hindiLanguage(), sh.pregnancyPack(1), SubscriptionOrigin.MCTS_IMPORT);
         subscriptionService.deactivateSubscription(oldSubscription, DeactivationReason.DEACTIVATED_BY_USER);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription for pregnancy pack in Active state such that next OBD date falls on current date
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90));
@@ -1696,7 +1696,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.updateStartDate(oldSubscription, DateTime.now().minusDays(512 + 90));
         oldSubscription.setNeedsWelcomeMessageViaObd(false);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription to pregnancy pack in Active state such that next OBD date falls on current date
         mctsSubscriber.setLastMenstrualPeriod(DateTime.now().minusDays(90));
@@ -1939,8 +1939,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
-        Subscriber subscriber = subscriberDataService
-                .findByNumber(9999911122L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber
+        (9999911122L).get(0);
         assertNotNull(subscriber);
         assertNotNull(subscriber.getSubscriptions());
 
@@ -2021,8 +2021,8 @@ public class KilkariControllerBundleIT extends BasePaxIT {
                 httpPost, ADMIN_USERNAME, ADMIN_PASSWORD);
         assertEquals(HttpStatus.SC_OK, response.getStatusLine()
                 .getStatusCode());
-        Subscriber subscriber = subscriberDataService
-                .findByNumber(9999911122L).get(0);
+        Subscriber subscriber = subscriberService
+                .getSubscriber(9999911122L).get(0);
         assertNotNull(subscriber);
 
     }
@@ -4041,7 +4041,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         childPackSubscription.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(childPackSubscription);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription for pregnancy pack in Active state
         mctsSubscriber.setDateOfBirth(null);
@@ -4095,7 +4095,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         childPackSubscription.setNeedsWelcomeMessageViaObd(false);
         subscriptionDataService.update(childPackSubscription);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription for pregnancy pack in Active state
         mctsSubscriber.setDateOfBirth(null);
@@ -4153,7 +4153,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.deactivateSubscription(oldSubscription,
                 DeactivationReason.DEACTIVATED_BY_USER);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription for child pack in Active state such that
         // next OBD date falls on current date
@@ -4204,7 +4204,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.updateStartDate(oldSubscription, DateTime.now()
                 .minusDays(505 + 90));
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription for child pack in Active state such that
         // next OBD date falls on current date
@@ -4260,7 +4260,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.deactivateSubscription(oldSubscription,
                 DeactivationReason.DEACTIVATED_BY_USER);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription for pregnancy pack in Active state such that
         // next OBD date falls on current date
@@ -4310,7 +4310,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.updateStartDate(oldSubscription, DateTime.now()
                 .minusDays(344));
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription for pregnancy pack in Active state such that
         // next OBD date falls on current date
@@ -4357,7 +4357,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.deactivateSubscription(oldSubscription,
                 DeactivationReason.DEACTIVATED_BY_USER);
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription for child pack in Active state such that
         // next OBD date falls on current date
@@ -4406,7 +4406,7 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         subscriptionService.updateStartDate(oldSubscription, DateTime.now()
                 .minusDays(337));
 
-        mctsSubscriber = subscriberDataService.findByNumber(9999911122L).get(0);
+        mctsSubscriber = subscriberService.getSubscriber(9999911122L).get(0);
 
         // create new subscription to child pack in Active state such that
         // next OBD date falls on current date
@@ -4434,4 +4434,96 @@ public class KilkariControllerBundleIT extends BasePaxIT {
         assertTrue(SimpleHttpClient.execHttpRequest(httpGet, HttpStatus.SC_OK,
                 newchildPackPattern, ADMIN_USERNAME, ADMIN_PASSWORD));
     }
+    /**
+     * To verify that DeactivateSubscriptionRequest API request fails if the mandatory
+     *subscriptionid is missing
+     */
+    @Test
+    public void testDeactivateSubscriptionRequestSubscriptionIdmissing() throws IOException, InterruptedException {
+
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, rh.airtelOperator(), rh.delhiCircle().getName(),
+                VALID_CALL_ID, null);
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = createFailureResponseJson("<subscriptionId: Not Present>");
+
+
+        HttpDeleteWithBody httpDelete = new HttpDeleteWithBody(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpDelete.setHeader("Content-type", "application/json");
+        httpDelete.setEntity(new StringEntity(subscriptionRequestJson));
+
+        // Should return HTTP 404 (Not Found) because the subscription ID won't be found
+        assertTrue(SimpleHttpClient.execHttpRequest(httpDelete, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME,
+                ADMIN_PASSWORD));
+
+    }
+   /* To verify that DeactivateSubscriptionRequest API request fails if
+   provided parameter is Invalid : subscriptionid less than 32 digits
+    */
+    @Test
+    public void testDeactivateSubscriptionRequestSubscriptionIdlessthan32digits() throws IOException, InterruptedException {
+
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, rh.airtelOperator(), rh.delhiCircle().getName(),
+                VALID_CALL_ID, "77f13128-037e-4f98-8651-285fa618d9");
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = createFailureResponseJson("<subscriptionId: Invalid>");
+
+
+        HttpDeleteWithBody httpDelete = new HttpDeleteWithBody(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpDelete.setHeader("Content-type", "application/json");
+        httpDelete.setEntity(new StringEntity(subscriptionRequestJson));
+
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpDelete, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME,
+                ADMIN_PASSWORD));
+
+    }
+    /* To verify that DeactivateSubscriptionRequest API request fails if
+  provided parameter is Invalid : subscriptionid more than 32 digits
+   */
+    @Test
+    public void testDeactivateSubscriptionRequestSubscriptionIdmorethan32digits() throws IOException, InterruptedException {
+
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(1000000000L, rh.airtelOperator(), rh.delhiCircle().getName(),
+                VALID_CALL_ID, "0871ef3e-905f-4708-875f-77182733b03d22");
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = createFailureResponseJson("<subscriptionId: Invalid>");
+
+
+        HttpDeleteWithBody httpDelete = new HttpDeleteWithBody(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpDelete.setHeader("Content-type", "application/json");
+        httpDelete.setEntity(new StringEntity(subscriptionRequestJson));
+
+
+        assertTrue(SimpleHttpClient.execHttpRequest(httpDelete, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME,
+                ADMIN_PASSWORD));
+
+    }
+    /* To verify that DeactivateSubscriptionRequest API request fails if
+       mandatory parameter callingnumber is missing */
+
+    @Test
+    public void testDeactivateSubscriptionRequestwithNocallingNumber() throws IOException, InterruptedException {
+
+        SubscriptionRequest subscriptionRequest = new SubscriptionRequest(null, rh.airtelOperator(), rh.delhiCircle().getName(),
+                VALID_CALL_ID, "77f13128-037e-4f98-8651-285fa618d94a");
+        ObjectMapper mapper = new ObjectMapper();
+        String subscriptionRequestJson = mapper.writeValueAsString(subscriptionRequest);
+
+        HttpDeleteWithBody httpDelete = new HttpDeleteWithBody(String.format(
+                "http://localhost:%d/api/kilkari/subscription", TestContext.getJettyPort()));
+        httpDelete.setHeader("Content-type", "application/json");
+        httpDelete.setEntity(new StringEntity(subscriptionRequestJson));
+
+        // Should return HTTP 404 (Not Found) because the callingnumber won't be found
+        assertTrue(SimpleHttpClient.execHttpRequest(httpDelete, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME,
+                ADMIN_PASSWORD));
+    }
+
+
+
+
+
 }

@@ -1,6 +1,7 @@
 package org.motechproject.nms.region.domain;
 
-import org.codehaus.jackson.annotate.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.InstanceLifecycleListeners;
@@ -10,6 +11,7 @@ import org.motechproject.nms.tracking.annotation.TrackFields;
 
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Unique;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity(tableName = "nms_circles")
@@ -24,7 +26,7 @@ public class Circle extends MdsEntity {
     @Field
     @Persistent(mappedBy = "circle", defaultFetchGroup = "false")
     @JsonManagedReference
-    private Set<District> districts;
+    private HashSet<District> districts;
 
     @Field
     private Language defaultLanguage;
@@ -44,11 +46,11 @@ public class Circle extends MdsEntity {
         this.name = name;
     }
 
-    public Set<District> getDistricts() {
+    public HashSet<District> getDistricts() {
         return districts;
     }
 
-    public void setDistricts(Set<District> districts) {
+    public void setDistricts(HashSet<District> districts) {
         this.districts = districts;
     }
 

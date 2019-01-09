@@ -6,6 +6,8 @@ import org.apache.axis.description.TypeDesc;
 import org.apache.axis.encoding.SerializationContext;
 import org.apache.axis.encoding.ser.BeanSerializer;
 import org.apache.axis.server.AxisServer;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -70,10 +72,7 @@ import org.motechproject.nms.rch.domain.RchImportAudit;
 import org.motechproject.nms.rch.domain.RchImportFacilitator;
 import org.motechproject.nms.rch.domain.RchImportFailRecord;
 import org.motechproject.nms.rch.domain.RchUserType;
-import org.motechproject.nms.rch.exception.ExecutionException;
-import org.motechproject.nms.rch.exception.RchFileManipulationException;
-import org.motechproject.nms.rch.exception.RchInvalidResponseStructureException;
-import org.motechproject.nms.rch.exception.RchWebServiceException;
+import org.motechproject.nms.rch.exception.*;
 import org.motechproject.nms.rch.repository.RchImportAuditDataService;
 import org.motechproject.nms.rch.repository.RchImportFacilitatorDataService;
 import org.motechproject.nms.rch.repository.RchImportFailRecordDataService;
@@ -104,10 +103,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.xml.sax.helpers.AttributesImpl;
 
@@ -397,7 +396,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LOGGER.info("Starting location read.");
         List<Long> stateIds = getStateIds();
         for (Long stateId : stateIds
-                ) {
+        ) {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
             eventParams.put(Constants.REMOTE_LOCATION, null);
@@ -756,7 +755,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LOGGER.info("Starting Mother read.");
         List<Long> stateIds = getStateIds();
         for (Long stateId : stateIds
-                ) {
+        ) {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
             eventParams.put(Constants.REMOTE_LOCATION, null);
@@ -902,7 +901,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LOGGER.info("Starting Child read.");
         List<Long> stateIds = getStateIds();
         for (Long stateId : stateIds
-                ) {
+        ) {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
             eventParams.put(Constants.REMOTE_LOCATION, null);
@@ -1047,7 +1046,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LOGGER.info("Starting Asha read.");
         List<Long> stateIds = getStateIds();
         for (Long stateId : stateIds
-                ) {
+        ) {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
             eventParams.put(Constants.REMOTE_LOCATION, null);
@@ -1070,6 +1069,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             File localResponseFile ;
             if (rchImportFacilitatorAshas.isEmpty()) {
                 localResponseFile = scpResponseToLocal(fileName, remoteLocation);
+
                 String result = readResponsesFromXml(localResponseFile);
                 State importState = stateDataService.findByCode(stateId);
                 String stateName = importState.getName();
@@ -2704,6 +2704,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             throws IOException {
         //CHECKSTYLE:OFF
         try {
+            
             final String SOAP_START = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"><soapenv:Header /><soapenv:Body>";
             final String SOAP_START_XSI = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><soapenv:Header /><soapenv:Body>";
             final String SOAP_END = "</soapenv:Body></soapenv:Envelope>";
@@ -2765,7 +2766,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             });
 
             for (RchImportFacilitator rchImportFile : rchImportFiles
-                    ) {
+            ) {
                 File remoteResponseFile = fileForXmlLocUpdate(rchImportFile.getFileName());
 
                 if (remoteResponseFile.exists() && !remoteResponseFile.isDirectory()) {
@@ -2801,47 +2802,47 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     @Transactional
     public void locationUpdateInTableFromCsv(Long stateId, RchUserType rchUserType) throws IOException {
 
-            List<MultipartFile> rchImportFiles = findByStateIdAndRchUserType(stateId, rchUserType);
+        List<MultipartFile> rchImportFiles = findByStateIdAndRchUserType(stateId, rchUserType);
 
-            Collections.sort(rchImportFiles, new Comparator<MultipartFile>() {
-                public int compare(MultipartFile m1, MultipartFile m2) {
-                    Date file1Date;
-                    Date file2Date;
-                    int flag = 1;
-                    try {
-                        file1Date = getDateFromFileName(m1.getOriginalFilename());
-                        file2Date = getDateFromFileName(m2.getOriginalFilename());
-                        flag = file1Date.compareTo(file2Date);
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
-                    return flag; //ascending order
+        Collections.sort(rchImportFiles, new Comparator<MultipartFile>() {
+            public int compare(MultipartFile m1, MultipartFile m2) {
+                Date file1Date;
+                Date file2Date;
+                int flag = 1;
+                try {
+                    file1Date = getDateFromFileName(m1.getOriginalFilename());
+                    file2Date = getDateFromFileName(m2.getOriginalFilename());
+                    flag = file1Date.compareTo(file2Date);
+                } catch (ParseException e) {
+                    e.printStackTrace();
                 }
-            });
-
-            for (MultipartFile rchImportFile : rchImportFiles) {
-                    try (InputStream in = rchImportFile.getInputStream()) {
-
-                        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
-                        Map<String, CellProcessor> cellProcessorMapper;
-                        List<Map<String, Object>> recordList;
-                        LOGGER.debug("Started reading file {}.", rchImportFile.getOriginalFilename());
-                        if (rchUserType == RchUserType.MOTHER) {
-                            cellProcessorMapper = mctsBeneficiaryImportService.getRchMotherProcessorMapping();
-                            recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
-                            motherLocUpdateFromCsv(recordList, stateId, rchUserType);
-                        } else if (rchUserType == RchUserType.CHILD) {
-                            cellProcessorMapper = mctsBeneficiaryImportReaderService.getRchChildProcessorMapping();
-                            recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
-                            childLocUpdateFromCsv(recordList, stateId, rchUserType);
-                        } else if (rchUserType == RchUserType.ASHA) {
-                            cellProcessorMapper = mctsBeneficiaryImportService.getRchAshaProcessorMapping();
-                            recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
-                            ashaLocUpdateFromCsv(recordList, stateId, rchUserType);
-                        }
-
-                    }
+                return flag; //ascending order
             }
+        });
+
+        for (MultipartFile rchImportFile : rchImportFiles) {
+            try (InputStream in = rchImportFile.getInputStream()) {
+
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
+                Map<String, CellProcessor> cellProcessorMapper;
+                List<Map<String, Object>> recordList;
+                LOGGER.debug("Started reading file {}.", rchImportFile.getOriginalFilename());
+                if (rchUserType == RchUserType.MOTHER) {
+                    cellProcessorMapper = mctsBeneficiaryImportService.getRchMotherProcessorMapping();
+                    recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
+                    motherLocUpdateFromCsv(recordList, stateId, rchUserType);
+                } else if (rchUserType == RchUserType.CHILD) {
+                    cellProcessorMapper = mctsBeneficiaryImportReaderService.getRchChildProcessorMapping();
+                    recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
+                    childLocUpdateFromCsv(recordList, stateId, rchUserType);
+                } else if (rchUserType == RchUserType.ASHA) {
+                    cellProcessorMapper = mctsBeneficiaryImportService.getRchAshaProcessorMapping();
+                    recordList = mctsBeneficiaryImportReaderService.readCsv(bufferedReader, cellProcessorMapper);
+                    ashaLocUpdateFromCsv(recordList, stateId, rchUserType);
+                }
+
+            }
+        }
     }
 
     @Override
@@ -3018,7 +3019,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     mctsIds.add(asha.getMctsFlwId());
                 }
                 for (RchAnmAshaRecord record : anmAshaRecords
-                     ) {
+                ) {
                     if(mctsIds.contains(record.getGfId().toString())) {
                         Map<String, Object> locMap = new HashMap<>();
                         toMapLoc(locMap, record);
@@ -3162,9 +3163,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 String[] fileNameSplitter =  f.getName().split("_");
                 if(Objects.equals(fileNameSplitter[2], stateId.toString()) && fileNameSplitter[3].equalsIgnoreCase(rchUserType.toString())){
                     try {
-                        FileInputStream input = new FileInputStream(f);
-                        MultipartFile multipartFile = new MockMultipartFile("file",
-                                f.getName(), "text/plain", IOUtils.toByteArray(input));
+                        FileItem fileItem = new DiskFileItem("file",  "text/plain", false, f.getName(), (int) f.length(), f.getParentFile());
+                        IOUtils.copy(new FileInputStream(f), fileItem.getOutputStream());
+                        MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
                         csvFilesByStateIdAndRchUserType.add(multipartFile);
                     }catch(IOException e) {
                         LOGGER.debug("IO Exception", e);
@@ -3186,7 +3187,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LocationFinder locationFinder = locationService.updateLocations(locArrList);
 
         for (Map<String, Object> record : locArrList
-                ) {
+        ) {
             Map<String, Object> updatedMap = setLocationFields(locationFinder, record);
             if("asha".equalsIgnoreCase(rchUserType.toString())){
                 updatedMap.put(FlwConstants.GF_ID, record.get(FlwConstants.GF_ID));
@@ -3221,7 +3222,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
         return csvFile;
 
-        }
+    }
 
     private void csvWriterKilkari(List<Map<String, Object>> locArrList, Long stateId, RchUserType rchUserType) throws IOException { //NO CHECKSTYLE Cyclomatic Complexity //NOPMD NcssMethodCount
 
@@ -3260,7 +3261,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             writer.write(NEXT_LINE);
 
             for (Map<String, Object> map : locArrList
-                    ) {
+            ) {
                 writer.write(map.get(KilkariConstants.RCH_ID).toString());
                 writer.write(TAB);
                 writer.write(map.get(KilkariConstants.STATE_ID).toString());
@@ -3334,7 +3335,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             writer.write(FlwConstants.VILLAGE_NAME);
             writer.write(NEXT_LINE);
             for (Map<String, Object> map : locArrList
-                    ) {
+            ) {
                 writer.write(map.get(FlwConstants.ID).toString());
                 writer.write(TAB);
                 writer.write(map.get(FlwConstants.GF_ID).toString());
@@ -3477,9 +3478,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             @Override
             public String getSqlQuery() {
                 String query = "SELECT * FROM nms_front_line_workers WHERE state_id_OID = " + stateID +
-                            " and mctsFlwId IN (SELECT mctsFlwId from nms_front_line_workers WHERE state_id_OID = " + stateID +
-                            " group by mctsFlwId having count(*) = 1) " +
-                            " and  mctsFlwId IN " + queryIdListAsha(ashaRecords);
+                        " and mctsFlwId IN (SELECT mctsFlwId from nms_front_line_workers WHERE state_id_OID = " + stateID +
+                        " group by mctsFlwId having count(*) = 1) " +
+                        " and  mctsFlwId IN " + queryIdListAsha(ashaRecords);
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
@@ -3542,6 +3543,3 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
 
 }
-
-
-
