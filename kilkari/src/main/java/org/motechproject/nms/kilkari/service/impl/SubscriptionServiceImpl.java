@@ -542,6 +542,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return true;
     }
 
+    /**
+     * The return statement has been changed from boolean to integer to accomodate the HOLD to PENDING_ACTIVATION scenario.
+     */
     private Integer enrollmentPreconditionCheckForUpkeep(Subscriber subscriber, SubscriptionPack pack, SubscriptionOrigin importOrigin) {
         if (pack.getType() == SubscriptionPackType.CHILD) {
 

@@ -405,6 +405,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
     }
 
+    /**
+     * The remoteLocation and fileName would be not null only in the case of integration tests.
+     * At other times the values will be taken from property files.
+     */
     @MotechListener(subjects = Constants.RCH_DISTRICT_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void readDistrictResponseFromFile(MotechEvent event) throws RchFileManipulationException {
@@ -520,6 +524,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
 
+    /**
+     * The remoteLocation and fileName would be not null only in the case of integration tests.
+     * At other times the values will be taken from property files.
+     */
     @MotechListener(subjects = Constants.RCH_TALUKA_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void readTalukaResponseFromFile(MotechEvent event) throws RchFileManipulationException {
@@ -635,6 +643,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
     }
 
+    /**
+     * The remoteLocation and fileName would be not null only in the case of integration tests.
+     * At other times the values will be taken from property files.
+     */
     @MotechListener(subjects = Constants.RCH_VILLAGE_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void readVillageResponseFromFile(MotechEvent event) throws RchFileManipulationException {
@@ -764,6 +776,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
     }
 
+    /**
+     * The remoteLocation and fileName would be not null only in the case of integration tests.
+     * At other times the values will be taken from property files.
+     */
     @MotechListener(subjects = Constants.RCH_MOTHER_READ) //NO CHECKSTYLE Cyclomatic Complexity
     public void readMotherResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
@@ -910,6 +926,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
     }
 
+    /**
+     * The remoteLocation and fileName would be not null only in the case of integration tests.
+     * At other times the values will be taken from property files.
+     */
     @MotechListener(subjects = Constants.RCH_CHILD_READ)
     public void readChildResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
@@ -1055,6 +1075,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
     }
 
+    /**
+     * The remoteLocation and fileName would be not null only in the case of integration tests.
+     * At other times the values will be taken from property files.
+     */
     @MotechListener(subjects = Constants.RCH_ASHA_READ)
     public void readAshaResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
@@ -1185,6 +1209,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return status;
     }
 
+    /**
+     * The remoteLocation and fileName would be not null only in the case of integration tests.
+     * At other times the values will be taken from property files.
+     */
     @MotechListener(subjects = Constants.RCH_HEALTHBLOCK_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void readHealthBlockResponseFromFile(MotechEvent event) throws RchFileManipulationException {
@@ -1334,6 +1362,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return status;
     }
 
+    /**
+     * The remoteLocation and fileName would be not null only in the case of integration tests.
+     * At other times the values will be taken from property files.
+     */
     @MotechListener(subjects = Constants.RCH_TALUKA_HEALTHBLOCK_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void readTalukaHealthBlockResponseFromFile(MotechEvent event) throws RchFileManipulationException {
@@ -1559,6 +1591,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return status;
     }
 
+    /**
+     * The remoteLocation and fileName would be not null only in the case of integration tests.
+     * At other times the values will be taken from property files.
+     */
     @MotechListener(subjects = Constants.RCH_HEALTHFACILITY_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void readHealthFacilityResponseFromFile(MotechEvent event) throws RchFileManipulationException {
@@ -1671,6 +1707,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
     }
 
+    /**
+     * The remoteLocation and fileName would be not null only in the case of integration tests.
+     * At other times the values will be taken from property files.
+     */
     @MotechListener(subjects = Constants.RCH_HEALTHSUBFACILITY_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void readHealthSubFacilityResponseFromFile(MotechEvent event) throws RchFileManipulationException {
@@ -1782,6 +1822,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
     }
 
+    /**
+     * The remoteLocation and fileName would be not null only in the case of integration tests.
+     * At other times the values will be taken from property files.
+     */
     @MotechListener(subjects = Constants.RCH_VILLAGE_HEALTHSUBFACILITY_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void readVillageHealthSubFacilityResponseFromFile(MotechEvent event) throws RchFileManipulationException {
