@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.jdo.Query;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,6 +27,7 @@ import java.util.List;
 @Service("testingService")
 public class TestingServiceImpl implements TestingService {
 
+    private static boolean isFirstTime = true;
     private static final String TESTING_ENVIRONMENT = "testing.environment";
     private static final int PREGNANCY_PACK_WEEKS = 72;
     private static final int CHILD_PACK_WEEKS = 48;
@@ -200,7 +202,10 @@ public class TestingServiceImpl implements TestingService {
         // Should only happen on dev / CI machines, so no need to save/restore settings
         //
         System.setProperty("org.motechproject.testing.osgi.http.numTries", "1");
+
     }
+
+
 
 
     private MctsHelper createMctsHelper() {
@@ -208,6 +213,35 @@ public class TestingServiceImpl implements TestingService {
     }
 
 
+    @PostConstruct
+    public void addAutoIncrementIds() {
+        changeConstraints(true);
+
+        //This is the script from AutoIncrementIDsScript.sql
+         String alterQuery = "ALTER TABLE `nms_districts` CHANGE COLUMN `id` `id` BIGINT(20) NOT NULL AUTO_INCREMENT ;ALTER TABLE `nms_talukas` CHANGE COLUMN `id` `id` BIGINT(20) NOT NULL AUTO_INCREMENT ;ALTER TABLE `nms_health_blocks` CHANGE COLUMN `id` `id` BIGINT(20) NOT NULL AUTO_INCREMENT;ALTER TABLE `nms_health_facilities` CHANGE COLUMN `id` `id` BIGINT(20) NOT NULL AUTO_INCREMENT;ALTER TABLE `nms_health_sub_facilities` CHANGE COLUMN `id` `id` BIGINT(20) NOT NULL AUTO_INCREMENT;ALTER TABLE `nms_villages` CHANGE COLUMN `id` `id` BIGINT(20) NOT NULL AUTO_INCREMENT;ALTER TABLE `nms_mother_rejects` CHANGE COLUMN `id` `id` BIGINT(20) NOT NULL AUTO_INCREMENT;ALTER TABLE `nms_child_rejects` CHANGE COLUMN `id` `id` BIGINT(20) NOT NULL AUTO_INCREMENT;ALTER TABLE `nms_imi_cdrs` CHANGE COLUMN `id` `id` BIGINT(20) NOT NULL AUTO_INCREMENT ;ALTER TABLE `nms_imi_csrs` CHANGE COLUMN `id` `id` BIGINT(20) NOT NULL AUTO_INCREMENT ;ALTER TABLE `nms_taluka_healthblock` CHANGE COLUMN `id` `id` BIGINT(20) NOT NULL AUTO_INCREMENT;ALTER TABLE `nms_village_healthsubfacility` CHANGE COLUMN `id` `id` BIGINT(20) NOT NULL AUTO_INCREMENT;";
+        String[] queries = alterQuery.split(";");
+
+        for(int iCOunt = 0; iCOunt< queries.length ; iCOunt++) {
+
+            final int currCount = iCOunt;
+            SqlQueryExecution sqe = new SqlQueryExecution() {
+
+                @Override
+                public String getSqlQuery() {
+
+                    return String.format(queries[currCount]);
+                }
+
+                @Override
+                public Object execute(Query query) {
+                    query.execute();
+                    return null;
+                }
+            };
+            stateDataService.executeSQLQuery(sqe);
+        }
+        changeConstraints(false);
+    }
     private void changeConstraints(final boolean disable) {
         SqlQueryExecution sqe = new SqlQueryExecution() {
 

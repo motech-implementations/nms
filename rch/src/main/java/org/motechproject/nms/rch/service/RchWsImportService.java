@@ -22,6 +22,22 @@ public interface RchWsImportService {
      * @param endpoint the url of the web service endpoint, null will mean using the default one from WSDL
      */
     void importFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint);
+    void importMothersFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint);
+    void importChildFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint);
+    void importAshaFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint);
+    void importTalukaFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint);
+    void importVillageFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint);
+    void importHealthBlockFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint);
+    void importHealthFacilityFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint);
+    void importHealthSubFacilityFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint);
+    void importDistrictFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint);
+    void importTalukaHealthBlockFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint);
+    void importVillageHealthSubFacilityFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint);
+
+
+
+
+
 
     // TEST HOOK ONLY. Do not call directly in production.
     void importRchMothersData(MotechEvent motechEvent);

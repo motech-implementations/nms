@@ -5,12 +5,12 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.38</version>
+        <version>1.0.38.1</version>
         <relativePath>../</relativePath>
     </parent>
 
     <artifactId>mobile-academy</artifactId>
-    <version>1.0.38</version>
+    <version>1.0.38.1</version>
     <packaging>bundle</packaging>
     <name>Mobile Academy module</name>
 
@@ -29,6 +29,20 @@
             <groupId>org.motechproject</groupId>
             <artifactId>mtraining</artifactId>
             <version>${motech.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-beans</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-context</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -49,6 +63,12 @@
             <version>1.0.0-v20140107</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.datanucleus</groupId>
+            <artifactId>datanucleus-core</artifactId>
+            <version>4.1.0-release</version>
+        </dependency>
+
     </dependencies>
 
     <repositories>
@@ -61,15 +81,7 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
-                <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
-                </configuration>
-            </plugin>
+            
 
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -95,7 +107,10 @@
                             org.apache.http.ssl,
                             org.json,
                             org.motechproject.mtraining.service,
+                            org.datanucleus.enhancer,
                             org.motechproject.nms.kilkari.service,
+                            org.datanucleus.enhancement,
+                            org.springframework.validation.beanvalidation,
                             *
                         </Import-Package>
                     </instructions>

@@ -94,6 +94,119 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         LOGGER.info("Initiated import workflow from RCH for mothers and children");
     }
 
+    @Override
+    public void importMothersFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint){
+        LOGGER.info("Starting Mother import from RCH web service");
+        LOGGER.info("Pulling mother data for {}, for states {}", referenceDate, stateIds);
+
+        for (Long stateId : stateIds) {
+            sendImportEventForAUserType(stateId, RchUserType.MOTHER, referenceDate, endpoint, Constants.RCH_MOTHER_IMPORT_SUBJECT);
+        }
+        LOGGER.info("Initiated import workflow from RCH for mothers");
+
+    }
+    @Override
+    public void importChildFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint) {
+        LOGGER.info("Starting Child import from RCH web service");
+        LOGGER.info("Pulling child data for {}, for states {}", referenceDate, stateIds);
+
+        for (Long stateId : stateIds) {
+            sendImportEventForAUserType(stateId, RchUserType.CHILD, referenceDate, endpoint, Constants.RCH_CHILD_IMPORT_SUBJECT);
+        }
+        LOGGER.info("Initiated import workflow from RCH for children");
+    }
+    @Override
+    public void importAshaFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint) {
+        LOGGER.info("Starting Asha import from RCH web service");
+        LOGGER.info("Pulling asha data for {}, for states {}", referenceDate, stateIds);
+
+        for (Long stateId : stateIds) {
+            sendImportEventForAUserType(stateId, RchUserType.ASHA, referenceDate, endpoint, Constants.RCH_ASHA_IMPORT_SUBJECT);
+        }
+        LOGGER.info("Initiated import workflow from RCH for asha");
+    }
+
+    @Override
+    public void importTalukaFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint) {
+        LOGGER.info("Starting Taluka import from RCH web service");
+        LOGGER.info("Pulling taluka data for {}, for states {}", referenceDate, stateIds);
+
+        for (Long stateId : stateIds) {
+            sendImportEventForAUserType(stateId, RchUserType.TALUKA, referenceDate, endpoint, Constants.RCH_TALUKA_IMPORT_SUBJECT);
+        }
+        LOGGER.info("Initiated import workflow from RCH for taluka");
+    }
+    @Override
+    public void importVillageFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint){
+        LOGGER.info("Starting Village import from RCH web service");
+        LOGGER.info("Pulling village data for {}, for states {}", referenceDate, stateIds);
+
+        for (Long stateId : stateIds) {
+            sendImportEventForAUserType(stateId, RchUserType.VILLAGE, referenceDate, endpoint, Constants.RCH_VILLAGE_IMPORT_SUBJECT);
+        }
+        LOGGER.info("Initiated import workflow from RCH for villages");
+    }
+    @Override
+    public void importHealthBlockFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint) {
+        LOGGER.info("Starting Healthblock import from RCH web service");
+        LOGGER.info("Pulling Healthblock data for {}, for states {}", referenceDate, stateIds);
+
+        for (Long stateId : stateIds) {
+            sendImportEventForAUserType(stateId, RchUserType.HEALTHBLOCK, referenceDate, endpoint, Constants.RCH_HEALTHBLOCK_IMPORT_SUBJECT);
+        }
+        LOGGER.info("Initiated import workflow from RCH for health blocks");
+    }
+    @Override
+    public void importHealthFacilityFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint){
+        LOGGER.info("Starting Healthfacility import from RCH web service");
+        LOGGER.info("Pulling Healthfacility data for {}, for states {}", referenceDate, stateIds);
+
+        for (Long stateId : stateIds) {
+            sendImportEventForAUserType(stateId, RchUserType.HEALTHFACILITY, referenceDate, endpoint, Constants.RCH_HEALTHFACILITY_IMPORT_SUBJECT);
+        }
+        LOGGER.info("Initiated import workflow from RCH for Healthfacility");
+    }
+    @Override
+    public void importHealthSubFacilityFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint){
+        LOGGER.info("Starting Healthsubfacility import from RCH web service");
+        LOGGER.info("Pulling Healthsubfacility data for {}, for states {}", referenceDate, stateIds);
+
+        for (Long stateId : stateIds) {
+            sendImportEventForAUserType(stateId, RchUserType.HEALTHSUBFACILITY, referenceDate, endpoint, Constants.RCH_HEALTHSUBFACILITY_IMPORT_SUBJECT);
+        }
+        LOGGER.info("Initiated import workflow from RCH for Healthsubfacility");
+    }
+    @Override
+    public void importDistrictFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint) {
+        LOGGER.info("Starting District import from RCH web service");
+        LOGGER.info("Pulling District data for {}, for states {}", referenceDate, stateIds);
+
+        for (Long stateId : stateIds) {
+            sendImportEventForAUserType(stateId, RchUserType.DISTRICT, referenceDate, endpoint, Constants.RCH_DISTRICT_IMPORT_SUBJECT);
+        }
+        LOGGER.info("Initiated import workflow from RCH for District");
+    }
+    @Override
+    public void importTalukaHealthBlockFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint) {
+        LOGGER.info("Starting TalukaHealthblock import from RCH web service");
+        LOGGER.info("Pulling TalukaHealthblock data for {}, for states {}", referenceDate, stateIds);
+
+        for (Long stateId : stateIds) {
+            sendImportEventForAUserType(stateId, RchUserType.TALUKAHEALTHBLOCK, referenceDate, endpoint, Constants.RCH_TALUKA_HEALTHBLOCK_IMPORT_SUBJECT);
+        }
+        LOGGER.info("Initiated import workflow from RCH for TalukaHealthblock");
+    }
+    @Override
+    public void importVillageHealthSubFacilityFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint) {
+        LOGGER.info("Starting villagesubfacility import from RCH web service");
+        LOGGER.info("Pulling villagesubfacility data for {}, for states {}", referenceDate, stateIds);
+
+        for (Long stateId : stateIds) {
+            sendImportEventForAUserType(stateId, RchUserType.VILLAGEHEALTHSUBFACILITY, referenceDate, endpoint, Constants.RCH_VILLAGEHEALTHSUBFACILITY_IMPORT_SUBJECT);
+        }
+        LOGGER.info("Initiated import workflow from RCH for villagesubfacility");
+    }
+
     @MotechListener(subjects = { Constants.RCH_MOTHER_IMPORT_SUBJECT })
     @Transactional
     @Override

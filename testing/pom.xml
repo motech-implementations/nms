@@ -7,12 +7,12 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.38</version>
+        <version>1.0.38.1</version>
         <relativePath>../</relativePath>
     </parent>
 
     <artifactId>testing</artifactId>
-    <version>1.0.38</version>
+    <version>1.0.38.1</version>
     <packaging>bundle</packaging>
     <name>Testing module</name>
 
@@ -35,19 +35,14 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>1.3.9</version>
+        </dependency>
+
+
         <!-- common properties -->
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>props</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>kilkari</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>org.motechproject.nms</groupId>
             <artifactId>api</artifactId>
@@ -56,9 +51,10 @@
 
         <dependency>
             <groupId>org.motechproject.nms</groupId>
-            <artifactId>imi</artifactId>
+            <artifactId>csv</artifactId>
             <version>${project.version}</version>
         </dependency>
+
 
         <dependency>
             <groupId>org.motechproject.nms</groupId>
@@ -74,30 +70,31 @@
 
         <dependency>
             <groupId>org.motechproject.nms</groupId>
+            <artifactId>imi</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>kilkari</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>mcts</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
             <artifactId>mobile-academy</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.motechproject.nms</groupId>
-            <artifactId>region</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>csv</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>tracking</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>mcts</artifactId>
+            <artifactId>props</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -109,13 +106,32 @@
 
         <dependency>
             <groupId>org.motechproject.nms</groupId>
+            <artifactId>region</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
             <artifactId>rejection-handler</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>tracking</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.servicemix.bundles</groupId>
             <artifactId>org.apache.servicemix.bundles.javax.mail</artifactId>
         </dependency>
+
+        <!--<dependency>-->
+            <!--<groupId>org.springframework</groupId>-->
+            <!--<artifactId>spring-test</artifactId>-->
+            <!--<version>${spring.version}</version>-->
+        <!--</dependency>-->
 
     </dependencies>
 
@@ -180,7 +196,8 @@
                                     </excludes>
                                     <encoding>UTF-8</encoding>
                                     <summaryFile>target/failsafe-reports/failsafe-summary-it.xml</summaryFile>
-                                    <argLine>-Xmx2G -XX:MaxPermSize=2G -Xms2G -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=9000</argLine>
+                                    <!--<argLine>-Xmx8G -XX:MaxPermSize=8G -Xms8G -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005</argLine>-->
+                                    <argLine>-Xms512m -Xmx1028m -XX:PermSize=512m -XX:MaxPermSize=2048m</argLine>
                                     <systemPropertiesFile>${modules.root.dir}/maven.properties</systemPropertiesFile>
                                     <runOrder>random</runOrder>
                                 </configuration>
@@ -259,15 +276,7 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
-                <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
-                </configuration>
-            </plugin>
+           
 
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -308,6 +317,16 @@
                             net.sf.cglib.reflect,
                             org.springframework.transaction,
                             javax.mail,
+                            org.motechproject.nms.flw.domain,
+                            org.motechproject.nms.kilkari.domain,
+                            org.motechproject.nms.props.domain,
+                            org.motechproject.nms.region.domain,
+                            org.datanucleus.enhancement,
+                            org.springframework.validation.beanvalidation,
+                            org.springframework.core,
+                            org.springframework.cglib.proxy,
+                            org.springframework.cglib.core,
+                            org.motechproject.nms.api.web.domain,
                             *
                         </Import-Package>
                     </instructions>
@@ -342,30 +361,32 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>aspectj-maven-plugin</artifactId>
-                <version>1.4</version>
+                <version>1.8</version>
                 <dependencies>
                     <dependency>
                         <groupId>org.aspectj</groupId>
                         <artifactId>aspectjrt</artifactId>
-                        <version>1.7.0</version>
+                        <version>1.8.13</version>
                     </dependency>
                     <dependency>
                         <groupId>org.aspectj</groupId>
                         <artifactId>aspectjtools</artifactId>
-                        <version>1.7.0</version>
+                        <version>1.8.13</version>
                     </dependency>
                 </dependencies>
                 <executions>
                     <execution>
                         <goals>
                             <goal>compile</goal>
-                            <!--<goal>test-compile</goal>-->
+                            <goal>test-compile</goal>
                         </goals>
                     </execution>
                 </executions>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
+					<complianceLevel>1.8</complianceLevel>
+                        
                     <aspectLibraries>
                         <dependency>
                             <groupId>org.motechproject.nms</groupId>
@@ -374,6 +395,7 @@
                     </aspectLibraries>
                 </configuration>
             </plugin>
+			
         </plugins>
     </build>
 </project>

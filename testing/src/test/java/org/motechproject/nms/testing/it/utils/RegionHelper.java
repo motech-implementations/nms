@@ -284,17 +284,21 @@ public class RegionHelper {
         taluka.setName(name);
         taluka.setRegionalName(regionalName(name));
         taluka.setIdentity(identity);
+        taluka.setStateIdOID(district.getState().getId());
         return taluka;
     }
 
     public static HealthBlock createHealthBlock(Taluka taluka, Long code, String name, String hq) {
         HealthBlock healthBlock = new HealthBlock();
-        healthBlock.addTaluka(taluka);
+        //TODO HARITHA commented 2 lines m-n taluka hb
+        //healthBlock.addTaluka(taluka);
         healthBlock.setDistrict(taluka.getDistrict());
         healthBlock.setCode(code);
         healthBlock.setName(name);
         healthBlock.setRegionalName(regionalName(name));
         healthBlock.setHq(hq);
+        healthBlock.setTalukaIdOID(taluka.getId());
+        healthBlock.setStateIdOID(taluka.getStateIdOID());
         return healthBlock;
     }
 
@@ -315,6 +319,7 @@ public class RegionHelper {
         healthFacility.setName(name);
         healthFacility.setRegionalName(regionalName(name));
         healthFacility.setHealthFacilityType(type);
+        healthFacility.setTalukaIdOID(healthBlock.getTalukaIdOID());
         return healthFacility;
     }
 

@@ -59,7 +59,8 @@ public class LocationDataImportController {
             try (InputStream in = csvFile.getInputStream()) {
                 LocationDataImportService importService = getLocationDataImportServiceMapping().get(location);
                 if (null != importService) {
-                    importService.importData(new InputStreamReader(in));
+                    //TODO HARITHA commenting for now -- this webservice might have to be removed ! no longer used
+                    //importService.importData(new InputStreamReader(in));
                     csvAuditService.auditSuccess(csvFile.getOriginalFilename(), endpoint);
                 } else {
                     String error = String.format("Location type '%s' not supported", location);

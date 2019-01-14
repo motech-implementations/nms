@@ -7,6 +7,8 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.metrics.service.Timer;
+import org.motechproject.nms.region.domain.District;
+import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.repository.VillageDataService;
@@ -77,16 +79,16 @@ public class VillageServiceImpl implements VillageService {
 
     @Override
     @Transactional
-    public Long createUpdateVillages(final List<Map<String, Object>> villages, final Map<String, Taluka> talukaHashMap) {
+    public Long createUpdateVillages(final List<Map<String, Object>> villages, final Map<String, State> stateHashMap, final Map<String, District> districtHashMap, final Map<String, Taluka> talukaHashMap) {
         Timer queryTimer = new Timer();
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
             public String getSqlQuery() {
-                String villageValues = villageQuerySet(villages, talukaHashMap);
+                String villageValues = villageQuerySet(villages, stateHashMap, districtHashMap, talukaHashMap);
                 String query = "";
                 if (!villageValues.isEmpty()) {
-                    query = "INSERT into nms_villages (`vcode`, `svid`, `name`, `taluka_id_OID`, " +
+                    query = "INSERT into nms_villages (`vcode`, `svid`, `name`, `state_id_OID`, `district_id_OID`,`taluka_id_OID`, " +
                             " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
                             villageValues +
                             " ON DUPLICATE KEY UPDATE " +
@@ -113,7 +115,7 @@ public class VillageServiceImpl implements VillageService {
         return createdVillages;
     }
 
-    private String villageQuerySet(List<Map<String, Object>> villages, Map<String, Taluka> talukaHashMap) { //NO CHECKSTYLE Cyclomatic Complexity
+    private String villageQuerySet(List<Map<String, Object>> villages, Map<String, State> stateHashMap, Map<String, District> districtHashMap, Map<String, Taluka> talukaHashMap) { //NO CHECKSTYLE Cyclomatic Complexity
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
         DateTime dateTimeNow = new DateTime();
@@ -121,6 +123,8 @@ public class VillageServiceImpl implements VillageService {
         for (Map<String, Object> village : villages) {
             if (village.get(LocationConstants.CSV_STATE_ID) != null && village.get(LocationConstants.DISTRICT_ID) != null &&
                     village.get(LocationConstants.TALUKA_ID) != null) {
+                State state = stateHashMap.get(village.get(LocationConstants.CSV_STATE_ID).toString());
+                District district = districtHashMap.get(village.get(LocationConstants.CSV_STATE_ID).toString() + "_" + village.get(LocationConstants.DISTRICT_ID).toString());
                 Taluka taluka = talukaHashMap.get(village.get(LocationConstants.CSV_STATE_ID).toString() + "_" +
                         village.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                         village.get(LocationConstants.TALUKA_ID).toString().trim());
@@ -134,6 +138,8 @@ public class VillageServiceImpl implements VillageService {
                     stringBuilder.append(0 + ", ");
                     stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(village.get(LocationConstants.VILLAGE_NAME) == null ?
                             "" : village.get(LocationConstants.VILLAGE_NAME).toString().replaceAll(":", "")) + QUOTATION_COMMA);
+                    stringBuilder.append(state.getId() + ", ");
+                    stringBuilder.append(district.getId() + ", ");
                     stringBuilder.append(taluka.getId() + ", ");
                     stringBuilder.append(MOTECH_STRING);
                     stringBuilder.append(MOTECH_STRING);

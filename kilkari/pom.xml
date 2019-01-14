@@ -5,12 +5,12 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.38</version>
+        <version>1.0.38.1</version>
         <relativePath>../</relativePath>
     </parent>
 
     <artifactId>kilkari</artifactId>
-    <version>1.0.38</version>
+    <version>1.0.38.1</version>
     <packaging>bundle</packaging>
     <name>Kilkari module</name>
 
@@ -73,15 +73,7 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
-                <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
-                </configuration>
-            </plugin>
+           
 
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -119,6 +111,9 @@
                             org.motechproject.nms.rejectionhandler.domain,
                             net.sf.cglib.proxy,
                             net.sf.cglib.core,
+                            org.datanucleus.enhancement,
+                            org.springframework.validation.beanvalidation,
+                            org.springframework.core,
                             *
                         </Import-Package>
                     </instructions>
@@ -153,17 +148,17 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>aspectj-maven-plugin</artifactId>
-                <version>1.4</version>
+                <version>1.8</version>
                 <dependencies>
                     <dependency>
                         <groupId>org.aspectj</groupId>
                         <artifactId>aspectjrt</artifactId>
-                        <version>1.7.0</version>
+                        <version>1.8.13</version>
                     </dependency>
                     <dependency>
                         <groupId>org.aspectj</groupId>
                         <artifactId>aspectjtools</artifactId>
-                        <version>1.7.0</version>
+                        <version>1.8.13</version>
                     </dependency>
                 </dependencies>
                 <executions>
@@ -175,8 +170,10 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
+					<complianceLevel>1.8</complianceLevel>
+                        
                     <aspectLibraries>
                         <dependency>
                             <groupId>org.motechproject.nms</groupId>
@@ -185,6 +182,7 @@
                     </aspectLibraries>
                 </configuration>
             </plugin>
+			
         </plugins>
     </build>
 </project>

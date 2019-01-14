@@ -330,5 +330,7 @@ public class KilkariController extends BaseController {
         }
 
         subscriptionService.deactivateSubscription(subscription, DeactivationReason.DEACTIVATED_BY_USER);
+
+        log("RESPONSE: /kilkari/subscription (DELETE)", "Success");
     }
 }

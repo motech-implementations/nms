@@ -7,6 +7,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,20 +43,16 @@ import org.ops4j.pax.exam.ExamFactory;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.inject.Inject;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
+import java.io.*;
 import java.util.HashMap;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -90,6 +87,8 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
     BookmarkDataService bookmarkDataService;
     @Inject
     ActivityDataService activityDataService;
+    @Inject
+    PlatformTransactionManager transactionManager;
 
     private RegionHelper rh;
 
@@ -701,6 +700,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
     // TODO https://applab.atlassian.net/browse/NMS-255
     @Test
     public void verifyFT558() throws InterruptedException, IOException {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         // create FLW record having state as "Delhi" and district as "new delhi district"
         FrontLineWorker flw = new FrontLineWorker("Aisha Bibi", 1234567899L);
         flw.setMctsFlwId("10");
@@ -709,6 +709,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
         flw.setLanguage(rh.hindiLanguage());
         flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
+        transactionManager.commit(status);
 
         // update FLW district to "southDelhiDistrict"
         rh.southDelhiDistrict();
@@ -717,6 +718,7 @@ public class FrontLineWorkerUpdateImportServiceBundleIT extends BasePaxIT {
                 "flw_FT_558.txt");
         assertEquals(HttpStatus.SC_OK, response.getStatusLine()
                 .getStatusCode());
+
 
         flw = frontLineWorkerService.getByContactNumber(1234567899L);
         assertEquals(rh.southDelhiDistrict().getCode(), flw.getDistrict()

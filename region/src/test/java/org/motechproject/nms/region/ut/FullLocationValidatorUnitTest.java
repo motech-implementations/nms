@@ -74,11 +74,11 @@ public class FullLocationValidatorUnitTest {
         taluka.setDistrict(district);
         taluka.getVillages().add(village);
         village.setTaluka(taluka);
-
-        healthBlock.addTaluka(taluka);
+        //TODO HARITHA commented 2 lines m-n taluka hb
+        //healthBlock.addTaluka(taluka);
         healthBlock.setDistrict(district);
 
-        taluka.addHealthBlock(healthBlock);
+        //taluka.addHealthBlock(healthBlock);
 
         healthBlock.getHealthFacilities().add(healthFacility);
         healthFacility.setHealthBlock(healthBlock);
@@ -187,7 +187,7 @@ public class FullLocationValidatorUnitTest {
         TestLocation testLocation = new TestLocation();
         buildValidFullLocation(testLocation);
 
-        testLocation.getState().setDistricts(Collections.<District>emptySet());
+        testLocation.getState().setDistricts(new HashSet<>());
         testLocation.getDistrict().setState(null);
 
         Set<ConstraintViolation<TestLocation>> constraintViolations = validator.validate(testLocation);
@@ -202,7 +202,7 @@ public class FullLocationValidatorUnitTest {
         TestLocation testLocation = new TestLocation();
         buildValidFullLocation(testLocation);
 
-        testLocation.getDistrict().setTalukas(Collections.<Taluka>emptyList());
+        testLocation.getDistrict().setTalukas(new ArrayList<>());
         testLocation.getTaluka().setDistrict(null);
 
         Set<ConstraintViolation<TestLocation>> constraintViolations = validator.validate(testLocation);

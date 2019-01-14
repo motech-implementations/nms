@@ -1,5 +1,7 @@
 package org.motechproject.nms.region.service.impl;
 
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.io.IOUtils;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.motechproject.mds.query.SqlQueryExecution;
@@ -38,9 +40,9 @@ import org.motechproject.nms.region.service.VillageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.prefs.CsvPreference;
 
@@ -52,6 +54,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -166,6 +169,7 @@ public class LocationServiceImpl implements LocationService {
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
     @SuppressWarnings("PMD")
+
     public Map<String, Object> getLocations(Map<String, Object> map, boolean createIfNotExists) throws InvalidLocationException {
 
         Map<String, Object> locations = new HashMap<>();
@@ -237,11 +241,13 @@ public class LocationServiceImpl implements LocationService {
         HealthBlock healthBlock = healthBlockService.findByDistrictAndCode(district, (Long) map.get(HEALTHBLOCK_ID));
         if (healthBlock == null && createIfNotExists) {
             healthBlock = new HealthBlock();
-            healthBlock.addTaluka(taluka);
+            //TODO HARITHA removing talukas commenting 2 lines
+            healthBlock.setTalukaIdOID(taluka.getId());
+            //healthBlock.addTaluka(taluka);
             healthBlock.setDistrict(district);
             healthBlock.setCode((Long) map.get(HEALTHBLOCK_ID));
             healthBlock.setName((String) map.get(HEALTHBLOCK_NAME));
-            taluka.addHealthBlock(healthBlock);
+            //taluka.addHealthBlock(healthBlock);
             district.getHealthBlocks().add(healthBlock);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthBlock, taluka, healthBlock.getId()));
         }
@@ -270,13 +276,14 @@ public class LocationServiceImpl implements LocationService {
         }
         HealthSubFacility healthSubFacility = healthSubFacilityService.findByHealthFacilityAndCode(healthFacility, (Long) map.get(SUBCENTRE_ID));
         if (healthSubFacility == null && createIfNotExists) {
+            //TODO HARITHA commented 2 lines m-n taluka hb
             healthSubFacility = new HealthSubFacility();
-            healthSubFacility.addVillage(village);
+            //healthSubFacility.addVillage(village);
             healthSubFacility.setHealthFacility(healthFacility);
             healthSubFacility.setCode((Long) map.get(SUBCENTRE_ID));
             healthSubFacility.setName((String) map.get(SUBCENTRE_NAME));
             healthFacility.getHealthSubFacilities().add(healthSubFacility);
-            village.addHealthSubFacility(healthSubFacility);
+            //village.addHealthSubFacility(healthSubFacility);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthSubFacility, healthFacility, healthSubFacility.getId()));
         }
         locations.put(SUBCENTRE_ID, healthSubFacility);
@@ -315,11 +322,14 @@ public class LocationServiceImpl implements LocationService {
         HealthBlock healthBlock = healthBlockService.findByTalukaAndCode(taluka, (Long) flw.get(HEALTHBLOCK_ID));
         if (healthBlock == null && createIfNotExists) {
             healthBlock = new HealthBlock();
-            healthBlock.addTaluka(taluka);
+            //TODO HARITHA  removed list and added single id !!!
+            healthBlock.setTalukaIdOID(taluka.getId());
+
+            //healthBlock.addTaluka(taluka);
             healthBlock.setDistrict(taluka.getDistrict());
             healthBlock.setCode((Long) flw.get(HEALTHBLOCK_ID));
             healthBlock.setName((String) flw.get(HEALTHBLOCK_NAME));
-            taluka.addHealthBlock(healthBlock);
+            //taluka.addHealthBlock(healthBlock);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthBlock, taluka, healthBlock.getId()));
         }
         return healthBlock;
@@ -641,6 +651,7 @@ public class LocationServiceImpl implements LocationService {
                 partNumber++;
                 if (recordListPart.size()>0) {
                     totalUpdatedRecords += createLocationPart(recordListPart, locationType, rchImportFile.getOriginalFilename(), partNumber);
+
                 }
                 recordListPart.clear();
             }
@@ -669,21 +680,21 @@ public class LocationServiceImpl implements LocationService {
                 case TALUKA:
                     stateHashMap = stateService.fillStateIds(recordList);
                     districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
-                    updatedRecords = talukaService.createUpdateTalukas(recordList, districtHashMap);
+                    updatedRecords = talukaService.createUpdateTalukas(recordList, stateHashMap, districtHashMap);
                     break;
 
                 case VILLAGE:
                     stateHashMap = stateService.fillStateIds(recordList);
                     districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
                     talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
-                    updatedRecords = villageService.createUpdateVillages(recordList, talukaHashMap);
+                    updatedRecords = villageService.createUpdateVillages(recordList, stateHashMap, districtHashMap, talukaHashMap);
                     break;
 
                 case HEALTHBLOCK:
                     stateHashMap = stateService.fillStateIds(recordList);
                     districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
                     talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
-                    updatedRecords = healthBlockService.createUpdateHealthBlocks(recordList, districtHashMap, talukaHashMap);
+                    updatedRecords = healthBlockService.createUpdateHealthBlocks(recordList, stateHashMap, districtHashMap, talukaHashMap);
                     break;
 
                 case TALUKAHEALTHBLOCK:
@@ -695,7 +706,7 @@ public class LocationServiceImpl implements LocationService {
                     districtHashMap = districtService.fillDistrictIds(recordList, stateHashMap);
                     talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
                     healthBlockHashMap = healthBlockService.fillHealthBlockIds(recordList, districtHashMap);
-                    updatedRecords = healthFacilityService.createUpdateHealthFacilities(recordList, talukaHashMap, healthBlockHashMap);
+                    updatedRecords = healthFacilityService.createUpdateHealthFacilities(recordList, stateHashMap, districtHashMap, talukaHashMap, healthBlockHashMap);
                     break;
 
                 case HEALTHSUBFACILITY:
@@ -704,7 +715,7 @@ public class LocationServiceImpl implements LocationService {
                     talukaHashMap = talukaService.fillTalukaIds(recordList, districtHashMap);
                     //Adding Health Facilities using Talukas as HealthBlock code is not given
                     healthFacilityHashMap = healthFacilityService.fillHealthFacilitiesFromTalukas(recordList, talukaHashMap);
-                    updatedRecords = healthSubFacilityService.createUpdateHealthSubFacilities(recordList, talukaHashMap, healthFacilityHashMap);
+                    updatedRecords = healthSubFacilityService.createUpdateHealthSubFacilities(recordList, stateHashMap, districtHashMap, talukaHashMap, healthFacilityHashMap);
                     break;
 
                 case VILLAGEHEALTHSUBFACILITY:
@@ -825,10 +836,11 @@ public class LocationServiceImpl implements LocationService {
                 String[] fileNameSplitter =  f.getName().split("_");
                 if(fileNameSplitter[1].equalsIgnoreCase(stateId.toString()) && fileNameSplitter[0].equalsIgnoreCase(locationType)){
                     try {
-                        FileInputStream input = new FileInputStream(f);
-                        csvFilesByStateIdAndRchUserType = new MockMultipartFile("file",
-                                f.getName(), "text/plain", IOUtils.toByteArray(input));
-                    } catch (IOException e) {
+                        FileItem fileItem = new DiskFileItem("file",  "text/plain", false, f.getName(), (int) f.length(), f.getParentFile());
+                        IOUtils.copy(new FileInputStream(f), fileItem.getOutputStream());
+                        MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
+                        csvFilesByStateIdAndRchUserType = multipartFile;
+                    }catch(IOException e) {
                         LOGGER.debug("IO Exception", e);
                     }
                 }
@@ -850,6 +862,9 @@ public class LocationServiceImpl implements LocationService {
         Map<String, Object> record;
         while (null != (record = csvImporter.read())) {
             recordList.add(record);
+            LOGGER.info("CSV READing .....");
+            for(String key : record.keySet())
+            LOGGER.info(key + "-" + record.get(key));
             count++;
         }
         LOGGER.debug("{} records added to object", count);
@@ -958,8 +973,6 @@ public class LocationServiceImpl implements LocationService {
             String stateKey = stateIdMap.get(district.getState().getId());
             districtHashMap.put(stateKey + "_" + district.getCode(), district);
         }
-
-
     }
 
 

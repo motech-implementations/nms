@@ -10,13 +10,39 @@
         </layout>
     </appender>
 
+    <appender name="file" class="org.apache.log4j.RollingFileAppender">
+        <param name="File" value="main.log" />
+        <param name="Append" value="true" />
+        <param name="ImmediateFlush" value="true" />
+        <param name="MaxFileSize" value="10MB" />
+        <param name="MaxBackupIndex" value="5" />
+
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d %d{Z} [%t] %-5p (%F:%L) - %m%n" />
+        </layout>
+    </appender>
+
     <logger name="org.motechproject.nms">
-        <level value="ALL"/>
+        <level value="DEBUG"/>
+    </logger>
+
+    <logger name="DataNucleus.Datastore.Native">
+        <level value="DEBUG"/>
+    </logger>
+
+    <logger name="org.motechproject.testing">
+        <level value="DEBUG"/>
+    </logger>
+
+    <logger name="org.motechproject.mds.reflections">
+        <level value="DEBUG"/>
     </logger>
 
     <root>
         <priority value="ERROR"/>
         <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="file" />
+
     </root>
 
 </log4j:configuration>
