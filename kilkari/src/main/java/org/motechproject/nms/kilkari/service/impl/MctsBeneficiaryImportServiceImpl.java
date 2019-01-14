@@ -270,7 +270,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 subscriptionService.deactivateSubscription(subscription, DeactivationReason.MATERNAL_DEATH);
             }
             LOGGER.debug("MotherImportRejection::importMotherRecord Start synchronized block " + beneficiaryId);
-            return createUpdateMotherRejections(flagForMcts, record, action, null, true);
+            createUpdateMotherRejections(flagForMcts, record, action, null, true);
+            return null;
 
         }
     }
@@ -562,7 +563,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             ChildImportRejection child;
             for (String rchId : rchIds) {
                 child = (ChildImportRejection) rejectedRecords.get(rchId);
-                if (childRejects.get(rchId) != null) {
+                if (childRejects != null && childRejects.get(rchId) != null) {
                     updateChildRejectionRecord(childRejects, rchId, child, updateObjects);
                     continue;
                 }
@@ -644,7 +645,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         ChildImportRejection child;
         for (String mctsId : mctsIds) {
             child = (ChildImportRejection) rejectedRecords.get(mctsId);
-            if (childRejects.get(mctsId) != null) {
+            if (childRejects != null && childRejects.get(mctsId) != null) {
                 updateChildRejectionRecord(childRejects, mctsId, child, updateObjects);
                 continue;
             }
@@ -703,7 +704,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         MotherImportRejection mother;
         for (String rchId : rchIds) {
             mother = (MotherImportRejection) rejectedRecords.get(rchId);
-            if (motherRejects.get(rchId) != null) {
+            if (motherRejects != null && motherRejects.get(rchId) != null) {
                 updateMotherRejectionRecord(motherRejects, rchId, mother, updateObjects);
                 continue;
             }
@@ -781,7 +782,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         MotherImportRejection mother;
         for (String mctsId : mctsIds) {
             mother = (MotherImportRejection) rejectedRecords.get(mctsId);
-            if (motherRejects.get(mctsId) != null) {
+            if (motherRejects != null && motherRejects.get(mctsId) != null) {
                 updateMotherRejectionRecord(motherRejects, mctsId, mother, updateObjects);
                 continue;
             }

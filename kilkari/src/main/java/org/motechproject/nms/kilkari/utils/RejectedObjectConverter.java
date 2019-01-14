@@ -535,7 +535,7 @@ public final class RejectedObjectConverter {
 
         childRecord.setMotherId(motherId);
 
-        childRecord.setEntryType(record.get(KilkariConstants.DEATH) == null || record.get(KilkariConstants.DEATH).toString().trim().isEmpty() ? null : ((Boolean) record.get(KilkariConstants.DEATH) ? 1 : 0));
+        childRecord.setEntryType(record.get(KilkariConstants.DEATH) == null || record.get(KilkariConstants.DEATH).toString().trim().isEmpty() ? null : String.valueOf((Boolean) record.get(KilkariConstants.DEATH) ? 1 : 0));
 
         childRecord.setGpVillage(record.get(KilkariConstants.GP_VILLAGE) == null ? null : (String) record.get(KilkariConstants.GP_VILLAGE));
         childRecord.setAddress(record.get(KilkariConstants.ADDRESS) == null ? null : (String) record.get(KilkariConstants.ADDRESS));
@@ -629,7 +629,7 @@ public final class RejectedObjectConverter {
         rchChildRecord.setMctsMotherIdNo(record.get(KilkariConstants.MCTS_MOTHER_ID) == null ? null : record.get(KilkariConstants.MCTS_MOTHER_ID).toString());
         rchChildRecord.setRegistrationNo(record.get(KilkariConstants.RCH_ID) == null ? null : record.get(KilkariConstants.RCH_ID).toString());
         rchChildRecord.setMotherRegistrationNo(record.get(KilkariConstants.RCH_MOTHER_ID) == null ? null : record.get(KilkariConstants.RCH_MOTHER_ID).toString());
-        rchChildRecord.setEntryType(record.get(KilkariConstants.DEATH) == null || record.get(KilkariConstants.DEATH).toString().trim().isEmpty() ? null : ((Boolean) record.get(KilkariConstants.DEATH) ? 1 : 0));
+        rchChildRecord.setEntryType(record.get(KilkariConstants.DEATH) == null || record.get(KilkariConstants.DEATH).toString().trim().isEmpty() ? null : String.valueOf((Boolean) record.get(KilkariConstants.DEATH) ? 1 : 0));
         rchChildRecord.setExecDate(record.get(KilkariConstants.EXECUTION_DATE) == null ? null : record.get(KilkariConstants.EXECUTION_DATE).toString());
 
         return rchChildRecord;
