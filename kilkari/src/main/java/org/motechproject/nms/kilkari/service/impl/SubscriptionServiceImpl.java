@@ -542,54 +542,43 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return true;
     }
 
-    /**
-     * The return statement has been changed from boolean to integer to accomodate the HOLD to PENDING_ACTIVATION scenario.
-     */
-    private Integer enrollmentPreconditionCheckForUpkeep(Subscriber subscriber, SubscriptionPack pack, SubscriptionOrigin importOrigin) {
+    private boolean enrollmentPreconditionCheckForUpkeep(Subscriber subscriber, SubscriptionPack pack, SubscriptionOrigin importOrigin) {
         if (pack.getType() == SubscriptionPackType.CHILD) {
 
             if (subscriber.getDateOfBirth() == null) {
-                return 0;
+                return false;
             }
 
             if (Subscription.hasCompletedForStartDate(subscriber.getDateOfBirth(), DateTime.now(), pack)) {
-                return 0;
+                return false;
             }
 
             if (getActiveSubscriptionForUpkeep(subscriber, SubscriptionPackType.CHILD) != null) {
                 // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(), (importOrigin == SubscriptionOrigin.MCTS_IMPORT) ? subscriber.getChild().getBeneficiaryId() : subscriber.getChild().getRchId(),
                         SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.CHILD, importOrigin);
-                return 0;
-            }
-
-            if (Subscription.notReadyForStartDate(subscriber.getDateOfBirth(), DateTime.now(), pack)) {
-                return 1;
+                return false;
             }
         } else { // SubscriptionPackType.PREGNANCY
 
             if (subscriber.getLastMenstrualPeriod() == null) {
-                return 0;
+                return false;
             }
 
             if (Subscription.hasCompletedForStartDate(subscriber.getLastMenstrualPeriod().plusDays(KilkariConstants.THREE_MONTHS),
                     DateUtil.now(), pack)) {
-                return 0;
+                return false;
             }
 
             if (getActiveSubscriptionForUpkeep(subscriber, SubscriptionPackType.PREGNANCY) != null) {
                 // reject the subscription if it already exists
                 logRejectedSubscription(subscriber.getCallingNumber(), (importOrigin == SubscriptionOrigin.MCTS_IMPORT) ? subscriber.getMother().getBeneficiaryId() : subscriber.getMother().getRchId(),
                         SubscriptionRejectionReason.ALREADY_SUBSCRIBED, SubscriptionPackType.PREGNANCY, importOrigin);
-                return 0;
-            }
-
-            if (Subscription.notReadyForStartDate(subscriber.getLastMenstrualPeriod().plusDays(KilkariConstants.THREE_MONTHS), DateUtil.now(), pack)) {
-                return 1;
+                return false;
             }
         }
 
-        return 2;
+        return true;
     }
 
     private void logRejectedSubscription(long callingNumber, String beneficiaryId, SubscriptionRejectionReason reason,
@@ -739,7 +728,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         long currentActive = subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
         LOGGER.info("Found {} active subscriptions", currentActive);
 
-        final long openSlots = maxActiveSubscriptions - subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
+        long openSlots = maxActiveSubscriptions - subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
         if (openSlots < 1) {
             LOGGER.info("No open slots found for hold subscription activation. Slots: {}", openSlots);
             return false;
@@ -749,7 +738,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             @Override
             public String getSqlQuery() {
                 String query = "UPDATE nms_subscriptions SET status='ACTIVE', activationDate = :now, " +
-                                "modificationDate = :now WHERE status='PENDING_ACTIVATION' AND startDate < :upto limit :count";
+                                "modificationDate = :now WHERE status='PENDING_ACTIVATION' AND startDate < :upto";
                 LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
                 return query;
             }
@@ -759,7 +748,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 Map params = new HashMap();
                 params.put("now", DateTime.now().toString(KilkariConstants.TIME_FORMATTER));
                 params.put("upto", upToDateTime.toString(KilkariConstants.TIME_FORMATTER));
-                params.put("count", openSlots);
                 query.executeWithMap(params);
                 return null;
             }
@@ -819,18 +807,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         Subscriber currentSubscriber = currentSubscription.getSubscriber();
         SubscriptionPack currentPack = currentSubscription.getSubscriptionPack();
 
-        if (enrollmentPreconditionCheckForUpkeep(currentSubscriber, currentPack, currentSubscription.getOrigin()) == 2) { // Don't need a full check but it doesn't hurt
+        if (enrollmentPreconditionCheckForUpkeep(currentSubscriber, currentPack, currentSubscription.getOrigin())) { // Don't need a full check but it doesn't hurt
             currentSubscription.setStatus(SubscriptionStatus.ACTIVE);
             subscriptionDataService.update(currentSubscription);
             return true;
-        } else if (enrollmentPreconditionCheckForUpkeep(currentSubscriber, currentPack, currentSubscription.getOrigin()) == 1) {
-            currentSubscription.setStatus(SubscriptionStatus.PENDING_ACTIVATION);
-            subscriptionDataService.update(currentSubscription);
-            return true;
-        } else {
-            LOGGER.debug("We will not be activating this Hold subscription : {}", currentSubscription.getSubscriptionId());
-            return false;
         }
+        LOGGER.debug("We will not be activating this Hold subscription : {}", currentSubscription.getSubscriptionId());
+        return false;
     }
 
     @Override

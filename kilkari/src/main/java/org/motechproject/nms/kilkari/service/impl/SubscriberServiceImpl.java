@@ -501,8 +501,7 @@ public class SubscriberServiceImpl implements SubscriberService {
 
         liveBirthChildDeathCheck(finalSubscription, record);
 
-        childRejectionMcts(convertMapToChild(record), true, null, action);
-        return null;
+        return childRejectionMcts(convertMapToChild(record), true, null, action);
 
     }
 
@@ -531,7 +530,6 @@ public class SubscriberServiceImpl implements SubscriberService {
         Subscriber subscriberByRchId = getSubscriberByBeneficiary(childUpdate);
         Subscription finalSubscription = null;
         String motherRchId;
-        String name = childUpdate.getName();
         if (childUpdate.getMother() != null) {
             motherRchId = childUpdate.getMother().getRchId();
         } else {
@@ -550,7 +548,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                 }
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                 subscriberByRchId.setDateOfBirth(dob);
-                subscriberByRchId.getChild().setName(name);
                 subscriberByRchId.getChild().setModificationDate(DateTime.now());
                 finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
             } else {
@@ -565,7 +562,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                         subscriberByRchId.setDateOfBirth(dob);
                         subscriberByRchId.getChild().setModificationDate(DateTime.now());
                         subscriberByRchId.getChild().setDateOfBirth(dob);
-                        subscriberByRchId.getChild().setName(name);
                         subscriberByRchId.setModificationDate(DateTime.now());
                         finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
                     } else {
@@ -583,7 +579,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                         }
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                         subscriberByRchId.setDateOfBirth(dob);
-                        subscriberByRchId.getChild().setName(name);
                         subscriberByRchId.getChild().setModificationDate(DateTime.now());
                         subscriberByRchId.setModificationDate(DateTime.now());
                         finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
@@ -621,7 +616,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                         subscriber.setChild(childUpdate);
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriber, pack.getType());
                         subscriber.getChild().setModificationDate(DateTime.now());
-                        subscriberByRchId.getChild().setName(name);
                         finalSubscription = updateOrCreateSubscription(subscriber, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
                     } else {
                         if (subscriptionService.activeSubscriptionByMsisdnRch(subscribersByMsisdn,msisdn, SubscriptionPackType.CHILD, motherRchId, childUpdate.getRchId())) {
@@ -662,8 +656,7 @@ public class SubscriberServiceImpl implements SubscriberService {
 
         liveBirthChildDeathCheck(finalSubscription, record);
 
-        childRejectionRch(convertMapToRchChild(record), true, null, action);
-        return null;
+        return childRejectionRch(convertMapToRchChild(record), true, null, action);
     }
 
     public Subscription updateOrCreateSubscription(Subscriber subscriber, Subscription subscription, DateTime dateTime, SubscriptionPack pack, Language language, Circle circle, SubscriptionOrigin origin, Boolean greaterCaseNo) { // NO CHECKSTYLE Cyclomatic Complexity

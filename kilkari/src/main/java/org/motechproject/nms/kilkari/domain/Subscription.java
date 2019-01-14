@@ -278,12 +278,6 @@ public class Subscription extends MdsEntity {
         return totalDaysInPack < daysSinceStartDate;
     }
 
-    public static boolean notReadyForStartDate(DateTime startDate, DateTime today, SubscriptionPack pack) {
-        int daysSinceStartDate = Days.daysBetween(startDate, today).getDays();
-
-        return daysSinceStartDate < 0;
-    }
-
 
     /**
      * Helper method which determines if the given contentFileName corresponds to the last message of this

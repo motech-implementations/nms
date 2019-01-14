@@ -372,7 +372,6 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
         mapping.put(KilkariConstants.DEATH, new Optional(new GetInstanceByString<Boolean>() {
             @Override
             public Boolean retrieve(String value) {
-                LOGGER.debug("Entry type : {}", value);
                 return mctsBeneficiaryValueProcessor.getDeathFromString(value);
             }
         }));

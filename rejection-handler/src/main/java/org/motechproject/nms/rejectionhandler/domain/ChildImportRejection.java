@@ -241,7 +241,7 @@ public class ChildImportRejection {
     private String birthCertificateNumber;
 
     @Field
-    private String entryType;
+    private Integer entryType;
 
     @Field
     private String source;
@@ -879,11 +879,11 @@ public class ChildImportRejection {
         this.birthCertificateNumber = birthCertificateNumber;
     }
 
-    public String getEntryType() {
+    public Integer getEntryType() {
         return entryType;
     }
 
-    public void setEntryType(String entryType) {
+    public void setEntryType(Integer entryType) {
         this.entryType = entryType;
     }
 

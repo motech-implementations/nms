@@ -300,40 +300,4 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     }
 
-    @Test
-    public void testAshaRCHImport() throws IOException{
-        String response = RchImportTestHelper.getAnmAshaResponseData();
-        String remoteLocation = "/home/beehyv/nms-nmsbugfix/testing/src/test/resources/rch";
-        String fileName =  "rch-anm-asha-data.xml"; //done by vishnu
-        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("ashendpoint", 200, response);
-        URL endpoint = new URL(url);
-        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
-        LocalDate yesterday = DateUtil.today().minusDays(1);
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
-        Map<String, Object> params = new HashMap<>();
-        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
-        params.put(Constants.END_DATE_PARAM, yesterday);
-        params.put(Constants.STATE_ID_PARAM, 21L);
-        params.put(Constants.ENDPOINT_PARAM, endpoint);
-        params.put(Constants.REMOTE_LOCATION, remoteLocation);
-        params.put(Constants.FILE_NAME, fileName);
-        List<Long> a = new ArrayList<>();
-        a.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
-        rchWsImportService.importAshaFromRch(a, yesterday, endpoint);
-        MotechEvent event1 = new MotechEvent(org.motechproject.nms.rch.utils.Constants.RCH_ASHA_READ, params);
-        try {
-            rchWebServiceFacade.readAshaResponseFromFile(event1);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        Thread.currentThread().setContextClassLoader(cl);
-        List<FlwImportRejection> flwImportRejectionList = flwImportRejectionDataService.retrieveAll();
-        assertEquals(1, flwImportRejectionList.size());
-        List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
-        assertEquals(2, frontLineWorkers.size());
-    }
-
 }

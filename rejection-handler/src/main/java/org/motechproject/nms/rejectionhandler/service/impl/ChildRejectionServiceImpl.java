@@ -69,36 +69,33 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
     @Override
     public Map<String, Object> findChildRejectionByRchId(final Set<String> rchIds) {
         Timer queryTimer = new Timer();
-        if (!rchIds.isEmpty()) {
-            @SuppressWarnings("unchecked")
-            SqlQueryExecution<Map<String, Object>> queryExecution = new SqlQueryExecution<Map<String, Object>>() {
 
-                @Override
-                public String getSqlQuery() {
-                    String query = "SELECT id, registrationNo, creationDate FROM nms_child_rejects WHERE registrationNo IN " + queryIdList(rchIds);
-                    LOGGER.debug(SQL_QUERY_LOG, query);
-                    return query;
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Map<String, Object>> queryExecution = new SqlQueryExecution<Map<String, Object>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "SELECT id, registrationNo, creationDate FROM nms_child_rejects WHERE registrationNo IN " + queryIdList(rchIds);
+                LOGGER.debug(SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public Map<String, Object> execute(Query query) {
+
+                query.setClass(ChildImportRejection.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                Map<String, Object> resultMap = new HashMap<>();
+                for (ChildImportRejection childReject : (List<ChildImportRejection>) fqr) {
+                    resultMap.put(childReject.getRegistrationNo(), childReject);
                 }
+                return resultMap;
+            }
+        };
 
-                @Override
-                public Map<String, Object> execute(Query query) {
-
-                    query.setClass(ChildImportRejection.class);
-                    ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
-                    Map<String, Object> resultMap = new HashMap<>();
-                    for (ChildImportRejection childReject : (List<ChildImportRejection>) fqr) {
-                        resultMap.put(childReject.getRegistrationNo(), childReject);
-                    }
-                    return resultMap;
-                }
-            };
-
-            Map<String, Object> resultMap = childRejectionDataService.executeSQLQuery(queryExecution);
-            LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
-            return resultMap;
-        } else {
-            return null;
-        }
+        Map<String, Object> resultMap = childRejectionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
+        return resultMap;
     }
 
     private String queryIdList(Set<String> idList) {
@@ -121,36 +118,32 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
     public Map<String, Object> findChildRejectionByMctsId(final Set<String> mctsIds) {
         Timer queryTimer = new Timer();
 
-        if (!mctsIds.isEmpty()) {
-            @SuppressWarnings("unchecked")
-            SqlQueryExecution<Map<String, Object>> queryExecution = new SqlQueryExecution<Map<String, Object>>() {
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Map<String, Object>> queryExecution = new SqlQueryExecution<Map<String, Object>>() {
 
-                @Override
-                public String getSqlQuery() {
-                    String query = "SELECT id, idNo, creationDate FROM nms_child_rejects WHERE idNo IN " + queryIdList(mctsIds);
-                    LOGGER.debug(SQL_QUERY_LOG, query);
-                    return query;
+            @Override
+            public String getSqlQuery() {
+                String query = "SELECT id, idNo, creationDate FROM nms_child_rejects WHERE idNo IN " + queryIdList(mctsIds);
+                LOGGER.debug(SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public Map<String, Object> execute(Query query) {
+
+                query.setClass(ChildImportRejection.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
+                Map<String, Object> resultMap = new HashMap<>();
+                for (ChildImportRejection childReject : (List<ChildImportRejection>) fqr) {
+                    resultMap.put(childReject.getIdNo(), childReject);
                 }
+                return resultMap;
+            }
+        };
 
-                @Override
-                public Map<String, Object> execute(Query query) {
-
-                    query.setClass(ChildImportRejection.class);
-                    ForwardQueryResult fqr = (ForwardQueryResult) query.execute();
-                    Map<String, Object> resultMap = new HashMap<>();
-                    for (ChildImportRejection childReject : (List<ChildImportRejection>) fqr) {
-                        resultMap.put(childReject.getIdNo(), childReject);
-                    }
-                    return resultMap;
-                }
-            };
-
-            Map<String, Object> resultMap = childRejectionDataService.executeSQLQuery(queryExecution);
-            LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
-            return resultMap;
-        } else {
-            return null;
-        }
+        Map<String, Object> resultMap = childRejectionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug(CHILD_LOG_STRING, queryTimer.time());
+        return resultMap;
     }
 
     @Override
