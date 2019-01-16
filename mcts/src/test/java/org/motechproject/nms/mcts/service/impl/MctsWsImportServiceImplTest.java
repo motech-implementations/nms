@@ -223,7 +223,7 @@ public class MctsWsImportServiceImplTest {
         record.setMotherId(motherId);
         when(mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherId)).thenReturn(mctsMother);
 
-        record.setEntryType((int) id + 9);
+        record.setEntryType(String.valueOf((int) id + 9));
 
         return record;
     }
