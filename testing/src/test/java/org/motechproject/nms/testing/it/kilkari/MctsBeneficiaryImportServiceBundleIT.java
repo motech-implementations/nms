@@ -2142,7 +2142,6 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         Reader reader = createMotherDataReader("21\t3\t\t\t\t\t1234567824\tShanti Ekka\t9439986124\t\t" +
                 lmpString + "\t\t\t\t");
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
-
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriber = subscriberService.getSubscriber(9439986124L).get(0);
         assertNotNull(subscriber);
@@ -2364,6 +2363,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         stateDataService.create(state20);
         District district = createDistrict(state20, 3L, "EXAMPLE DISTRICT");
         districtDataService.create(district);
+        transactionManager.commit(status);
         reader = createMotherDataReader("20\t3\t\t\t\t\t1234567827\tPooja Shanthi\t9439986126\t\t" +
                 lmpString + "\t\t\t\t");
         mctsBeneficiaryImportReaderService.importMotherData(reader, SubscriptionOrigin.MCTS_IMPORT);
@@ -2401,10 +2401,9 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         //rejected entry should be in nms_child_rejects with reason 'ALREADY_SUBSCRIBED'.
-        List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
-        assertEquals(1, childImportRejections.size());
-        assertEquals("9439986128", childImportRejections.get(0).getMobileNo());
-        assertEquals(RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), childImportRejections.get(0).getRejectionReason());
+        ChildImportRejection child = childRejectionDataService.findByIdno("1234567829");
+        assertEquals("9439986128", child.getMobileNo());
+        assertEquals(RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), child.getRejectionReason());
         transactionManager.commit(status);
     }
 
