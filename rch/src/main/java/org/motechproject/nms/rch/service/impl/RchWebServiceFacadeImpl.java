@@ -1522,14 +1522,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             }
 
         } catch (JAXBException e) {
-            String error = String.format("Cannot deserialize RCH mother data from %s location.", stateId);
+            String error = String.format("Cannot deserialize RCH Taluka-HealthBlock data from %s location.", stateId);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKAHEALTHBLOCK, stateId));
             throw new RchInvalidResponseStructureException(error, e);
         } catch (RchInvalidResponseStructureException e) {
             String error = String.format("Cannot read RCH taluka healthblock data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
             LOGGER.error(error, e);
-            alertService.create(RCH_WEB_SERVICE, "RCH Web Service Mother Import", e
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service Taluka-HealthBlock Import", e
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKAHEALTHBLOCK, stateId));
