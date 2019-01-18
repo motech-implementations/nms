@@ -1838,7 +1838,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
         transactionManager.commit(status);
         motherImportRejections = motherRejectionDataService.retrieveAll();
         assertEquals(2, motherImportRejections.size());
-        assertEquals(RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE, motherImportRejections.get(1).getRejectionReason());
+        assertEquals(RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED, motherImportRejections.get(1).getRejectionReason());
         //assertEquals("Msisdn already has an active Subscription", errors.get(1).getRejectionMessage());
     }
 
