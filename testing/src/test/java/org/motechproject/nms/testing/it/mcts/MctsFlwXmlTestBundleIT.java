@@ -151,7 +151,7 @@ public class MctsFlwXmlTestBundleIT extends BasePaxIT {
         assertEquals(1, flws.size());
         List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
         assertEquals(1, flwImportRejections.size());
-        assertEquals(RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), flwImportRejections.get(0).getRejectionReason());
+        assertEquals(RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), flwImportRejections.get(0).getRejectionReason());
     }
 
 
