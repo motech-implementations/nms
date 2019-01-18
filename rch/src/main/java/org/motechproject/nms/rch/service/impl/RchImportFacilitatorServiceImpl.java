@@ -37,7 +37,7 @@ public class RchImportFacilitatorServiceImpl implements RchImportFacilitatorServ
         if (rchImportFacilitator.getFileName() == null) {
             throw new RchFileManipulationException("Invalid file name");
         } else if (rchImportFacilitator1.size() != 0) {
-            LOGGER.error("A record already present for the same state and today's date.");
+            LOGGER.error("A record already present for the same state: {} , today's date: {} and userType: {}.", state, importDate, rchUserType.toString());
         } else {
             rchImportFacilitatorDataService.create(rchImportFacilitator);
         }
