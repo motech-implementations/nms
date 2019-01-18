@@ -87,8 +87,8 @@ public class SubscriberServiceBundleIT extends BasePaxIT {
 
         clearDatabase();
 
-        sh.mksub(SubscriptionOrigin.IVR, new DateTime(), SubscriptionPackType.CHILD, 2000000000L);
-        sh.mksub(SubscriptionOrigin.IVR, new DateTime(), SubscriptionPackType.PREGNANCY, 2000000000L);
+        sh.mksub(SubscriptionOrigin.MCTS_IMPORT, new DateTime(), SubscriptionPackType.CHILD, 2000000000L);
+        sh.mksub(SubscriptionOrigin.MCTS_IMPORT, new DateTime(), SubscriptionPackType.PREGNANCY, 2000000000L);
     }
 
     public void clearDatabase() {

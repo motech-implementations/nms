@@ -132,7 +132,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
     @Test
     public void verifyServiceFunctional() {
-        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(14));
 
         CallSummaryRecordDto csr = new CallSummaryRecordDto(
                 subscription,
@@ -151,7 +151,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
     @Test
     public void verifyInvalidWeekId() {
-        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(14));
         processCsr(new CallSummaryRecordDto(
                 subscription,
                 StatusCode.OBD_FAILED_NOANSWER,
@@ -172,7 +172,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
     @Test
     public void verifyInvalidFilename() {
-        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(14));
         processCsr(new CallSummaryRecordDto(
                 subscription,
                 StatusCode.OBD_FAILED_NOANSWER,
@@ -193,7 +193,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
     @Test
     public void verifyInvalidCircle() {
-        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(14));
         processCsr(new CallSummaryRecordDto(
                 subscription,
                 StatusCode.OBD_FAILED_NOANSWER,
@@ -214,7 +214,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
     @Test
     public void verifyCircle99Valid() {
-        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(14));
         processCsr(new CallSummaryRecordDto(
                 subscription,
                 StatusCode.OBD_FAILED_NOANSWER,
@@ -234,7 +234,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
 
     @Test
     public void verifyInvalidLanguage() {
-        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(14));
         processCsr(new CallSummaryRecordDto(
                 subscription,
                 StatusCode.OBD_FAILED_NOANSWER,
@@ -338,7 +338,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
     // https://github.com/motech-implementations/mim/issues/169
     @Test
     public void verifyIssue169() {
-        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(14));
 
         processCsr(new CallSummaryRecordDto(
                 subscription,
@@ -822,36 +822,6 @@ public class CsrServiceBundleIT extends BasePaxIT {
     }
 
 
-    /*
-    * NMS_FT_163
-    * To verify pregnancyPack Pack created via IVR, shouldn't get deactivated due to reason DND.
-    */
-    @Test
-    public void verifyFT163() {
-
-        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
-        String contentFileName = sh.getContentMessageFile(subscription, 0);
-        String weekId = sh.getWeekId(subscription, 0);
-
-        CallSummaryRecordDto csr = new CallSummaryRecordDto(
-                subscription,
-                StatusCode.OBD_DNIS_IN_DND,
-                FinalCallStatus.REJECTED,
-                contentFileName,
-                weekId,
-                rh.hindiLanguage(),
-                rh.delhiCircle(),
-                "20151119124330"
-        );
-
-        processCsr(csr);
-
-        // verify that subscription created via IVR is still Active
-        subscription = subscriptionDataService.findBySubscriptionId(subscription.getSubscriptionId());
-        assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
-    }
-
-
     /**
      * To verify that childPack beneficiary should not be  deactivated if the error “user
      * number does not exist” is not received for all failed delivery attempts during a scheduling
@@ -860,7 +830,7 @@ public class CsrServiceBundleIT extends BasePaxIT {
     @Test
     public void verifyFT176() {
 
-        Subscription subscription = sh.mksub(SubscriptionOrigin.IVR, DateTime.now().minusDays(14));
+        Subscription subscription = sh.mksub(SubscriptionOrigin.MCTS_IMPORT, DateTime.now().minusDays(14));
         String contentFileName = sh.getContentMessageFile(subscription, 0);
         String weekId = sh.getWeekId(subscription, 0);
 
