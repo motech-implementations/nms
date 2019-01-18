@@ -77,10 +77,11 @@ import org.motechproject.nms.testing.it.tracking.TrackOneToManyChangesBundleIT;
     /**
      * Kilkari
      */
+    RchBeneficiaryImportServiceBundleIT.class,
+    MctsBeneficiaryImportServiceBundleIT.class,
     SubscriptionServiceBundleIT.class,
     SubscriberServiceBundleIT.class,
     CsrServiceBundleIT.class,
-    MctsBeneficiaryImportServiceBundleIT.class,
 
     /**
      * Mobile Academy
@@ -111,7 +112,6 @@ import org.motechproject.nms.testing.it.tracking.TrackOneToManyChangesBundleIT;
     /**
      * RCH
      */
-    RchBeneficiaryImportServiceBundleIT.class,
     RchWebServiceFacadeBundleIT.class,
 
     /**

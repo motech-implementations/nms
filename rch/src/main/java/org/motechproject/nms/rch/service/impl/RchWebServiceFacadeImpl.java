@@ -1465,11 +1465,11 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             }
 
         } catch (JAXBException e) {
-            throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH mother data from %s location.", stateId), e);
+            throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH taluka healthblock data from %s location.", stateId), e);
         } catch (RchInvalidResponseStructureException e) {
             String error = String.format("Cannot read RCH taluka healthblock data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
             LOGGER.error(error, e);
-            alertService.create(RCH_WEB_SERVICE, "RCH Web Service Mother Import", e
+            alertService.create(RCH_WEB_SERVICE, "RCH Web Service taluka healthblock Import", e
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKAHEALTHBLOCK, stateId));
@@ -2347,7 +2347,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
                 if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || !state.equals(flw.getState())))  && !FrontLineWorkerStatus.ANONYMOUS.equals(flw.getStatus())) {
                     LOGGER.debug("Existing FLW with same MSISDN but different MCTS ID");
-                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
+                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
                     rejected++;
                 } else {
                     if (!(FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation))) {
@@ -2366,7 +2366,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                             rejected++;
                         } catch (FlwExistingRecordException e) {
                             LOGGER.debug("Existing FLW with same MSISDN but different RCH ID", e);
-                            flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
+                            flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
                             rejected++;
                         } catch (Exception e) {
                             LOGGER.error("RCH Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}",
