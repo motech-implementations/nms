@@ -241,7 +241,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private EventRelay eventRelay;
 
     private String createErrorMessage(String message, Exception e) {
-        return message + e.getMessage();
+        final int START = 0;
+        final int END = 99;
+        return message + StringUtils.substring(e.getMessage(), START, END);
     }
 
     @Override
@@ -530,10 +532,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
-        } catch (NullPointerException e) {
+        } catch (Exception e) {
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, createErrorMessage(FILES_MISSING_ON_A, e)));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
-            LOGGER.error(FILES_MISSING_ON_A, e);
+            LOGGER.error(FILES_MISSING_ON_A, RchUserType.DISTRICT, e);
         }
     }
 
@@ -657,10 +659,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
-        } catch (NullPointerException e) {
+        } catch (Exception e) {
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, createErrorMessage(FILES_MISSING_ON_A, e)));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
-            LOGGER.error(FILES_MISSING_ON_A, e);
+            LOGGER.error(FILES_MISSING_ON_A, RchUserType.TALUKA, e);
         }
     }
 
@@ -781,10 +783,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGE, stateId));
-        } catch (NullPointerException e) {
+        } catch (Exception e) {
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, createErrorMessage(FILES_MISSING_ON_A, e)));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGE, stateId));
-            LOGGER.error(FILES_MISSING_ON_A, e);
+            LOGGER.error(FILES_MISSING_ON_A, RchUserType.VILLAGE, e);
         }
     }
 
@@ -900,10 +902,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.MOTHER, stateId));
-        } catch (NullPointerException e) {
+        } catch (Exception e) {
             rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, createErrorMessage(FILES_MISSING_ON_A, e)));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.MOTHER, stateId));
-            LOGGER.error(FILES_MISSING_ON_A, e);
+            LOGGER.error(FILES_MISSING_ON_A, RchUserType.MOTHER, e);
         }
     }
 
@@ -1056,10 +1058,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             alertService.create(RCH_WEB_SERVICE, "RCH Web Service Child Import", e.getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
-        } catch (NullPointerException e) {
+        } catch (Exception e) {
             rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, createErrorMessage(FILES_MISSING_ON_B, e)));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
-            LOGGER.error(FILES_MISSING_ON_B, e);
+            LOGGER.error(FILES_MISSING_ON_B, RchUserType.CHILD, e);
         }
     }
 
@@ -1213,10 +1215,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             alertService.create(RCH_WEB_SERVICE, "RCH Web Service FLW Import", e.getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
-        } catch (NullPointerException e) {
+        } catch (Exception e) {
             rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, createErrorMessage(FILES_MISSING_ON_C, e)));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
-            LOGGER.error(FILES_MISSING_ON_C, e);
+            LOGGER.error(FILES_MISSING_ON_C, RchUserType.ASHA, e);
         }
     }
 
@@ -1372,10 +1374,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHBLOCK, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHBLOCK, stateId));
-        } catch (NullPointerException e) {
+        } catch (Exception e) {
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHBLOCK, stateCode, stateName, 0, 0, createErrorMessage(FILES_MISSING_ON_A, e)));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHBLOCK, stateId));
-            LOGGER.error(FILES_MISSING_ON_A, e);
+            LOGGER.error(FILES_MISSING_ON_A, RchUserType.HEALTHBLOCK, e);
         }
     }
 
@@ -1533,10 +1535,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKAHEALTHBLOCK, stateId));
-        } catch (NullPointerException e) {
+        } catch (Exception e) {
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, createErrorMessage(FILES_MISSING_ON_A, e)));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKAHEALTHBLOCK, stateId));
-            LOGGER.error(FILES_MISSING_ON_A, e);
+            LOGGER.error(FILES_MISSING_ON_A, RchUserType.TALUKAHEALTHBLOCK, e);
         }
     }
     @Override
@@ -1769,10 +1771,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHFACILITY, stateId));
-        } catch (NullPointerException e) {
+        } catch (Exception e) {
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, createErrorMessage(FILES_MISSING_ON_A, e)));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHFACILITY, stateId));
-            LOGGER.error(FILES_MISSING_ON_A, e);
+            LOGGER.error(FILES_MISSING_ON_A, RchUserType.HEALTHFACILITY, e);
         }
     }
 
@@ -2001,10 +2003,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId));
-        } catch (NullPointerException e) {
+        } catch (Exception e) {
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, createErrorMessage(FILES_MISSING_ON_A, e)));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId));
-            LOGGER.error(FILES_MISSING_ON_A, e);
+            LOGGER.error(FILES_MISSING_ON_A, RchUserType.VILLAGEHEALTHSUBFACILITY, e);
         }
     }
 
