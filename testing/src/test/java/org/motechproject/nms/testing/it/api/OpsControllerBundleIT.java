@@ -673,21 +673,6 @@ public class OpsControllerBundleIT extends BasePaxIT {
         assertEquals(AuditStatus.SUCCESS, auditRecords.get(testNumber-1).getAuditStatus());
     }
 
-    //Test deactivation of specific msisdn - 5000000000L as IVR and 6000000000L as MCTS import
-    @Ignore //invalid usecase as there no case of deactivating flw based on "WEEKLY_CALLS_NOT_ANSWERED", "LOW_LISTENERSHIP"
-    @Test
-    public void testDeactivateSpecificValidMsisdn() throws IOException, InterruptedException, URISyntaxException {
-        createSubscriberHelper();
-        testDeactivationRequestByMsisdn(5000000000L, "WEEKLY_CALLS_NOT_ANSWERED", HttpStatus.SC_OK);
-        testDeactivationRequestByMsisdn(5000000000L, "WEEKLY_CALLS_NOT_ANSWERED", HttpStatus.SC_OK);   // Test deactivation of same number again
-        testDeactivationSubscriptionAuditService(5000000000L, SubscriptionOrigin.IVR, 1);
-        testDeactivationRequestByMsisdn(6000000000L, "LOW_LISTENERSHIP", HttpStatus.SC_OK);
-        testDeactivationSubscriptionAuditService(6000000000L, SubscriptionOrigin.MCTS_IMPORT, 2);
-        testifAllSubscriberDectivated();
-        testReactivationDisabledAfterDeactivation(5000000000L);
-        testReactivationDisabledAfterDeactivation(6000000000L);
-    }
-
     @Test
     public void testDeactivateSpecificValidNotInDatabaseMsisdn() throws IOException, InterruptedException, URISyntaxException {
         testDeactivationRequestByMsisdn(7000000000L, "LOW_LISTENERSHIP", HttpStatus.SC_BAD_REQUEST);

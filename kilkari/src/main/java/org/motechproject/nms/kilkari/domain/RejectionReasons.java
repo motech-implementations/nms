@@ -6,7 +6,6 @@ package org.motechproject.nms.kilkari.domain;
 public enum RejectionReasons {
     FLW_TYPE_NOT_ASHA,
     INVALID_LOCATION,
-    MOBILE_NUMBER_ALREADY_IN_USE,
     UPDATED_RECORD_ALREADY_EXISTS,
     FLW_IMPORT_ERROR,
     INVALID_LMP_DATE,

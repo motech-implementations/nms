@@ -306,7 +306,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                         // we are trying to update 2 different users and/or phone number used by someone else
                         LOGGER.debug("Existing flw but phone number(update) already in use");
                         flwErrorDataService.create(new FlwError(flwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
-                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
+                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
                         return false;
                     }
                 } else if (existingFlwByFlwId != null && existingFlwByNumber == null) {
@@ -342,7 +342,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                         // phone number used by someone else.
                         LOGGER.debug("New flw but phone number(update) already in use");
                         flwErrorDataService.create(new FlwError(flwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
-                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
+                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
                         return false;
                     }
 
@@ -381,7 +381,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                         // we are trying to update 2 different users and/or phone number used by someone else
                         LOGGER.debug("Existing flw but phone number(update) already in use");
                         flwErrorDataService.create(new FlwError(flwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
-                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
+                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
                         return false;
                     }
                 } else if (existingFlwByFlwId != null && existingFlwByNumber == null) {
@@ -417,7 +417,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                         // phone number used by someone else.
                         LOGGER.debug("New flw but phone number(update) already in use");
                         flwErrorDataService.create(new FlwError(flwId, stateId, districtId, FlwErrorReason.PHONE_NUMBER_IN_USE));
-                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), false, RejectionReasons.MOBILE_NUMBER_ALREADY_IN_USE.toString(), action));
+                        flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
                         return false;
                     }
 
