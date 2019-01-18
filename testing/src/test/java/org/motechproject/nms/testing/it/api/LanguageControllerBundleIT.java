@@ -133,132 +133,6 @@ public class LanguageControllerBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testSetLanguageMissingCallingNumber() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callId\":"+ VALID_CALL_ID + ",\"languageLocationCode\":10}");
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
-                "{\"failureReason\":\"<callingNumber: Not Present>\"}",
-                ADMIN_USERNAME, ADMIN_PASSWORD));
-    }
-
-    @Test
-    public void testSetLanguageInvalidCallingNumber() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-
-        UserLanguageRequest request = new UserLanguageRequest(
-                123L, //callingNumber
-                VALID_CALL_ID, //callId
-                "123"); //languageLocationCode
-        String json = new ObjectMapper().writeValueAsString(request);
-        StringEntity params = new StringEntity(json);
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
-                "{\"failureReason\":\"<callingNumber: Invalid>\"}",
-                ADMIN_USERNAME, ADMIN_PASSWORD));
-    }
-
-    @Test
-    public void testSetLanguageMissingCallId() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(
-                String.format("http://localhost:%d/api/mobilekunji/languageLocationCode",
-                        TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"languageLocationCode\":10}");
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST,
-                "{\"failureReason\":\"<callId: Not Present>\"}",
-                ADMIN_USERNAME, ADMIN_PASSWORD));
-    }
-
-    @Test
-    public void testSetLanguageInvalidCallId() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(
-                String.format("http://localhost:%d/api/mobilekunji/languageLocationCode",
-                        TestContext.getJettyPort()));
-        StringEntity params = new StringEntity(
-                "{\"callingNumber\":abcdef,\"callId\":\"123456789012345\",\"languageLocationCode\":\"10\"}");
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, ADMIN_USERNAME,
-                ADMIN_PASSWORD));
-    }
-
-    @Test
-    public void testSetLanguageMissingLanguageLocationCode() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":"+ VALID_CALL_ID + "}");
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_BAD_REQUEST, 
-        		"{\"failureReason\":\"<languageLocationCode: Not Present>\"}",
-        		ADMIN_USERNAME, ADMIN_PASSWORD));
-    }
-
-    @Test
-    public void testSetLanguageInvalidLanguageLocationCode() throws IOException, InterruptedException {
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":"+ VALID_CALL_ID + ",\"languageLocationCode\":\"AA\"}");
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND,
-        		"{\"failureReason\":\"<languageLocationCode: Not Found>\"}",
-        		ADMIN_USERNAME, ADMIN_PASSWORD));
-    }
-
-    @Test
-    @Ignore
-    public void testSetLanguageNoFLW() throws IOException, InterruptedException {
-
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity(
-                "{\"callingNumber\":1111111111,\"callId\":" + VALID_CALL_ID + ",\"languageLocationCode\":\""
-                        + rh.hindiLanguage().getCode() + "\"}");
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
-
-        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
-        assertNotNull(flw);
-        assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
-        Language language = flw.getLanguage();
-        assertNotNull(language);
-        assertEquals("FLW Language Code", rh.hindiLanguage().getCode(),
-                language.getCode());
-    }
-
-    @Test
-    public void testSetLanguageLanguageNotFound() throws IOException, InterruptedException {
-        createFlwCappedServiceNoUsageNoLocationNoLanguage();
-
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":"+ VALID_CALL_ID + ",\"languageLocationCode\":77}");
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_NOT_FOUND,
-                "{\"failureReason\":\"<languageLocationCode: Not Found>\"}",
-                ADMIN_USERNAME, ADMIN_PASSWORD));
-    }
-
-    @Test
     public void testSetLanguageUndeployedState() throws IOException, InterruptedException {
         createFlwCappedServiceNoUsageNoLocationNoLanguage();
 
@@ -275,29 +149,6 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, response.getStatusLine().getStatusCode());
         assertEquals("{\"failureReason\":\"<MOBILE_ACADEMY: Not Deployed In State>\"}", EntityUtils.toString(response.getEntity()));
 
-    }
-
-    @Test
-    public void testSetLanguageValid() throws IOException, InterruptedException {
-        createFlwCappedServiceNoUsageNoLocationNoLanguage();
-
-        HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity(
-                "{\"callingNumber\":1111111111,\"callId\":"+ VALID_CALL_ID + ",\"languageLocationCode\":\""
-                        + rh.hindiLanguage().getCode() + "\"}");
-
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
-
-        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
-        Language language = flw.getLanguage();
-        assertNotNull(language);
-        assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
-        assertEquals("FLW Language Code", rh.hindiLanguage().getCode(),
-                language.getCode());
     }
 
     /**
@@ -470,26 +321,5 @@ public class LanguageControllerBundleIT extends BasePaxIT {
         
         nationalDefaultLanguageDataService.create(new NationalDefaultLanguage(language));
         
-    }
-    
-    /*
-     * To set the LanguageLocationCode of the anonymous user using languageLocationCode API.
-     */
-    @Test
-    public void verifyFT359() throws IOException, InterruptedException{
-    	createFlwWithStatusAnonymous();
-    	HttpPost httpPost = new HttpPost(String.format("http://localhost:%d/api/mobilekunji/languageLocationCode", TestContext.getJettyPort()));
-        StringEntity params = new StringEntity("{\"callingNumber\":1111111111,\"callId\":"+ VALID_CALL_ID +",\"languageLocationCode\":99}");
-        httpPost.setEntity(params);
-
-        httpPost.addHeader("content-type", "application/json");
-
-        assertTrue(SimpleHttpClient.execHttpRequest(httpPost, HttpStatus.SC_OK));
-
-        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1111111111l);
-        Language language = flw.getLanguage();
-        assertNotNull(language);
-        assertEquals(FrontLineWorkerStatus.ANONYMOUS, flw.getStatus());
-        assertEquals("FLW Language Code", "99", language.getCode());
     }
 }
