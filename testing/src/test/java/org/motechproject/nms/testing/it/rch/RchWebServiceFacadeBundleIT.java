@@ -382,12 +382,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testVillageRCHImport() throws IOException {
-        String response = RchImportTestHelper.getVillageLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_Village_import.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("villageendpoint", 200, response);
+        String url = simpleServer.start("villageendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -417,12 +416,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testDistrictRCHImport() throws IOException {
-        String response = RchImportTestHelper.getDistrictLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_District_import.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("districtendpoint", 200, response);
+        String url = simpleServer.start("districtendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -452,12 +450,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testTalukaRCHImport() throws IOException {
-        String response = RchImportTestHelper.getTalukaLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_Taluka_import.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("talukaendpoint", 200, response);
+        String url = simpleServer.start("talukaendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -488,12 +485,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testHealthBlockRCHImport() throws IOException {
-        String response = RchImportTestHelper.getHealthBlockLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_HealthBlock_import.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("healthblockendpoint", 200, response);
+        String url = simpleServer.start("healthblockendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -522,12 +518,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testHealthFacilityRCHImport() throws IOException {
-        String response = RchImportTestHelper.getHealthFacilityLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_HealthFacility_import.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("healthfacilityendpoint", 200, response);
+        String url = simpleServer.start("healthblockendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -558,12 +553,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testHealthSubFacilityRCHImport() throws IOException {
-        String response = RchImportTestHelper.getHealthSubFacilityLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_HealthSubFacility_import.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("healthsubfacilityendpoint", 200, response);
+        String url = simpleServer.start("healthsubfacilityendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -579,7 +573,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         // MotechEvent event = new MotechEvent("foobar", params);
 
-        MotechEvent event1 = new MotechEvent(org.motechproject.nms.rch.utils.Constants.RCH_HEALTHSUBFACILITY_READ_SUBJECT, params);
+        MotechEvent event1 = new MotechEvent(Constants.RCH_HEALTHSUBFACILITY_READ_SUBJECT, params);
         try {
             rchWebServiceFacade.readHealthSubFacilityResponseFromFile(event1);
         } catch (Exception e) {
@@ -597,12 +591,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     @Test
     public void testDistrictNameupdation() throws IOException {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        String response1 = RchImportTestHelper.getDistrictLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation1 = filepath.getAbsolutePath();
         String fileName1 = "RCH_District_import.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("districtendpoint", 200, response1);
+        String url1 = simpleServer1.start("districtendpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -631,12 +624,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         // Updating district name via another XML
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        String response = RchImportTestHelper.getDistrictLocationdataResponse();
         File filepath1 = new File("src/test/resources/rch");
         String remoteLocation = filepath1.getAbsolutePath();
         String fileName = "RCH_District_name_update.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("districtendpoint", 200, response);
+        String url = simpleServer1.start("districtendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -665,12 +657,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testTalukanameupdate() throws IOException {
-        String response = RchImportTestHelper.getTalukaLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_Taluka_import.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("talukaendpoint", 200, response);
+        String url = simpleServer.start("talukaendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -687,7 +678,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         a.add(21L);
         // MotechEvent event = new MotechEvent("foobar", params);
         rchWsImportService.importTalukaFromRch(a, yesterday, endpoint);
-        MotechEvent event = new MotechEvent(org.motechproject.nms.rch.utils.Constants.RCH_TALUKA_READ_SUBJECT, params);
+        MotechEvent event = new MotechEvent(Constants.RCH_TALUKA_READ_SUBJECT, params);
         try {
             rchWebServiceFacade.readTalukaResponseFromFile(event);
         } catch (Exception e) {
@@ -699,12 +690,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         // Updating taluka name via another XML
 
-        String response1 = RchImportTestHelper.getTalukaLocationdataResponse();
         File filepath1 = new File("src/test/resources/rch");
         String remoteLocation1 = filepath1.getAbsolutePath();
         String fileName1 = "RCH_Taluka_name_update.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("talukaendpoint", 200, response1);
+        String url1 = simpleServer1.start("talukaendpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -734,12 +724,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testHealthBlocknameupdate() throws IOException {
-        String response = RchImportTestHelper.getHealthBlockLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_HealthBlock_import.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("rchendpoint", 200, response);
+        String url = simpleServer.start("rchendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -765,12 +754,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         // Updating HealthBlock name via another XML
 
-        String response1 = RchImportTestHelper.getHealthBlockLocationdataResponse();
         File filepath1 = new File("src/test/resources/rch");
         String remoteLocation1 = filepath1.getAbsolutePath();
         String fileName1 = "RCH_HealthBlock_name_update.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("rchendpoint", 200, response1);
+        String url1 = simpleServer1.start("rchendpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -800,12 +788,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testHealthFacilityWithDuplicateId() throws IOException {
-        String response = RchImportTestHelper.getHealthFacilityLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_HealthFacility_import.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("healthfacilityendpoint", 200, response);
+        String url = simpleServer.start("healthfacilityendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -831,12 +818,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         // Duplicate Health Facility id via another XML
 
-        String response1 = RchImportTestHelper.getHealthFacilityLocationdataResponse();
         File filepath1 = new File("src/test/resources/rch");
         String remoteLocation1 = filepath1.getAbsolutePath();
         String fileName1 = "RCH_HealthFacility_name_update.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("healthfacilityendpoint", 200, response1);
+        String url1 = simpleServer1.start("healthfacilityendpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -865,12 +851,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testHealthSubFacilityWithDupId() throws IOException {
-        String response = RchImportTestHelper.getHealthSubFacilityLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_HealthSubFacility_import.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("healthsubfacilityendpoint", 200, response);
+        String url = simpleServer.start("healthsubfacilityendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -897,12 +882,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         // Update healthSubFacility name through another XML
 
-        String response1 = RchImportTestHelper.getHealthSubFacilityLocationdataResponse();
         File filepath1 = new File("src/test/resources/rch");
         String remoteLocation1 = filepath1.getAbsolutePath();
         String fileName1 = "RCH_HealthSubFacility_name_update.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("healthsubfacilityendpoint", 200, response1);
+        String url1 = simpleServer.start("healthsubfacilityendpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -935,12 +919,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     @Test
     public void testSameDistrictcodeindiffstates() throws IOException {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        String response1 = RchImportTestHelper.getDistrictLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation1 = filepath.getAbsolutePath();
         String fileName1 = "RCH_District_same_state_21.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("districtendpoint", 200, response1);
+        String url1 = simpleServer1.start("districtendpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -970,12 +953,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         State state1 = stateDataService.create(new State("Other State", 22L));
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        String response = RchImportTestHelper.getDistrictLocationdataResponse();
         File filepath1 = new File("src/test/resources/rch");
         String remoteLocation = filepath1.getAbsolutePath();
         String fileName = "RCH_District_same_state_22.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("districtendpoint", 200, response);
+        String url = simpleServer1.start("districtendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -1005,12 +987,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     @Test
     public void testDupDistrictnameinSameState() throws IOException {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        String response1 = RchImportTestHelper.getDistrictLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation1 = filepath.getAbsolutePath();
         String fileName1 = "RCH_District_import.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("districtendpoint", 200, response1);
+        String url1 = simpleServer1.start("districtendpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -1038,13 +1019,12 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         // Duplicate district names in same state
 
-        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        String response = RchImportTestHelper.getDistrictLocationdataResponse();
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());        ;
         File filepath1 = new File("src/test/resources/rch");
         String remoteLocation = filepath1.getAbsolutePath();
         String fileName = "RCH_dup_district_in_same_state.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("districtendpoint", 200, response);
+        String url = simpleServer1.start("districtendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -1073,12 +1053,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testVillageNameupdate() throws IOException {
-        String response = RchImportTestHelper.getVillageLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_Village_import.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("villageendpoint", 200, response);
+        String url = simpleServer.start("villageendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -1105,12 +1084,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         // Updating village name via another XML
 
-        String response1 = RchImportTestHelper.getVillageLocationdataResponse();
         File filepath1 = new File("src/test/resources/rch");
         String remoteLocation1 = filepath1.getAbsolutePath();
         String fileName1 = "RCH_Village_name_update.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("villageendpoint", 200, response1);
+        String url1 = simpleServer.start("villageendpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -1141,12 +1119,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testDistrictwithoutID() throws IOException {
-        String response = RchImportTestHelper.getDistrictLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_District_without_id.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("districtendpoint", 200, response);
+        String url = simpleServer.start("districtendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -1177,12 +1154,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testDistrictwithInvalidID() throws IOException {
-        String response = RchImportTestHelper.getDistrictLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_invalid_district_id.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("districtendpoint", 200, response);
+        String url = simpleServer.start("districtendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -1210,12 +1186,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testDuplicateTalukaidInDiffState() throws IOException {
-        String response = RchImportTestHelper.getTalukaLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_Taluka_import.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("talukaendpoint", 200, response);
+        String url = simpleServer.start("talukaendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -1229,7 +1204,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params.put(Constants.REMOTE_LOCATION, remoteLocation);
         params.put(Constants.FILE_NAME, fileName);
 //         MotechEvent event = new MotechEvent("foobar", params);
-        MotechEvent event = new MotechEvent(org.motechproject.nms.rch.utils.Constants.RCH_TALUKA_READ_SUBJECT, params);
+        MotechEvent event = new MotechEvent(Constants.RCH_TALUKA_READ_SUBJECT, params);
         try {
             rchWebServiceFacade.readTalukaResponseFromFile(event);
         } catch (Exception e) {
@@ -1250,12 +1225,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         district1.setRegionalName("Regional Name 5");
         districtDataService.create(district1);
 
-        String response1 = RchImportTestHelper.getTalukaLocationdataResponse();
         File filepath1 = new File("src/test/resources/rch");
         String remoteLocation1 = filepath1.getAbsolutePath();
         String fileName1 = "RCH_dup_taluka_id.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("talukaendpoint", 200, response1);
+        String url1 = simpleServer1.start("talukaendpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -1287,12 +1261,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testTalukaWithoutDistrictID() throws IOException {
-        String response = RchImportTestHelper.getTalukaLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_without_districtid_taluka_import.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("talukaendpoint", 200, response);
+        String url = simpleServer.start("districtendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -1322,12 +1295,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testTalukaWithInvalidID() throws IOException {
-        String response = RchImportTestHelper.getTalukaLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_invalid_taluka_id.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("talukaendpoint", 200, response);
+        String url = simpleServer.start("talukaendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -1361,12 +1333,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testTalukaWithInvalidDistrictID() throws IOException {
-        String response = RchImportTestHelper.getTalukaLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_invalid_districtid_taluka_import.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("talukaendpoint", 200, response);
+        String url = simpleServer.start("talukaendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -1400,12 +1371,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testHealthBlockWithoutId() throws IOException {
-        String response = RchImportTestHelper.getHealthBlockLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_without_HealthBlock_id.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("healthblockendpoint", 200, response);
+        String url = simpleServer.start("healthblockendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -1437,12 +1407,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testHealthFacilityWithoutId() throws IOException {
-        String response = RchImportTestHelper.getHealthFacilityLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_without_HealthFacility_id.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("healthfacilityendpoint", 200, response);
+        String url = simpleServer.start("healthfacilityendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -1474,12 +1443,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testHealthSubFacilityWithoutId() throws IOException {
-        String response = RchImportTestHelper.getHealthSubFacilityLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_without_HealthSubFacility_id.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("healthsubfacilityendpoint", 200, response);
+        String url = simpleServer.start("healthsubfacilityendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -1512,12 +1480,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testVillageWithoutId() throws IOException {
-        String response = RchImportTestHelper.getVillageLocationdataResponse();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_without_Village_id.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("villageendpoint", 200, response);
+        String url = simpleServer.start("villageendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
