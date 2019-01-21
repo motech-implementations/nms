@@ -1,6 +1,8 @@
 package org.motechproject.nms.testing.it.rch;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -40,13 +42,23 @@ import org.osgi.service.http.HttpService;
 
 import javax.inject.Inject;
 import javax.servlet.ServletException;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.*;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createDistrict;
+import static org.motechproject.nms.testing.it.utils.RegionHelper.createState;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
+import org.motechproject.nms.kilkari.repository.*;
+import org.motechproject.nms.kilkari.service.SubscriberService;
+import org.motechproject.nms.kilkari.service.SubscriptionService;
+
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerSuite.class)
@@ -93,8 +105,25 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     private FlwImportRejectionDataService flwImportRejectionDataService;
 
     @Inject
-    FrontLineWorkerDataService frontLineWorkerDataService;
+    private FrontLineWorkerDataService frontLineWorkerDataService;
 
+    @Inject
+    SubscriberDataService subscriberDataService;
+
+    @Inject
+    SubscriptionService subscriptionService;
+
+    @Inject
+    SubscriptionDataService subscriptionDataService;
+
+    @Inject
+    PlatformTransactionManager transactionManager;
+
+    @Inject
+    SubscriberService subscriberService;
+
+    @Inject
+    SubscriberMsisdnTrackerDataService subscriberMsisdnTrackerDataService;
 
 
     @Before
@@ -162,6 +191,33 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     }
 
+    public void SetupImportNewChild() throws IOException {
+        File filepath = new File("src/test/resources/rch");
+        String remoteLocation = filepath.getAbsolutePath();
+        String fileName = "RCH_StateID_21_Child_Import_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("childendpoint", 200, "abcd");
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName);
+
+        MotechEvent event = new MotechEvent(Constants.RCH_CHILD_READ, params);
+        try {
+            rchWebServiceFacade.readChildResponseFromFile(event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl);
+    }
 
     @Test
     @Ignore
@@ -336,4 +392,764 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         assertEquals(2, frontLineWorkers.size());
     }
 
-}
+    /*
+     * To verify import new child subscriber via xml with MotherID
+     */
+    @Test
+    public void testChildRCHImportNewSubscriber() throws IOException {
+        SetupImportNewChild();
+        List<Subscription> subscriptions = subscriptionDataService.retrieveAll();
+        Assert.assertEquals(1, subscriptions.size());
+        Assert.assertEquals(SubscriptionPackType.CHILD, subscriptions.get(0).getSubscriptionPack().getType());
+    }
+
+    /*
+     * To verify import child via xml with no MotherID
+     */
+    @Test
+    public void testImportChildNewSubscriberNoMotherId() throws IOException {
+        File filepath = new File("src/test/resources/rch");
+        String remoteLocation = filepath.getAbsolutePath();
+        String fileName = "RCH_StateID_21_Child_Update_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("childendpoint", 200, "abcd");
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName);
+
+        MotechEvent event = new MotechEvent(Constants.RCH_CHILD_READ, params);
+        try {
+            rchWebServiceFacade.readChildResponseFromFile(event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl);
+        List<Subscription> subscriptions = subscriptionDataService.retrieveAll();
+        Assert.assertEquals(1, subscriptions.size());
+        Assert.assertEquals(SubscriptionPackType.CHILD, subscriptions.get(0).getSubscriptionPack().getType());
+
+    }
+
+    /*
+     * To verify import child via xml with same MSISDN and matching MotherID
+     */
+    @Test
+    public void testImportMotherAndChildSameMsisdn() throws IOException {
+        File filepath = new File("src/test/resources/rch");
+        String remoteLocation = filepath.getAbsolutePath();
+        String fileName = "RCH_StateID_21_Mother_Import_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("childendpoint", 200, "abcd");
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName);
+
+        MotechEvent event = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params);
+        try {
+            rchWebServiceFacade.readMotherResponseFromFile(event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl);
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        List<Subscriber> subscriber = subscriberService.getSubscriber(9856852145L);
+        assertEquals(1, subscriber.size());
+        Set<Subscription> subscriptions = subscriber.get(0).getActiveAndPendingSubscriptions();
+        assertEquals(1, subscriptions.size());
+
+        List<Subscription> subscriptions1 = subscriptionDataService.retrieveAll();
+        Assert.assertEquals(SubscriptionStatus.ACTIVE, subscriptions1.get(0).getStatus());
+        transactionManager.commit(status);
+
+        //Import child xml file with same msisdn as mother
+
+        SetupImportNewChild();
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        subscriber = subscriberService.getSubscriber(9856852145L);
+        assertEquals(1, subscriber.size());
+        transactionManager.commit(status);
+        Subscription childSubscription = subscriptionService
+                .getActiveSubscription(subscriber.get(0), SubscriptionPackType.CHILD);
+        Subscription pregnancySubscription = subscriptionService
+                .getActiveSubscription(subscriber.get(0), SubscriptionPackType.PREGNANCY);
+        assertEquals(1, subscriptions.size());
+
+        // the pregnancy subscription should have been deactivated
+        assertEquals(1, subscriptions.size());
+        assertNotNull(childSubscription);
+        assertNull(pregnancySubscription);
+        transactionManager.commit(status);
+    }
+
+    /*
+     * To verify child subscriber is rejected when future DOB is provided.
+     */
+    @Test
+    public void verifyChildImportWithFutureDOB() throws Exception {
+        File filepath = new File("src/test/resources/rch");
+        String remoteLocation = filepath.getAbsolutePath();
+        String fileName = "RCH_StateID_21_Child_Import_Future_DOB_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("childendpoint", 200, "abcd");
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName);
+
+        MotechEvent event = new MotechEvent(Constants.RCH_CHILD_READ, params);
+        try {
+            rchWebServiceFacade.readChildResponseFromFile(event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl);
+        List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
+        Assert.assertEquals(1, childImportRejections.size());
+        Assert.assertEquals("8206996121", childImportRejections.get(0).getMobileNo());
+        Assert.assertEquals(RejectionReasons.INVALID_DOB.toString(), childImportRejections.get(0).getRejectionReason());
+        Assert.assertEquals("225893460704", childImportRejections.get(0).getRegistrationNo());
+
+    }
+
+    /*
+     * To verify child subscription is rejected when DOB provided is 48 weeks back.
+     */
+    @Test
+    public void verifyChildImportWithOldDOB() throws Exception {
+        File filepath = new File("src/test/resources/rch");
+        String remoteLocation = filepath.getAbsolutePath();
+        String fileName = "RCH_StateID_21_Child_Import_Old_DOB_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("childendpoint", 200, "abcd");
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName);
+
+        MotechEvent event = new MotechEvent(Constants.RCH_CHILD_READ, params);
+        try {
+            rchWebServiceFacade.readChildResponseFromFile(event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl);
+        List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
+        Assert.assertEquals(1, childImportRejections.size());
+        Assert.assertEquals("8206996121", childImportRejections.get(0).getMobileNo());
+        Assert.assertEquals(RejectionReasons.INVALID_DOB.toString(), childImportRejections.get(0).getRejectionReason());
+        Assert.assertEquals("225893460704", childImportRejections.get(0).getRegistrationNo());
+    }
+
+    /*
+     * To verify child subscription is deactivated when
+     * entry type given as '9'.
+     */
+    @Test
+    public void testDeactivateChildSubscriptionDueToDeath() throws Exception {
+        // import Child
+        SetupImportNewChild();
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+        assertEquals(1, subscriptions.size());
+
+        Subscription subscription = subscriptions.iterator().next();
+        assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+        transactionManager.commit(status);
+
+        // import record for same child with Entry_Type set to 9 -- her subscription should be deactivated
+        File filepath = new File("src/test/resources/rch");
+        String remoteLocation = filepath.getAbsolutePath();
+        String fileName1 = "RCH_StateID_21_Child_Death_9_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("childendpoint", 200, "abcd");
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl1 = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName1);
+
+        MotechEvent event = new MotechEvent(Constants.RCH_CHILD_READ, params);
+        try {
+            rchWebServiceFacade.readChildResponseFromFile(event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl1);
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        subscriptions = subscriber.getAllSubscriptions();
+        assertEquals(1, subscriptions.size());
+
+        subscription = subscriptions.iterator().next();
+        assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
+        assertEquals(DeactivationReason.CHILD_DEATH, subscription.getDeactivationReason());
+        transactionManager.commit(status);
+    }
+
+    /*
+     * To verify RCH upload is rejected when MSISDN number already exist
+     * for subscriber with new rch id.
+     */
+    @Test
+    public void testChildImportSameMsisdn() throws Exception {
+        // import Child
+        SetupImportNewChild();
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+        assertEquals(1, subscriptions.size());
+
+        Subscription subscription = subscriptions.iterator().next();
+        assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+        transactionManager.commit(status);
+
+        // attempt to create subscriber with same msisdn but different rch id.
+        File filepath = new File("src/test/resources/rch");
+        String remoteLocation = filepath.getAbsolutePath();
+        String fileName = "RCH_Child_Same_Msisdn_Diff_RchId_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("childendpoint", 200, "abcd");
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName);
+
+        MotechEvent event = new MotechEvent(Constants.RCH_CHILD_READ, params);
+        try {
+            rchWebServiceFacade.readChildResponseFromFile(event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl);
+
+        //second subscriber should have been rejected
+        List<Subscriber> subscribersByMsisdn = subscriberService.getSubscriber(9856852145L);
+        assertEquals(1, subscribersByMsisdn.size());
+        List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
+        Assert.assertEquals(1, childImportRejections.size());
+        Assert.assertEquals("9856852145", childImportRejections.get(0).getMobileNo());
+        Assert.assertEquals(RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), childImportRejections.get(0).getRejectionReason());
+        Assert.assertEquals("245893460721", childImportRejections.get(0).getRegistrationNo());
+    }
+
+    /*
+     * To verify RCH upload is rejected when data doesn’t contain DOB.
+     */
+    @Test
+    public void testChildImportWithoutDOB() throws Exception {
+        //DOB is missing
+        File filepath = new File("src/test/resources/rch");
+        String remoteLocation = filepath.getAbsolutePath();
+        String fileName = "RCH_StateID_21_Child_DOB_missing_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("childendpoint", 200, "abcd");
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName);
+
+        MotechEvent event = new MotechEvent(Constants.RCH_CHILD_READ, params);
+        try {
+            rchWebServiceFacade.readChildResponseFromFile(event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl);
+
+        //subscriber should not be created and rejected entry should be in nms_child_rejects with reason 'MISSING_DOB'.
+        List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
+        Assert.assertEquals(1, childImportRejections.size());
+        Assert.assertEquals("9856852145", childImportRejections.get(0).getMobileNo());
+        Assert.assertEquals(RejectionReasons.INVALID_DOB.toString(), childImportRejections.get(0).getRejectionReason());
+        Assert.assertEquals("245893460722", childImportRejections.get(0).getRegistrationNo());
+    }
+
+    /*
+     * To verify MSISDN is sucessfully updated for
+     * for existing child subscriber.
+     */
+    @Test
+    public void testUpdateMsisdnForChildRecord() throws Exception {
+        // import Child
+        SetupImportNewChild();
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        assertNotNull(subscriber);
+        Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+        assertEquals(1, subscriptions.size());
+
+        Subscription subscription = subscriptions.iterator().next();
+        assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+        transactionManager.commit(status);
+
+        //update msisdn of the existing child
+        File filepath = new File("src/test/resources/rch");
+        String remoteLocation = filepath.getAbsolutePath();
+        String fileName = "RCH_StateID_21_Child_With_Diff_Msisdn_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("childendpoint", 200, "abcd");
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName);
+
+        MotechEvent event = new MotechEvent(Constants.RCH_CHILD_READ, params);
+        try {
+            rchWebServiceFacade.readChildResponseFromFile(event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl);
+        List<Subscriber> subscribersByMsisdn = subscriberService.getSubscriber(9856852178L);
+        assertEquals(1, subscribersByMsisdn.size());
+        assertNotNull(subscriber);
+    }
+
+    /*
+     * To verify RCH upload is rejected when MSISDN number already exist
+     * for subscriber with new rch id.
+     */
+    @Test
+    public void verifyChildImportWithSameMsisdnDifferentState() throws Exception {
+        // import Child
+        SetupImportNewChild();
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        assertNotNull(subscriber);
+        Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+        assertEquals(1, subscriptions.size());
+
+        Subscription subscription = subscriptions.iterator().next();
+        assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+        transactionManager.commit(status);
+
+        // attempt to create subscriber with same msisdn but different rch id.
+        State state20 = createState(20L, "State 20");
+        stateDataService.create(state20);
+        District district = createDistrict(state20, 3L, "EXAMPLE DISTRICT");
+        districtDataService.create(district);
+
+        File filepath = new File("src/test/resources/rch");
+        String remoteLocation = filepath.getAbsolutePath();
+        String fileName = "RCH_StateID_20_Child_With_Same_Msisdn_Diff_State_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("childendpoint", 200, "abcd");
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 20L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName);
+
+        MotechEvent event = new MotechEvent(Constants.RCH_CHILD_READ, params);
+        try {
+            rchWebServiceFacade.readChildResponseFromFile(event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl);
+
+        //second subscriber should have been rejected
+
+        List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
+        Assert.assertEquals(1, childImportRejections.size());
+        Assert.assertEquals("9856852145", childImportRejections.get(0).getMobileNo());
+        Assert.assertEquals(RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), childImportRejections.get(0).getRejectionReason());
+        Assert.assertEquals("245893460721", childImportRejections.get(0).getRegistrationNo());
+    }
+
+    /*
+     * To verify DOB is changed successfully via XML when subscription
+     * already exist for childPack having status as "Active"
+     */
+    @Test
+    public void verifyChildDOBUpdate() throws Exception {
+        // import Child
+        SetupImportNewChild();
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        assertNotNull(subscriber);
+        Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+        assertEquals(1, subscriptions.size());
+
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
+        assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+        transactionManager.commit(status);
+
+        // attempt to update dob through rch upload
+        File filepath = new File("src/test/resources/rch");
+        String remoteLocation = filepath.getAbsolutePath();
+        String fileName = "RCH_StateID_21_Child_With_DOB_Update_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("childendpoint", 200, "abcd");
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName);
+
+        MotechEvent event = new MotechEvent(Constants.RCH_CHILD_READ, params);
+        try {
+            rchWebServiceFacade.readChildResponseFromFile(event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl);
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        List<Subscriber> subscribersByMsisdn = subscriberService.getSubscriber(9856852145L);
+        assertEquals(1, subscribersByMsisdn.size());
+        assertNotNull(subscriber);
+        transactionManager.commit(status);
+    }
+
+    /*
+     * To verify when subscription
+     * already exists for childPack having status as "Deactivated" received with DOB update is rejected.
+     */
+    @Test
+    public void verifyD0bUpdateForDeactivatedChild() throws Exception {
+        // import Child
+        SetupImportNewChild();
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        assertNotNull(subscriber);
+        Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+        assertEquals(1, subscriptions.size());
+
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
+        assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+
+        //Mark subscription deactivate
+        subscriptionService.deactivateSubscription(subscription, DeactivationReason.STILL_BIRTH);
+        assertEquals(SubscriptionStatus.DEACTIVATED, subscription.getStatus());
+        transactionManager.commit(status);
+
+        //Update DOB for subscriber whose subscription is deactivated.
+        File filepath = new File("src/test/resources/rch");
+        String remoteLocation = filepath.getAbsolutePath();
+        String fileName = "RCH_StateID_21_Child_With_DOB_Update_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("childendpoint", 200, "abcd");
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName);
+
+        MotechEvent event = new MotechEvent(Constants.RCH_CHILD_READ, params);
+        try {
+            rchWebServiceFacade.readChildResponseFromFile(event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl);
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        //Record should get rejected when existed record with status "Deactivated" comes with DOB update.
+        List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
+        Assert.assertEquals(1, childImportRejections.size());
+        Assert.assertEquals("9856852145", childImportRejections.get(0).getMobileNo());
+        Assert.assertEquals(RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS.toString(), childImportRejections.get(0).getRejectionReason());
+        Assert.assertEquals("245893460722", childImportRejections.get(0).getRegistrationNo());
+        transactionManager.commit(status);
+    }
+
+    /*
+     * To verify when DOB is changed successfully via xml when subscription
+     * already exist for childPack having status as "Completed"
+     */
+    @Test
+    public void verifyD0bUpdateForCompletedChild() throws Exception {
+        // import Child
+        DateTime dob = DateTime.now();
+        SetupImportNewChild();
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        assertNotNull(subscriber);
+        Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
+        assertEquals(1, subscriptions.size());
+
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
+        assertEquals(SubscriptionStatus.ACTIVE, subscription.getStatus());
+
+        //Make subscription completed
+        subscriber.setDateOfBirth(dob.minusDays(35000));
+        subscriberService.updateStartDate(subscriber);
+        transactionManager.commit(status);
+        assertEquals(SubscriptionStatus.COMPLETED, subscription.getStatus());
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        //Update DOB for subscriber whose subscription is completed.
+        File filepath = new File("src/test/resources/rch");
+        String remoteLocation = filepath.getAbsolutePath();
+        String fileName = "RCH_StateID_21_Child_With_DOB_Update_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("childendpoint", 200, "abcd");
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName);
+
+        MotechEvent event = new MotechEvent(Constants.RCH_CHILD_READ, params);
+        try {
+            rchWebServiceFacade.readChildResponseFromFile(event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl);
+
+        subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        Assert.assertEquals(2, subscriber.getAllSubscriptions().size());
+        Assert.assertEquals(1, subscriber.getActiveAndPendingSubscriptions().size());
+        transactionManager.commit(status);
+    }
+
+    /*
+     * To verify that NMS shall deactivate pregancyPack if childPack uploads
+     * for updation which contains motherId for an active mother beneficiary.
+     */
+    @Test
+    public void testDeactivateMotherWhenChildUploads() throws Exception {
+        // import mother
+        File filepath = new File("src/test/resources/rch");
+        String remoteLocation = filepath.getAbsolutePath();
+        String fileName = "RCH_StateID_21_Mother_Import_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("childendpoint", 200, "abcd");
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName);
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        MotechEvent event = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params);
+        try {
+            rchWebServiceFacade.readMotherResponseFromFile(event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl);
+        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        assertNotNull(subscriber);
+        Set<Subscription> subscriptions = subscriber.getActiveAndPendingSubscriptions();
+        Assert.assertEquals(1, subscriptions.size());
+        transactionManager.commit(status);
+
+        // import child with same MSISDN and above MotherID --> child should be updated and mother be deactivated
+
+        SetupImportNewChild();
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        subscriptions = subscriber.getActiveAndPendingSubscriptions();
+        Subscription childSubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.CHILD);
+        Subscription pregnancySubscription = subscriptionService
+                .getActiveSubscription(subscriber, SubscriptionPackType.PREGNANCY);
+
+
+        //only child subscription should be activated
+        Assert.assertEquals(1, subscriptions.size());
+        assertNotNull(childSubscription);
+        assertNull(pregnancySubscription);
+        transactionManager.commit(status);
+    }
+
+    // Test SubscriberMsisdnTracker in Child Import
+    @Test
+    public void testChildMsisdnTracker() throws Exception {
+        SetupImportNewChild();
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        List<Subscriber> subscribers = subscriberService.getSubscriber(9856852145L);
+        Assert.assertEquals(1, subscribers.size());
+
+        File filepath = new File("src/test/resources/rch");
+        String remoteLocation = filepath.getAbsolutePath();
+        String fileName = "RCH_Child_With_Same_Mother_Diff_Msisdn_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("childendpoint", 200, "abcd");
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName);
+
+        MotechEvent event = new MotechEvent(Constants.RCH_CHILD_READ, params);
+        try {
+            rchWebServiceFacade.readChildResponseFromFile(event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl);
+        transactionManager.commit(status);
+
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        subscribers = subscriberService.getSubscriber(9856852145L);
+        Assert.assertEquals(0, subscribers.size());
+        subscribers = subscriberService.getSubscriber(9856852235L);
+        Assert.assertEquals(1, subscribers.size());
+
+        List<SubscriberMsisdnTracker> msisdnTrackers = subscriberMsisdnTrackerDataService.retrieveAll();
+        Assert.assertEquals(1, msisdnTrackers.size());
+        SubscriberMsisdnTracker msisdnTracker = msisdnTrackers.get(0);
+        Assert.assertEquals(9856852145L, msisdnTracker.getOldCallingNumber().longValue());
+        Assert.assertEquals(9856852235L, msisdnTracker.getNewCallingNumber().longValue());
+        transactionManager.commit(status);
+    }
+
+    @Test
+    public void testCreateNewChildRecordDifferentMsisdn() throws Exception {
+        SetupImportNewChild();
+
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
+
+        //deactivate child subscription due to death
+        subscription.setStatus(SubscriptionStatus.DEACTIVATED);
+        subscription.setEndDate(new DateTime().withDate(2016, 8, 1));
+        subscriptionDataService.update(subscription);
+        subscriptionService.purgeOldInvalidSubscriptions();
+        transactionManager.commit(status);
+
+        //import a new child record for the same mother with different msisdn
+
+        File filepath = new File("src/test/resources/rch");
+        String remoteLocation = filepath.getAbsolutePath();
+        String fileName = "RCH_Child_With_Same_Mother_Diff_Msisdn_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("childendpoint", 200, "abcd");
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName);
+
+        MotechEvent event = new MotechEvent(Constants.RCH_CHILD_READ, params);
+        try {
+            rchWebServiceFacade.readChildResponseFromFile(event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl);
+        status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        List<Subscriber> subscribers = subscriberService.getSubscriber(9856852146L);
+        assertEquals(1, subscribers.size());
+        transactionManager.commit(status);
+    }
+    }
+
