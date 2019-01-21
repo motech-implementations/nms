@@ -396,7 +396,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
      * To verify import new child subscriber via xml with MotherID
      */
     @Test
-    public void testChildRCHImportNewSubscriber() throws IOException {
+    public void testChildRCHImportNewSubscriberViaXml() throws IOException {
         SetupImportNewChild();
         List<Subscription> subscriptions = subscriptionDataService.retrieveAll();
         Assert.assertEquals(1, subscriptions.size());
@@ -407,7 +407,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
      * To verify import child via xml with no MotherID
      */
     @Test
-    public void testImportChildNewSubscriberNoMotherId() throws IOException {
+    public void testImportChildNewSubscriberNoMotherIdViaXml() throws IOException {
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_StateID_21_Child_Update_Response.xml";
@@ -443,7 +443,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
      * To verify import child via xml with same MSISDN and matching MotherID
      */
     @Test
-    public void testImportMotherAndChildSameMsisdn() throws IOException {
+    public void testImportMotherAndChildSameMsisdnViaXml() throws IOException {
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_StateID_21_Mother_Import_Response.xml";
@@ -485,7 +485,6 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscriber = subscriberService.getSubscriber(9856852145L);
         assertEquals(1, subscriber.size());
-        transactionManager.commit(status);
         Subscription childSubscription = subscriptionService
                 .getActiveSubscription(subscriber.get(0), SubscriptionPackType.CHILD);
         Subscription pregnancySubscription = subscriptionService
@@ -503,7 +502,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
      * To verify child subscriber is rejected when future DOB is provided.
      */
     @Test
-    public void verifyChildImportWithFutureDOB() throws Exception {
+    public void verifyChildImportWithFutureDOBViaXml() throws Exception {
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_StateID_21_Child_Import_Future_DOB_Response.xml";
@@ -541,7 +540,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
      * To verify child subscription is rejected when DOB provided is 48 weeks back.
      */
     @Test
-    public void verifyChildImportWithOldDOB() throws Exception {
+    public void verifyChildImportWithOldDOBViaXml() throws Exception {
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_StateID_21_Child_Import_Old_DOB_Response.xml";
@@ -579,7 +578,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
      * entry type given as '9'.
      */
     @Test
-    public void testDeactivateChildSubscriptionDueToDeath() throws Exception {
+    public void testDeactivateChildSubscriptionDueToDeathViaXml() throws Exception {
         // import Child
         SetupImportNewChild();
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -633,7 +632,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
      * for subscriber with new rch id.
      */
     @Test
-    public void testChildImportSameMsisdn() throws Exception {
+    public void testChildImportSameMsisdnViaXml() throws Exception {
         // import Child
         SetupImportNewChild();
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -686,7 +685,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
      * To verify RCH upload is rejected when data doesn’t contain DOB.
      */
     @Test
-    public void testChildImportWithoutDOB() throws Exception {
+    public void testChildImportWithoutDOBViaXml() throws Exception {
         //DOB is missing
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
@@ -727,7 +726,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
      * for existing child subscriber.
      */
     @Test
-    public void testUpdateMsisdnForChildRecord() throws Exception {
+    public void testUpdateMsisdnForChildRecordViaXml() throws Exception {
         // import Child
         SetupImportNewChild();
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -776,7 +775,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
      * for subscriber with new rch id.
      */
     @Test
-    public void verifyChildImportWithSameMsisdnDifferentState() throws Exception {
+    public void verifyChildImportWithSameMsisdnDifferentStateViaXml() throws Exception {
         // import Child
         SetupImportNewChild();
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -835,7 +834,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
      * already exist for childPack having status as "Active"
      */
     @Test
-    public void verifyChildDOBUpdate() throws Exception {
+    public void verifyChildDOBUpdateViaXml() throws Exception {
         // import Child
         SetupImportNewChild();
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -886,7 +885,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
      * already exists for childPack having status as "Deactivated" received with DOB update is rejected.
      */
     @Test
-    public void verifyD0bUpdateForDeactivatedChild() throws Exception {
+    public void verifyD0bUpdateForDeactivatedChildViaXml() throws Exception {
         // import Child
         SetupImportNewChild();
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -945,7 +944,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
      * already exist for childPack having status as "Completed"
      */
     @Test
-    public void verifyD0bUpdateForCompletedChild() throws Exception {
+    public void verifyD0bUpdateForCompletedChildViaXml() throws Exception {
         // import Child
         DateTime dob = DateTime.now();
         SetupImportNewChild();
@@ -1003,7 +1002,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
      * for updation which contains motherId for an active mother beneficiary.
      */
     @Test
-    public void testDeactivateMotherWhenChildUploads() throws Exception {
+    public void testDeactivateMotherWhenChildUploadsViaXml() throws Exception {
         // import mother
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
@@ -1023,7 +1022,6 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params.put(Constants.REMOTE_LOCATION, remoteLocation);
         params.put(Constants.FILE_NAME, fileName);
 
-        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         MotechEvent event = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event);
@@ -1031,6 +1029,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
             e.printStackTrace();
         }
         Thread.currentThread().setContextClassLoader(cl);
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
         assertNotNull(subscriber);
         Set<Subscription> subscriptions = subscriber.getActiveAndPendingSubscriptions();
@@ -1057,7 +1056,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     // Test SubscriberMsisdnTracker in Child Import
     @Test
-    public void testChildMsisdnTracker() throws Exception {
+    public void testChildMsisdnTrackerViaXml() throws Exception {
         SetupImportNewChild();
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         List<Subscriber> subscribers = subscriberService.getSubscriber(9856852145L);
@@ -1105,7 +1104,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     }
 
     @Test
-    public void testCreateNewChildRecordDifferentMsisdn() throws Exception {
+    public void testCreateNewChildRecordDifferentMsisdnViaXml() throws Exception {
         SetupImportNewChild();
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -1147,7 +1146,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         }
         Thread.currentThread().setContextClassLoader(cl);
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        List<Subscriber> subscribers = subscriberService.getSubscriber(9856852146L);
+        List<Subscriber> subscribers = subscriberService.getSubscriber(9856852235L);
         assertEquals(1, subscribers.size());
         transactionManager.commit(status);
     }
