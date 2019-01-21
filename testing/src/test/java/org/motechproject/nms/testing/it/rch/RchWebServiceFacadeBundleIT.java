@@ -872,6 +872,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         Thread.currentThread().setContextClassLoader(cl);
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         List<Subscriber> subscribersByMsisdn = subscriberService.getSubscriber(9856852145L);
