@@ -621,7 +621,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                         subscriber.setChild(childUpdate);
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriber, pack.getType());
                         subscriber.getChild().setModificationDate(DateTime.now());
-                        subscriberByRchId.getChild().setName(name);
+                        subscriber.getChild().setName(name);
                         finalSubscription = updateOrCreateSubscription(subscriber, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
                     } else {
                         if (subscriptionService.activeSubscriptionByMsisdnRch(subscribersByMsisdn,msisdn, SubscriptionPackType.CHILD, motherRchId, childUpdate.getRchId())) {
