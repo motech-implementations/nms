@@ -174,7 +174,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String QUOTATION = "'";
     private static final String SQL_QUERY_LOG = "SQL QUERY: {}";
     private static final String FROM_DATE_LOG = "fromdate {}";
-    private static final String SCP_ERROR = "error copying file to remote server.";
+    private static final String SCP_ERROR_REMOTE = "error copying file to remote server.";
+    private static final String SCP_ERROR_LOCAL = "error copying file to local server.";
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("dd-MM-yyyy");
     private static final String SCP_TIMEOUT_SETTING = "rch.scp_timeout";
@@ -185,6 +186,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String FILES_MISSING_ON_A = "No files saved a due to ";
     private static final String FILES_MISSING_ON_B = "No files saved b due to ";
     private static final String FILES_MISSING_ON_C = "No files saved c due to ";
+    private static final String SCP_LOCAL_TO_REMOTE_REMOTELOCATION = "empty";
 
 
     @Autowired
@@ -246,6 +248,182 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return message + StringUtils.substring(e.getMessage(), START, END);
     }
 
+    class ScpRunnable implements Runnable {
+        String name;
+        String remoteLocation;
+        LocalDate from;
+        LocalDate to;
+        Long stateId;
+        RchUserType userType;
+        int trialCount;
+
+        public ScpRunnable(String name, String remoteLocation, LocalDate from, LocalDate to, Long stateId, RchUserType userType, int trialCount) {
+            this.name=name;
+            this.remoteLocation = remoteLocation;
+            this.from  = from;
+            this.to= to;
+            this.stateId = stateId;
+            this.userType  = userType;
+            this.trialCount = trialCount;
+        }
+
+        public void run() {
+            try {
+                Thread.sleep(120000L);
+                trialCount++;
+                LOGGER.error("Error in SCP for {} time for state {} for type {}", trialCount, stateId, userType);
+                if (trialCount <= 3) {
+                    if (SCP_LOCAL_TO_REMOTE_REMOTELOCATION.equals(remoteLocation)) {
+                        retryScpAndAudit(name, from, to, stateId, userType, trialCount);
+                    } else {
+                        retryScpFromRemoteToLocal(name, remoteLocation, from, to, stateId, userType, trialCount);
+                    }
+                }
+            } catch (InterruptedException e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+        }
+
+    }
+    private boolean retryScpAndAudit(String name, LocalDate from, LocalDate to, Long stateId, RchUserType userType, int trialCount) {
+        try {
+            scpResponseToRemote(name);
+            LOGGER.info("RCH mother response file successfully copied to remote server");
+
+            RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(name, from, to, stateId, userType, LocalDate.now());
+            rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
+            return true;
+
+        } catch (ExecutionException e) {
+            if(trialCount < 3) {
+            Runnable scpRunnable = new ScpRunnable(name, SCP_LOCAL_TO_REMOTE_REMOTELOCATION, from, to, stateId, userType, trialCount);
+            scpRunnable.run();
+            } else {
+                LOGGER.error(SCP_ERROR_REMOTE, e);
+            }
+         } catch (RchFileManipulationException e) {
+            LOGGER.error("invalid file name", e);
+        }
+        return false;
+    }
+
+    private void retryScpFromRemoteToLocal(String name, String remoteLocation, LocalDate from, LocalDate to, Long stateId, RchUserType userType, int trialCount) {
+        try {
+            List<RchImportFacilitator> rchImportFacilitatorTypes = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), userType);
+            File localResponseFile ;
+            if (rchImportFacilitatorTypes.isEmpty()) {
+                localResponseFile = scpResponseToLocal(name, remoteLocation);
+                String result = readResponsesFromXml(localResponseFile);
+                State importState = stateDataService.findByCode(stateId);
+                String stateName = importState.getName();
+                Long stateCode = importState.getCode();
+
+                LocalDate startReferenceDate = to;
+                LocalDate endReferenceDate = from;
+                processByUserType(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate, userType);
+            } else {
+                for (RchImportFacilitator rchImportFacilitatorType: rchImportFacilitatorTypes
+                ) {
+                    if (name == null) {
+                        localResponseFile = scpResponseToLocal(rchImportFacilitatorType.getFileName(), remoteLocation);
+                    } else {
+                        localResponseFile = scpResponseToLocal(name, remoteLocation);
+                    }
+                    if (localResponseFile != null) {
+                        String result = readResponsesFromXml(localResponseFile);
+                        State importState = stateDataService.findByCode(stateId);
+                        String stateName = importState.getName();
+                        Long stateCode = importState.getCode();
+                        LocalDate startReferenceDate = rchImportFacilitatorType.getStartDate();
+                        LocalDate endReferenceDate = rchImportFacilitatorType.getEndDate();
+                        processByUserType(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate, userType);
+                    }
+                }
+            }
+        } catch (ExecutionException e) {
+            if(trialCount < 3) {
+                Runnable scpRunnable = new ScpRunnable(name, remoteLocation, from, to, stateId, userType, trialCount);
+                scpRunnable.run();
+            } else {
+                LOGGER.error(SCP_ERROR_LOCAL, e);
+            }
+        } catch (RchFileManipulationException e) {
+
+        } finally {
+            Map<String, Object> eventParams = new HashMap<>();
+            eventParams.put(Constants.STATE_ID_PARAM, stateId);
+            eventParams.put(Constants.REMOTE_LOCATION, null);
+            eventParams.put(Constants.FILE_NAME, null);
+            eventByUserType(eventParams, userType);
+            }
+        }
+
+    private void eventByUserType(Map<String, Object> eventParams, RchUserType userType) {
+        switch (userType) {
+            case DISTRICT:
+                eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_TALUKA_READ_SUBJECT, eventParams));
+                break;
+            case TALUKA:
+                eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_HEALTHBLOCK_READ_SUBJECT, eventParams));
+                break;
+            case HEALTHBLOCK:
+                eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_TALUKA_HEALTHBLOCK_READ_SUBJECT, eventParams));
+                break;
+            case TALUKAHEALTHBLOCK:
+                eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_HEALTHFACILITY_READ_SUBJECT, eventParams));
+                break;
+            case HEALTHFACILITY:
+                eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_HEALTHSUBFACILITY_READ_SUBJECT, eventParams));
+                break;
+            case HEALTHSUBFACILITY:
+                eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_VILLAGE_READ_SUBJECT, eventParams));
+                break;
+            case VILLAGE:
+                eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_VILLAGE_HEALTHSUBFACILITY_READ_SUBJECT, eventParams));
+                break;
+            default:
+                return;
+        }
+    }
+
+    private void processByUserType(String name, String result, Long stateId, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate, RchUserType rchUserType) {
+        switch (rchUserType) {
+            case MOTHER:
+                motherFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                break;
+            case CHILD:
+                childFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                break;
+            case ASHA:
+                ashaFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                break;
+            case DISTRICT:
+                districtFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                break;
+            case TALUKA:
+                talukaFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                break;
+            case HEALTHBLOCK:
+                healthblockFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                break;
+            case TALUKAHEALTHBLOCK:
+                tHFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                break;
+            case HEALTHFACILITY:
+                healthFacilityFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                break;
+            case HEALTHSUBFACILITY:
+                healthsubfacilityFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                break;
+            case VILLAGE:
+                villageFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                break;
+            case VILLAGEHEALTHSUBFACILITY:
+                vhsfFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                break;
+        }
+    }
+
     @Override
     public boolean getMothersData(LocalDate from, LocalDate to, URL endpoint, Long stateId) {
         DS_DataResponseDS_DataResult result;
@@ -265,19 +443,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         File responseFile = generateResponseFile(result, RchUserType.MOTHER, stateId);
         if (responseFile != null) {
             LOGGER.info("RCH mother response successfully written to file. Copying to remote directory.");
-            try {
-                scpResponseToRemote(responseFile.getName());
-                LOGGER.info("RCH mother response file successfully copied to remote server");
-
-                RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.MOTHER, LocalDate.now());
-                rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
-                status = true;
-
-            } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR, e);
-            } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name", e);
-            }
+            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.MOTHER, 0);
         } else {
             LOGGER.error("Error writing response to file.");
         }
@@ -303,19 +469,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         File responseFile = generateResponseFile(result, RchUserType.DISTRICT, stateId);
         if (responseFile != null) {
             LOGGER.info("RCH district response successfully written to file. Copying to remote directory.");
-            try {
-                scpResponseToRemote(responseFile.getName());
-                LOGGER.info("RCH district response file successfully copied to remote server");
-
-                RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.DISTRICT, LocalDate.now());
-                rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
-                status = true;
-
-            } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR, e);
-            } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name", e);
-            }
+            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.DISTRICT, 0);
         } else {
             LOGGER.error("Error writing response to file.");
         }
@@ -341,19 +495,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         File responseFile = generateResponseFile(result, RchUserType.TALUKA, stateId);
         if (responseFile != null) {
             LOGGER.info("RCH taluka response successfully written to file. Copying to remote directory.");
-            try {
-                scpResponseToRemote(responseFile.getName());
-                LOGGER.info("RCH taluka response file successfully copied to remote server");
-
-                RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.TALUKA, LocalDate.now());
-                rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
-                status = true;
-
-            } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR, e);
-            } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name", e);
-            }
+            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.TALUKA, 0);
         } else {
             LOGGER.error("Error writing response to file.");
         }
@@ -379,19 +521,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         File responseFile = generateResponseFile(result, RchUserType.VILLAGE, stateId);
         if (responseFile != null) {
             LOGGER.info("RCH Village response successfully written to file. Copying to remote directory.");
-            try {
-                scpResponseToRemote(responseFile.getName());
-                LOGGER.info("RCH Village response file successfully copied to remote server");
-
-                RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.VILLAGE, LocalDate.now());
-                rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
-                status = true;
-
-            } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR, e);
-            } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name", e);
-            }
+            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.VILLAGE, 0);
         } else {
             LOGGER.error("Error writing response to file.");
         }
@@ -428,47 +558,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH District file import entry point");
         LOGGER.info("Copying RCH District response file from remote server to local directory.");
-        try {
-            List<RchImportFacilitator> rchImportFacilitatorDistricts = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.DISTRICT);
-            File localResponseFile ;
-            if (rchImportFacilitatorDistricts.isEmpty()) {
-                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                String result = readResponsesFromXml(localResponseFile);
-                State importState = stateDataService.findByCode(stateId);
-                String stateName = importState.getName();
-                Long stateCode = importState.getCode();
-
-                LocalDate startReferenceDate = startDate;
-                LocalDate endReferenceDate = endDate;
-                districtFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-            } else {
-                for (RchImportFacilitator rchImportFacilitatorDistrict: rchImportFacilitatorDistricts
-                ) {
-                    if (fileName == null) {
-                        localResponseFile = scpResponseToLocal(rchImportFacilitatorDistrict.getFileName(), remoteLocation);
-                    } else {
-                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                    }
-                    if (localResponseFile != null) {
-                        String result = readResponsesFromXml(localResponseFile);
-                        State importState = stateDataService.findByCode(stateId);
-                        String stateName = importState.getName();
-                        Long stateCode = importState.getCode();
-                        LocalDate startReferenceDate = rchImportFacilitatorDistrict.getStartDate();
-                        LocalDate endReferenceDate = rchImportFacilitatorDistrict.getEndDate();
-                        districtFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-                    }
-                }
-            }
-        } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy response file from remote server to local directory.");
-        } finally {
-            Map<String, Object> eventParams = new HashMap<>();
-            eventParams.put(Constants.STATE_ID_PARAM, stateId);
-            eventParams.put(Constants.REMOTE_LOCATION, null);
-            eventParams.put(Constants.FILE_NAME, null);
-            eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_TALUKA_READ_SUBJECT, eventParams));
-        }
+        retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.DISTRICT, 0);
     }
 
     private void districtFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
@@ -555,47 +645,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH Taluka file import entry point");
         LOGGER.info("Copying RCH Taluka response file from remote server to local directory.");
-        try {
-            List<RchImportFacilitator> rchImportFacilitatorTalukas = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.TALUKA);
-            File localResponseFile ;
-            if (rchImportFacilitatorTalukas.isEmpty()) {
-                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                String result = readResponsesFromXml(localResponseFile);
-                State importState = stateDataService.findByCode(stateId);
-                String stateName = importState.getName();
-                Long stateCode = importState.getCode();
-
-                LocalDate startReferenceDate = startDate;
-                LocalDate endReferenceDate = endDate;
-                talukaFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-            } else {
-                for (RchImportFacilitator rchImportFacilitatorTaluka: rchImportFacilitatorTalukas
-                ) {
-                    if (fileName == null) {
-                        localResponseFile = scpResponseToLocal(rchImportFacilitatorTaluka.getFileName(), remoteLocation);
-                    } else {
-                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                    }
-                    if (localResponseFile != null) {
-                        String result = readResponsesFromXml(localResponseFile);
-                        State importState = stateDataService.findByCode(stateId);
-                        String stateName = importState.getName();
-                        Long stateCode = importState.getCode();
-                        LocalDate startReferenceDate = rchImportFacilitatorTaluka.getStartDate();
-                        LocalDate endReferenceDate = rchImportFacilitatorTaluka.getEndDate();
-                        talukaFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-                    }
-                }
-            }
-        } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy response file from remote server to local directory.");
-        } finally {
-            Map<String, Object> eventParams = new HashMap<>();
-            eventParams.put(Constants.STATE_ID_PARAM, stateId);
-            eventParams.put(Constants.REMOTE_LOCATION, null);
-            eventParams.put(Constants.FILE_NAME, null);
-            eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_HEALTHBLOCK_READ_SUBJECT, eventParams));
-        }
+        retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.TALUKA, 0);
     }
 
     private void talukaFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
@@ -680,47 +730,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH village file import entry point");
         LOGGER.info("Copying RCH village response file from remote server to local directory.");
-        try {
-            List<RchImportFacilitator> rchImportFacilitatorvillages = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.VILLAGE);
-            File localResponseFile ;
-            if (rchImportFacilitatorvillages.isEmpty()) {
-                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                String result = readResponsesFromXml(localResponseFile);
-                State importState = stateDataService.findByCode(stateId);
-                String stateName = importState.getName();
-                Long stateCode = importState.getCode();
-
-                LocalDate startReferenceDate = startDate;
-                LocalDate endReferenceDate = endDate;
-                villageFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-            } else {
-                for (RchImportFacilitator rchImportFacilitatorvillage: rchImportFacilitatorvillages
-                ) {
-                    if (fileName == null) {
-                        localResponseFile = scpResponseToLocal(rchImportFacilitatorvillage.getFileName(), remoteLocation);
-                    } else {
-                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                    }
-                    if (localResponseFile != null) {
-                        String result = readResponsesFromXml(localResponseFile);
-                        State importState = stateDataService.findByCode(stateId);
-                        String stateName = importState.getName();
-                        Long stateCode = importState.getCode();
-                        LocalDate startReferenceDate = rchImportFacilitatorvillage.getStartDate();
-                        LocalDate endReferenceDate = rchImportFacilitatorvillage.getEndDate();
-                        villageFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-                    }
-                }
-            }
-        } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy response file from remote server to local directory.");
-        } finally {
-            Map<String, Object> eventParams = new HashMap<>();
-            eventParams.put(Constants.STATE_ID_PARAM, stateId);
-            eventParams.put(Constants.REMOTE_LOCATION, null);
-            eventParams.put(Constants.FILE_NAME, null);
-            eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_VILLAGE_HEALTHSUBFACILITY_READ_SUBJECT, eventParams));
-        }
+        retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.VILLAGE, 0);
     }
 
     private void villageFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
@@ -819,41 +829,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH Asha file import entry point");
         LOGGER.info("Copying RCH Asha response file from remote server to local directory.");
-        try {
-            List<RchImportFacilitator> rchImportFacilitatorMothers = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.MOTHER);
-            File localResponseFile ;
-            if (rchImportFacilitatorMothers.isEmpty()) {
-                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                String result = readResponsesFromXml(localResponseFile);
-                State importState = stateDataService.findByCode(stateId);
-                String stateName = importState.getName();
-                Long stateCode = importState.getCode();
-
-                LocalDate startReferenceDate = startDate;
-                LocalDate endReferenceDate = endDate;
-                motherFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-            } else {
-                for (RchImportFacilitator rchImportFacilitatorMother: rchImportFacilitatorMothers
-                ) {
-                    if (fileName == null) {
-                        localResponseFile = scpResponseToLocal(rchImportFacilitatorMother.getFileName(), remoteLocation);
-                    } else {
-                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                    }
-                    if (localResponseFile != null) {
-                        String result = readResponsesFromXml(localResponseFile);
-                        State importState = stateDataService.findByCode(stateId);
-                        String stateName = importState.getName();
-                        Long stateCode = importState.getCode();
-                        LocalDate startReferenceDate = rchImportFacilitatorMother.getStartDate();
-                        LocalDate endReferenceDate = rchImportFacilitatorMother.getEndDate();
-                        motherFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-                    }
-                }
-            }
-        } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy response file from remote server to local directory.");
-        }
+        retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.MOTHER, 0);
     }
 
     private void motherFileProcess(String result, Long stateId, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
@@ -927,19 +903,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         File responseFile = generateResponseFile(result, RchUserType.CHILD, stateId);
         if (responseFile != null) {
             LOGGER.info("RCH children response successfully written to file. Copying to remote directory.");
-            try {
-                scpResponseToRemote(responseFile.getName());
-                LOGGER.info("RCH children response file successfully copied to remote server");
-
-                RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.CHILD, LocalDate.now());
-                rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
-                status = true;
-            } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR, e);
-            } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file error");
-            }
-
+            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.CHILD, 0);
         } else {
             LOGGER.error("Error writing response to file.");
         }
@@ -976,41 +940,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH Asha file import entry point");
         LOGGER.info("Copying RCH Asha response file from remote server to local directory.");
-        try {
-            List<RchImportFacilitator> rchImportFacilitatorChildren = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.CHILD);
-            File localResponseFile ;
-            if (rchImportFacilitatorChildren.isEmpty()) {
-                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                String result = readResponsesFromXml(localResponseFile);
-                State importState = stateDataService.findByCode(stateId);
-                String stateName = importState.getName();
-                Long stateCode = importState.getCode();
-
-                LocalDate startReferenceDate = startDate;
-                LocalDate endReferenceDate = endDate;
-                childFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-            } else {
-                for (RchImportFacilitator rchImportFacilitatorChild: rchImportFacilitatorChildren
-                ) {
-                    if (fileName == null) {
-                        localResponseFile = scpResponseToLocal(rchImportFacilitatorChild.getFileName(), remoteLocation);
-                    } else {
-                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                    }
-                    if (localResponseFile != null) {
-                        String result = readResponsesFromXml(localResponseFile);
-                        State importState = stateDataService.findByCode(stateId);
-                        String stateName = importState.getName();
-                        Long stateCode = importState.getCode();
-                        LocalDate startReferenceDate = rchImportFacilitatorChild.getStartDate();
-                        LocalDate endReferenceDate = rchImportFacilitatorChild.getEndDate();
-                        childFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-                    }
-                }
-            }
-        } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy response file from remote server to local directory.");
-        }
+        retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.CHILD, 0);
     }
 
     private void childFileProcess(String result, Long stateId, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
@@ -1084,18 +1014,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         File responseFile = generateResponseFile(result, RchUserType.ASHA, stateId);
         if (responseFile != null) {
             LOGGER.info("RCH asha response successfully written to file. Copying to remote directory.");
-            try {
-                scpResponseToRemote(responseFile.getName());
-                LOGGER.info("RCH asha response file successfully copied to remote server");
-
-                RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.ASHA, LocalDate.now());
-                rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
-                status = true;
-            } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR,e);
-            } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file error",e);
-            }
+            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.ASHA, 0);
         } else {
             LOGGER.error("Error writing response to file.");
         }
@@ -1132,42 +1051,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH Asha file import entry point");
         LOGGER.info("Copying RCH Asha response file from remote server to local directory.");
-        try {
-            List<RchImportFacilitator> rchImportFacilitatorAshas = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.ASHA);
-            File localResponseFile ;
-            if (rchImportFacilitatorAshas.isEmpty()) {
-                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-
-                String result = readResponsesFromXml(localResponseFile);
-                State importState = stateDataService.findByCode(stateId);
-                String stateName = importState.getName();
-                Long stateCode = importState.getCode();
-
-                LocalDate startReferenceDate = startDate;
-                LocalDate endReferenceDate = endDate;
-                ashaFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-            } else {
-                for (RchImportFacilitator rchImportFacilitatorAsha: rchImportFacilitatorAshas
-                        ) {
-                    if (fileName == null) {
-                        localResponseFile = scpResponseToLocal(rchImportFacilitatorAsha.getFileName(), remoteLocation);
-                    } else {
-                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                    }
-                    if (localResponseFile != null) {
-                        String result = readResponsesFromXml(localResponseFile);
-                        State importState = stateDataService.findByCode(stateId);
-                        String stateName = importState.getName();
-                        Long stateCode = importState.getCode();
-                        LocalDate startReferenceDate = rchImportFacilitatorAsha.getStartDate();
-                        LocalDate endReferenceDate = rchImportFacilitatorAsha.getEndDate();
-                        ashaFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-                    }
-                }
-            }
-        } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy response file from remote server to local directory.");
-        }
+        retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.ASHA, 0);
     }
 
     private void ashaFileProcess(String result, Long stateId, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
@@ -1241,19 +1125,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         File responseFile = generateResponseFile(result, RchUserType.HEALTHBLOCK, stateId);
         if (responseFile != null) {
             LOGGER.info("RCH healthblock response successfully written to file. Copying to remote directory.");
-            try {
-                scpResponseToRemote(responseFile.getName());
-                LOGGER.info("RCH healthblock response file successfully copied to remote server");
-
-                RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.HEALTHBLOCK, LocalDate.now());
-                rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
-                status = true;
-
-            } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR, e);
-            } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name", e);
-            }
+            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.HEALTHBLOCK, 0);
         } else {
             LOGGER.error("Error writing response to file.");
         }
@@ -1275,47 +1147,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH Healthblock file import entry point");
         LOGGER.info("Copying RCH Healthblock response file from remote server to local directory.");
-        try {
-            List<RchImportFacilitator> rchImportFacilitatorHealthblocks = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.HEALTHBLOCK);
-            File localResponseFile ;
-            if (rchImportFacilitatorHealthblocks.isEmpty()) {
-                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                String result = readResponsesFromXml(localResponseFile);
-                State importState = stateDataService.findByCode(stateId);
-                String stateName = importState.getName();
-                Long stateCode = importState.getCode();
-
-                LocalDate startReferenceDate = startDate;
-                LocalDate endReferenceDate = endDate;
-                healthblockFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-            } else {
-                for (RchImportFacilitator rchImportFacilitatorHealthblock: rchImportFacilitatorHealthblocks
-                ) {
-                    if (fileName == null) {
-                        localResponseFile = scpResponseToLocal(rchImportFacilitatorHealthblock.getFileName(), remoteLocation);
-                    } else {
-                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                    }
-                    if (localResponseFile != null) {
-                        String result = readResponsesFromXml(localResponseFile);
-                        State importState = stateDataService.findByCode(stateId);
-                        String stateName = importState.getName();
-                        Long stateCode = importState.getCode();
-                        LocalDate startReferenceDate = rchImportFacilitatorHealthblock.getStartDate();
-                        LocalDate endReferenceDate = rchImportFacilitatorHealthblock.getEndDate();
-                        healthblockFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-                    }
-                }
-            }
-        } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy response file from remote server to local directory.");
-        } finally {
-            Map<String, Object> eventParams = new HashMap<>();
-            eventParams.put(Constants.STATE_ID_PARAM, stateId);
-            eventParams.put(Constants.REMOTE_LOCATION, null);
-            eventParams.put(Constants.FILE_NAME, null);
-            eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_TALUKA_HEALTHBLOCK_READ_SUBJECT, eventParams));
-        }
+        retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.HEALTHBLOCK, 0);
     }
 
     private void healthblockFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
@@ -1400,19 +1232,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         File responseFile = generateResponseFile(result, RchUserType.TALUKAHEALTHBLOCK, stateId);
         if (responseFile != null) {
             LOGGER.info("RCH taluka-healthblock response successfully written to file. Copying to remote directory.");
-            try {
-                scpResponseToRemote(responseFile.getName());
-                LOGGER.info("RCH taluka-healthBlock response file successfully copied to remote server");
-
-                RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.TALUKAHEALTHBLOCK, LocalDate.now());
-                rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
-                status = true;
-
-            } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR, e);
-            } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name", e);
-            }
+            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.TALUKAHEALTHBLOCK, 0);
         } else {
             LOGGER.error("Error writing response to file.");
         }
@@ -1434,47 +1254,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH TalukaHealthblock file import entry point");
         LOGGER.info("Copying RCH TalukaHealthblock response file from remote server to local directory.");
-        try {
-            List<RchImportFacilitator> rchImportFacilitatorTalukaHealthblocks = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.TALUKAHEALTHBLOCK);
-            File localResponseFile ;
-            if (rchImportFacilitatorTalukaHealthblocks.isEmpty()) {
-                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                String result = readResponsesFromXml(localResponseFile);
-                State importState = stateDataService.findByCode(stateId);
-                String stateName = importState.getName();
-                Long stateCode = importState.getCode();
-
-                LocalDate startReferenceDate = startDate;
-                LocalDate endReferenceDate = endDate;
-                tHFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-            } else {
-                for (RchImportFacilitator rchImportFacilitatorTalukaHealthblock: rchImportFacilitatorTalukaHealthblocks
-                ) {
-                    if (fileName == null) {
-                        localResponseFile = scpResponseToLocal(rchImportFacilitatorTalukaHealthblock.getFileName(), remoteLocation);
-                    } else {
-                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                    }
-                    if (localResponseFile != null) {
-                        String result = readResponsesFromXml(localResponseFile);
-                        State importState = stateDataService.findByCode(stateId);
-                        String stateName = importState.getName();
-                        Long stateCode = importState.getCode();
-                        LocalDate startReferenceDate = rchImportFacilitatorTalukaHealthblock.getStartDate();
-                        LocalDate endReferenceDate = rchImportFacilitatorTalukaHealthblock.getEndDate();
-                        tHFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-                    }
-                }
-            }
-        } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy response file from remote server to local directory.");
-        } finally {
-            Map<String, Object> eventParams = new HashMap<>();
-            eventParams.put(Constants.STATE_ID_PARAM, stateId);
-            eventParams.put(Constants.REMOTE_LOCATION, null);
-            eventParams.put(Constants.FILE_NAME, null);
-            eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_HEALTHFACILITY_READ_SUBJECT, eventParams));
-        }
+        retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.TALUKAHEALTHBLOCK, 0);
     }
 
     private void tHFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
@@ -1560,19 +1340,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         File responseFile = generateResponseFile(result, RchUserType.HEALTHFACILITY, stateId);
         if (responseFile != null) {
             LOGGER.info("RCH healthfacility response successfully written to file. Copying to remote directory.");
-            try {
-                scpResponseToRemote(responseFile.getName());
-                LOGGER.info("RCH healthfacility response file successfully copied to remote server");
-
-                RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.HEALTHFACILITY, LocalDate.now());
-                rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
-                status = true;
-
-            } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR, e);
-            } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name", e);
-            }
+            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.HEALTHFACILITY, 0);
         } else {
             LOGGER.error("Error writing response to file.");
         }
@@ -1598,19 +1366,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         File responseFile = generateResponseFile(result, RchUserType.HEALTHSUBFACILITY, stateId);
         if (responseFile != null) {
             LOGGER.info("RCH healthsubfacility response successfully written to file. Copying to remote directory.");
-            try {
-                scpResponseToRemote(responseFile.getName());
-                LOGGER.info("RCH healthsubfacility response file successfully copied to remote server");
-
-                RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.HEALTHSUBFACILITY, LocalDate.now());
-                rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
-                status = true;
-
-            } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR, e);
-            } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name", e);
-            }
+            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.HEALTHSUBFACILITY, 0);
         } else {
             LOGGER.error("Error writing response to file.");
         }
@@ -1636,19 +1392,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         File responseFile = generateResponseFile(result, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId);
         if (responseFile != null) {
             LOGGER.info("RCH villagehealthfacility response successfully written to file. Copying to remote directory.");
-            try {
-                scpResponseToRemote(responseFile.getName());
-                LOGGER.info("RCH villagehealthfacility response file successfully copied to remote server");
-
-                RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(responseFile.getName(), from, to, stateId, RchUserType.VILLAGEHEALTHSUBFACILITY, LocalDate.now());
-                rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
-                status = true;
-
-            } catch (ExecutionException e) {
-                LOGGER.error(SCP_ERROR, e);
-            } catch (RchFileManipulationException e) {
-                LOGGER.error("invalid file name", e);
-            }
+            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.VILLAGEHEALTHSUBFACILITY, 0);
         } else {
             LOGGER.error("Error writing response to file.");
         }
@@ -1670,47 +1414,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH Healthfacility file import entry point");
         LOGGER.info("Copying RCH Healthfacility response file from remote server to local directory.");
-        try {
-            List<RchImportFacilitator> rchImportFacilitatorHealthfacilities = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.HEALTHFACILITY);
-            File localResponseFile ;
-            if (rchImportFacilitatorHealthfacilities.isEmpty()) {
-                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                String result = readResponsesFromXml(localResponseFile);
-                State importState = stateDataService.findByCode(stateId);
-                String stateName = importState.getName();
-                Long stateCode = importState.getCode();
-
-                LocalDate startReferenceDate = startDate;
-                LocalDate endReferenceDate = endDate;
-                healthFacilityFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-            } else {
-                for (RchImportFacilitator rchImportFacilitatorHealthfacility: rchImportFacilitatorHealthfacilities
-                ) {
-                    if (fileName == null) {
-                        localResponseFile = scpResponseToLocal(rchImportFacilitatorHealthfacility.getFileName(), remoteLocation);
-                    } else {
-                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                    }
-                    if (localResponseFile != null) {
-                        String result = readResponsesFromXml(localResponseFile);
-                        State importState = stateDataService.findByCode(stateId);
-                        String stateName = importState.getName();
-                        Long stateCode = importState.getCode();
-                        LocalDate startReferenceDate = rchImportFacilitatorHealthfacility.getStartDate();
-                        LocalDate endReferenceDate = rchImportFacilitatorHealthfacility.getEndDate();
-                        healthFacilityFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-                    }
-                }
-            }
-        } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy response file from remote server to local directory.");
-        } finally {
-            Map<String, Object> eventParams = new HashMap<>();
-            eventParams.put(Constants.STATE_ID_PARAM, stateId);
-            eventParams.put(Constants.REMOTE_LOCATION, null);
-            eventParams.put(Constants.FILE_NAME, null);
-            eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_HEALTHSUBFACILITY_READ_SUBJECT, eventParams));
-        }
+        retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.HEALTHFACILITY, 0);
     }
 
     private void healthFacilityFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
@@ -1792,47 +1496,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LocalDate startDate = (LocalDate) event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH Healthsubfacility file import entry point");
         LOGGER.info("Copying RCH Healthsubfacility response file from remote server to local directory.");
-        try {
-            List<RchImportFacilitator> rchImportFacilitatorHealthsubfacilities = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.HEALTHSUBFACILITY);
-            File localResponseFile ;
-            if (rchImportFacilitatorHealthsubfacilities.isEmpty()) {
-                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                String result = readResponsesFromXml(localResponseFile);
-                State importState = stateDataService.findByCode(stateId);
-                String stateName = importState.getName();
-                Long stateCode = importState.getCode();
-
-                LocalDate startReferenceDate = startDate;
-                LocalDate endReferenceDate = endDate;
-                healthsubfacilityFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-            } else {
-                for (RchImportFacilitator rchImportFacilitatorHealthsubfacility: rchImportFacilitatorHealthsubfacilities
-                ) {
-                    if (fileName == null) {
-                        localResponseFile = scpResponseToLocal(rchImportFacilitatorHealthsubfacility.getFileName(), remoteLocation);
-                    } else {
-                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                    }
-                    if (localResponseFile != null) {
-                        String result = readResponsesFromXml(localResponseFile);
-                        State importState = stateDataService.findByCode(stateId);
-                        String stateName = importState.getName();
-                        Long stateCode = importState.getCode();
-                        LocalDate startReferenceDate = rchImportFacilitatorHealthsubfacility.getStartDate();
-                        LocalDate endReferenceDate = rchImportFacilitatorHealthsubfacility.getEndDate();
-                        healthsubfacilityFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-                    }
-                }
-            }
-        } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy response file from remote server to local directory.");
-        } finally {
-            Map<String, Object> eventParams = new HashMap<>();
-            eventParams.put(Constants.STATE_ID_PARAM, stateId);
-            eventParams.put(Constants.REMOTE_LOCATION, null);
-            eventParams.put(Constants.FILE_NAME, null);
-            eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_VILLAGE_READ_SUBJECT, eventParams));
-        }
+        retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.HEALTHSUBFACILITY, 0);
     }
 
     private void healthsubfacilityFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
@@ -1907,42 +1571,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH villagehealthsubfacility file import entry point");
         LOGGER.info("Copying RCH villagehealthsubfacility response file from remote server to local directory.");
-        try {
-            List<RchImportFacilitator> rchImportFacilitatorvillagehealthsubfacilities = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), RchUserType.VILLAGEHEALTHSUBFACILITY);
-            File localResponseFile ;
-            if (rchImportFacilitatorvillagehealthsubfacilities.isEmpty()) {
-                localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                String result = readResponsesFromXml(localResponseFile);
-                State importState = stateDataService.findByCode(stateId);
-                String stateName = importState.getName();
-                Long stateCode = importState.getCode();
-
-                LocalDate startReferenceDate = startDate;
-                LocalDate endReferenceDate = endDate;
-                vhsfFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-            } else {
-                for (RchImportFacilitator rchImportFacilitatorvillagehealthsubfacility: rchImportFacilitatorvillagehealthsubfacilities
-                ) {
-                    if (fileName == null) {
-                        localResponseFile = scpResponseToLocal(rchImportFacilitatorvillagehealthsubfacility.getFileName(), remoteLocation);
-                    } else {
-                        localResponseFile = scpResponseToLocal(fileName, remoteLocation);
-                    }
-                    if (localResponseFile != null) {
-                        String result = readResponsesFromXml(localResponseFile);
-                        State importState = stateDataService.findByCode(stateId);
-                        String stateName = importState.getName();
-                        Long stateCode = importState.getCode();
-                        LocalDate startReferenceDate = rchImportFacilitatorvillagehealthsubfacility.getStartDate();
-                        LocalDate endReferenceDate = rchImportFacilitatorvillagehealthsubfacility.getEndDate();
-                        vhsfFileProcess(fileName, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-                    }
-                }
-            }
-        } catch (ExecutionException e) {
-            LOGGER.error("Failed to copy response file from remote server to local directory.");
-        }
-
+        retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.VILLAGEHEALTHSUBFACILITY, 0);
     }
 
     private void vhsfFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
