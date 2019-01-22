@@ -11,10 +11,6 @@ public final class RchImportTestHelper {
         return readRchFile("rch-mothers-data.xml");
     }
 
-    public static String getRchMotherActiveResponseData() throws IOException {
-        return readRchFile("motherActiveImport.xml");
-    }
-
     public static String getRchMothersResponseDataFail() throws IOException {
         return readRchFile("rch-mothers-data-fail.xml");
     }

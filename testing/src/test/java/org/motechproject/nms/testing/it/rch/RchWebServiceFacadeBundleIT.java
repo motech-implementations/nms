@@ -196,12 +196,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     }
 
     public void RchMotherActiveImport() throws IOException {
-        String response = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "motherActiveImport.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("rchEndpoint", 200, response);
+        String url = simpleServer.start("rchEndpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -216,8 +215,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params.put(Constants.FILE_NAME, fileName);
         List<Long> a = new ArrayList<>();
         a.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
-        rchWsImportService.importMothersFromRch(a, yesterday, endpoint);
+
         MotechEvent event1 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event1);
@@ -225,13 +223,6 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
             e.printStackTrace();
         }
         Thread.currentThread().setContextClassLoader(cl);
-        List<MotherImportRejection> motherImportRejectionList = motherRejectionDataService.retrieveAll();
-        assertEquals(0, motherImportRejectionList.size());
-        List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
-        assertEquals(1, mothers.size());
-        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
-        List<Subscription> subscriptions = subscriptionDataService.retrieveAll();
-        Assert.assertEquals(SubscriptionStatus.ACTIVE, subscriptions.get(0).getStatus());
     }
 
 
@@ -411,17 +402,23 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     @Test
     public void testMotherRCHActiveImport() throws IOException {
         RchMotherActiveImport();
+        List<MotherImportRejection> motherImportRejectionList = motherRejectionDataService.retrieveAll();
+        assertEquals(0, motherImportRejectionList.size());
+        List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
+        assertEquals(1, mothers.size());
+        List<Subscription> subscriptions = subscriptionDataService.retrieveAll();
+        Assert.assertEquals(SubscriptionStatus.ACTIVE, subscriptions.get(0).getStatus());
 
     }
 
     @Test
     public void testMotherRCHPendingActivationImport() throws IOException {
-        String response = RchImportTestHelper.getRchMotherActiveResponseData();
+
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "pendingActivation.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("rchEndpoint", 200, response);
+        String url = simpleServer.start("rchEndpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -436,8 +433,8 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params.put(Constants.FILE_NAME, fileName);
         List<Long> a = new ArrayList<>();
         a.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
-        rchWsImportService.importMothersFromRch(a, yesterday, endpoint);
+
+
         MotechEvent event1 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event1);
@@ -445,13 +442,14 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
             e.printStackTrace();
         }
         Thread.currentThread().setContextClassLoader(cl);
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         List<MotherImportRejection> motherImportRejectionList = motherRejectionDataService.retrieveAll();
         assertEquals(0, motherImportRejectionList.size());
         List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
         assertEquals(1, mothers.size());
-        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
         List<Subscription> subscriptions = subscriptionDataService.retrieveAll();
         Assert.assertEquals(SubscriptionStatus.PENDING_ACTIVATION, subscriptions.get(0).getStatus());
+        transactionManager.commit(status);
     }
 
     @Test
@@ -460,12 +458,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         //updating LMP by importing another xml file
 
-        String response1 = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation1 = filepath.getAbsolutePath();
         String fileName1 = "pendingActivation.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("rchEndpoint", 200, response1);
+        String url1 = simpleServer1.start("rchEndpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -480,7 +477,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params1.put(Constants.FILE_NAME, fileName1);
         List<Long> a1 = new ArrayList<>();
         a1.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
+
         MotechEvent event11 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params1);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event11);
@@ -492,7 +489,6 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         assertEquals(0, motherImportRejectionList1.size());
         List<MctsMother> mothers1 = mctsMotherDataService.retrieveAll();
         assertEquals(1, mothers1.size());
-        //Subscriber subscriber1 = subscriberService.getSubscriber(9856852145L).get(0);
         List<Subscription> subscriptions1 = subscriptionDataService.retrieveAll();
         Assert.assertEquals(SubscriptionStatus.PENDING_ACTIVATION, subscriptions1.get(0).getStatus());
 
@@ -504,12 +500,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         //updating LMP by importing another xml file
 
-        String response = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "motherActiveImport.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("rchEndpoint", 200, response);
+        String url = simpleServer.start("rchEndpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -524,7 +519,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params.put(Constants.FILE_NAME, fileName);
         List<Long> a = new ArrayList<>();
         a.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
+
         MotechEvent event1 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event1);
@@ -536,7 +531,6 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         assertEquals(0, motherImportRejectionList.size());
         List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
         assertEquals(1, mothers.size());
-        //Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
         List<Subscription> subscriptions = subscriptionDataService.retrieveAll();
         Assert.assertEquals(SubscriptionStatus.ACTIVE, subscriptions.get(0).getStatus());
     }
@@ -547,12 +541,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         //updating LMP by importing another xml file
 
-        String response1 = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation1 = filepath.getAbsolutePath();
         String fileName1 = "invalidLmp.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("rchEndpoint", 200, response1);
+        String url1 = simpleServer1.start("rchEndpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -567,7 +560,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params1.put(Constants.FILE_NAME, fileName1);
         List<Long> a1 = new ArrayList<>();
         a1.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
+
         MotechEvent event11 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params1);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event11);
@@ -582,12 +575,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testMotherRCHFutureLmpImport() throws IOException {
-        String response = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "futureLmp.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("rchEndpoint", 200, response);
+        String url = simpleServer.start("rchEndpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -602,8 +594,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params.put(Constants.FILE_NAME, fileName);
         List<Long> a = new ArrayList<>();
         a.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
-        rchWsImportService.importMothersFromRch(a, yesterday, endpoint);
+
         MotechEvent event1 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event1);
@@ -619,12 +610,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testMotherRCHMissingLmpImport() throws IOException {
-        String response = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "missingLmp.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("rchEndpoint", 200, response);
+        String url = simpleServer.start("rchEndpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -639,8 +629,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params.put(Constants.FILE_NAME, fileName);
         List<Long> a = new ArrayList<>();
         a.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
-        rchWsImportService.importMothersFromRch(a, yesterday, endpoint);
+
         MotechEvent event1 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event1);
@@ -657,12 +646,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testMotherAbortionImportReason1() throws IOException {
-        String response = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "mtpLessAbortion.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("rchEndpoint", 200, response);
+        String url = simpleServer.start("rchEndpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -677,8 +665,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params.put(Constants.FILE_NAME, fileName);
         List<Long> a = new ArrayList<>();
         a.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
-        rchWsImportService.importMothersFromRch(a, yesterday, endpoint);
+
         MotechEvent event1 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event1);
@@ -696,12 +683,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testMotherAbortionImportReason2() throws IOException {
-        String response = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "mtpGreaterAbortion.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("rchEndpoint", 200, response);
+        String url = simpleServer.start("rchEndpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -716,8 +702,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params.put(Constants.FILE_NAME, fileName);
         List<Long> a = new ArrayList<>();
         a.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
-        rchWsImportService.importMothersFromRch(a, yesterday, endpoint);
+
         MotechEvent event1 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event1);
@@ -735,12 +720,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testMotherAbortionImportReason3() throws IOException {
-        String response = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "spontaneousAbortion.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("rchEndpoint", 200, response);
+        String url = simpleServer.start("rchEndpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -755,8 +739,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params.put(Constants.FILE_NAME, fileName);
         List<Long> a = new ArrayList<>();
         a.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
-        rchWsImportService.importMothersFromRch(a, yesterday, endpoint);
+
         MotechEvent event1 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event1);
@@ -776,12 +759,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     public void testMotherRCHAbortionUpdate() throws IOException {
         RchMotherActiveImport();
 
-        String response1 = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation1 = filepath.getAbsolutePath();
         String fileName1 = "spontaneousAbortion.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("rchEndpoint", 200, response1);
+        String url1 = simpleServer1.start("rchEndpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -796,8 +778,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params1.put(Constants.FILE_NAME, fileName1);
         List<Long> a1 = new ArrayList<>();
         a1.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
-        rchWsImportService.importMothersFromRch(a1, yesterday1, endpoint1);
+
         MotechEvent event11 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params1);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event11);
@@ -813,12 +794,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testMotherDeathImport() throws IOException {
-        String response = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "motherDeath.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("rchEndpoint", 200, response);
+        String url = simpleServer.start("rchEndpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -833,8 +813,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params.put(Constants.FILE_NAME, fileName);
         List<Long> a = new ArrayList<>();
         a.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
-        rchWsImportService.importMothersFromRch(a, yesterday, endpoint);
+
         MotechEvent event1 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event1);
@@ -854,12 +833,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     public void testMotherRCHDeathUpdate() throws IOException {
         RchMotherActiveImport();
 
-        String response1 = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation1 = filepath.getAbsolutePath();
         String fileName1 = "motherDeath.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("rchEndpoint", 200, response1);
+        String url1 = simpleServer1.start("rchEndpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -874,8 +852,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params1.put(Constants.FILE_NAME, fileName1);
         List<Long> a1 = new ArrayList<>();
         a1.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
-        rchWsImportService.importMothersFromRch(a1, yesterday1, endpoint1);
+
         MotechEvent event11 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params1);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event11);
@@ -891,12 +868,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testMotherImportStillbirth() throws IOException {
-        String response = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "stillbirth.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("rchEndpoint", 200, response);
+        String url = simpleServer.start("rchEndpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -911,8 +887,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params.put(Constants.FILE_NAME, fileName);
         List<Long> a = new ArrayList<>();
         a.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
-        rchWsImportService.importMothersFromRch(a, yesterday, endpoint);
+
         MotechEvent event1 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event1);
@@ -932,12 +907,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     public void testMotherRCHStillbirthUpdate() throws IOException {
         RchMotherActiveImport();
 
-        String response1 = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation1 = filepath.getAbsolutePath();
         String fileName1 = "stillbirth.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("rchEndpoint", 200, response1);
+        String url1 = simpleServer1.start("rchEndpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -952,8 +926,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params1.put(Constants.FILE_NAME, fileName1);
         List<Long> a1 = new ArrayList<>();
         a1.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
-        rchWsImportService.importMothersFromRch(a1, yesterday1, endpoint1);
+
         MotechEvent event11 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params1);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event11);
@@ -970,18 +943,23 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     @Test
     public void testMotherRCHValidCaseNo() throws IOException {
         RchMotherActiveImport();
+        List<MotherImportRejection> motherImportRejectionList = motherRejectionDataService.retrieveAll();
+        assertEquals(0, motherImportRejectionList.size());
+        List<MctsMother> mothers = mctsMotherDataService.retrieveAll();
+        assertEquals(1, mothers.size());
+        List<Subscription> subscriptions = subscriptionDataService.retrieveAll();
+        Assert.assertEquals(SubscriptionStatus.ACTIVE, subscriptions.get(0).getStatus());
     }
 
     //Null Pointer
     @Ignore
     @Test
     public void testMotherRCHMissingCaseNo() throws IOException {
-        String response = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "missingCaseNo.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("rchEndpoint", 200, response);
+        String url = simpleServer.start("rchEndpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -996,8 +974,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params.put(Constants.FILE_NAME, fileName);
         List<Long> a = new ArrayList<>();
         a.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
-        rchWsImportService.importMothersFromRch(a, yesterday, endpoint);
+
         MotechEvent event1 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event1);
@@ -1022,12 +999,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         //updating Mobile No by importing another xml file
 
-        String response1 = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation1 = filepath.getAbsolutePath();
         String fileName1 = "mobileNoUpdate.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("rchEndpoint", 200, response1);
+        String url1 = simpleServer1.start("rchEndpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -1042,7 +1018,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params1.put(Constants.FILE_NAME, fileName1);
         List<Long> a1 = new ArrayList<>();
         a1.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
+
         MotechEvent event11 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params1);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event11);
@@ -1065,12 +1041,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     public void testMotherRCHMsisdnAlreadySubscribedSameState() throws IOException {
         RchMotherActiveImport();
 
-        String response1 = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation1 = filepath.getAbsolutePath();
         String fileName1 = "sameMsisdnSameState.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("rchEndpoint", 200, response1);
+        String url1 = simpleServer1.start("rchEndpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -1085,7 +1060,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params1.put(Constants.FILE_NAME, fileName1);
         List<Long> a1 = new ArrayList<>();
         a1.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
+
         MotechEvent event11 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params1);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event11);
@@ -1111,12 +1086,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         districtDataService.create(district);
 
 
-        String response1 = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation1 = filepath.getAbsolutePath();
         String fileName1 = "sameMsisdnDifferentState.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("rchEndpoint", 200, response1);
+        String url1 = simpleServer1.start("rchEndpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -1151,12 +1125,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         RchMotherActiveImport();
         //updating LMP by importing another xml file to 2018-07-04
 
-        String response1 = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation1 = filepath.getAbsolutePath();
         String fileName1 = "ActiveLmpUpdate.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("rchEndpoint", 200, response1);
+        String url1 = simpleServer1.start("rchEndpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -1171,7 +1144,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params1.put(Constants.FILE_NAME, fileName1);
         List<Long> a1 = new ArrayList<>();
         a1.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
+
         MotechEvent event11 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params1);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event11);
@@ -1187,7 +1160,6 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         List<Subscription> subscriptions1 = subscriptionDataService.retrieveAll();
         Assert.assertEquals(SubscriptionStatus.ACTIVE, subscriptions1.get(0).getStatus());
         List<Subscriber> Subscriber = subscriberService.getSubscriber(9856852145L);
-        //assertEquals("2018-07-04T00:00:00.000+05:30", Subscriber.get(0).getLastMenstrualPeriod());
     }
 
     @Test
@@ -1196,12 +1168,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         //Update Case No to 1
 
-        String response1 = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation1 = filepath.getAbsolutePath();
         String fileName1 = "invalidCaseNo.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("rchEndpoint", 200, response1);
+        String url1 = simpleServer1.start("rchEndpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -1216,7 +1187,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params1.put(Constants.FILE_NAME, fileName1);
         List<Long> a1 = new ArrayList<>();
         a1.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
+
         MotechEvent event11 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params1);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event11);
@@ -1230,18 +1201,15 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         List<MctsMother> mothers1 = mctsMotherDataService.retrieveAll();
         assertEquals(1, mothers1.size());
         Assert.assertEquals(RejectionReasons.INVALID_CASE_NO.toString(), motherImportRejectionList1.get(0).getRejectionReason());
-
-
     }
 
     @Test
     public void testMotherRCHSubscriptionExistingDeactivatedStatus() throws IOException {
-        String response = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "motherActiveImport.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("rchEndpoint", 200, response);
+        String url = simpleServer.start("rchEndpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -1256,7 +1224,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params.put(Constants.FILE_NAME, fileName);
         List<Long> a = new ArrayList<>();
         a.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
+
         rchWsImportService.importMothersFromRch(a, yesterday, endpoint);
         MotechEvent event1 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params);
         try {
@@ -1275,11 +1243,10 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         //Create New Subscription for the Deactivated Subscription
 
-        String response1 = RchImportTestHelper.getRchMotherActiveResponseData();
         String remoteLocation1 = "/home/beehyv/IdeaProjects/nms/testing/src/test/resources/rch";
         String fileName1 = "ActiveLmpUpdate.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("rchEndpoint", 200, response1);
+        String url1 = simpleServer1.start("rchEndpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -1294,7 +1261,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params1.put(Constants.FILE_NAME, fileName1);
         List<Long> a1 = new ArrayList<>();
         a1.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
+
         MotechEvent event11 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params1);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event11);
@@ -1326,12 +1293,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         //Create New Subscription for the Completed Subscription
 
-        String response1 = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation1 = filepath.getAbsolutePath();
         String fileName1 = "ActiveLmpUpdate.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("rchEndpoint", 200, response1);
+        String url1 = simpleServer1.start("rchEndpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -1346,7 +1312,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params1.put(Constants.FILE_NAME, fileName1);
         List<Long> a1 = new ArrayList<>();
         a1.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
+
         MotechEvent event11 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params1);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event11);
@@ -1394,12 +1360,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         blockedMsisdnRecordDataService.create(new BlockedMsisdnRecord(8977825553L, DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED));
         transactionManager.commit(status);
 
-        String response1 = RchImportTestHelper.getRchMotherActiveResponseData();
         File filepath = new File("src/test/resources/rch");
         String remoteLocation1 = filepath.getAbsolutePath();
         String fileName1 = "blockedMsisdn.xml";
         SimpleHttpServer simpleServer1 = SimpleHttpServer.getInstance();
-        String url1 = simpleServer1.start("rchEndpoint", 200, response1);
+        String url1 = simpleServer1.start("rchEndpoint", 200, "abcd");
         URL endpoint1 = new URL(url1);
         LocalDate lastDateToCheck1 = DateUtil.today().minusDays(1);
         LocalDate yesterday1 = DateUtil.today().minusDays(1);
@@ -1414,7 +1379,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         params1.put(Constants.FILE_NAME, fileName1);
         List<Long> a1 = new ArrayList<>();
         a1.add(21L);
-        // MotechEvent event = new MotechEvent("foobar", params);
+
         MotechEvent event11 = new MotechEvent(Constants.RCH_MOTHER_READ_SUBJECT, params1);
         try {
             rchWebServiceFacade.readMotherResponseFromFile(event11);
