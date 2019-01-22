@@ -270,9 +270,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             try {
                 Thread.sleep(120000L);
                 trialCount++;
-                LOGGER.error("Error in SCP for %d for type %s", trialCount, userType);
+                LOGGER.error("Error in SCP for {} for type {}", trialCount, userType);
                 if (trialCount <= 3) {
-                    if (remoteLocation == null) {
+                    if ("empty".equals(remoteLocation)) {
                         retryScpAndAudit(name, from, to, stateId, userType, trialCount);
                     } else {
                         retryScpFromRemoteToLocal(name, remoteLocation, from, to, stateId, userType, trialCount);
@@ -295,7 +295,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
         } catch (ExecutionException e) {
             if(trialCount < 3) {
-            Runnable scpRunnable = new ScpRunnable(name, null, from, to, stateId, userType, trialCount);
+            Runnable scpRunnable = new ScpRunnable(name, "empty", from, to, stateId, userType, trialCount);
             scpRunnable.run();
             } else {
                 LOGGER.error(SCP_ERROR_REMOTE, e);
