@@ -270,7 +270,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             try {
                 Thread.sleep(120000L);
                 trialCount++;
-                LOGGER.error("Error in SCP for {} for type {}", trialCount, userType);
+                LOGGER.error("Error in SCP for {} time for state {} for type {}", trialCount, stateId, userType);
                 if (trialCount <= 3) {
                     if ("empty".equals(remoteLocation)) {
                         retryScpAndAudit(name, from, to, stateId, userType, trialCount);
