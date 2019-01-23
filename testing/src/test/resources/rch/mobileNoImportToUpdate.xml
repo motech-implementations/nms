@@ -58,13 +58,13 @@
                             <Village_ID>0</Village_ID>
                             <Village_Name>0</Village_Name>
                             <Registration_no>121003648144</Registration_no>
-                            <Case_no>1</Case_no>
-                            <Name>Weekly</Name>
-                            <Mobile_no>8266451113</Mobile_no>
-                            <LMP_Date>2018-06-04T00:00:00+05:30</LMP_Date>
+                            <Case_no>2</Case_no>
+                            <Name>MobileUpdate</Name>
+                            <Mobile_no>8744897773</Mobile_no>
+                            <LMP_Date>2018-07-04T00:00:00+05:30</LMP_Date>
                             <Birthdate>1990-01-01T00:00:00+05:30</Birthdate>
                             <Entry_Type>Active</Entry_Type>
-                            <Exec_Date>2018-10-02T00:31:06.703+05:30</Exec_Date>
+                            <Exec_Date>2018-10-03T00:31:06.703+05:30</Exec_Date>
                         </Records>
                     </NewDataSet>
                 </diffgr:diffgram>
