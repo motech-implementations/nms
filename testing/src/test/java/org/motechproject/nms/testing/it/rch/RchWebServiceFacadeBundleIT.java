@@ -475,7 +475,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         }
         Thread.currentThread().setContextClassLoader(cl);
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        List<Subscriber> subscriber = subscriberService.getSubscriber(9856852145L);
+        List<Subscriber> subscriber = subscriberService.getSubscriber(9876543212L);
         assertEquals(1, subscriber.size());
         Set<Subscription> subscriptions = subscriber.get(0).getActiveAndPendingSubscriptions();
         assertEquals(1, subscriptions.size());
@@ -488,7 +488,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         SetupImportNewChild();
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberService.getSubscriber(9856852145L);
+        subscriber = subscriberService.getSubscriber(9876543212L);
         assertEquals(1, subscriber.size());
         Subscription childSubscription = subscriptionService
                 .getActiveSubscription(subscriber.get(0), SubscriptionPackType.CHILD);
@@ -587,7 +587,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         // import Child
         SetupImportNewChild();
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9876543212L).get(0);
         Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
         assertEquals(1, subscriptions.size());
 
@@ -622,7 +622,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         }
         Thread.currentThread().setContextClassLoader(cl1);
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        subscriber = subscriberService.getSubscriber(9876543212L).get(0);
         subscriptions = subscriber.getAllSubscriptions();
         assertEquals(1, subscriptions.size());
 
@@ -641,7 +641,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         // import Child
         SetupImportNewChild();
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9876543212L).get(0);
         Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
         assertEquals(1, subscriptions.size());
 
@@ -677,11 +677,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         Thread.currentThread().setContextClassLoader(cl);
 
         //second subscriber should have been rejected
-        List<Subscriber> subscribersByMsisdn = subscriberService.getSubscriber(9856852145L);
+        List<Subscriber> subscribersByMsisdn = subscriberService.getSubscriber(9876543212L);
         assertEquals(1, subscribersByMsisdn.size());
         List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
         Assert.assertEquals(1, childImportRejections.size());
-        Assert.assertEquals("9856852145", childImportRejections.get(0).getMobileNo());
+        Assert.assertEquals("9876543212", childImportRejections.get(0).getMobileNo());
         Assert.assertEquals(RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), childImportRejections.get(0).getRejectionReason());
         Assert.assertEquals("245893460721", childImportRejections.get(0).getRegistrationNo());
     }
@@ -721,7 +721,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         //subscriber should not be created and rejected entry should be in nms_child_rejects with reason 'MISSING_DOB'.
         List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
         Assert.assertEquals(1, childImportRejections.size());
-        Assert.assertEquals("9856852145", childImportRejections.get(0).getMobileNo());
+        Assert.assertEquals("9856852245", childImportRejections.get(0).getMobileNo());
         Assert.assertEquals(RejectionReasons.INVALID_DOB.toString(), childImportRejections.get(0).getRejectionReason());
         Assert.assertEquals("245893460722", childImportRejections.get(0).getRegistrationNo());
     }
@@ -735,7 +735,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         // import Child
         SetupImportNewChild();
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9876543212L).get(0);
         assertNotNull(subscriber);
         Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
         assertEquals(1, subscriptions.size());
@@ -784,7 +784,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         // import Child
         SetupImportNewChild();
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9876543212L).get(0);
         assertNotNull(subscriber);
         Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
         assertEquals(1, subscriptions.size());
@@ -829,7 +829,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
         Assert.assertEquals(1, childImportRejections.size());
-        Assert.assertEquals("9856852145", childImportRejections.get(0).getMobileNo());
+        Assert.assertEquals("9876543212", childImportRejections.get(0).getMobileNo());
         Assert.assertEquals(RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), childImportRejections.get(0).getRejectionReason());
         Assert.assertEquals("245893460721", childImportRejections.get(0).getRegistrationNo());
     }
@@ -1036,7 +1036,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         }
         Thread.currentThread().setContextClassLoader(cl);
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9876543212L).get(0);
         assertNotNull(subscriber);
         Set<Subscription> subscriptions = subscriber.getActiveAndPendingSubscriptions();
         Assert.assertEquals(1, subscriptions.size());
@@ -1046,7 +1046,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         SetupImportNewChild();
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        subscriber = subscriberService.getSubscriber(9876543212L).get(0);
         subscriptions = subscriber.getActiveAndPendingSubscriptions();
         Subscription childSubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.CHILD);
         Subscription pregnancySubscription = subscriptionService
@@ -1065,7 +1065,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     public void testChildMsisdnTrackerViaXml() throws Exception {
         SetupImportNewChild();
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        List<Subscriber> subscribers = subscriberService.getSubscriber(9856852145L);
+        List<Subscriber> subscribers = subscriberService.getSubscriber(9876543212L);
         Assert.assertEquals(1, subscribers.size());
         transactionManager.commit(status);
 
@@ -1096,7 +1096,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         Thread.currentThread().setContextClassLoader(cl);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        subscribers = subscriberService.getSubscriber(9856852145L);
+        subscribers = subscriberService.getSubscriber(9876543212L);
         Assert.assertEquals(0, subscribers.size());
         subscribers = subscriberService.getSubscriber(9856852235L);
         Assert.assertEquals(1, subscribers.size());
@@ -1104,7 +1104,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         List<SubscriberMsisdnTracker> msisdnTrackers = subscriberMsisdnTrackerDataService.retrieveAll();
         Assert.assertEquals(1, msisdnTrackers.size());
         SubscriberMsisdnTracker msisdnTracker = msisdnTrackers.get(0);
-        Assert.assertEquals(9856852145L, msisdnTracker.getOldCallingNumber().longValue());
+        Assert.assertEquals(9876543212L, msisdnTracker.getOldCallingNumber().longValue());
         Assert.assertEquals(9856852235L, msisdnTracker.getNewCallingNumber().longValue());
         transactionManager.commit(status);
     }
@@ -1114,7 +1114,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         SetupImportNewChild();
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(9876543212L).get(0);
         Subscription subscription = subscriber.getActiveAndPendingSubscriptions().iterator().next();
 
         //deactivate child subscription due to death
