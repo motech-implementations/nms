@@ -219,6 +219,34 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         Thread.currentThread().setContextClassLoader(cl);
     }
 
+    public void SetupImportNewChild2() throws IOException {
+        File filepath = new File("src/test/resources/rch");
+        String remoteLocation = filepath.getAbsolutePath();
+        String fileName = "RCH_StateID_21_Child_Import_2_Response.xml";
+        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
+        String url = simpleServer.start("childendpoint", 200, "abcd");
+        URL endpoint = new URL(url);
+        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
+        LocalDate yesterday = DateUtil.today().minusDays(1);
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
+        params.put(Constants.END_DATE_PARAM, yesterday);
+        params.put(Constants.STATE_ID_PARAM, 21L);
+        params.put(Constants.ENDPOINT_PARAM, endpoint);
+        params.put(Constants.REMOTE_LOCATION, remoteLocation);
+        params.put(Constants.FILE_NAME, fileName);
+
+        MotechEvent event = new MotechEvent(Constants.RCH_CHILD_READ, params);
+        try {
+            rchWebServiceFacade.readChildResponseFromFile(event);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.currentThread().setContextClassLoader(cl);
+    }
+
     @Test
     @Ignore
     public void shouldSerializeMothersDataFromSoapResponse() throws IOException {
@@ -321,13 +349,12 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     }
 
     @Test
-    @Ignore
-    public void testChildRCHImport() throws IOException {
-        String response = RchImportTestHelper.getRchChildrenResponseData();
-        String remoteLocation = "/home/beehyv/IdeaProjects/nsp/testing/src/test/resources/rch";
+    public void testChildDeactivatedWithDeath() throws IOException {
+        File filepath = new File("src/test/resources/rch");
+        String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_StateID_21_Child_Response.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("childendpoint", 200, response);
+        String url = simpleServer.start("childendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -358,11 +385,11 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
     @Test
     public void testAshaRCHImport() throws IOException{
-        String response = RchImportTestHelper.getAnmAshaResponseData();
-        String remoteLocation = "/home/beehyv/nms-nmsbugfix/testing/src/test/resources/rch";
+        File filepath = new File("src/test/resources/rch");
+        String remoteLocation = filepath.getAbsolutePath();
         String fileName =  "rch-anm-asha-data.xml"; //done by vishnu
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("ashendpoint", 200, response);
+        String url = simpleServer.start("ashaendpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -408,35 +435,13 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
      */
     @Test
     public void testImportChildNewSubscriberNoMotherIdViaXml() throws IOException {
-        File filepath = new File("src/test/resources/rch");
-        String remoteLocation = filepath.getAbsolutePath();
-        String fileName = "RCH_StateID_21_Child_Update_Response.xml";
-        SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("childendpoint", 200, "abcd");
-        URL endpoint = new URL(url);
-        LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
-        LocalDate yesterday = DateUtil.today().minusDays(1);
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        Thread.currentThread().setContextClassLoader(rchWsImportService.getClass().getClassLoader());
-        Map<String, Object> params = new HashMap<>();
-        params.put(Constants.START_DATE_PARAM, lastDateToCheck);
-        params.put(Constants.END_DATE_PARAM, yesterday);
-        params.put(Constants.STATE_ID_PARAM, 21L);
-        params.put(Constants.ENDPOINT_PARAM, endpoint);
-        params.put(Constants.REMOTE_LOCATION, remoteLocation);
-        params.put(Constants.FILE_NAME, fileName);
-
-        MotechEvent event = new MotechEvent(Constants.RCH_CHILD_READ, params);
-        try {
-            rchWebServiceFacade.readChildResponseFromFile(event);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        Thread.currentThread().setContextClassLoader(cl);
-        List<Subscription> subscriptions = subscriptionDataService.retrieveAll();
-        Assert.assertEquals(1, subscriptions.size());
-        Assert.assertEquals(SubscriptionPackType.CHILD, subscriptions.get(0).getSubscriptionPack().getType());
-
+        SetupImportNewChild2();
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        List<Subscriber> subscriber = subscriberService.getSubscriber(8206996122L);
+        assertEquals(1, subscriber.size());
+        Set<Subscription> subscriptions = subscriber.get(0).getActiveAndPendingSubscriptions();
+        assertEquals(1, subscriptions.size());
+        transactionManager.commit(status);
     }
 
     /*
@@ -448,7 +453,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_StateID_21_Mother_Import_Response.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("childendpoint", 200, "abcd");
+        String url = simpleServer.start("rchEndpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -836,9 +841,9 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     @Test
     public void verifyChildDOBUpdateViaXml() throws Exception {
         // import Child
-        SetupImportNewChild();
+        SetupImportNewChild2();
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(8206996122L).get(0);
         assertNotNull(subscriber);
         Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
         assertEquals(1, subscriptions.size());
@@ -875,7 +880,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
 
         Thread.currentThread().setContextClassLoader(cl);
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        List<Subscriber> subscribersByMsisdn = subscriberService.getSubscriber(9856852145L);
+        List<Subscriber> subscribersByMsisdn = subscriberService.getSubscriber(8206996122L);
         assertEquals(1, subscribersByMsisdn.size());
         assertNotNull(subscriber);
         transactionManager.commit(status);
@@ -888,9 +893,9 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     @Test
     public void verifyD0bUpdateForDeactivatedChildViaXml() throws Exception {
         // import Child
-        SetupImportNewChild();
+        SetupImportNewChild2();
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(8206996122L).get(0);
         assertNotNull(subscriber);
         Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
         assertEquals(1, subscriptions.size());
@@ -934,9 +939,9 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         //Record should get rejected when existed record with status "Deactivated" comes with DOB update.
         List<ChildImportRejection> childImportRejections = childRejectionDataService.retrieveAll();
         Assert.assertEquals(1, childImportRejections.size());
-        Assert.assertEquals("9856852145", childImportRejections.get(0).getMobileNo());
+        Assert.assertEquals("8206996122", childImportRejections.get(0).getMobileNo());
         Assert.assertEquals(RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS.toString(), childImportRejections.get(0).getRejectionReason());
-        Assert.assertEquals("245893460722", childImportRejections.get(0).getRegistrationNo());
+        Assert.assertEquals("245893460788", childImportRejections.get(0).getRegistrationNo());
         transactionManager.commit(status);
     }
 
@@ -948,9 +953,9 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
     public void verifyD0bUpdateForCompletedChildViaXml() throws Exception {
         // import Child
         DateTime dob = DateTime.now();
-        SetupImportNewChild();
+        SetupImportNewChild2();
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        Subscriber subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        Subscriber subscriber = subscriberService.getSubscriber(8206996122L).get(0);
         assertNotNull(subscriber);
         Set<Subscription> subscriptions = subscriber.getAllSubscriptions();
         assertEquals(1, subscriptions.size());
@@ -992,7 +997,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         }
         Thread.currentThread().setContextClassLoader(cl);
 
-        subscriber = subscriberService.getSubscriber(9856852145L).get(0);
+        subscriber = subscriberService.getSubscriber(8206996122L).get(0);
         Assert.assertEquals(2, subscriber.getAllSubscriptions().size());
         Assert.assertEquals(1, subscriber.getActiveAndPendingSubscriptions().size());
         transactionManager.commit(status);
@@ -1009,7 +1014,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         String remoteLocation = filepath.getAbsolutePath();
         String fileName = "RCH_StateID_21_Mother_Import_Response.xml";
         SimpleHttpServer simpleServer = SimpleHttpServer.getInstance();
-        String url = simpleServer.start("childendpoint", 200, "abcd");
+        String url = simpleServer.start("rchEndpoint", 200, "abcd");
         URL endpoint = new URL(url);
         LocalDate lastDateToCheck = DateUtil.today().minusDays(1);
         LocalDate yesterday = DateUtil.today().minusDays(1);
@@ -1062,6 +1067,7 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         List<Subscriber> subscribers = subscriberService.getSubscriber(9856852145L);
         Assert.assertEquals(1, subscribers.size());
+        transactionManager.commit(status);
 
         File filepath = new File("src/test/resources/rch");
         String remoteLocation = filepath.getAbsolutePath();
@@ -1088,7 +1094,6 @@ public class RchWebServiceFacadeBundleIT extends BasePaxIT {
             e.printStackTrace();
         }
         Thread.currentThread().setContextClassLoader(cl);
-        transactionManager.commit(status);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
         subscribers = subscriberService.getSubscriber(9856852145L);
