@@ -606,8 +606,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             } else {
                 String warning = String.format("No district data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, warning));
-                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
+                //rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, warning));
+               // rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
             }
 
         } catch (JAXBException e) {
@@ -693,8 +693,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             } else {
                 String warning = String.format("No Taluka data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, warning));
-                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
+                //rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, warning));
+               // rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
             }
 
         } catch (JAXBException e) {
@@ -776,8 +776,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
             } else {
                 String warning = String.format("No Village data set received from RCH for %d stateId", stateId);
-                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, warning));
-                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGE, stateId));
+               // rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, warning));
+               // rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGE, stateId));
                 LOGGER.warn(warning);
             }
 
@@ -863,8 +863,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             } else {
                 String warning = String.format("No Mother data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-                rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, warning));
-                rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.MOTHER, stateId));
+//                rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, warning));
+//                rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.MOTHER, stateId));
             }
         } catch (JAXBException e) {
             String error = String.format("Cannot deserialize RCH mother data from %s location.", stateId);
@@ -974,8 +974,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             } else {
                 String warning = String.format("No Child data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-                rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, warning));
-                rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
+//                rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, warning));
+//                rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
             }
         } catch (JAXBException e) {
             String error = String.format("Cannot deserialize RCH children data from %s location.", stateId);
@@ -1085,8 +1085,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             } else {
                 String warning = String.format("No Asha data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-                rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, warning));
-                rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
+//                rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, warning));
+//                rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
             }
         } catch (JAXBException e) {
             String error = String.format("Cannot deserialize RCH FLW data from %s location.", stateId);
@@ -1191,8 +1191,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             } else {
                 String warning = String.format("No HealthBlock data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHBLOCK, stateCode, stateName, 0, 0, warning));
-                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHBLOCK, stateId));
+//                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHBLOCK, stateCode, stateName, 0, 0, warning));
+//                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHBLOCK, stateId));
             }
         } catch (JAXBException e) {
             String error = String.format("Cannot deserialize RCH mother data from %s location.", stateId);
@@ -1299,8 +1299,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             } else {
                 String warning = String.format("No Taluka-HealthBlock data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, warning));
-                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKAHEALTHBLOCK, stateId));
+//                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, warning));
+//                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKAHEALTHBLOCK, stateId));
             }
 
         } catch (JAXBException e) {
@@ -1459,8 +1459,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             } else {
                 String warning = String.format("No Healthfacility data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, warning));
-                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHFACILITY, stateId));
+                //rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, warning));
+                //rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHFACILITY, stateId));
             }
 
         } catch (JAXBException e) {
@@ -1616,8 +1616,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             } else {
                 String warning = String.format("No villageHealthsubfacility data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, warning));
-                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId));
+                //rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, warning));
+                //rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId));
             }
 
         } catch (JAXBException e) {
