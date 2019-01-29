@@ -75,23 +75,9 @@ import org.motechproject.nms.testing.it.tracking.TrackOneToManyChangesBundleIT;
     CdrFileServiceBundleIT.class,
 
     /**
-     * Kilkari
-     */
-    RchBeneficiaryImportServiceBundleIT.class,
-    MctsBeneficiaryImportServiceBundleIT.class,
-    SubscriptionServiceBundleIT.class,
-    SubscriberServiceBundleIT.class,
-    CsrServiceBundleIT.class,
-
-    /**
      * Mobile Academy
      */
     MobileAcademyServiceBundleIT.class,
-
-    /**
-     * Props
-     */
-    PropertyServiceBundleIT.class,
 
     /**
      * Region
@@ -104,15 +90,29 @@ import org.motechproject.nms.testing.it.tracking.TrackOneToManyChangesBundleIT;
     LanguageServiceBundleIT.class,
 
     /**
+     * RCH
+     */
+    RchWebServiceFacadeBundleIT.class,
+
+    /**
+     * Kilkari
+     */
+    RchBeneficiaryImportServiceBundleIT.class,
+    MctsBeneficiaryImportServiceBundleIT.class,
+    SubscriptionServiceBundleIT.class,
+    SubscriberServiceBundleIT.class,
+    CsrServiceBundleIT.class,
+
+    /**
+     * Props
+     */
+    PropertyServiceBundleIT.class,
+
+    /**
      * MCTS
      */
     MctsWebServiceFacadeBundleIT.class,
     MctsImportBundleIT.class,
-
-    /**
-     * RCH
-     */
-    RchWebServiceFacadeBundleIT.class,
 
     /**
      * Testing

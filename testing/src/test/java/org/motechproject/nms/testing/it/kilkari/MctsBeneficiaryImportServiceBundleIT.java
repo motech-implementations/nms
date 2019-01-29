@@ -701,7 +701,7 @@ public class MctsBeneficiaryImportServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT285() throws Exception {
-        DateTime dob = DateTime.now().minusDays(7 * 48);
+        DateTime dob = DateTime.now().minusDays(5000 * 7);
         String dobString = getDateString(dob);
         Reader reader = createChildDataReader("21\t3\t\t\t\t\t1234123450\tBaby1 of Lilima Kua\t9876453210\t9439961878\t"
                 + dobString + "\t\t");

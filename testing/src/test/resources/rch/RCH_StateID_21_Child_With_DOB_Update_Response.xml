@@ -55,12 +55,12 @@
                             <SubCentre_Name>SubCentre_Name 1</SubCentre_Name>
                             <Village_ID>0</Village_ID>
                             <Village_Name>0</Village_Name>
-                            <Name>Child_Death</Name>
-                            <Mobile_no>8767565434</Mobile_no>
-                            <Birthdate>2018-07-05T00:00:00+05:30</Birthdate>
-                            <Registration_no>245893460798</Registration_no>
-                            <Mother_Registration_no>None</Mother_Registration_no>
-                            <Entry_Type>DEATH</Entry_Type>
+                            <Name>Baby_import_3</Name>
+                            <Mobile_no>8206996122</Mobile_no>
+                            <Birthdate>2018-12-23T00:00:00+05:30</Birthdate>
+                            <Registration_no>245893460788</Registration_no>
+                            <Mother_Registration_no>0</Mother_Registration_no>
+                            <Entry_Type>None</Entry_Type>
                             <MCTS_ID_No>0</MCTS_ID_No>
                             <Exec_Date>2018-11-25T00:51:08.083+05:30</Exec_Date>
                         </Records>

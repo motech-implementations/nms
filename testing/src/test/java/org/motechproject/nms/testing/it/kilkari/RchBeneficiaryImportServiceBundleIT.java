@@ -1351,7 +1351,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         DateTime dob = DateTime.now().minusDays(200);
         String dobString = getDateString(dob);
         reader = createRchChildDataReader("21\t3\t\t\t\t\t9876543236\tBaby1 of Shanti Ekka\t1234567836\t9439986136\t"
-                + dobString + "\t7000000001\t2000000000\t\t");
+                + dobString + "\t7000000001\t2000000001\t\t");
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -1389,7 +1389,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         DateTime dob = DateTime.now().minusDays(200);
         String dobString = getDateString(dob);
         reader = createRchChildDataReader("21\t3\t\t\t\t\t9876543237\tBaby1 of Shanti Ekka\t1234567837\t9439986137\t"
-                + dobString + "\t7000000002\t2000000000\t\t");
+                + dobString + "\t7000000002\t2000000002\t\t");
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -1476,7 +1476,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         DateTime dob = DateTime.now().plusDays(1);
         String dobString = getDateString(dob);
         Reader reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567838\tBaby1 of Lilima Kua\t9876453238\t9439986138\t"
-                + dobString + "\t7000000004\t2000000000\t\t");
+                + dobString + "\t7000000004\t2000000003\t\t");
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
 
         //subscriber should not be created and rejected entry should be in nms_child_rejects with reason 'INVALID_DOB'.
@@ -1493,7 +1493,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
      */
     @Test
     public void verifyFT285() throws Exception {
-        DateTime dob = DateTime.now().minusDays(7 * 48);
+        DateTime dob = DateTime.now().minusDays(5000 * 7);
         String dobString = getDateString(dob);
         Reader reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567839\tBaby1 of Lilima Kua\t9876453239\t9439986139\t"
                 + dobString + "\t7000000005\t2000000000\t\t");
@@ -1520,7 +1520,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         // create subscriber and subscription
         Reader reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567840\tBaby1 of Lilima Kua\t9876453240\t9439986140\t"
-                + dobString + "\t7000000006\t2000000000\t\t");
+                + dobString + "\t7000000006\t2000000005\t\t");
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
 
@@ -1631,7 +1631,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         DateTime dob = DateTime.now();
         String dobString = getDateString(dob);
         Reader reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567844\tBaby1 of Lilima Kua\t9876453244\t9439986144\t"
-                + dobString + "\t7000000009\t2000000000\t\t");
+                + dobString + "\t7000000009\t2000000006\t\t");
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -1644,7 +1644,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         //create a new subscription for subscriber whose subscription is deactivated.
         dobString = getDateString(dob.minus(50));
         reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567844\tBaby1 of Lilima Kua\t9876453244\t9439986144\t"
-                + dobString + "\t7000000009\t2000000000\t\t");
+                + dobString + "\t7000000009\t2000000006\t\t");
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -1664,7 +1664,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         DateTime dob = DateTime.now();
         String dobString = getDateString(dob);
         Reader reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567845\tBaby1 of Lilima Kua\t9876453245\t9439986145\t"
-                + dobString + "\t7000000010\t2000000000\t\t");
+                + dobString + "\t7000000010\t2000000007\t\t");
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
 
         //Make subscription completed
@@ -1675,7 +1675,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         //create a new subscription for subscriber whose subscription is deactivated.
         dobString = getDateString(dob.minus(50));
         reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567845\tBaby1 of Lilima Kua\t9876453245\t9439986145\t"
-                + dobString + "\t7000000010\t2000000000\t\t");
+                + dobString + "\t7000000010\t2000000007\t\t");
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -1695,7 +1695,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         DateTime dob = DateTime.now();
         String dobString = getDateString(dob);
         Reader reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567846\tBaby1 of Lilima Kua\t9876453246\t9439986146\t"
-                + dobString + "\t7000000011\t2000000000\t\t");
+                + dobString + "\t7000000011\t2000000008\t\t");
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -1713,7 +1713,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         DateTime newDob = DateTime.now().minusDays(150);
         String newDobString = getDateString(newDob);
         reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567846\tBaby1 of Lilima Kua\t9876453246\t9439986146\t"
-                + newDobString + "\t7000000011\t2000000000\t\t");
+                + newDobString + "\t7000000011\t2000000008\t\t");
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
 //        transactionManager.commit(status);
 
@@ -1941,7 +1941,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         DateTime dob = DateTime.now().minusDays(60);
         String dobString = getDateString(dob);
         Reader reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567848\tBaby1 of Lilima Kua\t9876453248\t9439986148\t"
-                + dobString + "\t7000000012\t2000000000\t\t");
+                + dobString + "\t7000000012\t2000000009\t\t");
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -1959,7 +1959,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         dob = DateTime.now().minusDays(30);
         dobString = getDateString(dob);
         reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567849\tBaby2 of Lilima Kua\t9876453248\t9439986149\t"
-                + dobString + "\t8000000001\t2000000000\t\t");
+                + dobString + "\t8000000001\t2000000009\t\t");
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -1974,7 +1974,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
         DateTime dob = DateTime.now().minusDays(60);
         String dobString = getDateString(dob);
         Reader reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567850\tBaby1 of Lilima Kua\t9876453250\t9439986150\t"
-                + dobString + "\t7000000013\t2000000000\t\t10-05-2016");
+                + dobString + "\t7000000013\t2000000010\t\t10-05-2016");
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
 
         TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -1985,7 +1985,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         //update msisdn of the existing child
         reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567850\tBaby1 of Lilima Kua\t9876453250\t9439986151\t"
-                + dobString + "\t7000000013\t2000000000\t\t");
+                + dobString + "\t7000000013\t2000000010\t\t");
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
 
         status = transactionManager.getTransaction(new DefaultTransactionDefinition());
@@ -2260,7 +2260,7 @@ public class RchBeneficiaryImportServiceBundleIT extends BasePaxIT {
 
         // create subscriber and subscription
         Reader reader = createRchChildDataReader("21\t3\t\t\t\t\t1234567855\tBaby1 of Lilima Kua\t9876453255\t9439986155\t"
-                + dobString + "\t7000000014\t2000000000\t\t");
+                + dobString + "\t7000000014\t2000000011\t\t");
         mctsBeneficiaryImportReaderService.importChildData(reader, SubscriptionOrigin.RCH_IMPORT);
 
         // attempt to create subscriber with same msisdn but different rch id.
