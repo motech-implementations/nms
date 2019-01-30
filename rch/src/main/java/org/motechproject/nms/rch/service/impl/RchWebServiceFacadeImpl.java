@@ -445,7 +445,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH mother response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.MOTHER, 0);
         } else {
-            LOGGER.error("Error writing response to file.");
+            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.MOTHER, stateId);
         }
         return status;
     }
@@ -471,7 +471,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH district response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.DISTRICT, 0);
         } else {
-            LOGGER.error("Error writing response to file.");
+            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.DISTRICT, stateId);
         }
         return status;
     }
@@ -497,7 +497,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH taluka response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.TALUKA, 0);
         } else {
-            LOGGER.error("Error writing response to file.");
+            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.TALUKA, stateId);
         }
         return status;
     }
@@ -523,7 +523,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH Village response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.VILLAGE, 0);
         } else {
-            LOGGER.error("Error writing response to file.");
+            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.VILLAGE, stateId);
         }
         return status;
     }
@@ -905,7 +905,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH children response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.CHILD, 0);
         } else {
-            LOGGER.error("Error writing response to file.");
+            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.CHILD, stateId);
         }
 
         return status;
@@ -1016,7 +1016,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH asha response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.ASHA, 0);
         } else {
-            LOGGER.error("Error writing response to file.");
+            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.ASHA, stateId);
         }
 
         return status;
@@ -1127,7 +1127,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH healthblock response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.HEALTHBLOCK, 0);
         } else {
-            LOGGER.error("Error writing response to file.");
+            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.HEALTHBLOCK, stateId);
         }
         return status;
     }
@@ -1234,7 +1234,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH taluka-healthblock response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.TALUKAHEALTHBLOCK, 0);
         } else {
-            LOGGER.error("Error writing response to file.");
+            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.TALUKAHEALTHBLOCK, stateId);
         }
         return status;
     }
@@ -1342,7 +1342,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH healthfacility response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.HEALTHFACILITY, 0);
         } else {
-            LOGGER.error("Error writing response to file.");
+            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.HEALTHFACILITY, stateId);
         }
         return status;
     }
@@ -1368,7 +1368,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH healthsubfacility response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.HEALTHSUBFACILITY, 0);
         } else {
-            LOGGER.error("Error writing response to file.");
+            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.HEALTHSUBFACILITY, stateId);
         }
         return status;
     }
@@ -1394,7 +1394,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH villagehealthfacility response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.VILLAGEHEALTHSUBFACILITY, 0);
         } else {
-            LOGGER.error("Error writing response to file.");
+            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.VILLAGEHEALTHSUBFACILITY, stateId);
         }
         return status;
     }
