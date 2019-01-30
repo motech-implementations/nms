@@ -468,4 +468,6 @@ public class LocationServiceBundleIT extends BasePaxIT {
 //        assertEquals(1, healthSubFacilityList.size());
 //        assertTrue(healthSubFacilityList.contains(healthSubFacility));
     }
+
+
 }
