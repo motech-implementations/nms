@@ -986,6 +986,8 @@ public class LocationServiceImpl implements LocationService {
         final Set<String> talukaKeys = talukaHashMap.keySet();
         Map<Long, String> districtIdMap = new HashMap<>();
         for (String districtKey : districtHashMap.keySet()) {
+            LOGGER.debug("fillTalukas::The district key is {} and district is {} ", districtKey , districtHashMap.get(districtKey));
+            LOGGER.debug("fillTalukas:: The district ID from districtHashMap is {} " , districtHashMap.get(districtKey).getId());
             districtIdMap.put(districtHashMap.get(districtKey).getId(), districtKey);
         }
 
