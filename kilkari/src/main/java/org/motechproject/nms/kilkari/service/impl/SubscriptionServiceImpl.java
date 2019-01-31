@@ -272,10 +272,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                             if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.CHILD)) {
                                 return true;
                             } else {
-                                return (subscriber.getMother() != null && subscriber.getMother().getBeneficiaryId() != null && !subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId));
+                                return (subscriber.getMother() != null && subscriber.getMother().getBeneficiaryId() != null && !motherBeneficiaryId.equals(subscriber.getMother().getBeneficiaryId()));
                             }
                         } else {
-                            return (subscriber.getMother() != null && !subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId));
+                            return (subscriber.getMother() != null && !motherBeneficiaryId.equals(subscriber.getMother().getBeneficiaryId()));
                         }
                     }
                 //}
@@ -290,15 +290,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     subscriptionsSize = subscriptions.size();
                     if (subscriptionsSize != 0) {
                         if (subscriptionsSize == 1) {
-                            if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.PREGNANCY) && subscriber.getMother() != null && !subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId)) {
+                            if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && !motherBeneficiaryId.equals(subscriber.getMother().getBeneficiaryId())) {
                                 return true;
-                            } else if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.PREGNANCY) && subscriber.getMother() != null && subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId)) {
+                            } else if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.PREGNANCY) && subscriber.getMother() != null && motherBeneficiaryId.equals(subscriber.getMother().getBeneficiaryId())) {
                                 return false;
                             } else {
-                                return (subscriber.getChild() != null && subscriber.getChild().getBeneficiaryId() != null && !subscriber.getChild().getBeneficiaryId().equals(childBeneficiaryId));
+                                return (subscriber.getChild() != null && subscriber.getChild().getBeneficiaryId() != null && !childBeneficiaryId.equals(subscriber.getChild().getBeneficiaryId()));
                             }
                         } else {
-                            return ((subscriber.getChild() != null && !subscriber.getChild().getBeneficiaryId().equals(childBeneficiaryId)) || (subscriber.getMother() != null && !subscriber.getMother().getBeneficiaryId().equals(motherBeneficiaryId)));
+                            return ((subscriber.getChild() != null && !childBeneficiaryId.equals(subscriber.getChild().getBeneficiaryId())) || (subscriber.getMother() != null && !motherBeneficiaryId.equals(subscriber.getMother().getBeneficiaryId())));
                         }
                     }
 //                }
@@ -324,10 +324,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                             if (SubscriptionPackType.CHILD.equals(subscriptions.get(0).getSubscriptionPack().getType())) {
                                 return true;
                             } else {
-                                return (subscriber.getMother() != null && subscriber.getMother().getRchId() != null && !subscriber.getMother().getRchId().equals(motherRchId));
+                                return (subscriber.getMother() != null && subscriber.getMother().getRchId() != null && !motherRchId.equals(subscriber.getMother().getRchId()));
                             }
                         } else {
-                            return (subscriber.getMother() != null && !subscriber.getMother().getRchId().equals(motherRchId));
+                            return (subscriber.getMother() != null && !motherRchId.equals(subscriber.getMother().getRchId()));
                         }
                     }
                 }
@@ -342,15 +342,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     subscriptionsSize = subscriptions.size();
                     if (subscriptionsSize != 0) {
                         if (subscriptionsSize == 1) {
-                            if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && subscriber.getMother().getRchId() != null && !subscriber.getMother().getRchId().equals(motherRchId)) {
+                            if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && subscriber.getMother().getRchId() != null && !motherRchId.equals(subscriber.getMother().getRchId())) {
                                 return true;
-                            } else if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && subscriber.getMother().getRchId() != null && subscriber.getMother().getRchId().equals(motherRchId)) {
+                            } else if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && subscriber.getMother().getRchId() != null && motherRchId.equals(subscriber.getMother().getRchId())) {
                                 return false;
                             } else {
-                                return (subscriber.getChild() != null && subscriber.getChild().getRchId() != null && !subscriber.getChild().getRchId().equals(childRchId));
+                                return (subscriber.getChild() != null && subscriber.getChild().getRchId() != null && !childRchId.equals(subscriber.getChild().getRchId()));
                             }
                         } else {
-                            return ((subscriber.getChild() != null && subscriber.getChild().getRchId() !=null &&   !subscriber.getChild().getRchId().equals(childRchId)) || (subscriber.getMother() != null && subscriber.getMother().getRchId() != null && !subscriber.getMother().getRchId().equals(motherRchId)));
+                            return ((subscriber.getChild() != null && subscriber.getChild().getRchId() !=null &&   !childRchId.equals(subscriber.getChild().getRchId())) || (subscriber.getMother() != null && subscriber.getMother().getRchId() != null && !motherRchId.equals(subscriber.getMother().getRchId())));
                         }
                     }
                 }
