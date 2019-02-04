@@ -237,6 +237,11 @@ public class RchWsImportServiceImpl implements RchWsImportService {
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.MOTHER, stateId));
+        } catch (Exception e) {
+            String error = String.format("Cannot read RCH mother data from %s state with state id: %d due to exception %s.", stateName, stateId , e.getMessage());
+            LOGGER.error(error, e);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.MOTHER, stateId));
         }
     }
 
@@ -267,6 +272,11 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             LOGGER.error(error, e);
             alertService.create(RCH_WEB_SERVICE, "RCH Web Service district Import", e
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
+        } catch (Exception e) {
+            String error = String.format("Cannot read RCH district data from %s state with state id: %d due to exception %s.", stateName, stateId , e.getMessage());
+            LOGGER.error(error, e);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
         }
@@ -301,6 +311,11 @@ public class RchWsImportServiceImpl implements RchWsImportService {
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
+        } catch (Exception e) {
+            String error = String.format("Cannot read RCH taluka data from %s state with state id: %d due to exception %s.", stateName, stateId , e.getMessage());
+            LOGGER.error(error, e);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
         }
     }
 
@@ -331,6 +346,11 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             LOGGER.error(error, e);
             alertService.create(RCH_WEB_SERVICE, "RCH Web Service Village Import", e
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGE, stateId));
+        } catch (Exception e) {
+            String error = String.format("Cannot read RCH village data from %s state with state id: %d due to exception %s.", stateName, stateId , e.getMessage());
+            LOGGER.error(error, e);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGE, stateId));
         }
@@ -366,6 +386,11 @@ public class RchWsImportServiceImpl implements RchWsImportService {
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHBLOCK, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHBLOCK, stateId));
+        } catch (Exception e) {
+            String error = String.format("Cannot read RCH healthBlock data from %s state with state id: %d due to exception %s.", stateName, stateId , e.getMessage());
+            LOGGER.error(error, e);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHBLOCK, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHBLOCK, stateId));
         }
     }
 
@@ -396,6 +421,11 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             LOGGER.error(error, e);
             alertService.create(RCH_WEB_SERVICE, "RCH Web Service Taluka healthBlock Import", e
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKAHEALTHBLOCK, stateId));
+        } catch (Exception e) {
+            String error = String.format("Cannot read RCH taluka-healthblock data from %s state with state id: %d due to exception %s.", stateName, stateId , e.getMessage());
+            LOGGER.error(error, e);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKAHEALTHBLOCK, stateId));
         }
@@ -431,6 +461,11 @@ public class RchWsImportServiceImpl implements RchWsImportService {
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHFACILITY, stateId));
+        } catch (Exception e) {
+            String error = String.format("Cannot read RCH HealthFacility data from %s state with state id: %d due to exception %s.", stateName, stateId , e.getMessage());
+            LOGGER.error(error, e);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHFACILITY, stateId));
         }
     }
 
@@ -462,6 +497,11 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             LOGGER.error(error, e);
             alertService.create(RCH_WEB_SERVICE, "RCH Web Service HealthSubFacility Import", e
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHSUBFACILITY, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHSUBFACILITY, stateId));
+        } catch (Exception e) {
+            String error = String.format("Cannot read RCH HealthSubFacility data from %s state with state id: %d due to exception %s.", stateName, stateId , e.getMessage());
+            LOGGER.error(error, e);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHSUBFACILITY, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHSUBFACILITY, stateId));
         }
@@ -497,6 +537,11 @@ public class RchWsImportServiceImpl implements RchWsImportService {
                     .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId));
+        } catch (Exception e) {
+            String error = String.format("Cannot read RCH VillageHealthSubFacility data from %s state with state id: %d due to exception %s.", stateName, stateId , e.getMessage());
+            LOGGER.error(error, e);
+            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId));
         }
     }
 
@@ -526,6 +571,11 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             String error = String.format("Cannot read RCH children data from %s state with state id: %d", stateName, stateCode);
             LOGGER.error(error, e);
             alertService.create(RCH_WEB_SERVICE, "RCH Web Service Child Import", e.getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
+        } catch (Exception e) {
+            String error = String.format("Cannot read RCH child data from %s state with state id: %d due to exception %s.", stateName, stateId , e.getMessage());
+            LOGGER.error(error, e);
             rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
         }
@@ -560,6 +610,11 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             String error = String.format("Cannot read FLW data from %s state with state id: %d", stateName, stateCode);
             LOGGER.error(error);
             alertService.create(RCH_WEB_SERVICE, "RCH Web Service Asha Import", e.getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, error));
+            rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
+        } catch (Exception e) {
+            String error = String.format("Cannot read RCH asha data from %s state with state id: %d due to exception %s.", stateName, stateId , e.getMessage());
+            LOGGER.error(error, e);
             rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
         }
