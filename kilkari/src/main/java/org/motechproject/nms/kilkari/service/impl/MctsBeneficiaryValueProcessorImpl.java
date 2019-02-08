@@ -271,7 +271,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                 String healthFacilityCode = record.get(KilkariConstants.PHC_ID) == null ? "0" : record.get(KilkariConstants.PHC_ID).toString();
                 String healthSubFacilityCode = record.get(KilkariConstants.SUB_CENTRE_ID) == null ? "0" : record.get(KilkariConstants.SUB_CENTRE_ID).toString();
 
-                LOGGER.debug("State:%s, District:%s, Taluka:%s, VilageSvid:%s, VillageCode:%s, HB:%s, HF:%s, HSF:%s", record.get(KilkariConstants.STATE_ID).toString(), districtCode,
+                LOGGER.debug("State: {}, District: {}, Taluka: {}, VilageSvid: {}, VillageCode: {}, HB: {}, HF: {}, HSF: {}", record.get(KilkariConstants.STATE_ID).toString(), districtCode,
                         talukaCode.toString(), villageSvid, villageCode, healthBlockCode, healthFacilityCode, healthSubFacilityCode);
                 Village village = locationFinder.getVillageHashMap().get(mapKey.toString() + "_" + Long.parseLong(villageCode) + "_" + Long.parseLong(villageSvid));
                 if (village != null && village.getId() != null) {
