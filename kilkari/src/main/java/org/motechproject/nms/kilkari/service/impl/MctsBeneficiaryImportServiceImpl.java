@@ -197,6 +197,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         mother.setDateOfBirth(motherDOB);
         mother.setLastMenstrualPeriod(lmp);
         mother.setUpdatedDateNic(lastUpdatedDateNic);
+        mctsMotherDataService.update(mother);
 
 
         // Check if existing subscription needs to be deactivated
@@ -389,6 +390,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
         child.setDateOfBirth(dob);
         child.setUpdatedDateNic(lastUpdateDateNic);
+        mctsChildDataService.update(child);
 
         List<DeactivatedBeneficiary> deactivatedUsers = null;
         synchronized(this) {
