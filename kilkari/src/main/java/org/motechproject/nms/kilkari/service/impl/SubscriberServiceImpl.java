@@ -38,6 +38,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.jdo.Query;
+import javax.validation.ConstraintViolationException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -139,7 +140,12 @@ public class SubscriberServiceImpl implements SubscriberService {
 
     @Override
     public Subscriber create(Subscriber subscriber) {
-        return subscriberDataService.create(subscriber);
+        try {
+            return subscriberDataService.create(subscriber);
+        } catch (ConstraintViolationException e) {
+            LOGGER.debug("List of constraints: {}", e.getConstraintViolations());
+            throw e;
+        }
     }
 
     @Override
