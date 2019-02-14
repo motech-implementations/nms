@@ -143,7 +143,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         try {
             return subscriberDataService.create(subscriber);
         } catch (ConstraintViolationException e) {
-            LOGGER.debug("List of constraints: {}", e.getConstraintViolations());
+            LOGGER.error("List of constraints: {}", e.getConstraintViolations());
             throw e;
         }
     }
