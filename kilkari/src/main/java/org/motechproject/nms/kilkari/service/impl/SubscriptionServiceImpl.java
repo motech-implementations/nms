@@ -56,6 +56,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import javax.jdo.Query;
+import javax.validation.ConstraintViolationException;
 import java.util.List;
 import java.util.Map;
 import java.util.Iterator;
@@ -290,9 +291,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     subscriptionsSize = subscriptions.size();
                     if (subscriptionsSize != 0) {
                         if (subscriptionsSize == 1) {
-                            if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && !motherBeneficiaryId.equals(subscriber.getMother().getBeneficiaryId())) {
+                            if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && motherBeneficiaryId != null && !motherBeneficiaryId.equals(subscriber.getMother().getBeneficiaryId())) {
                                 return true;
-                            } else if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.PREGNANCY) && subscriber.getMother() != null && motherBeneficiaryId.equals(subscriber.getMother().getBeneficiaryId())) {
+                            } else if (subscriptions.get(0).getSubscriptionPack().getType().equals(SubscriptionPackType.PREGNANCY) && subscriber.getMother() != null && motherBeneficiaryId != null && motherBeneficiaryId.equals(subscriber.getMother().getBeneficiaryId())) {
                                 return false;
                             } else {
                                 return (subscriber.getChild() != null && subscriber.getChild().getBeneficiaryId() != null && !childBeneficiaryId.equals(subscriber.getChild().getBeneficiaryId()));
@@ -342,9 +343,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     subscriptionsSize = subscriptions.size();
                     if (subscriptionsSize != 0) {
                         if (subscriptionsSize == 1) {
-                            if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && subscriber.getMother().getRchId() != null && !motherRchId.equals(subscriber.getMother().getRchId())) {
+                            if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && subscriber.getMother().getRchId() != null && motherRchId != null && !motherRchId.equals(subscriber.getMother().getRchId())) {
                                 return true;
-                            } else if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && subscriber.getMother().getRchId() != null && motherRchId.equals(subscriber.getMother().getRchId())) {
+                            } else if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && subscriber.getMother().getRchId() != null && motherRchId != null && motherRchId.equals(subscriber.getMother().getRchId())) {
                                 return false;
                             } else {
                                 return (subscriber.getChild() != null && subscriber.getChild().getRchId() != null && !childRchId.equals(subscriber.getChild().getRchId()));
@@ -364,64 +365,68 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Override // NO CHECKSTYLE Cyclomatic Complexity
     public Subscription createSubscription(Subscriber subscriber, long callingNumber, Language language, Circle circle,
                                            SubscriptionPack subscriptionPack, SubscriptionOrigin mode) {
+        try {
+            long number = PhoneNumberHelper.truncateLongNumber(callingNumber);
 
-        long number = PhoneNumberHelper.truncateLongNumber(callingNumber);
-
-        // Check if the callingNumber is in Weekly_Calls_Not_Answered_Msisdn_Records
-        BlockedMsisdnRecord blockedMsisdnRecord = blockedMsisdnRecordDataService.findByNumber(callingNumber);
-        if (!acceptNewSubscriptionForBlockedMsisdn()) {
-            if (blockedMsisdnRecord != null) {
-                LOGGER.info("Can't create a Subscription as the number {} is deactivated due to Weekly Calls Not Answered", callingNumber);
-                String beneficiaryId = getBeneficiaryId(subscriber, mode, subscriptionPack);
-                subscriptionErrorDataService.create(new SubscriptionError(number, beneficiaryId,
-                        SubscriptionRejectionReason.WEEKLY_CALLS_NOT_ANSWERED, subscriptionPack.getType(), "", mode));
-                return null;
+            // Check if the callingNumber is in Weekly_Calls_Not_Answered_Msisdn_Records
+            BlockedMsisdnRecord blockedMsisdnRecord = blockedMsisdnRecordDataService.findByNumber(callingNumber);
+            if (!acceptNewSubscriptionForBlockedMsisdn()) {
+                if (blockedMsisdnRecord != null) {
+                    LOGGER.info("Can't create a Subscription as the number {} is deactivated due to Weekly Calls Not Answered", callingNumber);
+                    String beneficiaryId = getBeneficiaryId(subscriber, mode, subscriptionPack);
+                    subscriptionErrorDataService.create(new SubscriptionError(number, beneficiaryId,
+                            SubscriptionRejectionReason.WEEKLY_CALLS_NOT_ANSWERED, subscriptionPack.getType(), "", mode));
+                    return null;
+                }
             }
-        }
-        Subscriber sub;
-        Subscription subscription;
+            Subscriber sub;
+            Subscription subscription;
 
-        if (subscriber == null) {
-            sub = subscriberDataService.create(new Subscriber(number, language, circle));
-        } else {
-            sub = subscriber;
-        }
-
-        if (acceptNewSubscriptionForBlockedMsisdn() && blockedMsisdnRecord != null) {
-            Long motherID = 0L;
-
-            if (sub.getMother() != null) {
-                motherID = sub.getMother().getId();
-            } else if (sub.getChild() != null && sub.getChild().getMother() != null) {
-                motherID = sub.getChild().getMother().getId();
+            if (subscriber == null) {
+                sub = subscriberDataService.create(new Subscriber(number, language, circle));
+            } else {
+                sub = subscriber;
             }
 
-            deleteBlockedMsisdn(motherID, null, callingNumber);
+            if (acceptNewSubscriptionForBlockedMsisdn() && blockedMsisdnRecord != null) {
+                Long motherID = 0L;
+
+                if (sub.getMother() != null) {
+                    motherID = sub.getMother().getId();
+                } else if (sub.getChild() != null && sub.getChild().getMother() != null) {
+                    motherID = sub.getChild().getMother().getId();
+                }
+
+                deleteBlockedMsisdn(motherID, null, callingNumber);
+            }
+
+            Language subscriberLanguage = sub.getLanguage();
+            Circle subscriberCircle = sub.getCircle();
+
+            if (subscriberLanguage == null && language != null) {
+                sub.setLanguage(language);
+                subscriberDataService.update(sub);
+            }
+
+            if (subscriberCircle == null && circle != null) {
+                sub.setCircle(circle);
+                subscriberDataService.update(sub);
+            }
+
+            subscription = (mode == SubscriptionOrigin.IVR) ?
+                    createSubscriptionViaIvr(sub, subscriptionPack) :
+                    createSubscriptionViaMcts(sub, subscriptionPack, mode);
+
+            if (subscription != null) {
+                sub.getSubscriptions().add(subscription);
+                subscriberDataService.update(sub);
+            }
+
+            return subscription;
+        } catch (ConstraintViolationException e) {
+            LOGGER.debug("List of constraints: {}", e.getConstraintViolations());
+            throw e;
         }
-
-        Language subscriberLanguage = sub.getLanguage();
-        Circle subscriberCircle = sub.getCircle();
-
-        if (subscriberLanguage == null && language != null) {
-            sub.setLanguage(language);
-            subscriberDataService.update(sub);
-        }
-
-        if (subscriberCircle == null && circle != null) {
-            sub.setCircle(circle);
-            subscriberDataService.update(sub);
-        }
-
-        subscription = (mode == SubscriptionOrigin.IVR) ?
-                createSubscriptionViaIvr(sub, subscriptionPack) :
-                createSubscriptionViaMcts(sub, subscriptionPack, mode);
-
-        if (subscription != null) {
-            sub.getSubscriptions().add(subscription);
-            subscriberDataService.update(sub);
-        }
-
-        return subscription;
     }
 
     private Subscription createSubscriptionViaIvr(Subscriber subscriber, SubscriptionPack pack) {
@@ -715,16 +720,21 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     @Override
     public void updateStartDate(Subscription subscription, DateTime newReferenceDate) {
-        if (subscription.getSubscriptionPack().getType() == SubscriptionPackType.PREGNANCY) {
-            subscription.setStartDate(newReferenceDate.plusDays(KilkariConstants.THREE_MONTHS));
-        } else { // CHILD pack
-            subscription.setStartDate(newReferenceDate);
+        try {
+            if (subscription.getSubscriptionPack().getType() == SubscriptionPackType.PREGNANCY) {
+                subscription.setStartDate(newReferenceDate.plusDays(KilkariConstants.THREE_MONTHS));
+            } else { // CHILD pack
+                subscription.setStartDate(newReferenceDate);
+            }
+            subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
+            if (subscription.getOrigin() == SubscriptionOrigin.IVR) {  // Start Date gets updated through MCTS
+                subscription.setOrigin(SubscriptionOrigin.MCTS_IMPORT);
+            }
+            subscriptionDataService.update(subscription);
+        } catch (ConstraintViolationException e) {
+            LOGGER.debug("List of constraints: {}", e.getConstraintViolations());
+            throw e;
         }
-        subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
-        if (subscription.getOrigin() == SubscriptionOrigin.IVR) {  // Start Date gets updated through MCTS
-            subscription.setOrigin(SubscriptionOrigin.MCTS_IMPORT);
-        }
-        subscriptionDataService.update(subscription);
     }
 
     @Override
