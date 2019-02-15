@@ -210,7 +210,7 @@ public class LocationServiceImpl implements LocationService {
             taluka.setName((String) map.get(TALUKA_NAME));
             taluka.setDistrict(district);
             district.getTalukas().add(taluka);
-            LOGGER.debug(String.format("Created %s in %s with id %d", taluka, district, taluka.getId()));
+            LOGGER.debug(String.format("Created {} in {} with id {}", taluka, district, taluka.getId()));
         }
         locations.put(TALUKA_ID, taluka);
 

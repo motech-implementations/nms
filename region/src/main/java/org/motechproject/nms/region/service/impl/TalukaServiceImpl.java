@@ -201,7 +201,8 @@ public class TalukaServiceImpl implements TalukaService {
             if (taluka.get(LocationConstants.CSV_STATE_ID) != null && taluka.get(LocationConstants.DISTRICT_ID) != null) {
                 State state = stateHashMap.get(taluka.get(LocationConstants.CSV_STATE_ID).toString());
                 District district = districtHashMap.get(taluka.get(LocationConstants.CSV_STATE_ID).toString() + "_" + taluka.get(LocationConstants.DISTRICT_ID).toString());
-                if (district != null && taluka.get(LocationConstants.TALUKA_ID) != null &&
+                String talukaName = taluka.get(LocationConstants.TALUKA_NAME).toString();
+                if (district != null && taluka.get(LocationConstants.TALUKA_ID) != null && (talukaName != null && !talukaName.trim().isEmpty()) &&
                         !("0000").equals(taluka.get(LocationConstants.TALUKA_ID).toString().trim())) {
                     if (i != 0) {
                         stringBuilder.append(", ");

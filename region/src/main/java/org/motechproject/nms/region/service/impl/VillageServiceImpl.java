@@ -129,7 +129,8 @@ public class VillageServiceImpl implements VillageService {
                         village.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                         village.get(LocationConstants.TALUKA_ID).toString().trim());
                 Long villageCode = (Long) village.get(LocationConstants.VILLAGE_ID);
-                if (taluka != null && taluka.getId() != null && villageCode != null && !((Long) (0L)).equals(villageCode)) {
+                String villageName = (String) village.get(LocationConstants.VILLAGE_NAME);
+                if (taluka != null && taluka.getId() != null && (villageName != null && !villageName.trim().isEmpty()) && villageCode != null && !((Long) (0L)).equals(villageCode)) {
                     if (i != 0) {
                         stringBuilder.append(", ");
                     }
