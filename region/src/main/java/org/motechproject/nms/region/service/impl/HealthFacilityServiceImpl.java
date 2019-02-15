@@ -203,8 +203,9 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
                         healthFacility.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                         healthFacility.get(LocationConstants.HEALTHBLOCK_ID).toString());
                 Long healthFacilityCode = (Long) healthFacility.get(LocationConstants.HEALTHFACILITY_ID);
+                String healthFacilityName = (String) healthFacility.get(LocationConstants.HEALTHFACILITY_NAME);
                 if (taluka != null && healthBlock != null && healthFacilityCode != null) {
-                    if (!((Long) (0L)).equals(healthFacilityCode) && healthBlock.getDistrict().getId().equals(taluka.getDistrict().getId())) {
+                    if (!((Long) (0L)).equals(healthFacilityCode) && (healthFacilityName != null && !healthFacilityName.trim().isEmpty()) && healthBlock.getDistrict().getId().equals(taluka.getDistrict().getId())) {
                         if (i != 0) {
                             stringBuilder.append(", ");
                         }

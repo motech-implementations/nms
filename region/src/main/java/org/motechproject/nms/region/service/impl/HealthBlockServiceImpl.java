@@ -241,7 +241,8 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                 Taluka taluka = talukaHashMap.get(healthBlock.get(LocationConstants.CSV_STATE_ID).toString() + "_" + healthBlock.get(LocationConstants.DISTRICT_ID).toString() + "_" +
                         healthBlock.get(LocationConstants.TALUKA_ID).toString().trim());
                 Long healthBlockCode = (Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID);
-                if (district != null && taluka != null && healthBlockCode != null && !((Long) (0L)).equals(healthBlockCode)) {
+                String healthBlockName = (String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME);
+                if (district != null && taluka != null && (healthBlockName != null && !healthBlockName.trim().isEmpty()) && healthBlockCode != null && !((Long) (0L)).equals(healthBlockCode)) {
                     if (i != 0) {
                         stringBuilder.append(", ");
                     }

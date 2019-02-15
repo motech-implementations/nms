@@ -312,7 +312,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
             List<RchImportFacilitator> rchImportFacilitatorTypes = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), userType);
             File localResponseFile ;
-            if (rchImportFacilitatorTypes.isEmpty()) {
+            if (rchImportFacilitatorTypes.isEmpty() && name != null) {
                 localResponseFile = scpResponseToLocal(name, remoteLocation);
                 String result = readResponsesFromXml(localResponseFile);
                 State importState = stateDataService.findByCode(stateId);
@@ -325,7 +325,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             } else {
                 for (RchImportFacilitator rchImportFacilitatorType: rchImportFacilitatorTypes
                 ) {
-                    if (name == null) {
+                    if (name == null || rchImportFacilitatorType.getFileName() != null) {
                         localResponseFile = scpResponseToLocal(rchImportFacilitatorType.getFileName(), remoteLocation);
                     } else {
                         localResponseFile = scpResponseToLocal(name, remoteLocation);
