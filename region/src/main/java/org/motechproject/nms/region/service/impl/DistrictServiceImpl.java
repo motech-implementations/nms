@@ -153,7 +153,7 @@ public class DistrictServiceImpl implements DistrictService {
                 String districtValues = districtQuerySet(districts, stateHashMap);
                 String query = "";
                 if(!districtValues.isEmpty()) {
-                    query = "INSERT into nms_districts (`code`, `name`, `state_id_OID`, " +
+                    query = "INSERT into nms_districts (`code`, `name`, `regionalName`, `state_id_OID`, " +
                             " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
                             districtValues +
                             " ON DUPLICATE KEY UPDATE " +
@@ -189,12 +189,15 @@ public class DistrictServiceImpl implements DistrictService {
             if (district.get(LocationConstants.CSV_STATE_ID) != null) {
                 State state = stateHashMap.get(district.get(LocationConstants.CSV_STATE_ID).toString());
                 Long districtCode = (Long) district.get(LocationConstants.DISTRICT_ID);
-                if (state != null && districtCode != null && !((Long) (0L)).equals(districtCode)) {
+                String districtName = (String) district.get(LocationConstants.DISTRICT_NAME);
+                if (state != null && districtCode != null && (districtName != null && !districtName.trim().isEmpty()) && !((Long) (0L)).equals(districtCode)) {
                     if (i != 0) {
                         stringBuilder.append(", ");
                     }
                     stringBuilder.append("(");
                     stringBuilder.append(districtCode + ", ");
+                    stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(district.get(LocationConstants.DISTRICT_NAME) == null ?
+                            "" : district.get(LocationConstants.DISTRICT_NAME).toString()) + QUOTATION_COMMA);
                     stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(district.get(LocationConstants.DISTRICT_NAME) == null ?
                             "" : district.get(LocationConstants.DISTRICT_NAME).toString()) + QUOTATION_COMMA);
                     stringBuilder.append(state.getId() + ", ");

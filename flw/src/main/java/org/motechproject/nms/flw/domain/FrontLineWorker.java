@@ -77,6 +77,7 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
 
     @Field
     @Persistent(defaultFetchGroup = "true")
+    @TrackField
     private District district;
 
     @Field
