@@ -130,7 +130,8 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
                         healthSubFacility.get(LocationConstants.TALUKA_ID).toString().trim() + "_" +
                         healthSubFacility.get(LocationConstants.HEALTHFACILITY_ID).toString());
                 Long healthSubFacilityCode = (Long) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_ID);
-                if (taluka != null && healthFacility != null && healthSubFacilityCode != null && !((Long) (0L)).equals(healthSubFacilityCode)) {
+                String healthSubFacilityName = (String) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME);
+                if (taluka != null && healthFacility != null && (healthSubFacilityName != null && !healthSubFacilityName.trim().isEmpty()) && healthSubFacilityCode != null && !((Long) (0L)).equals(healthSubFacilityCode)) {
                     if (i != 0) {
                         stringBuilder.append(", ");
                     }
