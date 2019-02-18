@@ -828,8 +828,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
         LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
-        LOGGER.info("RCH Asha file import entry point");
-        LOGGER.info("Copying RCH Asha response file from remote server to local directory.");
+        LOGGER.info("RCH Mother file import entry point");
+        LOGGER.info("Copying RCH Mother response file from remote server to local directory.");
         retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.MOTHER, 0);
     }
 
@@ -939,8 +939,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
         LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
-        LOGGER.info("RCH Asha file import entry point");
-        LOGGER.info("Copying RCH Asha response file from remote server to local directory.");
+        LOGGER.info("RCH Child file import entry point");
+        LOGGER.info("Copying RCH Child response file from remote server to local directory.");
         retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.CHILD, 0);
     }
 

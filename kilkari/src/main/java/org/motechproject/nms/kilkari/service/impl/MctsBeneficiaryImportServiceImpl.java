@@ -197,7 +197,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         mother.setDateOfBirth(motherDOB);
         mother.setLastMenstrualPeriod(lmp);
         mother.setUpdatedDateNic(lastUpdatedDateNic);
-        mctsMotherDataService.update(mother);
+        if (mother.getId() != null) {
+            mctsMotherDataService.update(mother);
+        }
 
 
         // Check if existing subscription needs to be deactivated
@@ -390,7 +392,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
         child.setDateOfBirth(dob);
         child.setUpdatedDateNic(lastUpdateDateNic);
-        mctsChildDataService.update(child);
+        if (child.getId() != null) {
+            mctsChildDataService.update(child);
+        }
 
         List<DeactivatedBeneficiary> deactivatedUsers = null;
         synchronized(this) {
@@ -535,9 +539,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
 
         if (packType == SubscriptionPackType.PREGNANCY) {
-            LOGGER.debug("here2");
             String referenceDateValidationError = pregnancyPack.isReferenceDateValidForPack(referenceDate);
-            LOGGER.debug("Result: {}", referenceDateValidationError);
             if (!referenceDateValidationError.isEmpty()) {
                 return false;
             }
