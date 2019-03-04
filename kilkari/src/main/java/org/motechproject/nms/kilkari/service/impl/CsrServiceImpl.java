@@ -96,7 +96,7 @@ public class CsrServiceImpl implements CsrService {
 
         boolean invalidNr = StatusCode.fromInt(csrDto.getStatusCode()).equals(StatusCode.OBD_FAILED_INVALIDNUMBER);
 
-        if (existingCallRetry == null) {
+        if (existingCallRetry == null && SubscriptionStatus.ACTIVE.equals(subscription.getStatus())) {
             // We've never retried this call, let's do it
             callRetryDataService.create(new CallRetry(
                     subscription.getSubscriptionId(),
@@ -114,13 +114,13 @@ public class CsrServiceImpl implements CsrService {
         }
 
         if ((subscription.getSubscriptionPack().retryCount() == 1) ||
-                (existingCallRetry.getCallStage() == CallStage.RETRY_LAST)) {
+                (existingCallRetry !=null && existingCallRetry.getCallStage() == CallStage.RETRY_LAST)) {
 
             // This call should not be retried
 
             // Deactivate subscription for persistent invalid numbers
             // See https://github.com/motech-implementations/mim/issues/169
-            if (existingCallRetry.getInvalidNumberCount() != null &&
+            if (existingCallRetry != null && existingCallRetry.getInvalidNumberCount() != null &&
                     existingCallRetry.getInvalidNumberCount() == subscription.getSubscriptionPack().retryCount()) {
                 subscription.setStatus(SubscriptionStatus.DEACTIVATED);
                 subscription.setDeactivationReason(DeactivationReason.INVALID_NUMBER);
@@ -128,7 +128,9 @@ public class CsrServiceImpl implements CsrService {
                 SubscriptionServiceImpl.createDeactivatedUser(deactivatedBeneficiaryDataService, subscription, DeactivationReason.INVALID_NUMBER, false);
             }
 
-            callRetryDataService.delete(existingCallRetry);
+            if (existingCallRetry != null) {
+                callRetryDataService.delete(existingCallRetry);
+            }
 
             // Does subscription need to be marked complete, even if we failed to send the last message?
             completeSubscriptionIfNeeded(subscription, csrDto.getContentFileName());
@@ -138,11 +140,12 @@ public class CsrServiceImpl implements CsrService {
 
 
         // This call should indeed be re-rescheduled
-
-        existingCallRetry.setCallStage(existingCallRetry.getCallStage().nextStage());
-        existingCallRetry.setInvalidNumberCount(existingCallRetry.getInvalidNumberCount() == null ? 0 :
-                (existingCallRetry.getInvalidNumberCount() + (invalidNr ? 1 : 0)));
-        callRetryDataService.update(existingCallRetry);
+        if (existingCallRetry != null) {
+            existingCallRetry.setCallStage(existingCallRetry.getCallStage().nextStage());
+            existingCallRetry.setInvalidNumberCount(existingCallRetry.getInvalidNumberCount() == null ? 0 :
+                    (existingCallRetry.getInvalidNumberCount() + (invalidNr ? 1 : 0)));
+            callRetryDataService.update(existingCallRetry);
+        }
 
     }
 

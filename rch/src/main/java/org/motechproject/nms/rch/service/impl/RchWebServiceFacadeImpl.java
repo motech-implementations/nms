@@ -590,7 +590,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
                 int count = 0;
                 int partNumber = 0;
-                Long totalUpdatedRecords = 0L;
+                int totalUpdatedRecords = 0;
                 while (count < districtArrList.size()) {
                     List<Map<String, Object>> recordListPart = new ArrayList<>();
                     while (recordListPart.size() < LOCATION_PART_SIZE && count < districtArrList.size()) {
@@ -601,14 +601,15 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.DISTRICT, fileName, partNumber);
                     recordListPart.clear();
                 }
-
+                int recordsAdded = totalUpdatedRecords/2;
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, recordsAdded, districtArrList.size()-recordsAdded, null));
                 LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
 
             } else {
                 String warning = String.format("No district data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-                //rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, warning));
-               // rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, warning));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
             }
 
         } catch (JAXBException e) {
@@ -677,7 +678,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
                 int count = 0;
                 int partNumber = 0;
-                Long totalUpdatedRecords = 0L;
+                int totalUpdatedRecords = 0;
                 while (count < talukaArrList.size()) {
                     List<Map<String, Object>> recordListPart = new ArrayList<>();
                     while (recordListPart.size() < LOCATION_PART_SIZE && count < talukaArrList.size()) {
@@ -688,14 +689,15 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.TALUKA, fileName, partNumber);
                     recordListPart.clear();
                 }
-
+                int recordsAdded = totalUpdatedRecords/2;
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, recordsAdded, talukaArrList.size()-recordsAdded, null));
                 LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
 
             } else {
                 String warning = String.format("No Taluka data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-                //rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, warning));
-               // rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, warning));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
             }
 
         } catch (JAXBException e) {
@@ -761,7 +763,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
                 int count = 0;
                 int partNumber = 0;
-                Long totalUpdatedRecords = 0L;
+                int totalUpdatedRecords = 0;
                 while (count < villageArrList.size()) {
                     List<Map<String, Object>> recordListPart = new ArrayList<>();
                     while (recordListPart.size() < LOCATION_PART_SIZE && count < villageArrList.size()) {
@@ -772,13 +774,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.VILLAGE, fileName, partNumber);
                     recordListPart.clear();
                 }
-
+                int recordsAdded = totalUpdatedRecords/2;
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, recordsAdded, villageArrList.size()-recordsAdded, null));
                 LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
 
             } else {
                 String warning = String.format("No Village data set received from RCH for %d stateId", stateId);
-               // rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, warning));
-               // rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGE, stateId));
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, warning));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGE, stateId));
                 LOGGER.warn(warning);
             }
 
@@ -1177,7 +1180,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
                 int count = 0;
                 int partNumber = 0;
-                Long totalUpdatedRecords = 0L;
+                int totalUpdatedRecords = 0;
                 while (count < healthBlockArrList.size()) {
                     List<Map<String, Object>> recordListPart = new ArrayList<>();
                     while (recordListPart.size() < LOCATION_PART_SIZE && count < healthBlockArrList.size()) {
@@ -1188,12 +1191,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.HEALTHBLOCK, fileName, partNumber);
                     recordListPart.clear();
                 }
+                int recordsAdded = totalUpdatedRecords/2;
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHBLOCK, stateCode, stateName, recordsAdded, healthBlockArrList.size()-recordsAdded, null));
                 LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
             } else {
                 String warning = String.format("No HealthBlock data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-//                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHBLOCK, stateCode, stateName, 0, 0, warning));
-//                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHBLOCK, stateId));
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHBLOCK, stateCode, stateName, 0, 0, warning));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHBLOCK, stateId));
             }
         } catch (JAXBException e) {
             String error = String.format("Cannot deserialize RCH mother data from %s location.", stateId);
@@ -1284,7 +1289,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
                 int count = 0;
                 int partNumber = 0;
-                Long totalUpdatedRecords = 0L;
+                int totalUpdatedRecords = 0;
                 while (count < talukaHealthBlockArrList.size()) {
                     List<Map<String, Object>> recordListPart = new ArrayList<>();
                     while (recordListPart.size() < LOCATION_PART_SIZE && count < talukaHealthBlockArrList.size()) {
@@ -1295,13 +1300,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.TALUKAHEALTHBLOCK, fileName, partNumber);
                     recordListPart.clear();
                 }
-
+                int recordsAdded = totalUpdatedRecords/2;
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, recordsAdded, talukaHealthBlockArrList.size()-recordsAdded, null));
                 LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
             } else {
                 String warning = String.format("No Taluka-HealthBlock data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-//                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, warning));
-//                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKAHEALTHBLOCK, stateId));
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, warning));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKAHEALTHBLOCK, stateId));
             }
 
         } catch (JAXBException e) {
@@ -1445,7 +1451,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
                 int count = 0;
                 int partNumber = 0;
-                Long totalUpdatedRecords = 0L;
+                int totalUpdatedRecords = 0;
                 while (count < healthFacilityArrList.size()) {
                     List<Map<String, Object>> recordListPart = new ArrayList<>();
                     while (recordListPart.size() < LOCATION_PART_SIZE && count < healthFacilityArrList.size()) {
@@ -1456,12 +1462,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.HEALTHFACILITY, fileName, partNumber);
                     recordListPart.clear();
                 }
+                int recordsAdded = totalUpdatedRecords/2;
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, recordsAdded, healthFacilityArrList.size()-recordsAdded, null));
                 LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
             } else {
                 String warning = String.format("No Healthfacility data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-                //rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, warning));
-                //rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHFACILITY, stateId));
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, warning));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHFACILITY, stateId));
             }
 
         } catch (JAXBException e) {
@@ -1527,7 +1535,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
                 int count = 0;
                 int partNumber = 0;
-                Long totalUpdatedRecords = 0L;
+                int totalUpdatedRecords = 0;
                 while (count < healthSubFacilityArrList.size()) {
                     List<Map<String, Object>> recordListPart = new ArrayList<>();
                     while (recordListPart.size() < LOCATION_PART_SIZE && count < healthSubFacilityArrList.size()) {
@@ -1538,10 +1546,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.HEALTHSUBFACILITY, fileName, partNumber);
                     recordListPart.clear();
                 }
+                int recordsAdded = totalUpdatedRecords/2;
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHSUBFACILITY, stateCode, stateName, recordsAdded, healthSubFacilityArrList.size()-recordsAdded, null));
                 LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
             } else {
                 String warning = String.format("No healthsubfacility data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHSUBFACILITY, stateCode, stateName, 0, 0, warning));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHSUBFACILITY, stateId));
             }
 
         } catch (JAXBException e) {
@@ -1602,7 +1614,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
                 int count = 0;
                 int partNumber = 0;
-                Long totalUpdatedRecords = 0L;
+                int totalUpdatedRecords = 0;
                 while (count < villageHealthSubFacilityArrList.size()) {
                     List<Map<String, Object>> recordListPart = new ArrayList<>();
                     while (recordListPart.size() < LOCATION_PART_SIZE && count < villageHealthSubFacilityArrList.size()) {
@@ -1613,12 +1625,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.VILLAGEHEALTHSUBFACILITY, fileName, partNumber);
                     recordListPart.clear();
                 }
+                int recordsAdded = totalUpdatedRecords/2;
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, recordsAdded, villageHealthSubFacilityArrList.size()-recordsAdded, null));
                 LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
             } else {
                 String warning = String.format("No villageHealthsubfacility data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-                //rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, warning));
-                //rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId));
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, warning));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId));
             }
 
         } catch (JAXBException e) {

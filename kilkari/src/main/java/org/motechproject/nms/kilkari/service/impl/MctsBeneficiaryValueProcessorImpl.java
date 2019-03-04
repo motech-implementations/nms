@@ -66,7 +66,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
         MctsMother motherByRchId = mctsMotherDataService.findByRchId(rchId);
         MctsMother motherByMctsId;
         if (motherByRchId == null) {
-            if (mctsId == null || ("NULL").equalsIgnoreCase(mctsId) || mctsId.isEmpty()) {
+            if (mctsId == null || ("NULL").equalsIgnoreCase(mctsId) || mctsId.isEmpty() || "".equals(mctsId.trim())) {
                 motherByRchId = new MctsMother(rchId, null);
                 return motherByRchId;
             } else {
@@ -80,11 +80,11 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                 }
             }
         } else {
-            if (mctsId == null || ("NULL").equalsIgnoreCase(mctsId) || mctsId.isEmpty()) {
+            if (mctsId == null || ("NULL").equalsIgnoreCase(mctsId) || "".equals(mctsId.trim())) {
                 return motherByRchId;
             } else {
                 motherByMctsId = mctsMotherDataService.findByBeneficiaryId(mctsId);
-                if (motherByMctsId == null) {
+                if (motherByMctsId == null && motherByRchId.getBeneficiaryId() != null) {
                     motherByRchId.setBeneficiaryId(mctsId);
                     return motherByRchId;
                 } else {
@@ -148,7 +148,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
         MctsChild childByRchId = mctsChildDataService.findByRchId(rchId);
         MctsChild childByMctsId;
         if (childByRchId == null) {
-            if (mctsId == null) {
+            if (mctsId == null || mctsId.isEmpty() || "NULL".equalsIgnoreCase(mctsId) || "".equals(mctsId.trim())) {
                 childByRchId = new MctsChild(rchId, null);
                 return childByRchId;
             } else {
@@ -274,7 +274,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                 LOGGER.debug("State: {}, District: {}, Taluka: {}, VilageSvid: {}, VillageCode: {}, HB: {}, HF: {}, HSF: {}", record.get(KilkariConstants.STATE_ID).toString(), districtCode,
                         talukaCode.toString(), villageSvid, villageCode, healthBlockCode, healthFacilityCode, healthSubFacilityCode);
                 Village village = locationFinder.getVillageHashMap().get(mapKey.toString() + "_" + Long.parseLong(villageCode) + "_" + Long.parseLong(villageSvid));
-                if (village != null && village.getId() != null) {
+                if (village != null && taluka !=null && village.getId() != null) {
                     beneficiary.setVillage(village);
                 } else {
                     beneficiary.setVillage(null);
@@ -283,7 +283,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                 mapKey.append("_");
                 mapKey.append(Long.parseLong(healthBlockCode));
                 HealthBlock healthBlock = locationFinder.getHealthBlockHashMap().get(mapKey.toString());
-                if (healthBlock != null && healthBlock.getId() != null) {
+                if (healthBlock != null && taluka !=null && healthBlock.getId() != null) {
                     beneficiary.setHealthBlock(healthBlock);
                 } else {
                     beneficiary.setHealthBlock(null);
@@ -291,7 +291,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                 mapKey.append("_");
                 mapKey.append(Long.parseLong(healthFacilityCode));
                 HealthFacility healthFacility = locationFinder.getHealthFacilityHashMap().get(mapKey.toString());
-                if (healthFacility != null && healthFacility.getId() != null) {
+                if (healthFacility != null && healthBlock !=null && healthFacility.getId() != null) {
                     beneficiary.setHealthFacility(healthFacility);
                 } else {
                     beneficiary.setHealthFacility(null);
@@ -299,7 +299,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                 mapKey.append("_");
                 mapKey.append(Long.parseLong(healthSubFacilityCode));
                 HealthSubFacility healthSubFacility = locationFinder.getHealthSubFacilityHashMap().get(mapKey.toString());
-                if (healthSubFacility != null && healthSubFacility.getId() != null) {
+                if (healthSubFacility != null && healthFacility !=null && healthSubFacility.getId() != null) {
                     beneficiary.setHealthSubFacility(healthSubFacility);
                 } else {
                     beneficiary.setHealthSubFacility(null);
