@@ -259,12 +259,12 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         int trialCount;
 
         public ScpRunnable(String name, String remoteLocation, LocalDate from, LocalDate to, Long stateId, RchUserType userType, int trialCount) {
-            this.name=name;
+            this.name = name;
             this.remoteLocation = remoteLocation;
-            this.from  = from;
-            this.to= to;
+            this.from = from;
+            this.to = to;
             this.stateId = stateId;
-            this.userType  = userType;
+            this.userType = userType;
             this.trialCount = trialCount;
         }
 
@@ -286,6 +286,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
 
     }
+
     private boolean retryScpAndAudit(String name, LocalDate from, LocalDate to, Long stateId, RchUserType userType, int trialCount) {
         try {
             scpResponseToRemote(name);
@@ -296,13 +297,13 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             return true;
 
         } catch (ExecutionException e) {
-            if(trialCount < 3) {
-            Runnable scpRunnable = new ScpRunnable(name, SCP_LOCAL_TO_REMOTE_REMOTELOCATION, from, to, stateId, userType, trialCount);
-            scpRunnable.run();
+            if (trialCount < 3) {
+                Runnable scpRunnable = new ScpRunnable(name, SCP_LOCAL_TO_REMOTE_REMOTELOCATION, from, to, stateId, userType, trialCount);
+                scpRunnable.run();
             } else {
                 LOGGER.error(SCP_ERROR_REMOTE, e);
             }
-         } catch (RchFileManipulationException e) {
+        } catch (RchFileManipulationException e) {
             LOGGER.error("invalid file name", e);
         }
         return false;
@@ -311,7 +312,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private void retryScpFromRemoteToLocal(String name, String remoteLocation, LocalDate from, LocalDate to, Long stateId, RchUserType userType, int trialCount) {
         try {
             List<RchImportFacilitator> rchImportFacilitatorTypes = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), userType);
-            File localResponseFile ;
+            File localResponseFile;
             if (rchImportFacilitatorTypes.isEmpty() && name != null) {
                 localResponseFile = scpResponseToLocal(name, remoteLocation);
                 String result = readResponsesFromXml(localResponseFile);
@@ -323,7 +324,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 LocalDate endReferenceDate = from;
                 processByUserType(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate, userType);
             } else {
-                for (RchImportFacilitator rchImportFacilitatorType: rchImportFacilitatorTypes
+                for (RchImportFacilitator rchImportFacilitatorType : rchImportFacilitatorTypes
                 ) {
                     if (name == null || rchImportFacilitatorType.getFileName() != null) {
                         localResponseFile = scpResponseToLocal(rchImportFacilitatorType.getFileName(), remoteLocation);
@@ -342,7 +343,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
             }
         } catch (ExecutionException e) {
-            if(trialCount < 3) {
+            if (trialCount < 3) {
                 Runnable scpRunnable = new ScpRunnable(name, remoteLocation, from, to, stateId, userType, trialCount);
                 scpRunnable.run();
             } else {
@@ -356,8 +357,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             eventParams.put(Constants.REMOTE_LOCATION, null);
             eventParams.put(Constants.FILE_NAME, null);
             eventByUserType(eventParams, userType);
-            }
         }
+    }
 
     private void eventByUserType(Map<String, Object> eventParams, RchUserType userType) {
         switch (userType) {
@@ -446,7 +447,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH mother response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.MOTHER, 0);
         } else {
-            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.MOTHER, stateId);
+            LOGGER.error("Error writing {} response to file for state {}", RchUserType.MOTHER, stateId);
         }
         return status;
     }
@@ -472,7 +473,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH district response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.DISTRICT, 0);
         } else {
-            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.DISTRICT, stateId);
+            LOGGER.error("Error writing {} response to file for state {}", RchUserType.DISTRICT, stateId);
         }
         return status;
     }
@@ -498,7 +499,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH taluka response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.TALUKA, 0);
         } else {
-            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.TALUKA, stateId);
+            LOGGER.error("Error writing {} response to file for state {}", RchUserType.TALUKA, stateId);
         }
         return status;
     }
@@ -524,7 +525,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH Village response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.VILLAGE, 0);
         } else {
-            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.VILLAGE, stateId);
+            LOGGER.error("Error writing {} response to file for state {}", RchUserType.VILLAGE, stateId);
         }
         return status;
     }
@@ -556,7 +557,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
-        LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate startDate = (LocalDate) event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH District file import entry point");
         LOGGER.info("Copying RCH District response file from remote server to local directory.");
         retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.DISTRICT, 0);
@@ -590,7 +591,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
                 int count = 0;
                 int partNumber = 0;
-                Long totalUpdatedRecords = 0L;
+                int totalUpdatedRecords = 0;
                 while (count < districtArrList.size()) {
                     List<Map<String, Object>> recordListPart = new ArrayList<>();
                     while (recordListPart.size() < LOCATION_PART_SIZE && count < districtArrList.size()) {
@@ -601,14 +602,15 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.DISTRICT, fileName, partNumber);
                     recordListPart.clear();
                 }
-
+                int recordsAdded = totalUpdatedRecords/2;
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, recordsAdded, districtArrList.size()-recordsAdded, null));
                 LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
 
             } else {
                 String warning = String.format("No district data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-                //rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, warning));
-               // rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, warning));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
             }
 
         } catch (JAXBException e) {
@@ -643,7 +645,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
-        LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate startDate = (LocalDate) event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH Taluka file import entry point");
         LOGGER.info("Copying RCH Taluka response file from remote server to local directory.");
         retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.TALUKA, 0);
@@ -677,7 +679,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
                 int count = 0;
                 int partNumber = 0;
-                Long totalUpdatedRecords = 0L;
+                int totalUpdatedRecords = 0;
                 while (count < talukaArrList.size()) {
                     List<Map<String, Object>> recordListPart = new ArrayList<>();
                     while (recordListPart.size() < LOCATION_PART_SIZE && count < talukaArrList.size()) {
@@ -688,14 +690,15 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.TALUKA, fileName, partNumber);
                     recordListPart.clear();
                 }
-
+                int recordsAdded = totalUpdatedRecords/2;
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, recordsAdded, talukaArrList.size()-recordsAdded, null));
                 LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
 
             } else {
                 String warning = String.format("No Taluka data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-                //rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, warning));
-               // rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, warning));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
             }
 
         } catch (JAXBException e) {
@@ -728,7 +731,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
-        LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate startDate = (LocalDate) event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH village file import entry point");
         LOGGER.info("Copying RCH village response file from remote server to local directory.");
         retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.VILLAGE, 0);
@@ -761,7 +764,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
                 int count = 0;
                 int partNumber = 0;
-                Long totalUpdatedRecords = 0L;
+                int totalUpdatedRecords = 0;
                 while (count < villageArrList.size()) {
                     List<Map<String, Object>> recordListPart = new ArrayList<>();
                     while (recordListPart.size() < LOCATION_PART_SIZE && count < villageArrList.size()) {
@@ -772,13 +775,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.VILLAGE, fileName, partNumber);
                     recordListPart.clear();
                 }
-
+                int recordsAdded = totalUpdatedRecords/2;
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, recordsAdded, villageArrList.size()-recordsAdded, null));
                 LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
 
             } else {
                 String warning = String.format("No Village data set received from RCH for %d stateId", stateId);
-               // rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, warning));
-               // rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGE, stateId));
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, warning));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGE, stateId));
                 LOGGER.warn(warning);
             }
 
@@ -827,7 +831,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
-        LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate startDate = (LocalDate) event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH Mother file import entry point");
         LOGGER.info("Copying RCH Mother response file from remote server to local directory.");
         retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.MOTHER, 0);
@@ -906,7 +910,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH children response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.CHILD, 0);
         } else {
-            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.CHILD, stateId);
+            LOGGER.error("Error writing {} response to file for state {}", RchUserType.CHILD, stateId);
         }
 
         return status;
@@ -938,7 +942,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
-        LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate startDate = (LocalDate) event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH Child file import entry point");
         LOGGER.info("Copying RCH Child response file from remote server to local directory.");
         retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.CHILD, 0);
@@ -1017,7 +1021,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH asha response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.ASHA, 0);
         } else {
-            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.ASHA, stateId);
+            LOGGER.error("Error writing {} response to file for state {}", RchUserType.ASHA, stateId);
         }
 
         return status;
@@ -1049,7 +1053,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
-        LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate startDate = (LocalDate) event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH Asha file import entry point");
         LOGGER.info("Copying RCH Asha response file from remote server to local directory.");
         retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.ASHA, 0);
@@ -1128,7 +1132,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH healthblock response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.HEALTHBLOCK, 0);
         } else {
-            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.HEALTHBLOCK, stateId);
+            LOGGER.error("Error writing {} response to file for state {}", RchUserType.HEALTHBLOCK, stateId);
         }
         return status;
     }
@@ -1145,7 +1149,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
-        LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate startDate = (LocalDate) event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH Healthblock file import entry point");
         LOGGER.info("Copying RCH Healthblock response file from remote server to local directory.");
         retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.HEALTHBLOCK, 0);
@@ -1177,7 +1181,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
                 int count = 0;
                 int partNumber = 0;
-                Long totalUpdatedRecords = 0L;
+                int totalUpdatedRecords = 0;
                 while (count < healthBlockArrList.size()) {
                     List<Map<String, Object>> recordListPart = new ArrayList<>();
                     while (recordListPart.size() < LOCATION_PART_SIZE && count < healthBlockArrList.size()) {
@@ -1188,12 +1192,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.HEALTHBLOCK, fileName, partNumber);
                     recordListPart.clear();
                 }
+                int recordsAdded = totalUpdatedRecords/2;
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHBLOCK, stateCode, stateName, recordsAdded, healthBlockArrList.size()-recordsAdded, null));
                 LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
             } else {
                 String warning = String.format("No HealthBlock data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-//                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHBLOCK, stateCode, stateName, 0, 0, warning));
-//                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHBLOCK, stateId));
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHBLOCK, stateCode, stateName, 0, 0, warning));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHBLOCK, stateId));
             }
         } catch (JAXBException e) {
             String error = String.format("Cannot deserialize RCH mother data from %s location.", stateId);
@@ -1235,7 +1241,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH taluka-healthblock response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.TALUKAHEALTHBLOCK, 0);
         } else {
-            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.TALUKAHEALTHBLOCK, stateId);
+            LOGGER.error("Error writing {} response to file for state {}", RchUserType.TALUKAHEALTHBLOCK, stateId);
         }
         return status;
     }
@@ -1252,7 +1258,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
-        LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate startDate = (LocalDate) event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH TalukaHealthblock file import entry point");
         LOGGER.info("Copying RCH TalukaHealthblock response file from remote server to local directory.");
         retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.TALUKAHEALTHBLOCK, 0);
@@ -1284,7 +1290,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
                 int count = 0;
                 int partNumber = 0;
-                Long totalUpdatedRecords = 0L;
+                int totalUpdatedRecords = 0;
                 while (count < talukaHealthBlockArrList.size()) {
                     List<Map<String, Object>> recordListPart = new ArrayList<>();
                     while (recordListPart.size() < LOCATION_PART_SIZE && count < talukaHealthBlockArrList.size()) {
@@ -1295,13 +1301,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.TALUKAHEALTHBLOCK, fileName, partNumber);
                     recordListPart.clear();
                 }
-
+                int recordsAdded = totalUpdatedRecords/2;
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, recordsAdded, talukaHealthBlockArrList.size()-recordsAdded, null));
                 LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
             } else {
                 String warning = String.format("No Taluka-HealthBlock data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-//                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, warning));
-//                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKAHEALTHBLOCK, stateId));
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, warning));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKAHEALTHBLOCK, stateId));
             }
 
         } catch (JAXBException e) {
@@ -1322,6 +1329,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.error(FILES_MISSING_ON_A, RchUserType.TALUKAHEALTHBLOCK, e);
         }
     }
+
     @Override
     public boolean getHealthFacilityData(LocalDate from, LocalDate to, URL endpoint, Long stateId) {
         DS_DataResponseDS_DataResult result;
@@ -1343,7 +1351,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH healthfacility response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.HEALTHFACILITY, 0);
         } else {
-            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.HEALTHFACILITY, stateId);
+            LOGGER.error("Error writing {} response to file for state {}", RchUserType.HEALTHFACILITY, stateId);
         }
         return status;
     }
@@ -1369,7 +1377,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH healthsubfacility response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.HEALTHSUBFACILITY, 0);
         } else {
-            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.HEALTHSUBFACILITY, stateId);
+            LOGGER.error("Error writing {} response to file for state {}", RchUserType.HEALTHSUBFACILITY, stateId);
         }
         return status;
     }
@@ -1395,7 +1403,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.info("RCH villagehealthfacility response successfully written to file. Copying to remote directory.");
             status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.VILLAGEHEALTHSUBFACILITY, 0);
         } else {
-            LOGGER.error("Error writing {} response to file for state {}" ,  RchUserType.VILLAGEHEALTHSUBFACILITY, stateId);
+            LOGGER.error("Error writing {} response to file for state {}", RchUserType.VILLAGEHEALTHSUBFACILITY, stateId);
         }
         return status;
     }
@@ -1412,7 +1420,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
-        LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate startDate = (LocalDate) event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH Healthfacility file import entry point");
         LOGGER.info("Copying RCH Healthfacility response file from remote server to local directory.");
         retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.HEALTHFACILITY, 0);
@@ -1445,7 +1453,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
                 int count = 0;
                 int partNumber = 0;
-                Long totalUpdatedRecords = 0L;
+                int totalUpdatedRecords = 0;
                 while (count < healthFacilityArrList.size()) {
                     List<Map<String, Object>> recordListPart = new ArrayList<>();
                     while (recordListPart.size() < LOCATION_PART_SIZE && count < healthFacilityArrList.size()) {
@@ -1456,12 +1464,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.HEALTHFACILITY, fileName, partNumber);
                     recordListPart.clear();
                 }
+                int recordsAdded = totalUpdatedRecords/2;
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, recordsAdded, healthFacilityArrList.size()-recordsAdded, null));
                 LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
             } else {
                 String warning = String.format("No Healthfacility data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-                //rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, warning));
-                //rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHFACILITY, stateId));
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, warning));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHFACILITY, stateId));
             }
 
         } catch (JAXBException e) {
@@ -1527,7 +1537,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
                 int count = 0;
                 int partNumber = 0;
-                Long totalUpdatedRecords = 0L;
+                int totalUpdatedRecords = 0;
                 while (count < healthSubFacilityArrList.size()) {
                     List<Map<String, Object>> recordListPart = new ArrayList<>();
                     while (recordListPart.size() < LOCATION_PART_SIZE && count < healthSubFacilityArrList.size()) {
@@ -1538,10 +1548,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.HEALTHSUBFACILITY, fileName, partNumber);
                     recordListPart.clear();
                 }
+                int recordsAdded = totalUpdatedRecords/2;
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHSUBFACILITY, stateCode, stateName, recordsAdded, healthSubFacilityArrList.size()-recordsAdded, null));
                 LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
             } else {
                 String warning = String.format("No healthsubfacility data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHSUBFACILITY, stateCode, stateName, 0, 0, warning));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHSUBFACILITY, stateId));
             }
 
         } catch (JAXBException e) {
@@ -1562,14 +1576,15 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
      * The remoteLocation and fileName would be not null only in the case of integration tests.
      * At other times the values will be taken from property files.
      */
-    @MotechListener(subjects = Constants.RCH_VILLAGE_HEALTHSUBFACILITY_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
+    @MotechListener(subjects = Constants.RCH_VILLAGE_HEALTHSUBFACILITY_READ_SUBJECT)
+    //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void readVillageHealthSubFacilityResponseFromFile(MotechEvent event) throws RchFileManipulationException {
         Long stateId = (Long) event.getParameters().get(Constants.STATE_ID_PARAM);
         String remoteLocation = (String) event.getParameters().get(Constants.REMOTE_LOCATION);
         String fileName = (String) event.getParameters().get(Constants.FILE_NAME);
         LocalDate endDate = (LocalDate) event.getParameters().get(Constants.END_DATE_PARAM);
-        LocalDate startDate = (LocalDate)   event.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate startDate = (LocalDate) event.getParameters().get(Constants.START_DATE_PARAM);
         LOGGER.info("RCH villagehealthsubfacility file import entry point");
         LOGGER.info("Copying RCH villagehealthsubfacility response file from remote server to local directory.");
         retryScpFromRemoteToLocal(fileName, remoteLocation, endDate, startDate, stateId, RchUserType.VILLAGEHEALTHSUBFACILITY, 0);
@@ -1602,7 +1617,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
                 int count = 0;
                 int partNumber = 0;
-                Long totalUpdatedRecords = 0L;
+                int totalUpdatedRecords = 0;
                 while (count < villageHealthSubFacilityArrList.size()) {
                     List<Map<String, Object>> recordListPart = new ArrayList<>();
                     while (recordListPart.size() < LOCATION_PART_SIZE && count < villageHealthSubFacilityArrList.size()) {
@@ -1613,12 +1628,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     totalUpdatedRecords += locationService.createLocationPart(recordListPart, LocationEnum.VILLAGEHEALTHSUBFACILITY, fileName, partNumber);
                     recordListPart.clear();
                 }
+                int recordsAdded = totalUpdatedRecords/2;
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, recordsAdded, villageHealthSubFacilityArrList.size()-recordsAdded, null));
                 LOGGER.debug("File {} processed. {} records updated", fileName, totalUpdatedRecords);
             } else {
                 String warning = String.format("No villageHealthsubfacility data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-                //rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, warning));
-                //rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId));
+                rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, warning));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId));
             }
 
         } catch (JAXBException e) {
@@ -1715,18 +1732,30 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private String targetFileName(String timeStamp, RchUserType userType, Long stateId) {
         switch (userType) {
-            case MOTHER: return String.format("RCH_StateID_%d_Mother_Response_%s.xml", stateId, timeStamp);
-            case CHILD: return String.format("RCH_StateID_%d_Child_Response_%s.xml", stateId, timeStamp);
-            case ASHA: return String.format("RCH_StateID_%d_Asha_Response_%s.xml", stateId, timeStamp);
-            case TALUKA: return String.format("RCH_StateID_%d_Taluka_Response_%s.xml", stateId, timeStamp);
-            case HEALTHBLOCK: return String.format("RCH_StateID_%d_HealthBlock_Response_%s.xml", stateId, timeStamp);
-            case TALUKAHEALTHBLOCK: return String.format("RCH_StateID_%d_Taluka_HealthBlock_Response_%s.xml", stateId, timeStamp);
-            case DISTRICT: return String.format("RCH_StateID_%d_District_Response_%s.xml", stateId, timeStamp);
-            case VILLAGE: return String.format("RCH_StateID_%d_Village_Response_%s.xml", stateId, timeStamp);
-            case HEALTHFACILITY: return String.format("RCH_StateID_%d_HealthFacility_Response_%s.xml", stateId, timeStamp);
-            case HEALTHSUBFACILITY: return String.format("RCH_StateID_%d_HealthSubFacility_Response_%s.xml", stateId, timeStamp);
-            case VILLAGEHEALTHSUBFACILITY: return String.format("RCH_StateID_%d_Village_HealthSubFacility_Response_%s.xml", stateId, timeStamp);
-            default: return "Null";
+            case MOTHER:
+                return String.format("RCH_StateID_%d_Mother_Response_%s.xml", stateId, timeStamp);
+            case CHILD:
+                return String.format("RCH_StateID_%d_Child_Response_%s.xml", stateId, timeStamp);
+            case ASHA:
+                return String.format("RCH_StateID_%d_Asha_Response_%s.xml", stateId, timeStamp);
+            case TALUKA:
+                return String.format("RCH_StateID_%d_Taluka_Response_%s.xml", stateId, timeStamp);
+            case HEALTHBLOCK:
+                return String.format("RCH_StateID_%d_HealthBlock_Response_%s.xml", stateId, timeStamp);
+            case TALUKAHEALTHBLOCK:
+                return String.format("RCH_StateID_%d_Taluka_HealthBlock_Response_%s.xml", stateId, timeStamp);
+            case DISTRICT:
+                return String.format("RCH_StateID_%d_District_Response_%s.xml", stateId, timeStamp);
+            case VILLAGE:
+                return String.format("RCH_StateID_%d_Village_Response_%s.xml", stateId, timeStamp);
+            case HEALTHFACILITY:
+                return String.format("RCH_StateID_%d_HealthFacility_Response_%s.xml", stateId, timeStamp);
+            case HEALTHSUBFACILITY:
+                return String.format("RCH_StateID_%d_HealthSubFacility_Response_%s.xml", stateId, timeStamp);
+            case VILLAGEHEALTHSUBFACILITY:
+                return String.format("RCH_StateID_%d_Village_HealthSubFacility_Response_%s.xml", stateId, timeStamp);
+            default:
+                return "Null";
         }
     }
 
@@ -1808,7 +1837,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         for (Future<ThreadProcessorObject> fut : list) {
             try {
                 ThreadProcessorObject threadProcessorObject = fut.get();
-                Map<String,Object> rejectedBen = threadProcessorObject.getRejectedBeneficiaries();
+                Map<String, Object> rejectedBen = threadProcessorObject.getRejectedBeneficiaries();
                 rejectedMothers.putAll(rejectedBen);
                 int currentRej = rejectedBen.size();
                 rejected += currentRej;
@@ -1832,7 +1861,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
 
         try {
-            mctsBeneficiaryImportService.createOrUpdateRchMotherRejections(rejectedMothers , rejectionStatus);
+            mctsBeneficiaryImportService.createOrUpdateRchMotherRejections(rejectedMothers, rejectionStatus);
         } catch (RuntimeException e) {
             LOGGER.error(BULK_REJECTION_ERROR_MESSAGE, e);
 
@@ -1841,7 +1870,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, saved, rejected, null);
     }
 
-    private  List<Map<String, Object>> getLMPValidRecords(List<RchMotherRecord> motherRecords) {
+    private List<Map<String, Object>> getLMPValidRecords(List<RchMotherRecord> motherRecords) {
         List<Map<String, Object>> validMotherRecords = new ArrayList<>();
         Map<String, Object> rejectedMothers = new HashMap<>();
         Map<String, Object> rejectionStatus = new HashMap<>();
@@ -1878,7 +1907,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
 
         try {
-            mctsBeneficiaryImportService.createOrUpdateRchMotherRejections(rejectedMothers , rejectionStatus);
+            mctsBeneficiaryImportService.createOrUpdateRchMotherRejections(rejectedMothers, rejectionStatus);
         } catch (RuntimeException e) {
             LOGGER.error(BULK_REJECTION_ERROR_MESSAGE, e);
 
@@ -1947,7 +1976,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         for (Future<ThreadProcessorObject> fut : list) {
             try {
                 ThreadProcessorObject threadProcessorObject = fut.get();
-                Map<String,Object> currRejBen = threadProcessorObject.getRejectedBeneficiaries();
+                Map<String, Object> currRejBen = threadProcessorObject.getRejectedBeneficiaries();
                 Integer currRejBenSize = currRejBen.size();
                 rejectedChilds.putAll(currRejBen);
                 rejectionStatus.putAll(threadProcessorObject.getRejectionStatus());
@@ -1972,7 +2001,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
 
         try {
-            mctsBeneficiaryImportService.createOrUpdateRchChildRejections(rejectedChilds , rejectionStatus);
+            mctsBeneficiaryImportService.createOrUpdateRchChildRejections(rejectedChilds, rejectionStatus);
         } catch (RuntimeException e) {
             LOGGER.error(BULK_REJECTION_ERROR_MESSAGE, e);
 
@@ -1981,7 +2010,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, saved, rejected, null);
     }
 
-    private  List<Map<String, Object>> getDOBValidChildRecords(List<RchChildRecord> childRecords) {
+    private List<Map<String, Object>> getDOBValidChildRecords(List<RchChildRecord> childRecords) {
         List<Map<String, Object>> validChildRecords = new ArrayList<>();
         Map<String, Object> rejectedChilds = new HashMap<>();
         Map<String, Object> rejectionStatus = new HashMap<>();
@@ -2020,7 +2049,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
 
         try {
-            mctsBeneficiaryImportService.createOrUpdateRchChildRejections(rejectedChilds , rejectionStatus);
+            mctsBeneficiaryImportService.createOrUpdateRchChildRejections(rejectedChilds, rejectionStatus);
         } catch (RuntimeException e) {
             LOGGER.error(BULK_REJECTION_ERROR_MESSAGE, e);
 
@@ -2053,7 +2082,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 Long msisdn = Long.parseLong(record.getMobileNo());
                 String flwId = record.getGfId().toString();
                 FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
-                if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || !state.equals(flw.getState())))  && !FrontLineWorkerStatus.ANONYMOUS.equals(flw.getStatus())) {
+                if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || !state.equals(flw.getState()))) && !FrontLineWorkerStatus.ANONYMOUS.equals(flw.getStatus())) {
                     LOGGER.debug("Existing FLW with same MSISDN but different MCTS ID");
                     flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
                     rejected++;
@@ -2407,7 +2436,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             String xmlString;
             String string = FileUtils.readFileToString(file);
             String[] newDataSetArr = string.split("NewDataSet");
-            if(newDataSetArr.length > 2) {
+            if (newDataSetArr.length > 2) {
                 xmlString = "<NewDataSet" + newDataSetArr[3] + "NewDataSet>";
                 xmlString = xmlString.replaceAll("\\n", " ");
                 xmlString = xmlString.replaceAll("<Records diffgr:id=\"Records[0-9]+\" msdata:rowOrder=\"[0-9]+\">", "<Records >");
@@ -2460,7 +2489,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             throws IOException {
         //CHECKSTYLE:OFF
         try {
-            
+
             final String SOAP_START = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"><soapenv:Header /><soapenv:Body>";
             final String SOAP_START_XSI = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><soapenv:Header /><soapenv:Body>";
             final String SOAP_END = "</soapenv:Body></soapenv:Envelope>";
@@ -2624,7 +2653,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 LOGGER.debug("Records read {}", motherRecords.size());
                 List<String> existingMotherIds = getDatabaseMothers(motherRecords);
                 for (RchMotherRecord record : motherRecords) {
-                    if(existingMotherIds.contains(record.getRegistrationNo())) {
+                    if (existingMotherIds.contains(record.getRegistrationNo())) {
                         Map<String, Object> locMap = new HashMap<>();
                         toMapLocMother(locMap, record);
                         locMap.put(KilkariConstants.RCH_ID, record.getRegistrationNo());
@@ -2648,8 +2677,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
 
-
-
     private void motherLocUpdateFromCsv(List<Map<String, Object>> result, Long stateId, RchUserType rchUserType) {
         try {
             ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
@@ -2660,7 +2687,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rchMotherRecords.add(rchMotherRecord);
             }
             List<String> existingMotherIds = getDatabaseMothers(rchMotherRecords);
-            for(RchMotherRecord rchMotherRecord : rchMotherRecords) {
+            for (RchMotherRecord rchMotherRecord : rchMotherRecords) {
                 if (existingMotherIds.contains(rchMotherRecord.getRegistrationNo())) {
                     Map<String, Object> locMap = new HashMap<>();
                     toMapLocMother(locMap, rchMotherRecord);
@@ -2672,14 +2699,12 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 updateLocInMap(locArrList, stateId, rchUserType);
             }
 
-        }  catch (IOException e) {
+        } catch (IOException e) {
             LOGGER.error("IO exception.");
         } catch (InvalidLocationException e) {
             LOGGER.error("Location Invalid");
         }
     }
-
-
 
 
     private void childLocUpdate(String result, Long stateId, RchUserType rchUserType) { // NO CHECKSTYLE Cyclomatic Complexity
@@ -2697,7 +2722,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 LOGGER.debug("Records read {}", childRecords.size());
                 List<String> existingChildIds = getDatabaseChild(childRecords);
                 for (RchChildRecord record : childRecords) {
-                    if(existingChildIds.contains(record.getRegistrationNo())) {
+                    if (existingChildIds.contains(record.getRegistrationNo())) {
                         Map<String, Object> locMap = new HashMap<>();
                         toMapLocChild(locMap, record);
                         locMap.put(KilkariConstants.RCH_ID, record.getRegistrationNo());
@@ -2732,7 +2757,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
             }
             List<String> existingMotherIds = getDatabaseChild(rchChildRecords);
-            for(RchChildRecord rchChildRecord : rchChildRecords) {
+            for (RchChildRecord rchChildRecord : rchChildRecords) {
                 if (existingMotherIds.contains(rchChildRecord.getRegistrationNo())) {
                     Map<String, Object> locMap = new HashMap<>();
                     toMapLocChild(locMap, rchChildRecord);
@@ -2752,8 +2777,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
 
-
-
     private void ashaLocUpdate(String result, Long stateId, RchUserType rchUserType) { // NO CHECKSTYLE Cyclomatic Complexity
         try {
             ArrayList<Map<String, Object>> locArrList = new ArrayList<>();
@@ -2767,7 +2790,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 List<RchAnmAshaRecord> anmAshaRecords = ashaDataSet.getRecords();
                 LOGGER.debug("Records read {}", anmAshaRecords.size());
                 State state = stateDataService.findByCode(stateId);
-                List<FrontLineWorker> existingAshas = getDatabaseAsha(anmAshaRecords,state.getId());
+                List<FrontLineWorker> existingAshas = getDatabaseAsha(anmAshaRecords, state.getId());
                 Map<String, Long> existingAshaIds = new HashMap<>();
                 List<String> mctsIds = new ArrayList<>();
                 for (FrontLineWorker asha : existingAshas) {
@@ -2776,7 +2799,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
                 for (RchAnmAshaRecord record : anmAshaRecords
                 ) {
-                    if(mctsIds.contains(record.getGfId().toString())) {
+                    if (mctsIds.contains(record.getGfId().toString())) {
                         Map<String, Object> locMap = new HashMap<>();
                         toMapLoc(locMap, record);
                         locMap.put(FlwConstants.ID, existingAshaIds.get(record.getGfId().toString()));
@@ -2810,14 +2833,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rchAshaRecords.add(rchAnmAshaRecord);
             }
             State state = stateDataService.findByCode(stateId);
-            List<FrontLineWorker> existingAshas = getDatabaseAsha(rchAshaRecords,state.getId());
+            List<FrontLineWorker> existingAshas = getDatabaseAsha(rchAshaRecords, state.getId());
             Map<String, Long> existingAshaIds = new HashMap<>();
             List<String> mctsIds = new ArrayList<>();
             for (FrontLineWorker asha : existingAshas) {
                 existingAshaIds.put(asha.getMctsFlwId(), asha.getId());
                 mctsIds.add(asha.getMctsFlwId());
             }
-            for(RchAnmAshaRecord rchAnmAshaRecord : rchAshaRecords) {
+            for (RchAnmAshaRecord rchAnmAshaRecord : rchAshaRecords) {
                 if (mctsIds.contains(rchAnmAshaRecord.getGfId().toString())) {
                     Map<String, Object> locMap = new HashMap<>();
                     toMapLoc(locMap, rchAnmAshaRecord);
@@ -2836,8 +2859,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             LOGGER.error("Location Invalid");
         }
     }
-
-
 
 
     public Map<String, Object> setLocationFields(LocationFinder locationFinder, Map<String, Object> record) throws InvalidLocationException { //NO CHECKSTYLE Cyclomatic Complexity
@@ -2907,23 +2928,23 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return !"0".equals(obj);
     }
 
-    private  List<MultipartFile> findByStateIdAndRchUserType(Long stateId, RchUserType rchUserType) throws IOException {
+    private List<MultipartFile> findByStateIdAndRchUserType(Long stateId, RchUserType rchUserType) throws IOException {
 
-        ArrayList <MultipartFile> csvFilesByStateIdAndRchUserType = new ArrayList<>();
+        ArrayList<MultipartFile> csvFilesByStateIdAndRchUserType = new ArrayList<>();
         String locUpdateDir = settingsFacade.getProperty(REMOTE_RESPONSE_DIR_CSV);
         File file = new File(locUpdateDir);
 
         File[] files = file.listFiles();
         if (files != null) {
-            for(File f: files){
-                String[] fileNameSplitter =  f.getName().split("_");
-                if(Objects.equals(fileNameSplitter[2], stateId.toString()) && fileNameSplitter[3].equalsIgnoreCase(rchUserType.toString())){
+            for (File f : files) {
+                String[] fileNameSplitter = f.getName().split("_");
+                if (Objects.equals(fileNameSplitter[2], stateId.toString()) && fileNameSplitter[3].equalsIgnoreCase(rchUserType.toString())) {
                     try {
-                        FileItem fileItem = new DiskFileItem("file",  "text/plain", false, f.getName(), (int) f.length(), f.getParentFile());
+                        FileItem fileItem = new DiskFileItem("file", "text/plain", false, f.getName(), (int) f.length(), f.getParentFile());
                         IOUtils.copy(new FileInputStream(f), fileItem.getOutputStream());
                         MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
                         csvFilesByStateIdAndRchUserType.add(multipartFile);
-                    }catch(IOException e) {
+                    } catch (IOException e) {
                         LOGGER.debug("IO Exception", e);
                     }
 
@@ -2935,7 +2956,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
 
-
     private void updateLocInMap(List<Map<String, Object>> locArrList, Long stateId, RchUserType rchUserType) throws InvalidLocationException, IOException {
 
         ArrayList<Map<String, Object>> updatedLocArrList = new ArrayList<>();
@@ -2945,10 +2965,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         for (Map<String, Object> record : locArrList
         ) {
             Map<String, Object> updatedMap = setLocationFields(locationFinder, record);
-            if("asha".equalsIgnoreCase(rchUserType.toString())){
+            if ("asha".equalsIgnoreCase(rchUserType.toString())) {
                 updatedMap.put(FlwConstants.GF_ID, record.get(FlwConstants.GF_ID));
                 updatedMap.put(FlwConstants.ID, record.get(FlwConstants.ID));
-            }else {
+            } else {
                 updatedMap.put(KilkariConstants.RCH_ID, record.get(KilkariConstants.RCH_ID));
             }
             updatedLocArrList.add(updatedMap);
@@ -2956,7 +2976,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
         if ("asha".equalsIgnoreCase(rchUserType.toString())) {
             csvWriterAsha(updatedLocArrList, stateId, rchUserType);
-        }else {
+        } else {
             csvWriterKilkari(updatedLocArrList, stateId, rchUserType);
         }
 
@@ -2971,7 +2991,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         String locUpdateDir = settingsFacade.getProperty(LOC_UPDATE_DIR_RCH);
         String fileName = locUpdateDir + "location_update_state" + "_" + stateId + "_" + rchUserType + "_" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()) + ".csv";
         File csvFile = new File(fileName);
-        if (!csvFile.exists()){
+        if (!csvFile.exists()) {
             csvFile.createNewFile();
         } else {
             LOGGER.debug("File already exists");
@@ -3163,7 +3183,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
         stringBuilder.append("(");
-        for (RchMotherRecord motherRecord: motherRecords) {
+        for (RchMotherRecord motherRecord : motherRecords) {
             if (i != 0) {
                 stringBuilder.append(", ");
             }
@@ -3174,7 +3194,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
         return stringBuilder.toString();
     }
-
 
 
     private List<String> getDatabaseChild(final List<RchChildRecord> childRecords) {
@@ -3212,7 +3231,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
         stringBuilder.append("(");
-        for (RchChildRecord childRecord: childRecords) {
+        for (RchChildRecord childRecord : childRecords) {
             if (i != 0) {
                 stringBuilder.append(", ");
             }
@@ -3259,7 +3278,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
         stringBuilder.append("(");
-        for (RchAnmAshaRecord ashaRecord: ashaRecords) {
+        for (RchAnmAshaRecord ashaRecord : ashaRecords) {
             if (i != 0) {
                 stringBuilder.append(", ");
             }
@@ -3295,7 +3314,5 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
         return stateIds;
     }
-
-
 
 }
