@@ -157,7 +157,7 @@ public class DistrictServiceImpl implements DistrictService {
                             " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
                             districtValues +
                             " ON DUPLICATE KEY UPDATE " +
-                            "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                            "name = VALUES(name), regionalName = VALUES(regionalName), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
                 }
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
