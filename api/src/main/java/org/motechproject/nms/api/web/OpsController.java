@@ -184,7 +184,6 @@ public class OpsController extends BaseController {
         // TODO: add a field updatedDateNic for Add Flw Request.
         // Will Fix this with NMS-349
 
-        LOGGER.debug("healthfacilityName {}", addFlwRequest.getPhcName());
         StringBuilder failureReasons = flwCsvService.csvUploadMcts(addFlwRequest);
         if (failureReasons != null) {
             throw new IllegalArgumentException(failureReasons.toString());
