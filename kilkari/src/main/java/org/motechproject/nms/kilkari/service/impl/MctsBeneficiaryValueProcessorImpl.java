@@ -88,7 +88,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                     motherByRchId.setBeneficiaryId(mctsId);
                     return motherByRchId;
                 } else {
-                    if (motherByRchId.getId().equals(motherByMctsId.getId())) {
+                    if (motherByMctsId != null && motherByRchId.getId().equals(motherByMctsId.getId())) {
                         return motherByRchId;
                     } else {
                        return null;
@@ -259,6 +259,8 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                 mapKey.append("_");
                 mapKey.append(talukaCode);
                 Taluka taluka = locationFinder.getTalukaHashMap().get(mapKey.toString());
+                LOGGER.debug("taluka code: {}", talukaCode.toString());
+                LOGGER.debug("Taluka: {}", taluka == null ? null : taluka.getId());
                 if (taluka != null && taluka.getId() != null) {
                     beneficiary.setTaluka(taluka);
                 } else {

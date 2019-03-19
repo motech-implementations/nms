@@ -868,8 +868,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             } else {
                 String warning = String.format("No Mother data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-//                rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, warning));
-//                rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.MOTHER, stateId));
+                rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, warning));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.MOTHER, stateId));
             }
         } catch (JAXBException e) {
             String error = String.format("Cannot deserialize RCH mother data from %s location.", stateId);
@@ -979,8 +979,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             } else {
                 String warning = String.format("No Child data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-//                rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, warning));
-//                rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
+                rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, warning));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
             }
         } catch (JAXBException e) {
             String error = String.format("Cannot deserialize RCH children data from %s location.", stateId);
@@ -1090,8 +1090,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             } else {
                 String warning = String.format("No Asha data set received from RCH for %d stateId", stateId);
                 LOGGER.warn(warning);
-//                rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, warning));
-//                rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
+                rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, warning));
+                rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
             }
         } catch (JAXBException e) {
             String error = String.format("Cannot deserialize RCH FLW data from %s location.", stateId);

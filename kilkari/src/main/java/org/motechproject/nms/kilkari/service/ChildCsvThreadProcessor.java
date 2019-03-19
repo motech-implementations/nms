@@ -97,7 +97,7 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
                     LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
                 }
             } catch (RuntimeException e) {
-                LOGGER.error("Error while importing child at msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id), e);
+                LOGGER.error("Child import Error. Error while importing child at msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id), e);
             }
         }
         threadProcessorObject.setRejectedBeneficiaries(rejectedChilds);

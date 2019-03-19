@@ -100,7 +100,7 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
                     LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
                 }
             } catch (RuntimeException e) {
-                LOGGER.error("Error while importing mother at msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id), e);
+                LOGGER.error("Mother import Error. Error while importing mother at msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id), e);
             }
         }
         threadProcessorObject.setRejectedBeneficiaries(rejectedMothers);
