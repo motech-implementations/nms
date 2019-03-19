@@ -38,7 +38,7 @@ public class DeactivatedBeneficiaryServiceImpl implements DeactivatedBeneficiary
             }
             return deactivatedBeneficiaryWithSelectDeactivationReasons;
         } catch (ConstraintViolationException e) {
-            LOGGER.error("List of constraints: {}", e.getConstraintViolations());
+            LOGGER.error("1: List of constraints: {}", e.getConstraintViolations());
             throw e;
         }
     }
