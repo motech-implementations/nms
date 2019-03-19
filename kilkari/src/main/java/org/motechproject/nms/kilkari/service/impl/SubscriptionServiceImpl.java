@@ -424,7 +424,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
             return subscription;
         } catch (ConstraintViolationException e) {
-            LOGGER.error("List of constraints: {}", e.getConstraintViolations());
+            LOGGER.error("2: List of constraints: {}", e.getConstraintViolations());
             throw e;
         }
     }
@@ -732,7 +732,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
             subscriptionDataService.update(subscription);
         } catch (ConstraintViolationException e) {
-            LOGGER.error("List of constraints: {}", e.getConstraintViolations());
+            LOGGER.error("3: List of constraints: {}", e.getConstraintViolations());
             throw e;
         }
     }
