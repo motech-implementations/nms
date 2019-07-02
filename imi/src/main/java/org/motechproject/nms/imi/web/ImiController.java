@@ -59,6 +59,8 @@ public class ImiController {
     private FileAuditRecordDataService fileAuditRecordDataService;
     private AlertService alertService;
 
+    public static final String generateJhFile = "imi.obd.bifurcate";
+
 
     @Autowired
     public ImiController(SettingsFacade settingsFacade, CdrFileService cdrFileService, AlertService alertService,
@@ -148,10 +150,17 @@ public class ImiController {
 
         LOGGER.debug("/generateTargetFile (GET)");
         try {
-            TargetFileNotification tfn = targetFileService.generateTargetFile();
-            LOGGER.debug("targetFileService.generateTargetFile() done");
+            if(Boolean.valueOf(settingsFacade.getProperty(generateJhFile))){
+                TargetFileNotification[] tfn = targetFileService.generateObdFiles();
+                LOGGER.debug("targetFileService.generateObdFiles() done");
 
-            return tfn == null ? "null" : tfn.getFileName();
+                return tfn == null ? "null" : tfn[0].getFileName()+"-"+tfn[1].getFileName();
+            }
+            else {
+                TargetFileNotification tfn = targetFileService.generateTargetFile();
+                LOGGER.debug("targetFileService.generateTargetFile() done");
+
+                return tfn == null ? "null" : tfn.getFileName();}
         } catch(Exception e) {
             LOGGER.error(e.getMessage(),e);
             throw e;

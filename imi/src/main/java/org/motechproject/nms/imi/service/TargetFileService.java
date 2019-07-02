@@ -14,7 +14,7 @@ public interface TargetFileService {
      */
     TargetFileNotification generateTargetFile();
 
-
+    TargetFileNotification[] generateObdFiles();
     /**
      * The IVR system invoked the obdFileProcessedStatusNotification http endpoint signalling the completion of the
      * processing of the targetFile we generated
