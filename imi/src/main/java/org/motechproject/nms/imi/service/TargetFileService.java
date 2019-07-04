@@ -32,4 +32,6 @@ public interface TargetFileService {
      * @return the IMI ServiceID
      */
     String serviceIdFromOrigin(boolean freshCall, SubscriptionOrigin origin);
+
+    String serviceIdFromOriginJh(boolean freshCall, SubscriptionOrigin origin);
 }

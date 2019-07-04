@@ -63,6 +63,11 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final String IMI_FRESH_NO_CHECK_DND = "imi.fresh_no_check_dnd";
     private static final String IMI_RETRY_CHECK_DND = "imi.retry_check_dnd";
     private static final String IMI_RETRY_NO_CHECK_DND = "imi.retry_no_check_dnd";
+
+    private static final String IMI_FRESH_CHECK_DND_JH = "imi.fresh_check_dnd_jh";
+    private static final String IMI_FRESH_NO_CHECK_DND_JH = "imi.fresh_no_check_dnd_jh";
+    private static final String IMI_RETRY_CHECK_DND_JH = "imi.retry_check_dnd_jh";
+    private static final String IMI_RETRY_NO_CHECK_DND_JH = "imi.retry_no_check_dnd_jh";
     private static final String generateJhFile = "imi.sms.notification.url";
 
     private static final int PROGRESS_INTERVAL = 10000;
@@ -84,6 +89,11 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static String freshNoCheckDND;
     private static String retryCheckDND;
     private static String retryNoCheckDND;
+
+    private static String freshCheckDNDJh;
+    private static String freshNoCheckDNDJh;
+    private static String retryCheckDNDJh;
+    private static String retryNoCheckDNDJh;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TargetFileServiceImpl.class);
 
@@ -149,6 +159,11 @@ public class TargetFileServiceImpl implements TargetFileService {
         freshNoCheckDND = settingsFacade.getProperty(IMI_FRESH_NO_CHECK_DND);
         retryCheckDND = settingsFacade.getProperty(IMI_RETRY_CHECK_DND);
         retryNoCheckDND = settingsFacade.getProperty(IMI_RETRY_NO_CHECK_DND);
+
+        freshCheckDNDJh = settingsFacade.getProperty(IMI_FRESH_CHECK_DND_JH);
+        freshNoCheckDNDJh = settingsFacade.getProperty(IMI_FRESH_NO_CHECK_DND_JH);
+        retryCheckDNDJh = settingsFacade.getProperty(IMI_RETRY_CHECK_DND_JH);
+        retryNoCheckDNDJh = settingsFacade.getProperty(IMI_RETRY_NO_CHECK_DND_JH);
     }
 
 
@@ -160,6 +175,19 @@ public class TargetFileServiceImpl implements TargetFileService {
 
         if (origin == SubscriptionOrigin.IVR) {
             return freshCall ? freshNoCheckDND : retryNoCheckDND;
+        }
+
+        throw new IllegalStateException("Unexpected SubscriptionOrigin value");
+    }
+
+    public String serviceIdFromOriginJh(boolean freshCall, SubscriptionOrigin origin) {
+
+        if (origin == SubscriptionOrigin.MCTS_IMPORT || origin == SubscriptionOrigin.RCH_IMPORT) {
+            return freshCall ? freshCheckDNDJh : retryCheckDNDJh;
+        }
+
+        if (origin == SubscriptionOrigin.IVR) {
+            return freshCall ? freshNoCheckDNDJh : retryNoCheckDNDJh;
         }
 
         throw new IllegalStateException("Unexpected SubscriptionOrigin value");
@@ -533,7 +561,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                     if(subscriptionIdsJh.contains(subscription.getSubscriptionId())){
                         writeSubscriptionRow(
                                 requestId.toString(),
-                                serviceIdFromOrigin(true, subscription.getOrigin()),
+                                serviceIdFromOriginJh(true, subscription.getOrigin()),
                                 subscriber.getCallingNumber().toString(),
                                 NORMAL_PRIORITY, //todo: how do we choose a priority?
                                 callFlowUrl,
@@ -624,7 +652,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                 if(subscriptionIdsJh.contains(callRetry.getSubscriptionId())) {
                     writeSubscriptionRow(
                             requestId.toString(),
-                            serviceIdFromOrigin(false, callRetry.getSubscriptionOrigin()),
+                            serviceIdFromOriginJh(false, callRetry.getSubscriptionOrigin()),
                             callRetry.getMsisdn().toString(),
                             NORMAL_PRIORITY,
                             callFlowUrl,

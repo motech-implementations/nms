@@ -48,6 +48,7 @@ public class ImiController {
     public static final String INVALID_STATUS_ENUM = "Can not construct instance of " +
             "org.motechproject.nms.imi.domain.FileProcessedStatus from String value";
     public static final Pattern TARGET_FILENAME_PATTERN = Pattern.compile("OBD_NMS_[0-9]{14}\\.csv");
+    public static final Pattern TARGET_FILENAME_PATTERN_JH = Pattern.compile("OBD_NMS_[0-9]{14}JH\\.csv");
     public static final String IVR_INTERACTION_LOG = "IVR INTERACTION: %s";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImiController.class);
@@ -90,7 +91,8 @@ public class ImiController {
     // verify the passed targetFileName is valid
     private static boolean validateTargetFileName(StringBuilder errors, String targetFileName) {
         if (validateFieldPresent(errors, "fileName", targetFileName)) {
-            if (TARGET_FILENAME_PATTERN.matcher(targetFileName).matches()) {
+            if (TARGET_FILENAME_PATTERN.matcher(targetFileName).matches() ||
+                    TARGET_FILENAME_PATTERN_JH.matcher(targetFileName).matches() ) {
                 return true;
             } else {
                 errors.append(String.format(INVALID, "fileName"));
