@@ -60,7 +60,7 @@ public class ImiController {
     private FileAuditRecordDataService fileAuditRecordDataService;
     private AlertService alertService;
 
-    public static final String generateJhFile = "imi.obd.bifurcate";
+    public static final String generateJhFile = "imi.obd_bifurcate";
 
 
     @Autowired
@@ -152,7 +152,7 @@ public class ImiController {
 
         LOGGER.debug("/generateTargetFile (GET)");
         try {
-            if(Boolean.valueOf(settingsFacade.getProperty(generateJhFile))){
+            if(Boolean.parseBoolean(settingsFacade.getProperty(generateJhFile))){
                 TargetFileNotification[] tfn = targetFileService.generateObdFiles();
                 LOGGER.debug("targetFileService.generateObdFiles() done");
 

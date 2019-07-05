@@ -68,7 +68,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final String IMI_FRESH_NO_CHECK_DND_JH = "imi.fresh_no_check_dnd_jh";
     private static final String IMI_RETRY_CHECK_DND_JH = "imi.retry_check_dnd_jh";
     private static final String IMI_RETRY_NO_CHECK_DND_JH = "imi.retry_no_check_dnd_jh";
-    private static final String generateJhFile = "imi.sms.notification.url";
+    private static final String generateJhFile = "imi.obd_bifurcate";
 
     private static final int PROGRESS_INTERVAL = 10000;
 
@@ -873,7 +873,6 @@ public class TargetFileServiceImpl implements TargetFileService {
     public void generateTargetFile(MotechEvent event) {
         LOGGER.debug(event.toString());
         if(Boolean.valueOf(settingsFacade.getProperty(generateJhFile))) {
-            LOGGER.info("boolean:"+Boolean.valueOf(settingsFacade.getProperty(generateJhFile)));
             TargetFileNotification[] tfn = generateObdFiles();
             if (tfn != null) {
                 // Copy the OBD file from the local imi.local_obd_dir to the remote imi.local_obd_dir network share
