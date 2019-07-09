@@ -55,6 +55,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -70,6 +71,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
     private static final String LOCAL_OBD_DIR = "imi.local_obd_dir";
     private static final String REMOTE_OBD_DIR = "imi.remote_obd_dir";
+    private static final String Jh = "JH";
+    private static final String non_Jh = "NON-JH";
 
 
     private String localObdDirBackup;
@@ -175,9 +178,9 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
             ));
         }
 
-        TargetFileNotification tfn = targetFileService.generateTargetFile();
-        assertNotNull(tfn);
-        getLogger().debug("Generated {}", tfn.getFileName());
+        HashMap<String,TargetFileNotification> tfn = targetFileService.generateTargetFile(false);
+        assertNotNull(tfn.get(non_Jh));
+        getLogger().debug("Generated {}", tfn.values().toString());
     }
 
     // To check that target file should contain correct weekID according to LMP of the subscriber.
@@ -198,10 +201,10 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         List<String> contents = new ArrayList<>();
         String line;
 
-        TargetFileNotification tfn = targetFileService.generateTargetFile();
+        HashMap<String,TargetFileNotification> tfn = targetFileService.generateTargetFile(false);
 
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
-        File targetFile = new File(targetDir, tfn.getFileName());
+        File targetFile = new File(targetDir, tfn.get(non_Jh).getFileName());
         int recordCount = 0;
         boolean header = true;
         try (InputStream is = Files.newInputStream(targetFile.toPath());
@@ -218,8 +221,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
         String checksum = ChecksumHelper.checksum(targetFile);
 
-        assertEquals((int)tfn.getRecordsCount(), recordCount);
-        assertEquals(tfn.getChecksum(), checksum);
+        assertEquals((int)tfn.get(non_Jh).getRecordsCount(), recordCount);
+        assertEquals(tfn.get(non_Jh).getChecksum(), checksum);
         assertTrue("w6_1".equals(contents.get(0)));
         assertEquals(1, recordCount);
     }
@@ -242,10 +245,10 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         List<String> contents = new ArrayList<>();
         String line;
 
-        TargetFileNotification tfn = targetFileService.generateTargetFile();
+        HashMap<String,TargetFileNotification> tfn = targetFileService.generateTargetFile(false);
 
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
-        File targetFile = new File(targetDir, tfn.getFileName());
+        File targetFile = new File(targetDir, tfn.get(non_Jh).getFileName());
         int recordCount = 0;
         boolean header = true;
         try (InputStream is = Files.newInputStream(targetFile.toPath());
@@ -261,8 +264,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         }
 
         String checksum = ChecksumHelper.checksum(targetFile);
-        assertEquals((int)tfn.getRecordsCount(), recordCount);
-        assertEquals(tfn.getChecksum(), checksum);
+        assertEquals((int)tfn.get(non_Jh).getRecordsCount(), recordCount);
+        assertEquals(tfn.get(non_Jh).getChecksum(), checksum);
         assertTrue("w5_1".equals(contents.get(0)));
 
         //update the date of birth of the subscriber
@@ -272,9 +275,9 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         subscriberService.updateStartDate(subscriber2);
 
         // again generate the target file to check correct weekId is picked after DOB is changed.
-        tfn = targetFileService.generateTargetFile();
+        tfn = targetFileService.generateTargetFile(false);
         contents.clear();
-        targetFile = new File(targetDir, tfn.getFileName());
+        targetFile = new File(targetDir, tfn.get(non_Jh).getFileName());
         recordCount = 0;
         header = true;
         try (InputStream is = Files.newInputStream(targetFile.toPath());
@@ -289,8 +292,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
             }
         }
         checksum = ChecksumHelper.checksum(targetFile);
-        assertEquals((int)tfn.getRecordsCount(), recordCount);
-        assertEquals(tfn.getChecksum(), checksum);
+        assertEquals((int)tfn.get(non_Jh).getRecordsCount(), recordCount);
+        assertEquals(tfn.get(non_Jh).getChecksum(), checksum);
         assertTrue("w4_1".equals(contents.get(0)));
         assertEquals(1, recordCount);
     }
@@ -313,10 +316,10 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         List<String> contents = new ArrayList<>();
         String line;
 
-        TargetFileNotification tfn = targetFileService.generateTargetFile();
+        HashMap<String,TargetFileNotification> tfn = targetFileService.generateTargetFile(false);
 
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
-        File targetFile = new File(targetDir, tfn.getFileName());
+        File targetFile = new File(targetDir, tfn.get(non_Jh).getFileName());
         int recordCount = 0;
         boolean header = true;
         try (InputStream is = Files.newInputStream(targetFile.toPath());
@@ -332,8 +335,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         }
 
         String checksum = ChecksumHelper.checksum(targetFile);
-        assertEquals((int)tfn.getRecordsCount(), recordCount);
-        assertEquals(tfn.getChecksum(), checksum);
+        assertEquals((int)tfn.get(non_Jh).getRecordsCount(), recordCount);
+        assertEquals(tfn.get(non_Jh).getChecksum(), checksum);
         assertTrue("w1_1.wav".equals(contents.get(0)));
     }
 
@@ -355,10 +358,10 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         List<String> contents = new ArrayList<>();
         String line;
 
-        TargetFileNotification tfn = targetFileService.generateTargetFile();
+        HashMap<String,TargetFileNotification> tfn = targetFileService.generateTargetFile(false);
 
         File targetDir = new File(settingsService.getSettingsFacade().getProperty("imi.local_obd_dir"));
-        File targetFile = new File(targetDir, tfn.getFileName());
+        File targetFile = new File(targetDir, tfn.get(non_Jh).getFileName());
         int recordCount = 0;
         boolean header = true;
         try (InputStream is = Files.newInputStream(targetFile.toPath());
@@ -374,8 +377,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
         }
 
         String checksum = ChecksumHelper.checksum(targetFile);
-        assertEquals((int)tfn.getRecordsCount(), recordCount);
-        assertEquals(tfn.getChecksum(), checksum);
+        assertEquals((int)tfn.get(non_Jh).getRecordsCount(), recordCount);
+        assertEquals(tfn.get(non_Jh).getChecksum(), checksum);
         assertTrue("w1_1.wav".equals(contents.get(0)));
 
     }
@@ -395,9 +398,9 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
         transactionManager.commit(status);
 
-        TargetFileNotification tfn1 = targetFileService.generateTargetFile();
-        assertNotNull(tfn1);
-        getLogger().debug(tfn1.toString());
+        HashMap<String,TargetFileNotification> tfn1 = targetFileService.generateTargetFile(false);
+        assertNotNull(tfn1.get(non_Jh));
+        getLogger().debug(tfn1.get(non_Jh).toString());
 
         // Sleep two seconds so the file names are different
         Thread.sleep(2000L);
@@ -413,11 +416,11 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
 
         transactionManager.commit(status);
 
-        TargetFileNotification tfn2 = targetFileService.generateTargetFile();
-        assertNotNull(tfn2);
+        HashMap<String,TargetFileNotification> tfn2 = targetFileService.generateTargetFile(false);
+        assertNotNull(tfn2.get(non_Jh));
         getLogger().debug(tfn2.toString());
 
-        assertFalse(tfn1.getChecksum().equals(tfn2.getChecksum()));
+        assertFalse(tfn1.get(non_Jh).getChecksum().equals(tfn2.get(non_Jh).getChecksum()));
     }
 
 }

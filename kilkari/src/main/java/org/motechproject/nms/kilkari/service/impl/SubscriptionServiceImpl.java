@@ -1011,6 +1011,31 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptions;
     }
 
+    @Override
+    public List<String> findJhSubscriptionIds() {
+        SqlQueryExecution<List<String>> queryExecution = new SqlQueryExecution<List<String>>() {
+            @Override
+            public String getSqlQuery() {
+                String query = "select subscriptionId from (select subscriptionId from nms_mcts_mothers a LEFT JOIN " +
+                        "nms_subscribers b on b.mother_id_oid=a.id LEFT JOIN nms_subscriptions c on c.subscriber_id_oid = b.id where rchId like 'JH%' " +
+                        "and subscriptionPack_id_OID = 1 UNION ALL select subscriptionId from nms_mcts_children a LEFT JOIN " +
+                        "nms_subscribers b on b.child_id_oid=a.id LEFT JOIN nms_subscriptions c on c.subscriber_id_oid = b.id " +
+                        "where rchId like 'JH%' and subscriptionPack_id_OID = 2) as  a;";
+                LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public List<String> execute(Query query) {
+                List<String> ids = (List<String>) query.execute();
+                return ids;
+            }
+        };
+        List<String> subscriptionIds = subscriptionDataService.executeSQLQuery(queryExecution);
+        return subscriptionIds;
+    }
+
+
 
     public List<Subscription> findPendingSubscriptionsFromDate(DateTime startDate, int page, int pageSize) {
         return subscriptionDataService.findByStatusAndStartDate(SubscriptionStatus.PENDING_ACTIVATION, startDate, new QueryParams(page, pageSize));

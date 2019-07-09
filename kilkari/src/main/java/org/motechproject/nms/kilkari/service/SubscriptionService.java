@@ -150,6 +150,7 @@ public interface SubscriptionService {
      */
     List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, long offset, int rowCount);
 
+    List<String> findJhSubscriptionIds();
 
     /**
      * Get the list of pending subscriptions that starts after the specified date.

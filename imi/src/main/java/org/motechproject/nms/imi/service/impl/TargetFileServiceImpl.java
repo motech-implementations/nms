@@ -48,6 +48,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 @Service("targetFileService")
@@ -63,6 +65,14 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final String IMI_FRESH_NO_CHECK_DND = "imi.fresh_no_check_dnd";
     private static final String IMI_RETRY_CHECK_DND = "imi.retry_check_dnd";
     private static final String IMI_RETRY_NO_CHECK_DND = "imi.retry_no_check_dnd";
+
+    private static final String IMI_FRESH_CHECK_DND_JH = "imi.fresh_check_dnd_jh";
+    private static final String IMI_FRESH_NO_CHECK_DND_JH = "imi.fresh_no_check_dnd_jh";
+    private static final String IMI_RETRY_CHECK_DND_JH = "imi.retry_check_dnd_jh";
+    private static final String IMI_RETRY_NO_CHECK_DND_JH = "imi.retry_no_check_dnd_jh";
+    private static final String generateJhFile = "imi.obd_bifurcate";
+    private static final String Jh = "JH";
+    private static final String non_Jh = "NON-JH";
 
     private static final int PROGRESS_INTERVAL = 10000;
 
@@ -83,6 +93,11 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static String freshNoCheckDND;
     private static String retryCheckDND;
     private static String retryNoCheckDND;
+
+    private static String freshCheckDNDJh;
+    private static String freshNoCheckDNDJh;
+    private static String retryCheckDNDJh;
+    private static String retryNoCheckDNDJh;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TargetFileServiceImpl.class);
 
@@ -148,6 +163,11 @@ public class TargetFileServiceImpl implements TargetFileService {
         freshNoCheckDND = settingsFacade.getProperty(IMI_FRESH_NO_CHECK_DND);
         retryCheckDND = settingsFacade.getProperty(IMI_RETRY_CHECK_DND);
         retryNoCheckDND = settingsFacade.getProperty(IMI_RETRY_NO_CHECK_DND);
+
+        freshCheckDNDJh = settingsFacade.getProperty(IMI_FRESH_CHECK_DND_JH);
+        freshNoCheckDNDJh = settingsFacade.getProperty(IMI_FRESH_NO_CHECK_DND_JH);
+        retryCheckDNDJh = settingsFacade.getProperty(IMI_RETRY_CHECK_DND_JH);
+        retryNoCheckDNDJh = settingsFacade.getProperty(IMI_RETRY_NO_CHECK_DND_JH);
     }
 
 
@@ -159,6 +179,19 @@ public class TargetFileServiceImpl implements TargetFileService {
 
         if (origin == SubscriptionOrigin.IVR) {
             return freshCall ? freshNoCheckDND : retryNoCheckDND;
+        }
+
+        throw new IllegalStateException("Unexpected SubscriptionOrigin value");
+    }
+
+    public String serviceIdFromOriginJh(boolean freshCall, SubscriptionOrigin origin) {
+
+        if (origin == SubscriptionOrigin.MCTS_IMPORT || origin == SubscriptionOrigin.RCH_IMPORT) {
+            return freshCall ? freshCheckDNDJh : retryCheckDNDJh;
+        }
+
+        if (origin == SubscriptionOrigin.IVR) {
+            return freshCall ? freshNoCheckDNDJh : retryNoCheckDNDJh;
         }
 
         throw new IllegalStateException("Unexpected SubscriptionOrigin value");
@@ -357,25 +390,26 @@ public class TargetFileServiceImpl implements TargetFileService {
         writer.write("\n");
     }
 
+    private HashMap<String, Integer> generateFreshCalls(DateTime timestamp, int maxQueryBlock, String callFlowUrl,
+                                                           HashMap<String, OutputStreamWriter> wr, List<String> subscriptionIdsJh, boolean split) throws IOException {
 
-    private int generateFreshCalls(DateTime timestamp, int maxQueryBlock, String callFlowUrl,
-                                   OutputStreamWriter writer) throws IOException {
+        LOGGER.info("generateFreshCallsObd({})", timestamp);
 
-        LOGGER.info("generateFreshCalls({})", timestamp);
+        int skippedrecords = 0;
 
         DayOfTheWeek dow = DayOfTheWeek.fromDateTime(timestamp);
+        HashMap<String, Integer> recordsMap = new HashMap<>();
         int recordsWritten = 0;
+        int recordsWrittenJh = 0;
         Long offset = 0L;
-        Timer timer = new Timer("overall fresh call", "overall fresh calls");
+
         do {
             List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, offset, maxQueryBlock);
-
-            LOGGER.debug("Subsciptions size "  + subscriptions.size());
+            LOGGER.info("Subs_block_size"  + subscriptions.size());
             if (subscriptions.size() == 0) {
                 break;
             }
 
-            Timer rowTimer = new Timer("file row", "file rows");
             for (Subscription subscription : subscriptions) {
                 LOGGER.debug("Handling Subscription " + subscription.getId());
                 offset = subscription.getId();
@@ -394,30 +428,44 @@ public class TargetFileServiceImpl implements TargetFileService {
                         //
                         LOGGER.debug("Ignoring last day for subscription {} from fresh calls.",
                                 subscription.getSubscriptionId());
+                        skippedrecords++;
                         continue;
                     }
 
                     SubscriptionPackMessage msg = subscription.nextScheduledMessage(timestamp);
+                    if(split && subscriptionIdsJh.contains(subscription.getSubscriptionId())) {
+                            writeSubscriptionRow(
+                                    requestId.toString(),
+                                    serviceIdFromOriginJh(true, subscription.getOrigin()),
+                                    subscriber.getCallingNumber().toString(),
+                                    NORMAL_PRIORITY, //todo: how do we choose a priority?
+                                    callFlowUrl,
+                                    msg.getMessageFileName(),
+                                    msg.getWeekId(),
+                                    // we are happy with empty language and circle since they are optional
+                                    subscriber.getLanguage() == null ? "" : subscriber.getLanguage().getCode(),
+                                    subscriber.getCircle() == null ? "" : subscriber.getCircle().getName(),
+                                    subscription.getOrigin().getCode(),
+                                    wr.get(Jh));
+                            recordsWrittenJh++;
+                        }
+                    else {
+                            writeSubscriptionRow(
+                                    requestId.toString(),
+                                    serviceIdFromOrigin(true, subscription.getOrigin()),
+                                    subscriber.getCallingNumber().toString(),
+                                    NORMAL_PRIORITY, //todo: how do we choose a priority?
+                                    callFlowUrl,
+                                    msg.getMessageFileName(),
+                                    msg.getWeekId(),
+                                    // we are happy with empty language and circle since they are optional
+                                    subscriber.getLanguage() == null ? "" : subscriber.getLanguage().getCode(),
+                                    subscriber.getCircle() == null ? "" : subscriber.getCircle().getName(),
+                                    subscription.getOrigin().getCode(),
+                                    wr.get(non_Jh));
+                            recordsWritten++;
 
-                    writeSubscriptionRow(
-                            requestId.toString(),
-                            serviceIdFromOrigin(true, subscription.getOrigin()),
-                            subscriber.getCallingNumber().toString(),
-                            NORMAL_PRIORITY, //todo: how do we choose a priority?
-                            callFlowUrl,
-                            msg.getMessageFileName(),
-                            msg.getWeekId(),
-                            // we are happy with empty language and circle since they are optional
-                            subscriber.getLanguage() == null ? "" : subscriber.getLanguage().getCode(),
-                            subscriber.getCircle() == null ? "" : subscriber.getCircle().getName(),
-                            subscription.getOrigin().getCode(),
-                            writer);
-
-                    recordsWritten++;
-                    if (recordsWritten % PROGRESS_INTERVAL == 0) {
-                        LOGGER.debug(WROTE, rowTimer.frequency(recordsWritten));
                     }
-
                 } catch (IllegalStateException se) {
                     String message = se.toString();
                     alertService.create(subscription.getSubscriptionId(), "IllegalStateException", message,
@@ -426,128 +474,194 @@ public class TargetFileServiceImpl implements TargetFileService {
                 }
             }
 
-            if (recordsWritten % PROGRESS_INTERVAL != 0) {
-                LOGGER.debug(WROTE, rowTimer.frequency(recordsWritten));
-            }
-
         } while (true);
 
-        LOGGER.info(WROTE, timer.frequency(recordsWritten));
-
-        return recordsWritten;
+        LOGGER.info(WROTE+non_Jh, recordsWritten);
+        recordsMap.put(non_Jh, recordsWritten);
+        if(split){
+            LOGGER.info(WROTE+Jh, recordsWrittenJh);
+            recordsMap.put(Jh, recordsWrittenJh);
+        }
+        return recordsMap;
     }
 
-    private int generateRetryCalls(DateTime timestamp, int maxQueryBlock, String callFlowUrl,
-                                   OutputStreamWriter writer) throws IOException {
 
-        LOGGER.info("generateRetryCalls({})", timestamp);
+    private HashMap<String, Integer> generateRetryCalls(DateTime timestamp, int maxQueryBlock, String callFlowUrl,
+                                   HashMap<String, OutputStreamWriter> wr, List<String> subscriptionIdsJh, boolean split) throws IOException {
 
+        LOGGER.info("generateRetryCallsObd({})", timestamp);
         int count = 0;
+        int countJh = 0;
+        HashMap<String, Integer> retryCount = new HashMap<>();
         Long offset = 0L;
-        Timer timer = new Timer("retry call", "retry calls");
         do {
             // All calls are rescheduled for the next day which means that we should query for all CallRetry records
             List<CallRetry> callRetries = callRetryService.retrieveAll(offset, maxQueryBlock);
+            LOGGER.info("Call_Retries"+callRetries.size());
 
             if (callRetries.size() == 0) {
                 break;
             }
 
             for (CallRetry callRetry : callRetries) {
-
-                offset = callRetry.getId();
-
-                RequestId requestId = new RequestId(callRetry.getSubscriptionId(), TIME_FORMATTER.print(timestamp));
-
-                writeSubscriptionRow(
-                        requestId.toString(),
-                        serviceIdFromOrigin(false, callRetry.getSubscriptionOrigin()),
-                        callRetry.getMsisdn().toString(),
-                        NORMAL_PRIORITY,
-                        callFlowUrl,
-                        callRetry.getContentFileName(),
-                        callRetry.getWeekId(),
-                        callRetry.getLanguageLocationCode(),
-                        callRetry.getCircle(),
-                        callRetry.getSubscriptionOrigin().getCode(),
-                        writer);
-
-                count++;
-                if (count % PROGRESS_INTERVAL == 0) {
-                    LOGGER.debug(WROTE, timer.frequency(count));
+                    offset = callRetry.getId();
+                    RequestId requestId = new RequestId(callRetry.getSubscriptionId(), TIME_FORMATTER.print(timestamp));
+                    if(split && subscriptionIdsJh.contains(callRetry.getSubscriptionId())) {
+                        writeSubscriptionRow(
+                                requestId.toString(),
+                                serviceIdFromOriginJh(false, callRetry.getSubscriptionOrigin()),
+                                callRetry.getMsisdn().toString(),
+                                NORMAL_PRIORITY,
+                                callFlowUrl,
+                                callRetry.getContentFileName(),
+                                callRetry.getWeekId(),
+                                callRetry.getLanguageLocationCode(),
+                                callRetry.getCircle(),
+                                callRetry.getSubscriptionOrigin().getCode(),
+                                wr.get(Jh));
+                        countJh++;
+                    }
+                    else {
+                        writeSubscriptionRow(
+                                requestId.toString(),
+                                serviceIdFromOrigin(false, callRetry.getSubscriptionOrigin()),
+                                callRetry.getMsisdn().toString(),
+                                NORMAL_PRIORITY,
+                                callFlowUrl,
+                                callRetry.getContentFileName(),
+                                callRetry.getWeekId(),
+                                callRetry.getLanguageLocationCode(),
+                                callRetry.getCircle(),
+                                callRetry.getSubscriptionOrigin().getCode(),
+                                wr.get(non_Jh));
+                        count++;
+                    }
                 }
-
-            }
 
         } while (true);
 
-        LOGGER.info(WROTE, timer.frequency(count));
+        LOGGER.info(WROTE+non_Jh+"Retry", count);
+        retryCount.put(non_Jh, count);
+        if(split) {
+            LOGGER.info(WROTE+Jh+"Retry", countJh);
+            retryCount.put(Jh, countJh);
+        }
 
-        return count;
+        return retryCount;
     }
-
 
     private File localObdDir() {
         return new File(settingsFacade.getProperty(LOCAL_OBD_DIR));
     }
 
 
-    /*
-    /**
-     * 4.4.1 Target File Format
-     */
     @Transactional
-    public TargetFileNotification generateTargetFile() {
-        LOGGER.info("generateTargetFile()");
+    public HashMap<String, TargetFileNotification> generateTargetFile(boolean split) {
+        LOGGER.info("generateTargetFile()"+split);
         DateTime today = DateTime.now();
         String targetFileName = targetFileName(TIME_FORMATTER.print(today));
         File localTargetDir = localObdDir();
-        int recordCount = 0;
         String checksum;
-
         File targetFile = new File(localTargetDir, targetFileName);
-        try (FileOutputStream fos = new FileOutputStream(targetFile);
-             OutputStreamWriter writer = new OutputStreamWriter(fos)) {
 
-            int maxQueryBlock = Integer.parseInt(settingsFacade.getProperty(MAX_QUERY_BLOCK));
-            String callFlowUrl = settingsFacade.getProperty(TARGET_FILE_CALL_FLOW_URL);
-            if (callFlowUrl == null) {
-                //it's ok to have an empty call flow url - the spec says the default call flow will be used
-                //whatever that is...
-                callFlowUrl = "";
+        HashMap<String, Integer> recordCount;
+        HashMap<String, Integer> recordCountRetry;
+
+        int maxQueryBlock = Integer.parseInt(settingsFacade.getProperty(MAX_QUERY_BLOCK));
+        String callFlowUrl = settingsFacade.getProperty(TARGET_FILE_CALL_FLOW_URL);
+
+        if (callFlowUrl == null) {
+            //it's ok to have an empty call flow url - the spec says the default call flow will be used
+            //whatever that is...
+            callFlowUrl = "";
+        }
+        HashMap<String, OutputStreamWriter> wr = new HashMap<>();
+        HashMap<String, TargetFileNotification> tfn = new HashMap<>();
+        if(split){
+            String targetFileNameJh = targetFileName(TIME_FORMATTER.print(today)+"JH");
+            File localTargetDirJh = localObdDir();
+            String checksumJh;
+            File targetFileJh = new File(localTargetDirJh, targetFileNameJh);
+
+            try {
+                FileOutputStream fos = new FileOutputStream(targetFile);
+                OutputStreamWriter writer = new OutputStreamWriter(fos);
+
+                FileOutputStream fosJh = new FileOutputStream(targetFileJh);
+                OutputStreamWriter writerJh = new OutputStreamWriter(fosJh);
+
+                //Header
+                writeHeader(writer);
+                writeHeader(writerJh);
+
+                List<String> subscriptionIdsJh = subscriptionService.findJhSubscriptionIds();
+                LOGGER.info("JH-Subscriptions-Number"+subscriptionIdsJh.size());
+
+
+                wr.put(Jh, writerJh);
+                wr.put(non_Jh, writer);
+
+                //Fresh calls
+                recordCount = generateFreshCalls(today, maxQueryBlock, callFlowUrl, wr, subscriptionIdsJh, true);
+
+                //Retry calls
+                recordCountRetry = generateRetryCalls(today, maxQueryBlock, callFlowUrl, wr, subscriptionIdsJh, true);
+
+                writer.close();
+                fos.close();
+
+                writerJh.close();
+                fosJh.close();
+
+                checksum = ChecksumHelper.checksum(targetFile);
+                checksumJh = ChecksumHelper.checksum(targetFileJh);
+                tfn.put(Jh, new TargetFileNotification(targetFileNameJh, checksumJh, recordCount.get(Jh)+recordCountRetry.get(Jh)));
+
+            } catch (IOException e) {
+                LOGGER.error(e.getMessage(),e);
+                alert(targetFile.toString(), "targetFile", e.getMessage());
+                fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, targetFile.getName(),
+                        false, e.getMessage(), null, null));
+                return null;
             }
+        }
+        else{
+            try {
+                FileOutputStream fos = new FileOutputStream(targetFile);
+                OutputStreamWriter writer = new OutputStreamWriter(fos);
 
-            //Header
-            writeHeader(writer);
+                //Header
+                writeHeader(writer);
+                wr.put(non_Jh, writer);
 
-            //Fresh calls
-            recordCount = generateFreshCalls(today, maxQueryBlock, callFlowUrl, writer);
+                //Fresh calls
+                recordCount = generateFreshCalls(today, maxQueryBlock, callFlowUrl, wr, Collections.emptyList(), false);
 
-            //Retry calls
-            recordCount += generateRetryCalls(today, maxQueryBlock, callFlowUrl, writer);
+                //Retry calls
+                recordCountRetry = generateRetryCalls(today, maxQueryBlock, callFlowUrl, wr, Collections.emptyList(), false);
 
-            LOGGER.info("Created targetFile with {} record{}", recordCount, recordCount == 1 ? "" : "s");
+                writer.close();
+                fos.close();
 
-            writer.close();
-            fos.close();
+                checksum = ChecksumHelper.checksum(targetFile);
 
-            checksum = ChecksumHelper.checksum(targetFile);
-
-        } catch (IOException e) {
-            LOGGER.error(e.getMessage(),e);
-            alert(targetFile.toString(), "targetFile", e.getMessage());
-            fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, targetFile.getName(),
-                    false, e.getMessage(), null, null));
-            return null;
+            } catch (IOException e) {
+                LOGGER.error(e.getMessage(),e);
+                alert(targetFile.toString(), "targetFile", e.getMessage());
+                fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, targetFile.getName(),
+                        false, e.getMessage(), null, null));
+                return null;
+            }
         }
 
-        TargetFileNotification tfn = new TargetFileNotification(targetFileName, checksum, recordCount);
+        tfn.put(non_Jh, new TargetFileNotification(targetFileName, checksum, recordCount.get(non_Jh)+recordCountRetry.get(non_Jh)));
         LOGGER.debug("TargetFileNotification = {}", tfn.toString());
 
         //audit the success
-        fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, tfn.getFileName(), true,
-                null, tfn.getRecordsCount(), tfn.getChecksum()));
-
+        for(TargetFileNotification t: tfn.values()) {
+            fileAuditRecordDataService.create(new FileAuditRecord(FileType.TARGET_FILE, t.getFileName(), true,
+                    null, t.getRecordsCount(), t.getChecksum()));
+        }
         return tfn;
     }
 
@@ -579,33 +693,34 @@ public class TargetFileServiceImpl implements TargetFileService {
     @Transactional
     public void generateTargetFile(MotechEvent event) {
         LOGGER.debug(event.toString());
+            HashMap<String, TargetFileNotification> tfn = generateTargetFile(Boolean.valueOf(settingsFacade.getProperty(generateJhFile)));
+            if (tfn != null) {
+                // Copy the OBD file from the local imi.local_obd_dir to the remote imi.local_obd_dir network share
+                ScpHelper scpHelper = new ScpHelper(settingsFacade);
+                for(TargetFileNotification t: tfn.values()) {
+                    try {
+                        scpHelper.scpObdToRemote(t.getFileName());
+                    } catch (ExecException e) {
+                        String error = String.format("Error copying target file %s: %s", t.getFileName(),
+                                e.getMessage());
+                        LOGGER.error(error,e);
+                        fileAuditRecordDataService.create(new FileAuditRecord(
+                                FileType.TARGET_FILE,
+                                t.getFileName(),
+                                false,
+                                error,
+                                null,
+                                null
+                        ));
+                        alert(t.getFileName(), "targetFileName", error);
+                        return;
+                    }
 
-        TargetFileNotification tfn = generateTargetFile();
+                    //notify the IVR system the file is ready
+                    sendNotificationRequest(t);
+                }
 
-        if (tfn != null) {
-            // Copy the OBD file from the local imi.local_obd_dir to the remote imi.local_obd_dir network share
-            ScpHelper scpHelper = new ScpHelper(settingsFacade);
-            try {
-                scpHelper.scpObdToRemote(tfn.getFileName());
-            } catch (ExecException e) {
-                String error = String.format("Error copying target file %s: %s", tfn.getFileName(),
-                        e.getMessage());
-                LOGGER.error(error,e);
-                fileAuditRecordDataService.create(new FileAuditRecord(
-                        FileType.TARGET_FILE,
-                        tfn.getFileName(),
-                        false,
-                        error,
-                        null,
-                        null
-                ));
-                alert(tfn.getFileName(), "targetFileName", error);
-                return;
             }
-
-            //notify the IVR system the file is ready
-            sendNotificationRequest(tfn);
-        }
     }
 
 

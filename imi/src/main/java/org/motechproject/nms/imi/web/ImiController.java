@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
 import java.util.regex.Pattern;
 
 /**
@@ -48,6 +49,7 @@ public class ImiController {
     public static final String INVALID_STATUS_ENUM = "Can not construct instance of " +
             "org.motechproject.nms.imi.domain.FileProcessedStatus from String value";
     public static final Pattern TARGET_FILENAME_PATTERN = Pattern.compile("OBD_NMS_[0-9]{14}\\.csv");
+    public static final Pattern TARGET_FILENAME_PATTERN_JH = Pattern.compile("OBD_NMS_[0-9]{14}JH\\.csv");
     public static final String IVR_INTERACTION_LOG = "IVR INTERACTION: %s";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImiController.class);
@@ -58,6 +60,8 @@ public class ImiController {
     private TargetFileService targetFileService;
     private FileAuditRecordDataService fileAuditRecordDataService;
     private AlertService alertService;
+
+    public static final String generateJhFile = "imi.obd_bifurcate";
 
 
     @Autowired
@@ -88,7 +92,8 @@ public class ImiController {
     // verify the passed targetFileName is valid
     private static boolean validateTargetFileName(StringBuilder errors, String targetFileName) {
         if (validateFieldPresent(errors, "fileName", targetFileName)) {
-            if (TARGET_FILENAME_PATTERN.matcher(targetFileName).matches()) {
+            if (TARGET_FILENAME_PATTERN.matcher(targetFileName).matches() ||
+                    TARGET_FILENAME_PATTERN_JH.matcher(targetFileName).matches() ) {
                 return true;
             } else {
                 errors.append(String.format(INVALID, "fileName"));
@@ -148,13 +153,13 @@ public class ImiController {
 
         LOGGER.debug("/generateTargetFile (GET)");
         try {
-            TargetFileNotification tfn = targetFileService.generateTargetFile();
-            LOGGER.debug("targetFileService.generateTargetFile() done");
+                HashMap<String, TargetFileNotification> tfn = targetFileService.generateTargetFile(Boolean.parseBoolean(settingsFacade.getProperty(generateJhFile)));
+                LOGGER.debug("targetFileService.generateTargetFile() done");
 
-            return tfn == null ? "null" : tfn.getFileName();
-        } catch(Exception e) {
-            LOGGER.error(e.getMessage(),e);
-            throw e;
+                return tfn == null ? "null" : tfn.values().toString();
+            }catch(Exception e){
+        LOGGER.error(e.getMessage(), e);
+        throw e;
         }
 
     }
