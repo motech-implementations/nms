@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
 import java.util.regex.Pattern;
 
 /**
@@ -152,20 +153,13 @@ public class ImiController {
 
         LOGGER.debug("/generateTargetFile (GET)");
         try {
-            if(Boolean.parseBoolean(settingsFacade.getProperty(generateJhFile))){
-                TargetFileNotification[] tfn = targetFileService.generateObdFiles();
-                LOGGER.debug("targetFileService.generateObdFiles() done");
-
-                return tfn == null ? "null" : tfn[0].getFileName()+"-"+tfn[1].getFileName();
-            }
-            else {
-                TargetFileNotification tfn = targetFileService.generateTargetFile();
+                HashMap<String, TargetFileNotification> tfn = targetFileService.generateTargetFile(Boolean.parseBoolean(settingsFacade.getProperty(generateJhFile)));
                 LOGGER.debug("targetFileService.generateTargetFile() done");
 
-                return tfn == null ? "null" : tfn.getFileName();}
-        } catch(Exception e) {
-            LOGGER.error(e.getMessage(),e);
-            throw e;
+                return tfn == null ? "null" : tfn.values().toString();
+            }catch(Exception e){
+        LOGGER.error(e.getMessage(), e);
+        throw e;
         }
 
     }

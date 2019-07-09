@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -100,6 +101,8 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
     private String localObdDirBackup;
     private String remoteObdDirBackup;
     private CdrHelper helper;
+    private static final String Jh = "JH";
+    private static final String non_Jh = "NON-JH";
 
 
     @Before
@@ -511,12 +514,12 @@ public class ImiControllerCdrBundleIT extends BasePaxIT {
                 SubscriptionOrigin.MCTS_IMPORT);
         transactionManager.commit(status);
 
-        TargetFileNotification tfn = targetFileService.generateTargetFile();
-        assertNotNull(tfn);
+        HashMap<String,TargetFileNotification> tfn = targetFileService.generateTargetFile(false);
+        assertNotNull(tfn.get(non_Jh));
 
         CdrHelper cdrHelper = new CdrHelper(settingsService, subscriberService,subscriptionService, subscriberDataService,
                 subscriptionPackDataService, languageDataService, languageService, circleDataService, stateDataService,
-                districtDataService, fileAuditRecordDataService, districtService, tfn.getFileName());
+                districtDataService, fileAuditRecordDataService, districtService, tfn.get(non_Jh).getFileName());
 
         helper.makeCdrs(1, 0, 0, 0);
         File remoteCdrFile = helper.makeRemoteCdrFile();
