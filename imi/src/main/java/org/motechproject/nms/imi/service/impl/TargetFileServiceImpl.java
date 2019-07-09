@@ -557,7 +557,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
     @Transactional
     public HashMap<String, TargetFileNotification> generateTargetFile(boolean split) {
-        LOGGER.info("generateTargetFile()");
+        LOGGER.info("generateTargetFile()"+split);
         DateTime today = DateTime.now();
         String targetFileName = targetFileName(TIME_FORMATTER.print(today));
         File localTargetDir = localObdDir();
