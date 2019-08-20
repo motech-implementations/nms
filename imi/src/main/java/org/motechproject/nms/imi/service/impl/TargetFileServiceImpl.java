@@ -61,6 +61,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final String TARGET_FILE_NOTIFICATION_URL = "imi.target_file_notification_url";
     private static final String TARGET_FILE_CALL_FLOW_URL = "imi.target_file_call_flow_url";
     private static final String NORMAL_PRIORITY = "0";
+    private static final String HIGH_PRIORITY = "1";
     private static final String IMI_FRESH_CHECK_DND = "imi.fresh_check_dnd";
     private static final String IMI_FRESH_NO_CHECK_DND = "imi.fresh_no_check_dnd";
     private static final String IMI_RETRY_CHECK_DND = "imi.retry_check_dnd";
@@ -438,7 +439,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                                     requestId.toString(),
                                     serviceIdFromOriginJh(true, subscription.getOrigin()),
                                     subscriber.getCallingNumber().toString(),
-                                    NORMAL_PRIORITY, //todo: how do we choose a priority?
+                                    HIGH_PRIORITY, //todo: how do we choose a priority?
                                     callFlowUrl,
                                     msg.getMessageFileName(),
                                     msg.getWeekId(),
@@ -511,7 +512,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                                 requestId.toString(),
                                 serviceIdFromOriginJh(false, callRetry.getSubscriptionOrigin()),
                                 callRetry.getMsisdn().toString(),
-                                NORMAL_PRIORITY,
+                                HIGH_PRIORITY,
                                 callFlowUrl,
                                 callRetry.getContentFileName(),
                                 callRetry.getWeekId(),
