@@ -20,7 +20,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity(tableName = "nms_health_sub_facilities")
-@Unique(name = "UNIQUE_HEALTH_FACILITY_CODE", members = { "healthFacility", "code" })
+@Unique(name = "UNIQUE_STATE_CODE", members = { "state_id_OID", "code" })
 @TrackClass
 @TrackFields
 @InstanceLifecycleListeners

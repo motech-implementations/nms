@@ -37,7 +37,7 @@ import java.util.Set;
  */
 @ValidVillage
 @Entity(tableName = "nms_villages")
-@Unique(name = "UNIQUE_TALUKA_VCODE_SVID", members = { "taluka", "vcode", "svid" })
+@Unique(name = "UNIQUE_STATE_VCODE_SVID", members = { "state_id_OID", "vcode", "svid" })
 @TrackClass
 @TrackFields
 @InstanceLifecycleListeners

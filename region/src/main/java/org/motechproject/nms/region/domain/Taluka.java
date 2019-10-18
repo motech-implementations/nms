@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 @Entity(tableName = "nms_talukas")
-@Unique(name = "UNIQUE_DISTRICT_CODE", members = { "district", "code" })
+@Unique(name = "UNIQUE_STATE_CODE", members = { "state_id_OID", "code" })
 @TrackClass
 @TrackFields
 @InstanceLifecycleListeners
