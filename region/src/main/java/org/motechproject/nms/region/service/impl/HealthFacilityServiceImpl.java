@@ -92,7 +92,7 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
                             " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
                             healthFacilityValues +
                             " ON DUPLICATE KEY UPDATE " +
-                            "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                            "name = VALUES(name), district_id_OID = VALUES(district_id_OID), healthBlock_id_OID = VALUES(healthBlock_id_OID), taluka_id_oid = VALUES(taluka_id_oid), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
                 }
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
