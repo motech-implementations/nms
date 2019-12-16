@@ -8,6 +8,7 @@ import org.motechproject.nms.tracking.annotation.TrackClass;
 import org.motechproject.nms.tracking.annotation.TrackFields;
 
 import javax.jdo.annotations.Column;
+import javax.jdo.annotations.Unique;
 
 /**
  * Created by beehyvsc on 22/8/18.
@@ -16,6 +17,7 @@ import javax.jdo.annotations.Column;
 @TrackClass
 @TrackFields
 @InstanceLifecycleListeners
+@Unique(name = "UNIQUE_VILLAGE_HEALTHSUBFACILITY", members = { "villageIdOID", "healthSubFacilityIdOID" })
 public class VillageHealthSubFacility extends MdsEntity{
 
     @Field(name = "village_id")
