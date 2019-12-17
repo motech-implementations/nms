@@ -92,7 +92,7 @@ public class TalukaServiceImpl implements TalukaService {
                             " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
                             talukaValues +
                             " ON DUPLICATE KEY UPDATE " +
-                            "name = VALUES(name), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                            "name = VALUES(name), district_id_OID=VALUES(district_id_OID), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
                 }
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;

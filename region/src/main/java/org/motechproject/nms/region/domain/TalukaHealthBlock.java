@@ -12,11 +12,13 @@ import org.motechproject.nms.tracking.annotation.TrackClass;
 import org.motechproject.nms.tracking.annotation.TrackFields;
 
 import javax.jdo.annotations.Column;
+import javax.jdo.annotations.Unique;
 
 @Entity(tableName = "nms_taluka_healthblock")
 @TrackClass
 @TrackFields
 @InstanceLifecycleListeners
+@Unique(name = "UNIQUE_TALUKA_HEALTHBLOCK", members = { "talukaIdOID", "healthBlockIdOID" })
 public class TalukaHealthBlock extends MdsEntity{
 
     @Field(name = "taluka_id")

@@ -27,7 +27,7 @@ import java.util.Set;
  * This class Models data for HealthBlock location records
  */
 @Entity(tableName = "nms_health_blocks")
-@Unique(name = "UNIQUE_DISTRICT_CODE", members = { "district", "code" })
+@Unique(name = "UNIQUE_STATE_CODE", members = { "stateIdOID", "code" })
 @TrackClass
 @TrackFields
 @InstanceLifecycleListeners
