@@ -1,6 +1,7 @@
 package org.motechproject.nms.kilkari.service;
 
 import org.motechproject.nms.kilkari.domain.CallRetry;
+import org.motechproject.nms.kilkari.domain.Subscription;
 
 import java.util.List;
 
@@ -22,4 +23,6 @@ public interface CallRetryService {
      *
      */
     void deleteOldRetryRecords(final int retentionInDays);
+
+    void deleteCallRecordsFromRetryTable(Subscription subscription);
 }

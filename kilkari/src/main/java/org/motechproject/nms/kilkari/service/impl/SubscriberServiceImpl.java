@@ -23,6 +23,7 @@ import org.motechproject.nms.kilkari.domain.AuditStatus;
 import org.motechproject.nms.kilkari.domain.ReactivatedBeneficiaryAudit;
 import org.motechproject.nms.kilkari.exception.MultipleSubscriberException;
 import org.motechproject.nms.kilkari.repository.*;
+import org.motechproject.nms.kilkari.service.CallRetryService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
@@ -68,13 +69,14 @@ public class SubscriberServiceImpl implements SubscriberService {
     private ReactivatedBeneficiaryAuditDataService reactivatedBeneficiaryAuditDataService;
     private MctsChildDataService mctsChildDataService;
     private MctsMotherDataService mctsMotherDataService;
+    private CallRetryService callRetryService;
 
     @Autowired
     public SubscriberServiceImpl(SubscriberDataService subscriberDataService, SubscriptionService subscriptionService,
                                  SubscriptionDataService subscriptionDataService,
                                  SubscriptionErrorDataService subscriptionErrorDataService,
                                  SubscriptionPackDataService subscriptionPackDataService,
-                                 BlockedMsisdnRecordDataService blockedMsisdnRecordDataService,
+                                 BlockedMsisdnRecordDataService blockedMsisdnRecordDataService, CallRetryService callRetryService,
                                  DeactivationSubscriptionAuditRecordDataService deactivationSubscriptionAuditRecordDataService,
                                  ReactivatedBeneficiaryAuditDataService reactivatedBeneficiaryAuditDataService,
                                  MctsChildDataService mctsChildDataService) {
@@ -87,6 +89,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         this.blockedMsisdnRecordDataService = blockedMsisdnRecordDataService;
         this.reactivatedBeneficiaryAuditDataService = reactivatedBeneficiaryAuditDataService;
         this.mctsChildDataService = mctsChildDataService;
+        this.callRetryService = callRetryService;
     }
 
     @Override
@@ -266,12 +269,14 @@ public class SubscriberServiceImpl implements SubscriberService {
                 return createSubscriber(msisdn, motherUpdate, lmp, pack, language, circle);
             }
         } else { // subscriberByBeneficiary != null aka. MCTS mother exists in motech
+            DateTime currentLMP = subscriberByMctsId.getLastMenstrualPeriod();
             if (subscriberByMsisdns.isEmpty()) {   //no subscriber attached to the new number
                 // We got here because beneficiary's phone number changed
                 subscriptionService.deleteBlockedMsisdn(motherUpdate.getId(), subscriberByMctsId.getCallingNumber(), msisdn);
                 subscriberByMctsId.setCallingNumber(msisdn);
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
                 subscriberByMctsId.setLastMenstrualPeriod(lmp);
+                if(currentLMP!=subscriberByMctsId.getLastMenstrualPeriod()&&subscription!=null){callRetryService.deleteCallRecordsFromRetryTable(subscription);}
                 subscriberByMctsId.setModificationDate(DateTime.now());
                 return updateOrCreateSubscription(subscriberByMctsId, subscription, lmp, pack, language, circle, SubscriptionOrigin.MCTS_IMPORT, false);
             } else {    // we have a subscriber by phone# and also one with the MCTS id
@@ -279,6 +284,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     if (subscriberByMctsId.getId().equals(subscriber.getId())) {
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
                         subscriberByMctsId.setLastMenstrualPeriod(lmp);
+                        if(currentLMP!=subscriberByMctsId.getLastMenstrualPeriod()&&subscription!=null){callRetryService.deleteCallRecordsFromRetryTable(subscription);}
                         subscriberByMctsId.setModificationDate(DateTime.now());
                         return updateOrCreateSubscription(subscriberByMctsId, subscription, lmp, pack, language, circle, SubscriptionOrigin.MCTS_IMPORT, false);
                     }
@@ -327,7 +333,9 @@ public class SubscriberServiceImpl implements SubscriberService {
                     return subscriptionService.createSubscription(subscriberByMsisdn, msisdn, language, circle, pack, SubscriptionOrigin.RCH_IMPORT);
                 }
             }
-        } else { // subscriberByBeneficiary != null aka. RCH mother exists in motech
+        } else {
+            // subscriberByBeneficiary != null aka. RCH mother exists in motech
+            DateTime currentLMP = subscriberByRchId.getLastMenstrualPeriod();
             if (subscribersByMsisdn.isEmpty()) {  //no subscriber attached to the new number
                 // We got here because beneficiary's phone number changed
                 if (subscriberByRchId.getCaseNo() == null) {
@@ -341,6 +349,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 subscriberByRchId.setCallingNumber(msisdn);
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                 subscriberByRchId.setLastMenstrualPeriod(lmp);
+                if(currentLMP!=subscriberByRchId.getLastMenstrualPeriod()&&subscription!=null){callRetryService.deleteCallRecordsFromRetryTable(subscription);}
                 subscriberByRchId.setModificationDate(DateTime.now());
                 return updateOrCreateSubscription(subscriberByRchId, subscription, lmp, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
             } else {  // we have a subscriber by phone# and also one with the RCH id
@@ -349,6 +358,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                         motherUpdate.setMaxCaseNo(caseNo);
                         subscriberByRchId.setLastMenstrualPeriod(lmp);
+                        if(currentLMP!=subscriberByRchId.getLastMenstrualPeriod()&&subscription!=null){callRetryService.deleteCallRecordsFromRetryTable(subscription);}
                         Boolean greaterCaseNo = false;
                         if (subscriberByRchId.getCaseNo() != null && caseNo > subscriberByRchId.getCaseNo()) {
                             greaterCaseNo = true;
@@ -365,6 +375,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     subscriberByRchId.setCallingNumber(msisdn);
                     Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                     subscriberByRchId.setLastMenstrualPeriod(lmp);
+                    if(currentLMP!=subscriberByRchId.getLastMenstrualPeriod()&&subscription!=null){callRetryService.deleteCallRecordsFromRetryTable(subscription);}
                     subscriberByRchId.setModificationDate(DateTime.now());
                     return updateOrCreateSubscription(subscriberByRchId, subscription, lmp, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
                 }
@@ -454,7 +465,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 }
             }
         } else { // Found existing child beneficiary in our system
-
+            DateTime currentDOB = subscriberByMctsId.getDateOfBirth();
             if (subscriberByMsisdns.isEmpty() && childUpdate.getMother() != null) {   // no subscriber attached to the new number
                 // We got here because beneficiary's phone number changed
                 subscriptionService.deleteBlockedMsisdn(childUpdate.getMother().getId(), subscriberByMctsId.getCallingNumber(), msisdn);
@@ -464,12 +475,14 @@ public class SubscriberServiceImpl implements SubscriberService {
                 }
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
                 subscriberByMctsId.setDateOfBirth(dob);
+                if(currentDOB!=subscriberByMctsId.getDateOfBirth()&&subscription!=null){callRetryService.deleteCallRecordsFromRetryTable(subscription);}
                 subscriberByMctsId.setModificationDate(DateTime.now());
                 finalSubscription = updateOrCreateSubscription(subscriberByMctsId, subscription, dob, pack, language, circle, SubscriptionOrigin.MCTS_IMPORT, false);
             } else if (subscriberByMsisdns.isEmpty() && childUpdate.getMother() == null) {
                 subscriberByMctsId.setCallingNumber(msisdn);
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
                 subscriberByMctsId.setDateOfBirth(dob);
+                if(currentDOB!=subscriberByMctsId.getDateOfBirth()&&subscription!=null){callRetryService.deleteCallRecordsFromRetryTable(subscription);}
                 subscriberByMctsId.setModificationDate(DateTime.now());
                 finalSubscription = updateOrCreateSubscription(subscriberByMctsId, subscription, dob, pack, language, circle, SubscriptionOrigin.MCTS_IMPORT, false);
             }
@@ -479,6 +492,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     if (subscriberByMctsId.getId().equals(subscriber.getId())) {
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
                         subscriberByMctsId.setDateOfBirth(dob);
+                        if(currentDOB!=subscriberByMctsId.getDateOfBirth()&&subscription!=null){callRetryService.deleteCallRecordsFromRetryTable(subscription);}
                         if (subscriberByMctsId.getMother() == null) {
                             subscriberByMctsId.setMother(childUpdate.getMother());
                         }
@@ -535,6 +549,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         }
 
         if (subscriberByRchId != null) { //subscriber exists with the provided RCH id
+            DateTime currentDOB = subscriberByRchId.getDateOfBirth();
             if (subscribersByMsisdn.isEmpty()) { //no subscriber with provided msisdn
                 //subscriber's number has changed
                 //update msisdn in subscriber and delete msisdn from blocked list
@@ -545,6 +560,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 }
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                 subscriberByRchId.setDateOfBirth(dob);
+                if(currentDOB!=subscriberByRchId.getDateOfBirth()&&subscription!=null){callRetryService.deleteCallRecordsFromRetryTable(subscription);}
                 subscriberByRchId.setModificationDate(DateTime.now());
                 finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
             } else {
@@ -557,6 +573,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                             subscriberByRchId.setMother(childUpdate.getMother());
                         }
                         subscriberByRchId.setDateOfBirth(dob);
+                        if(currentDOB!=subscriberByRchId.getDateOfBirth()&&subscription!=null){callRetryService.deleteCallRecordsFromRetryTable(subscription);}
                         subscriberByRchId.setModificationDate(DateTime.now());
                         finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
                     } else {
@@ -574,6 +591,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                         }
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                         subscriberByRchId.setDateOfBirth(dob);
+                        if(currentDOB!=subscriberByRchId.getDateOfBirth()&&subscription!=null){callRetryService.deleteCallRecordsFromRetryTable(subscription);}
                         subscriberByRchId.setModificationDate(DateTime.now());
                         finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
                     }

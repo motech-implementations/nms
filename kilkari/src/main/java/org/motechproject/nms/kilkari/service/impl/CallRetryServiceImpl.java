@@ -4,6 +4,7 @@ import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.kilkari.domain.CallRetry;
+import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.service.CallRetryService;
 import org.slf4j.Logger;
@@ -86,5 +87,30 @@ public class CallRetryServiceImpl implements CallRetryService {
         Timer timer = new Timer();
         long rowCount = callRetryDataService.executeSQLQuery(queryExecution);
         LOGGER.debug("Deleted {} rows from nms_kk_retry_records in {}", rowCount, timer.time());
+    }
+
+    @Override
+    public void deleteCallRecordsFromRetryTable(Subscription subscription) {
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "DELETE FROM nms_kk_retry_records where subscriptionId= :subscriptionId";
+                LOGGER.debug("SQL QUERY: {}", query);
+                return query;
+            }
+
+            @Override
+            public Long execute(Query query) {
+
+                Map params = new HashMap();
+                params.put("subscriptionId", subscription.getSubscriptionId());
+                return (Long) query.executeWithMap(params);
+            }
+        };
+
+        LOGGER.debug("Deleting nms_kk_retry_records for subscription", subscription.getSubscriptionId());
+        callRetryDataService.executeSQLQuery(queryExecution);
+
     }
 }
