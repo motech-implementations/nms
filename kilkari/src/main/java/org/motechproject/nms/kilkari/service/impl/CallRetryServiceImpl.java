@@ -88,29 +88,4 @@ public class CallRetryServiceImpl implements CallRetryService {
         long rowCount = callRetryDataService.executeSQLQuery(queryExecution);
         LOGGER.debug("Deleted {} rows from nms_kk_retry_records in {}", rowCount, timer.time());
     }
-
-    @Override
-    public void deleteCallRecordsFromRetryTable(Subscription subscription) {
-        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
-
-            @Override
-            public String getSqlQuery() {
-                String query = "DELETE FROM nms_kk_retry_records where subscriptionId= :subscriptionId";
-                LOGGER.debug("SQL QUERY: {}", query);
-                return query;
-            }
-
-            @Override
-            public Long execute(Query query) {
-
-                Map params = new HashMap();
-                params.put("subscriptionId", subscription.getSubscriptionId());
-                return (Long) query.executeWithMap(params);
-            }
-        };
-
-        LOGGER.debug("Deleting nms_kk_retry_records for subscription", subscription.getSubscriptionId());
-        callRetryDataService.executeSQLQuery(queryExecution);
-
-    }
 }

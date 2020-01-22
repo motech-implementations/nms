@@ -23,6 +23,4 @@ public interface CallRetryService {
      *
      */
     void deleteOldRetryRecords(final int retentionInDays);
-
-    void deleteCallRecordsFromRetryTable(Subscription subscription);
 }
