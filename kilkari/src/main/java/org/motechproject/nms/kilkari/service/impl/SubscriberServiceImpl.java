@@ -23,7 +23,6 @@ import org.motechproject.nms.kilkari.domain.AuditStatus;
 import org.motechproject.nms.kilkari.domain.ReactivatedBeneficiaryAudit;
 import org.motechproject.nms.kilkari.exception.MultipleSubscriberException;
 import org.motechproject.nms.kilkari.repository.*;
-import org.motechproject.nms.kilkari.service.CallRetryService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
