@@ -184,8 +184,9 @@ public class CsrServiceImpl implements CsrService {
                 case FAILED:
                     String weekId = getWeekIdForSubscription(subscription.getStartDate());
                     //If there was a DOB/LMP update during RCH import, number of weeks into subscription would have changed.
-                    //No need to reschedule this call.
-                    if(!weekId.equals(csrDto.getWeekId())){
+                    //No need to reschedule this call. Exception for w1, because regardless of which week the subscription starts in, user
+                    //always gets w1 message initially
+                    if(!csrDto.getWeekId().equals("w1_1")&&!weekId.equals(csrDto.getWeekId())){
                         if(callRetry!=null){
                             callRetryDataService.delete(callRetry);
                         }
