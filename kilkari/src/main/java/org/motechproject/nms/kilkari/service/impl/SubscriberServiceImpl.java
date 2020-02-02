@@ -327,8 +327,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     return subscriptionService.createSubscription(subscriberByMsisdn, msisdn, language, circle, pack, SubscriptionOrigin.RCH_IMPORT);
                 }
             }
-        } else {
-            // subscriberByBeneficiary != null aka. RCH mother exists in motech
+        } else { // subscriberByBeneficiary != null aka. RCH mother exists in motech
             if (subscribersByMsisdn.isEmpty()) {  //no subscriber attached to the new number
                 // We got here because beneficiary's phone number changed
                 if (subscriberByRchId.getCaseNo() == null) {
@@ -455,6 +454,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 }
             }
         } else { // Found existing child beneficiary in our system
+
             if (subscriberByMsisdns.isEmpty() && childUpdate.getMother() != null) {   // no subscriber attached to the new number
                 // We got here because beneficiary's phone number changed
                 subscriptionService.deleteBlockedMsisdn(childUpdate.getMother().getId(), subscriberByMctsId.getCallingNumber(), msisdn);
