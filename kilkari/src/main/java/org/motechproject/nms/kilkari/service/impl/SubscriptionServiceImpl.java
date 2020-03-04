@@ -174,7 +174,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
 
-
     @Override
     public void completePastDueSubscriptions() {
 
@@ -197,10 +196,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         "ON s.subscriptionPack_id_OID = sp.id " +
                         "SET s.status = 'COMPLETED', s.endDate = :currentTime, s.modificationDate = :currentTime " +
                         "WHERE " +
-                        "(s.status = 'ACTIVE' OR s.status = 'PENDING_ACTIVATION' OR s.status = 'HOLD') AND " +
+                        "(s.status = 'ACTIVE') AND " +
                         "((sp.type = 'PREGNANCY' AND s.startDate < :oldestPregnancyStart) " +
                         "OR " +
                         "(sp.type = 'CHILD' AND s.startDate < :oldestChildStart))";
+
+
                 LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
                 return query;
             }
@@ -212,12 +213,60 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 params.put("oldestPregnancyStart", oldestPregnancyStart.toString(dateTimeFormatter));
                 params.put("oldestChildStart", oldestChildStart.toString(dateTimeFormatter));
                 return (Long) query.executeWithMap(params);
+
             }
         };
+        //changes
+
+
+        upKeepQueryExtension(dateTimeFormatter,currentTime,oldestPregnancyStart,oldestChildStart);
+
+        //changes end
+
+
+
 
         Long rowCount = subscriptionDataService.executeSQLQuery(queryExecution);
         LOGGER.debug(String.format("Updated %d subscription(s) to COMPLETED", rowCount));
         subscriptionDataService.evictEntityCache(true); // no need to evict sub-entity classes
+    }
+
+
+   public void upKeepQueryExtension(DateTimeFormatter dateTimeFormatter,DateTime currentTime,DateTime oldestPregnancyStart,DateTime oldestChildStart){
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query =
+                        "UPDATE motech_data_services.nms_subscriptions AS s " +
+                                "JOIN motech_data_services.nms_subscription_packs AS sp " +
+                                "ON s.subscriptionPack_id_OID = sp.id " +
+                                "SET s.status = 'NO LONGER ELIGIBLE', s.endDate = :currentTime, s.modificationDate = :currentTime " +
+                                "WHERE " +
+                                "(s.status = 'PENDING_ACTIVATION' OR s.status = 'HOLD') AND " +
+                                "((sp.type = 'PREGNANCY' AND s.startDate < :oldestPregnancyStart) " +
+                                "OR " +
+                                "(sp.type = 'CHILD' AND s.startDate < :oldestChildStart))";
+
+
+                LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public Long execute(Query query) {
+                Map params = new HashMap();
+                params.put("currentTime", currentTime.toString(dateTimeFormatter));
+                params.put("oldestPregnancyStart", oldestPregnancyStart.toString(dateTimeFormatter));
+                params.put("oldestChildStart", oldestChildStart.toString(dateTimeFormatter));
+                return (Long) query.executeWithMap(params);
+
+            }
+        };
+
+       Long rowCount = subscriptionDataService.executeSQLQuery(queryExecution);
+       LOGGER.debug(String.format("Updated %d subscription(s) to COMPLETED", rowCount));
     }
 
     @Override

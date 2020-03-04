@@ -79,7 +79,8 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                     return motherByMctsId;
                 }
             }
-        } else {
+        }
+        else {
             if (mctsId == null || ("NULL").equalsIgnoreCase(mctsId) || "".equals(mctsId.trim())) {
                 return motherByRchId;
             } else {
