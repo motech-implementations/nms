@@ -233,7 +233,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
 
    public void upKeepQueryExtension(DateTimeFormatter dateTimeFormatter,DateTime currentTime,DateTime oldestPregnancyStart,DateTime oldestChildStart){
-        @SuppressWarnings("unchecked")
+        int minDaysLeftInPack =85; //MIN_MSG_WEEKS * DAYS_IN_WEEK +1 => 12*7+1
+        final DateTime oldestPregnancyStartCutoff= oldestPregnancyStart.plusDays(minDaysLeftInPack).withTimeAtStartOfDay(); // plus 1 since we start calling people the next day
+        final DateTime oldestChildStartCutoff= oldestChildStart.plusDays(minDaysLeftInPack).withTimeAtStartOfDay();
+
+       LOGGER.debug("Completing HOLD PREGNANCY susbscriptions older than {}", oldestPregnancyStartCutoff);
+       LOGGER.debug("Completing HOLD CHILD susbscriptions older than {}", oldestChildStartCutoff);
+
+       @SuppressWarnings("unchecked")
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
@@ -245,9 +252,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                 "SET s.status = 'NO LONGER ELIGIBLE', s.endDate = :currentTime, s.modificationDate = :currentTime " +
                                 "WHERE " +
                                 "(s.status = 'PENDING_ACTIVATION' OR s.status = 'HOLD') AND " +
-                                "((sp.type = 'PREGNANCY' AND s.startDate < :oldestPregnancyStart) " +
+                                "((sp.type = 'PREGNANCY' AND s.startDate < :oldestPregnancyStartCutoff) " +
                                 "OR " +
-                                "(sp.type = 'CHILD' AND s.startDate < :oldestChildStart))";
+                                "(sp.type = 'CHILD' AND s.startDate < :oldestChildStartCutoff))";
 
 
                 LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
@@ -258,8 +265,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             public Long execute(Query query) {
                 Map params = new HashMap();
                 params.put("currentTime", currentTime.toString(dateTimeFormatter));
-                params.put("oldestPregnancyStart", oldestPregnancyStart.toString(dateTimeFormatter));
-                params.put("oldestChildStart", oldestChildStart.toString(dateTimeFormatter));
+                params.put("oldestPregnancyStartCutoff", oldestPregnancyStartCutoff.toString(dateTimeFormatter));
+                params.put("oldestChildStartCutoff", oldestChildStartCutoff.toString(dateTimeFormatter));
                 return (Long) query.executeWithMap(params);
 
             }
