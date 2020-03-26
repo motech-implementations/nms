@@ -1,15 +1,17 @@
 package org.motechproject.nms.kilkari.service;
 
 import org.motechproject.metrics.service.Timer;
-import org.motechproject.nms.kilkari.domain.MctsMother;
-import org.motechproject.nms.kilkari.domain.RejectionReasons;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.ThreadProcessorObject;
+import org.motechproject.nms.kilkari.domain.*;
+import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.kilkari.service.impl.SubscriptionServiceImpl;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
+import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +33,12 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
     private LocationFinder locationFinder;
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
+
+    private SubscriptionDataService subscriptionDataService;
+
+    @Autowired
+    @Qualifier("mctsSettings")
+    private SettingsFacade settingsFacade;
 
     public MotherCsvThreadProcessor(List<Map<String, Object>> recordList, Boolean mctsImport,
                                     SubscriptionOrigin importOrigin, LocationFinder locationFinder,
@@ -66,6 +74,11 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
         }
         int count = 0;
         Timer timer = new Timer("mom", "moms");
+
+        long savedRecords=0; // 1000 maximum record allowed to save in database until it checks capacity from db
+        long maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_CAP));
+
+
         for (Map<String, Object> record : recordList) {
             count++;
             LOGGER.debug("Started mother import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
@@ -99,6 +112,27 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
                 if (count % KilkariConstants.PROGRESS_INTERVAL == 0) {
                     LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
                 }
+
+                // changes made for subscription capacity bug-fix
+                savedRecords++;
+                if(savedRecords>=1000){
+
+                    long currentActive = subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
+                    long openslot=maxActiveSubscriptions-currentActive;
+                    if(openslot>0){
+                        //capacity not exceeded
+                        savedRecords=openslot<1000?(1000-openslot):0;
+
+                    }
+                    else {
+                        //capacity exceeded
+//                        SubscriptionServiceImpl.isCapacityExceeded=true;
+
+                    }
+                }
+                // subscription capacity bug-fix close
+
+
             } catch (RuntimeException e) {
                 LOGGER.error("Mother import Error. Error while importing mother at msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id), e);
             }

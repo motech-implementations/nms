@@ -18,11 +18,9 @@ import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.kilkari.domain.RejectionReasons;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.MctsMother;
-import org.motechproject.nms.kilkari.domain.MctsChild;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
+import org.motechproject.nms.kilkari.domain.*;
+import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.kilkari.service.impl.SubscriptionServiceImpl;
 import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
@@ -86,6 +84,8 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
     private static final String MCTS_WEB_SERVICE = "MCTS Web Service";
     private static final String BULK_REJECTION_ERROR_MESSAGE = "Error while bulk updating rejection records";
     private static final double THOUSAND = 1000d;
+
+    private SubscriptionDataService subscriptionDataService; // creation reason: subscription capacity bug-fix
 
     @Autowired
     private FrontLineWorkerImportService frontLineWorkerImportService;
@@ -259,6 +259,12 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         List<Map<String, Object>> acceptedMotherRecords = motherRecordsSet.get(1);
         LocationFinder locationFinder = locationService.updateLocations(acceptedMotherRecords);
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
+
+        // creation reason: subscription capacity bug-fix
+        long savedRecords=0; // 1000 maximum record allowed to save in database until it checks capacity from db
+        long maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_CAP));
+
+
         for (Map<String, Object> recordMap : acceptedMotherRecords) {
             String mctsId = (String) recordMap.get(KilkariConstants.BENEFICIARY_ID);
             try {
@@ -279,8 +285,32 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                             LOGGER.info("rejected mother {}", mctsId);
                         }
                     }
+
                     saved++;
                     LOGGER.info("saved mother {}", mctsId);
+
+                    // creation reason: subscription capacity bug-fix open
+                    savedRecords++;
+                    if(savedRecords>=1000){
+
+                        long currentActive = subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
+                        long openslot=maxActiveSubscriptions-currentActive;
+                        if(openslot>0){
+                            //capacity not exceeded
+                            savedRecords=openslot<1000?(1000-openslot):0;
+
+                        }
+                        else {
+                            //capacity exceeded
+                            //set status to hold => make allowMctsSubscriptions true in
+                            SubscriptionServiceImpl.isCapacityExceeded=true;
+
+                        }
+                    }
+
+                    // creation reason: subscription capacity bug-fix close
+
+
                 } else {
                     rejected++;
                     LOGGER.info("rejected mother {}", mctsId);

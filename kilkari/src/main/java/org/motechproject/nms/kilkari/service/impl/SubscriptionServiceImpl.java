@@ -87,6 +87,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService;
     private SubscriberMsisdnTrackerDataService subscriberMsisdnTrackerDataService;
 
+    public static boolean isCapacityExceeded;
+
 
     @Autowired
     public SubscriptionServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade, // NO CHECKSTYLE More than 7 parameters
@@ -490,7 +492,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         Subscription subscription = new Subscription(subscriber, pack, importOrigin);
         subscription.setStartDate(startDate);
         subscription.setNeedsWelcomeMessageViaObd(true);
-
+        allowMctsSubscriptions=isCapacityExceeded; // creation reason: subscription capacity bug-fix
         if (allowMctsSubscriptions) {
             subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
         } else {
@@ -788,7 +790,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         long currentActive = subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
         LOGGER.info("Found {} active subscriptions", currentActive);
         this.allowMctsSubscriptions = (currentActive < maxActiveSubscriptions);
-
+        isCapacityExceeded=this.allowMctsSubscriptions;
         // broadcast flag to every other instance
         Map<String, Object> eventParams = new HashMap<>();
         eventParams.put(KilkariConstants.TOGGLE_CAP_KEY, this.allowMctsSubscriptions);
