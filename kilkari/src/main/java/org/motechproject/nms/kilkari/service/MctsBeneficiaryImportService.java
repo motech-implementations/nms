@@ -16,7 +16,7 @@ import java.util.Map;
  */
 public interface MctsBeneficiaryImportService {
 
-    MotherImportRejection importMotherRecord(Map<String, Object> record, SubscriptionOrigin origin, LocationFinder locationFinder);
+    MotherImportRejection importMotherRecord(Map<String, Object> record, SubscriptionOrigin origin, LocationFinder locationFinder,boolean isCapacityExceeded);
 
     ChildImportRejection importChildRecord(Map<String, Object> record, SubscriptionOrigin origin, LocationFinder locationFinder);
 

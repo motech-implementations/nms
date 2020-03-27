@@ -263,7 +263,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         // creation reason: subscription capacity bug-fix
         long savedRecords=0; // 1000 maximum record allowed to save in database until it checks capacity from db
         long maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_CAP));
-
+        boolean isCapacityExceeded=false;
 
         for (Map<String, Object> recordMap : acceptedMotherRecords) {
             String mctsId = (String) recordMap.get(KilkariConstants.BENEFICIARY_ID);
@@ -273,7 +273,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                         (long) recordMap.get(KilkariConstants.STATE_ID),
                         (long) recordMap.get(KilkariConstants.DISTRICT_ID));
                 if (hpdValidation) {
-                    motherImportRejection = mctsBeneficiaryImportService.importMotherRecord(recordMap, SubscriptionOrigin.MCTS_IMPORT, locationFinder);
+                    motherImportRejection = mctsBeneficiaryImportService.importMotherRecord(recordMap, SubscriptionOrigin.MCTS_IMPORT, locationFinder,isCapacityExceeded);
                     if(motherImportRejection != null) {
                         rejectedMothers.put(motherImportRejection.getIdNo(), motherImportRejection);
                         rejectionStatus.put(motherImportRejection.getIdNo(), motherImportRejection.getAccepted());
@@ -302,8 +302,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                         }
                         else {
                             //capacity exceeded
-                            //set status to hold => make allowMctsSubscriptions true in
-                            SubscriptionServiceImpl.isCapacityExceeded=true;
+                            isCapacityExceeded=true;
 
                         }
                     }

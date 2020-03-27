@@ -121,11 +121,16 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
-    public MotherImportRejection importMotherRecord(Map<String, Object> record, SubscriptionOrigin importOrigin, LocationFinder locationFinder) { //NOPMD NcssMethodCount
+    public MotherImportRejection importMotherRecord(Map<String, Object> record, SubscriptionOrigin importOrigin, LocationFinder locationFinder, boolean isCapacityExceeded) { //NOPMD NcssMethodCount
         LOGGER.debug("MotherImportRejection::importMotherRecord Start ");
         if (pregnancyPack == null) {
             pregnancyPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.PREGNANCY);
         }
+
+        if(isCapacityExceeded){
+            SubscriptionServiceImpl.isCapacityExceeded=true;
+        }
+
         MctsMother mother;
         Long msisdn;
         Boolean abortion;

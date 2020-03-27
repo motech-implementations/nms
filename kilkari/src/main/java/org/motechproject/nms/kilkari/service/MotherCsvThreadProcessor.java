@@ -77,7 +77,7 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
 
         long savedRecords=0; // 1000 maximum record allowed to save in database until it checks capacity from db
         long maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_CAP));
-
+        boolean isCapacityExceeded=false;
 
         for (Map<String, Object> record : recordList) {
             count++;
@@ -98,7 +98,7 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
 
             try {
                 LOGGER.debug("Calling Import Mother Record for"  + count );
-                motherImportRejection = mctsBeneficiaryImportService.importMotherRecord(record, importOrigin, locationFinder);
+                motherImportRejection = mctsBeneficiaryImportService.importMotherRecord(record, importOrigin, locationFinder,isCapacityExceeded);
                 LOGGER.debug("Completed  Import Mother Record for" +  count);
                 if (motherImportRejection != null) {
                     if (mctsImport) {
@@ -126,7 +126,7 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
                     }
                     else {
                         //capacity exceeded
-//                        SubscriptionServiceImpl.isCapacityExceeded=true;
+                        isCapacityExceeded=true;
 
                     }
                 }

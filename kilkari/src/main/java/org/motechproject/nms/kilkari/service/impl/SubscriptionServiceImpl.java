@@ -492,7 +492,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         Subscription subscription = new Subscription(subscriber, pack, importOrigin);
         subscription.setStartDate(startDate);
         subscription.setNeedsWelcomeMessageViaObd(true);
-        allowMctsSubscriptions=isCapacityExceeded; // creation reason: subscription capacity bug-fix
+        allowMctsSubscriptions=!isCapacityExceeded; // creation reason: subscription capacity bug-fix
         if (allowMctsSubscriptions) {
             subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
         } else {
