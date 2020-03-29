@@ -37,7 +37,7 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
     private SubscriptionDataService subscriptionDataService;
 
     @Autowired
-    @Qualifier("mctsSettings")
+    @Qualifier("kilkariSettings")
     private SettingsFacade settingsFacade;
 
     public MotherCsvThreadProcessor(List<Map<String, Object>> recordList, Boolean mctsImport,
