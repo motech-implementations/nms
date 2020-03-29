@@ -12,4 +12,17 @@ public class HttpInterceptor implements HandlerInterceptor {
         return true;
     }
 
+    @Override
+    public void postHandle(HttpServletRequest request,
+                           HttpServletResponse response) throws Exception {
+        System.out.println("Inside post handle");
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request,
+                                HttpServletResponse response, Exception exception)
+            throws Exception {
+        System.out.println("Inside after completion");
+    }
+
     }
