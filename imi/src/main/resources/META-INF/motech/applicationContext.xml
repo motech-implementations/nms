@@ -10,6 +10,9 @@
     <context:component-scan base-package="org.motechproject.nms.imi" />
 
     <mvc:annotation-driven />
+    <mvc:interceptors>
+        <bean id="httpInterceptor" class="org.motechproject.nms.imi.web.HttpInterceptor"/>
+    </mvc:interceptors>
 
     <bean id="moduleRegistrationData" class="org.motechproject.osgi.web.ModuleRegistrationData">
         <constructor-arg name="moduleName" value="imi" />
