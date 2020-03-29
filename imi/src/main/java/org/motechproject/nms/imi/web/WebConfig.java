@@ -7,9 +7,10 @@ package org.motechproject.nms.imi.web;
 
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 //import java.time.Duration;
-
+@EnableWebMvc
 public class WebConfig extends WebMvcConfigurerAdapter {
 
     @Override
