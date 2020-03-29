@@ -1,7 +1,7 @@
 package org.motechproject.nms.imi.web;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -9,7 +9,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.util.concurrent.TimeUnit;
 
-public class RateLimitInterceptor implements HandlerInterceptorAdapter {
+public class RateLimitInterceptor implements HandlerInterceptor {
 
     private final Bucket bucket;
 
