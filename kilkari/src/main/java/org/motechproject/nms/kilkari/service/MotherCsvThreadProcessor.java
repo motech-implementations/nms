@@ -77,6 +77,7 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
 
         long savedRecords=0; // 1000 maximum record allowed to save in database until it checks capacity from db
         long maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_CAP));
+        LOGGER.info(Long.toString(maxActiveSubscriptions));
         boolean isCapacityExceeded=false;
 
         for (Map<String, Object> record : recordList) {
