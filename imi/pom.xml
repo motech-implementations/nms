@@ -35,6 +35,12 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.github.vladimir-bukhtoyarov</groupId>
+            <artifactId>bucket4j-core</artifactId>
+            <version>4.9.0</version>
+        </dependency>
+
         <!-- Kilkari -->
         <dependency>
             <groupId>org.motechproject.nms</groupId>
