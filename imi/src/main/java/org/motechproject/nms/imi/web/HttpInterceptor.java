@@ -3,6 +3,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.springframework.web.servlet.ModelAndView;
 
 public class HttpInterceptor implements HandlerInterceptor {
         @Override
@@ -14,7 +15,8 @@ public class HttpInterceptor implements HandlerInterceptor {
 
     @Override
     public void postHandle(HttpServletRequest request,
-                           HttpServletResponse response) throws Exception {
+                           HttpServletResponse response, Object handler,
+                           ModelAndView modelAndView) throws Exception {
         System.out.println("Inside post handle");
     }
 
