@@ -27,4 +27,5 @@ public class WebConfig extends WebMvcConfigurerAdapter {
         bucket = Bucket4j.builder().addLimit(limit).build();
         registry.addInterceptor(new RateLimitInterceptor(bucket, 1))
                 .addPathPatterns("/cdrFileNotification");
+    }
 }
