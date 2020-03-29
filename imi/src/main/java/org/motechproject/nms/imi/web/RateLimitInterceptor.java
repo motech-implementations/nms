@@ -38,4 +38,15 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         return false;
     }
 
+    @Override
+    public void postHandle(HttpServletRequest req, HttpServletResponse res,
+                           Object handler, ModelAndView model)  throws Exception {
+    }
+
+    // Called after rendering the view
+    @Override
+    public void afterCompletion(HttpServletRequest req, HttpServletResponse res,
+                                Object handler, Exception ex)  throws Exception {
+    }
+
     }
