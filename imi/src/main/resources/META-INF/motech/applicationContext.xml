@@ -11,7 +11,8 @@
 
     <mvc:annotation-driven />
     <mvc:interceptors>
-        <bean class="org.motechproject.nms.imi.web.RateLimitInterceptor"></bean>
+        <bean class="org.motechproject.nms.imi.web.RateLimitInterceptor">
+            <constructor-arg value="1"></constructor-arg> </bean>
     </mvc:interceptors>
     <bean id="moduleRegistrationData" class="org.motechproject.osgi.web.ModuleRegistrationData">
         <constructor-arg name="moduleName" value="imi" />
