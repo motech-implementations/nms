@@ -20,7 +20,7 @@ public class HttpInterceptor implements HandlerInterceptor {
 
     @Override
     public void afterCompletion(HttpServletRequest request,
-                                HttpServletResponse response, Exception exception)
+                                HttpServletResponse response, Object handler, Exception exception)
             throws Exception {
         System.out.println("Inside after completion");
     }
