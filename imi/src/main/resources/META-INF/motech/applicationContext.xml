@@ -32,6 +32,5 @@
             </list>
         </property>
     </bean>
-    <bean class="org.motechproject.nms.imi.web.WebConfig"></bean>
 
 </beans>
