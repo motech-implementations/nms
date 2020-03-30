@@ -41,6 +41,11 @@
             <artifactId>kilkari</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.vladimir-bukhtoyarov</groupId>
+            <artifactId>bucket4j-core</artifactId>
+            <version>4.9.0</version>
+        </dependency>
 
         <!-- Region -->
         <dependency>
@@ -100,7 +105,6 @@
                             org.motechproject.nms.region.service,
                             org.motechproject.nms.region.utils,
                             org.datanucleus.enhancement,
-                            io.github.bucket4j.*,
                             org.springframework.validation.beanvalidation,
                             *
                         </Import-Package>
