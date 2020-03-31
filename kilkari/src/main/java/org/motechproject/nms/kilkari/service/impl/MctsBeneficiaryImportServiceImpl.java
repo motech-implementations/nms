@@ -20,6 +20,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.exception.MultipleSubscriberException;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
@@ -37,9 +38,11 @@ import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
 import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
 import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
+import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.supercsv.cellprocessor.Optional;
@@ -81,6 +84,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private MctsChildDataService mctsChildDataService;
     private DeactivatedBeneficiaryService deactivatedBeneficiaryService;
 
+    private SubscriptionDataService subscriptionDataService;
+
     // Number of rejected mother/children in a single query for bulk insert/update
     private static final Integer REJECTION_PART_SIZE = 5000;
     private static final String SUBSCRIPTION_COMPLETED = "Subscription completed";
@@ -117,18 +122,37 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     @Autowired
     private ActionFinderService actionFinderService;
-
+    @Autowired
+    @Qualifier("kilkariSettings")
+    private SettingsFacade settingsFacade;
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
-    public MotherImportRejection importMotherRecord(Map<String, Object> record, SubscriptionOrigin importOrigin, LocationFinder locationFinder, boolean isCapacityExceeded) { //NOPMD NcssMethodCount
+    public MotherImportRejection importMotherRecord(Map<String, Object> record, SubscriptionOrigin importOrigin, LocationFinder locationFinder, boolean isCapacityExceededCheck) { //NOPMD NcssMethodCount
         LOGGER.debug("MotherImportRejection::importMotherRecord Start ");
         if (pregnancyPack == null) {
             pregnancyPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.PREGNANCY);
         }
 
-        if(isCapacityExceeded){
-            SubscriptionServiceImpl.isCapacityExceeded=true;
+        long maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_CAP));
+        LOGGER.debug("--------------------maxActiveSubscriptions--------------------------=> "+maxActiveSubscriptions);
+        if(isCapacityExceededCheck){
+            long currentActive = subscriptionService.findSubscriptionCountByStatus(SubscriptionStatus.ACTIVE);
+            LOGGER.debug("--------------------currentActive--------------------------=> "+currentActive);
+
+//                    subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
+            long openslot=maxActiveSubscriptions-currentActive;
+            LOGGER.debug(" ........................openslot.................=> "+openslot);
+            if(openslot>0){
+                //capacity not exceeded
+            }
+            else {
+                //capacity exceeded
+                LOGGER.debug(" ........................CAPACITY EXCEEDED1 ==>.................=> ");
+
+                SubscriptionServiceImpl.isCapacityExceeded=true;
+                LOGGER.debug(" ........................CAPACITY EXCEEDED2 ==>.................=> ");
+            }
         }
 
         MctsMother mother;

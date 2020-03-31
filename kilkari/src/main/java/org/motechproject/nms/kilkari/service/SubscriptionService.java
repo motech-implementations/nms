@@ -4,12 +4,7 @@ import org.joda.time.DateTime;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.mds.annotations.InstanceLifecycleListener;
 import org.motechproject.mds.annotations.InstanceLifecycleListenerType;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
+import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
@@ -227,5 +222,7 @@ public interface SubscriptionService {
      * @param subscriberId
      */
     void deleteSubscriber(Long subscriberId);
+
+    long findSubscriptionCountByStatus(SubscriptionStatus status);
 
 }

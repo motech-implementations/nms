@@ -1134,5 +1134,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     }
 
+    @Override
+    public long findSubscriptionCountByStatus(SubscriptionStatus status){
+        return subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
+    }
 
 }

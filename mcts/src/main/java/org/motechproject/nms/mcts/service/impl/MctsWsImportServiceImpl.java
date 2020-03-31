@@ -291,13 +291,13 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
                     // creation reason: subscription capacity bug-fix open
                     savedRecords++;
-                    if(savedRecords>=1000){
+                    if(savedRecords>=3){
 
                         long currentActive = subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
                         long openslot=maxActiveSubscriptions-currentActive;
                         if(openslot>0){
                             //capacity not exceeded
-                            savedRecords=openslot<1000?(1000-openslot):0;
+                            savedRecords=openslot<3?(3-openslot):0;
 
                         }
                         else {
