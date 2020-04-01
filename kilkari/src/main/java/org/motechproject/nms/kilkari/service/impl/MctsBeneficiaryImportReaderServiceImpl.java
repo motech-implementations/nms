@@ -21,9 +21,11 @@ import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.region.service.LocationService;
+import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
@@ -57,6 +59,10 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
     private LocationService locationService;
+
+    @Autowired
+    @Qualifier("kilkariSettings")
+    private SettingsFacade settingsFacade;
 
     @Autowired
     public MctsBeneficiaryImportReaderServiceImpl(MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor, MctsBeneficiaryImportService mctsBeneficiaryImportService, LocationService locationService) {
@@ -201,10 +207,11 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             ExecutorService executor = Executors.newCachedThreadPool();
             List<Future<ThreadProcessorObject>> list = new ArrayList<>();
 
+            long chunkSize = Long.parseLong(settingsFacade.getProperty(KilkariConstants.CHUNK_SIZE));
             for (int i = 0; i < recordListArray.size(); i++) {
                 LOGGER.debug("Thread Processing Start" + i);
                 Callable<ThreadProcessorObject> callable = new MotherCsvThreadProcessor(recordListArray.get(i), mctsImport, importOrigin, locationFinder,
-                        mctsBeneficiaryValueProcessor, mctsBeneficiaryImportService);
+                        mctsBeneficiaryValueProcessor, mctsBeneficiaryImportService,chunkSize);
                 Future<ThreadProcessorObject> future = executor.submit(callable);
                 list.add(future);
             }

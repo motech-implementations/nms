@@ -84,7 +84,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private MctsChildDataService mctsChildDataService;
     private DeactivatedBeneficiaryService deactivatedBeneficiaryService;
 
-    private SubscriptionDataService subscriptionDataService;
 
     // Number of rejected mother/children in a single query for bulk insert/update
     private static final Integer REJECTION_PART_SIZE = 5000;
@@ -134,26 +133,20 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             pregnancyPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.PREGNANCY);
         }
 
-        long maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_CAP));
-        LOGGER.debug("--------------------maxActiveSubscriptions--------------------------=> "+maxActiveSubscriptions);
-        if(isCapacityExceededCheck){
+        //check if capacity exceeded or not :subscription capacity bug fix open
+        if(isCapacityExceededCheck &&(!SubscriptionServiceImpl.isCapacityExceeded)){
+            long maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_CAP));
             long currentActive = subscriptionService.findSubscriptionCountByStatus(SubscriptionStatus.ACTIVE);
-            LOGGER.debug("--------------------currentActive--------------------------=> "+currentActive);
+            long openSlot=maxActiveSubscriptions-currentActive;
+            LOGGER.debug(" Current Active..=>"+currentActive+".....Max Capacity....=>"+maxActiveSubscriptions+"....Open slot....=>"+openSlot);
 
-//                    subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
-            long openslot=maxActiveSubscriptions-currentActive;
-            LOGGER.debug(" ........................openslot.................=> "+openslot);
-            if(openslot>0){
-                //capacity not exceeded
-            }
-            else {
-                //capacity exceeded
-                LOGGER.debug(" ........................CAPACITY EXCEEDED1 ==>.................=> ");
-
+            if(openSlot<0) {
                 SubscriptionServiceImpl.isCapacityExceeded=true;
-                LOGGER.debug(" ........................CAPACITY EXCEEDED2 ==>.................=> ");
+                LOGGER.debug("........................CAPACITY EXCEEDED......................x...");
             }
         }
+        //checked if capacity exceeded or not :subscription capacity bug fix close
+
 
         MctsMother mother;
         Long msisdn;

@@ -131,7 +131,7 @@ public final class KilkariConstants {
     public static final String SUBSCRIPTION_CAP = "kilkari.subscription.cap";
     public static final String SUBSCRIPTION_MANAGER_CRON = "kilkari.subscription.manager.cron";
     public static final String ACCEPT_NEW_SUBSCRIPTION_FOR_BLOCKED_MSISDN = "kilkari.accept_new_subscription_for_blocked_msisdn";
-
+    public static final String CHUNK_SIZE="kilkari.chunk.size";
 
     private KilkariConstants() {
     }

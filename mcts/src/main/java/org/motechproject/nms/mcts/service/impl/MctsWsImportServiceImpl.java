@@ -262,8 +262,8 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
         // creation reason: subscription capacity bug-fix
         long savedRecords=0; // 1000 maximum record allowed to save in database until it checks capacity from db
-        long maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_CAP));
-        boolean isCapacityExceeded=false;
+        boolean isCapacityExceededCheck=false;
+        long chunkSize = Long.parseLong(settingsFacade.getProperty(KilkariConstants.CHUNK_SIZE));
 
         for (Map<String, Object> recordMap : acceptedMotherRecords) {
             String mctsId = (String) recordMap.get(KilkariConstants.BENEFICIARY_ID);
@@ -273,7 +273,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                         (long) recordMap.get(KilkariConstants.STATE_ID),
                         (long) recordMap.get(KilkariConstants.DISTRICT_ID));
                 if (hpdValidation) {
-                    motherImportRejection = mctsBeneficiaryImportService.importMotherRecord(recordMap, SubscriptionOrigin.MCTS_IMPORT, locationFinder,isCapacityExceeded);
+                    motherImportRejection = mctsBeneficiaryImportService.importMotherRecord(recordMap, SubscriptionOrigin.MCTS_IMPORT, locationFinder,isCapacityExceededCheck);
                     if(motherImportRejection != null) {
                         rejectedMothers.put(motherImportRejection.getIdNo(), motherImportRejection);
                         rejectionStatus.put(motherImportRejection.getIdNo(), motherImportRejection.getAccepted());
@@ -290,23 +290,13 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                     LOGGER.info("saved mother {}", mctsId);
 
                     // creation reason: subscription capacity bug-fix open
+                    isCapacityExceededCheck=false;
                     savedRecords++;
-                    if(savedRecords>=3){
-
-                        long currentActive = subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
-                        long openslot=maxActiveSubscriptions-currentActive;
-                        if(openslot>0){
-                            //capacity not exceeded
-                            savedRecords=openslot<3?(3-openslot):0;
-
-                        }
-                        else {
-                            //capacity exceeded
-                            isCapacityExceeded=true;
-
-                        }
+                    LOGGER.debug("--------------------Chunk Size-------------------=>"+chunkSize);
+                    if(savedRecords>=chunkSize){
+                        isCapacityExceededCheck=true;
+                        savedRecords=0;
                     }
-
                     // creation reason: subscription capacity bug-fix close
 
 

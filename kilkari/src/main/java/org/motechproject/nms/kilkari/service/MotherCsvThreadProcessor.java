@@ -33,23 +33,25 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
     private LocationFinder locationFinder;
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
+    private long chunkSize;
 
-    private SubscriptionDataService subscriptionDataService;
-
-    @Autowired
-    @Qualifier("kilkariSettings")
-    private SettingsFacade settingsFacade;
+//    private SubscriptionDataService subscriptionDataService;
+//
+//    @Autowired
+//    @Qualifier("kilkariSettings")
+//    private SettingsFacade settingsFacade;
 
     public MotherCsvThreadProcessor(List<Map<String, Object>> recordList, Boolean mctsImport,
                                     SubscriptionOrigin importOrigin, LocationFinder locationFinder,
                                     MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor,
-                                    MctsBeneficiaryImportService mctsBeneficiaryImportService) {
+                                    MctsBeneficiaryImportService mctsBeneficiaryImportService,long chunkSize) {
         this.recordList = recordList;
         this.mctsImport = mctsImport;
         this.importOrigin = importOrigin;
         this.locationFinder = locationFinder;
         this.mctsBeneficiaryValueProcessor = mctsBeneficiaryValueProcessor;
         this.mctsBeneficiaryImportService = mctsBeneficiaryImportService;
+        this.chunkSize=chunkSize;
     }
 
     @Override
@@ -76,9 +78,7 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
         Timer timer = new Timer("mom", "moms");
 
         long savedRecords=0; // 1000 maximum record allowed to save in database until it checks capacity from db
-        long maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_CAP));
-        LOGGER.info(Long.toString(maxActiveSubscriptions));
-        boolean isCapacityExceeded=false;
+        boolean isCapacityExceededCheck=false;
 
         for (Map<String, Object> record : recordList) {
             count++;
@@ -99,7 +99,7 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
 
             try {
                 LOGGER.debug("Calling Import Mother Record for"  + count );
-                motherImportRejection = mctsBeneficiaryImportService.importMotherRecord(record, importOrigin, locationFinder,isCapacityExceeded);
+                motherImportRejection = mctsBeneficiaryImportService.importMotherRecord(record, importOrigin, locationFinder,isCapacityExceededCheck);
                 LOGGER.debug("Completed  Import Mother Record for" +  count);
                 if (motherImportRejection != null) {
                     if (mctsImport) {
@@ -114,22 +114,12 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
                     LOGGER.debug(KilkariConstants.IMPORTED, timer.frequency(count));
                 }
 
-                // changes made for subscription capacity bug-fix
+                // changes made for subscription capacity bug-fix open
+                isCapacityExceededCheck=false;
                 savedRecords++;
-                if(savedRecords>=1000){
-
-                    long currentActive = subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
-                    long openslot=maxActiveSubscriptions-currentActive;
-                    if(openslot>0){
-                        //capacity not exceeded
-                        savedRecords=openslot<1000?(1000-openslot):0;
-
-                    }
-                    else {
-                        //capacity exceeded
-                        isCapacityExceeded=true;
-
-                    }
+                if(savedRecords>=chunkSize){ // define the chunk
+                    isCapacityExceededCheck=true;
+                    savedRecords=0;
                 }
                 // subscription capacity bug-fix close
 

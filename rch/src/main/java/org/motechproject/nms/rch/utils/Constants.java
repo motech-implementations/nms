@@ -111,6 +111,7 @@ public final class Constants {
     public static final String END_DATE_PARAM = "end_date";
     public static final String STATE_PARAM = "state";
 
+    public static final String CHUNK_SIZE_RCH="rch.chunk.size";
 
     private Constants() {
     }
