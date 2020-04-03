@@ -450,6 +450,12 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
         Map<Long, Set<Long>> hpdMap = getHpdFilters();
 
+        // creation reason: subscription capacity bug-fix
+        long savedRecords=0; // 1000 maximum record allowed to save in database until it checks capacity from db
+        boolean isCapacityExceededCheck=false;
+        long chunkSize = Long.parseLong(settingsFacade.getProperty(KilkariConstants.CHUNK_SIZE));
+
+
         for (Map<String, Object> record : acceptedChildRecords) {
             String mctsId = (String) record.get(KilkariConstants.BENEFICIARY_ID);
             try {
@@ -459,7 +465,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                         (long) record.get(KilkariConstants.DISTRICT_ID));
 
                 if (hpdValidation) {
-                    childImportRejection = mctsBeneficiaryImportService.importChildRecord(record, SubscriptionOrigin.MCTS_IMPORT, locationFinder);
+                    childImportRejection = mctsBeneficiaryImportService.importChildRecord(record, SubscriptionOrigin.MCTS_IMPORT, locationFinder,isCapacityExceededCheck);
                     if (childImportRejection != null) {
                         rejectedChilds.put(childImportRejection.getIdNo(), childImportRejection);
                         rejectionStatus.put(childImportRejection.getIdNo(), childImportRejection.getAccepted());
@@ -471,6 +477,18 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                             LOGGER.info("rejected child {}", mctsId);
                         }
                     }
+
+
+                    // creation reason: subscription capacity bug-fix open
+                    isCapacityExceededCheck=false;
+                    savedRecords++;
+                    LOGGER.debug("--------------------Chunk Size-------------------=>"+chunkSize);
+                    if(savedRecords>=chunkSize){
+                        isCapacityExceededCheck=true;
+                        savedRecords=0;
+                    }
+                    // creation reason: subscription capacity bug-fix close
+
                 } else {
                     rejected++;
                     LOGGER.info("rejected child {}", mctsId);

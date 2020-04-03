@@ -303,7 +303,24 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
-    public ChildImportRejection importChildRecord(Map<String, Object> record, SubscriptionOrigin importOrigin, LocationFinder locationFinder) { //NOPMD NcssMethodCount
+    public ChildImportRejection importChildRecord(Map<String, Object> record, SubscriptionOrigin importOrigin, LocationFinder locationFinder,boolean isCapacityExceededCheck) { //NOPMD NcssMethodCount
+
+
+        //check if capacity exceeded or not :subscription capacity bug fix open
+        if(isCapacityExceededCheck &&(!SubscriptionServiceImpl.isCapacityExceeded)){
+            long maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_CAP));
+            long currentActive = subscriptionService.findSubscriptionCountByStatus(SubscriptionStatus.ACTIVE);
+            long openSlot=maxActiveSubscriptions-currentActive;
+            LOGGER.debug(" Current Active..=>"+currentActive+".....Max Capacity....=>"+maxActiveSubscriptions+"....Open slot....=>"+openSlot);
+
+            if(openSlot<0) {
+                SubscriptionServiceImpl.isCapacityExceeded=true;
+                LOGGER.debug("........................CAPACITY EXCEEDED......................x...");
+            }
+        }
+        //checked if capacity exceeded or not :subscription capacity bug fix close
+
+
         if (childPack == null) {
             childPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.CHILD);
         }

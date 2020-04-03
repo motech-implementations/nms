@@ -1967,9 +1967,11 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         ExecutorService executor = Executors.newCachedThreadPool();
         List<Future<ThreadProcessorObject>> list = new ArrayList<>();
 
+        long chunkSize = Long.parseLong(settingsFacade.getProperty(Constants.CHUNK_SIZE_RCH));
         for (int i = 0; i < recordListArray.size(); i++) {
+
             Callable<ThreadProcessorObject> callable = new ChildCsvThreadProcessor(recordListArray.get(i), false, SubscriptionOrigin.RCH_IMPORT, locationFinder,
-                    mctsBeneficiaryValueProcessor, mctsBeneficiaryImportService);
+                    mctsBeneficiaryValueProcessor, mctsBeneficiaryImportService,chunkSize);
             Future<ThreadProcessorObject> future = executor.submit(callable);
             list.add(future);
         }

@@ -18,7 +18,7 @@ public interface MctsBeneficiaryImportService {
 
     MotherImportRejection importMotherRecord(Map<String, Object> record, SubscriptionOrigin origin, LocationFinder locationFinder,boolean isCapacityExceeded);
 
-    ChildImportRejection importChildRecord(Map<String, Object> record, SubscriptionOrigin origin, LocationFinder locationFinder);
+    ChildImportRejection importChildRecord(Map<String, Object> record, SubscriptionOrigin origin, LocationFinder locationFinder,boolean  isCapacityExceededCheck);
 
     boolean validateReferenceDate(DateTime referenceDate, SubscriptionPackType packType, Long msisdn, String beneficiaryId, SubscriptionOrigin importOrigin);
 
