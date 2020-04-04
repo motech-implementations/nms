@@ -662,6 +662,11 @@
                 </exclusions>
             </dependency>
             <dependency>
+                <groupId>com.github.vladimir-bukhtoyarov</groupId>
+                <artifactId>bucket4j-core</artifactId>
+                <version>4.1.1</version>
+            </dependency>
+            <dependency>
                 <groupId>org.motechproject</groupId>
                 <artifactId>motech-platform-osgi-extender-fragment</artifactId>
                 <version>${motech.version}</version>
