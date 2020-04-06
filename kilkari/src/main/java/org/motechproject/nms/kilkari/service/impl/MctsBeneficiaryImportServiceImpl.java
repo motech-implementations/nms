@@ -140,7 +140,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             long openSlot=maxActiveSubscriptions-currentActive;
             LOGGER.debug(" Current Active..=>"+currentActive+".....Max Capacity....=>"+maxActiveSubscriptions+"....Open slot....=>"+openSlot);
 
-            if(openSlot<0) {
+            if(openSlot<=0) {
                 SubscriptionServiceImpl.isCapacityExceeded=true;
                 LOGGER.debug("........................CAPACITY EXCEEDED......................x...");
             }
@@ -313,7 +313,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             long openSlot=maxActiveSubscriptions-currentActive;
             LOGGER.debug(" Current Active..=>"+currentActive+".....Max Capacity....=>"+maxActiveSubscriptions+"....Open slot....=>"+openSlot);
 
-            if(openSlot<0) {
+            if(openSlot<=0) {
                 SubscriptionServiceImpl.isCapacityExceeded=true;
                 LOGGER.debug("........................CAPACITY EXCEEDED......................x...");
             }
