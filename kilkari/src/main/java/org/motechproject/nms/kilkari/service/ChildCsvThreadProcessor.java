@@ -32,7 +32,8 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
     private long chunkSize;
-
+    private static long savedRecords=0;
+    private static boolean isCapacityExceededCheck=false;
     public ChildCsvThreadProcessor(List<Map<String, Object>> recordList, Boolean mctsImport,
                                    SubscriptionOrigin importOrigin, LocationFinder locationFinder,
                                    MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor,
@@ -67,9 +68,6 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
         }
         int count = 0;
         Timer timer = new Timer("kid", "kids");
-
-        long savedRecords=0; // 1000 maximum record allowed to save in database until it checks capacity from db
-        boolean isCapacityExceededCheck=false;
 
         for(Map<String, Object> record : recordList) {
             count++;
@@ -112,7 +110,6 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
                     savedRecords=0;
                 }
                 // subscription capacity bug-fix close
-
             } catch (RuntimeException e) {
                 LOGGER.error("Child import Error. Error while importing child at msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id), e);
             }

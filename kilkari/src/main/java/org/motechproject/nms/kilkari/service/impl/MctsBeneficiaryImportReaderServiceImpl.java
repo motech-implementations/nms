@@ -54,7 +54,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportReaderServiceImpl.class);
 
     //Number of records to be processed by each thread
-    private static final int RECORDS_PART_SIZE = 10000;
+    private static final int RECORDS_PART_SIZE = 4;
 
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;

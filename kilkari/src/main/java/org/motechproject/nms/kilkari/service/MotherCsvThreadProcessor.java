@@ -34,7 +34,8 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
     private long chunkSize;
-
+    private static long savedRecords=0;
+    private static boolean isCapacityExceededCheck=false;
 //    private SubscriptionDataService subscriptionDataService;
 //
 //    @Autowired
@@ -76,9 +77,6 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
         }
         int count = 0;
         Timer timer = new Timer("mom", "moms");
-
-        long savedRecords=0; // 1000 maximum record allowed to save in database until it checks capacity from db
-        boolean isCapacityExceededCheck=false;
 
         for (Map<String, Object> record : recordList) {
             count++;
