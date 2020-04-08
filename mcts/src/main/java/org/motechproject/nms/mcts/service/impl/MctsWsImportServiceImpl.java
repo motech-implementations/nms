@@ -263,7 +263,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         // creation reason: subscription capacity bug-fix
         long savedRecords=0; // 1000 maximum record allowed to save in database until it checks capacity from db
         boolean isCapacityExceededCheck=false;
-        long chunkSize = Long.parseLong(settingsFacade.getProperty(KilkariConstants.CHUNK_SIZE));
+        long chunkSize = Long.parseLong(settingsFacade.getProperty(Constants.CHUNK_SIZE_MCTS));
 
         for (Map<String, Object> recordMap : acceptedMotherRecords) {
             String mctsId = (String) recordMap.get(KilkariConstants.BENEFICIARY_ID);
@@ -453,7 +453,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         // creation reason: subscription capacity bug-fix
         long savedRecords=0; // 1000 maximum record allowed to save in database until it checks capacity from db
         boolean isCapacityExceededCheck=false;
-        long chunkSize = Long.parseLong(settingsFacade.getProperty(KilkariConstants.CHUNK_SIZE));
+        long chunkSize= Long.parseLong(settingsFacade.getProperty(Constants.CHUNK_SIZE_MCTS));
 
 
         for (Map<String, Object> record : acceptedChildRecords) {

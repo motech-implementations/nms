@@ -32,7 +32,7 @@ public final class Constants {
     public static final String START_DATE_PARAM = "start_date";
     public static final String END_DATE_PARAM = "end_date";
     public static final String STATE_PARAM = "state";
-
+    public static final String CHUNK_SIZE_MCTS= "mcts.chunk.size";
     /**
      * Scheduler
      */
