@@ -11,6 +11,34 @@
 
     <mvc:annotation-driven />
 
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <mvc:mapping path="/mobileacademy/user"/>
+            <bean class="org.motechproject.nms.api.web.RateLimitInterceptor">
+                <constructor-arg value="1"></constructor-arg> </bean>
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/mobileacademy/sms/status/imi"/>
+            <bean class="org.motechproject.nms.api.web.RateLimitInterceptor">
+                <constructor-arg value="2"></constructor-arg> </bean>
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/mobileacademy/course"/>
+            <bean class="org.motechproject.nms.api.web.RateLimitInterceptor">
+                <constructor-arg value="2"></constructor-arg> </bean>
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/mobileacademy/courseVersion"/>
+            <bean class="org.motechproject.nms.api.web.RateLimitInterceptor">
+                <constructor-arg value="2"></constructor-arg> </bean>
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/mobileacademy/bookmarkWithScore"/>
+            <bean class="org.motechproject.nms.api.web.RateLimitInterceptor">
+                <constructor-arg value="4"></constructor-arg> </bean>
+        </mvc:interceptor>
+    </mvc:interceptors>
+
     <bean id="moduleRegistrationData" class="org.motechproject.osgi.web.ModuleRegistrationData">
         <constructor-arg name="moduleName" value="api" />
         <constructor-arg name="i18n">

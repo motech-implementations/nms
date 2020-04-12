@@ -27,6 +27,12 @@
             <version>${motech.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.github.vladimir-bukhtoyarov</groupId>
+            <artifactId>org.motechproject.com.github.vladimir-bukhtoyarov</artifactId>
+            <version>4.1.1-${external.dependency.release.tag.new}</version>
+        </dependency>
+
 
         <!-- common properties -->
         <dependency>
@@ -40,11 +46,6 @@
             <groupId>org.motechproject.nms</groupId>
             <artifactId>kilkari</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.vladimir-bukhtoyarov</groupId>
-            <artifactId>bucket4j-core</artifactId>
-            <version>4.1.1</version>
         </dependency>
 
         <!-- Region -->
@@ -60,6 +61,7 @@
             <version>3.1.0</version>
             <scope>provided</scope>
         </dependency>
+
     </dependencies>
 
     <repositories>

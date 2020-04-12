@@ -1,15 +1,16 @@
-package org.motechproject.nms.imi.web;
+package org.motechproject.nms.api.web;
+
 import io.github.bucket4j.*;
 import org.springframework.web.servlet.HandlerInterceptor;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 public class RateLimitInterceptor implements HandlerInterceptor {
-//
+    //
     private final Bucket bucket;
 
     public RateLimitInterceptor(int capacity) {
@@ -20,7 +21,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request,
-                                 HttpServletResponse response, Object handler) throws Exception {
+                             HttpServletResponse response, Object handler) throws Exception {
         System.out.println("Inside pre handle");
         ConsumptionProbe probe = this.bucket.tryConsumeAndReturnRemaining(1);
         if (probe.isConsumed()) {
@@ -47,4 +48,4 @@ public class RateLimitInterceptor implements HandlerInterceptor {
                                 Object handler, Exception ex)  throws Exception {
     }
 
-    }
+}

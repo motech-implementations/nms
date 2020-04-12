@@ -11,8 +11,16 @@
 
     <mvc:annotation-driven />
     <mvc:interceptors>
+        <mvc:interceptor>
+            <mvc:mapping path="/generateTargetFile"/>
         <bean class="org.motechproject.nms.imi.web.RateLimitInterceptor">
             <constructor-arg value="1"></constructor-arg> </bean>
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/cdrFileNotification"/>
+            <bean class="org.motechproject.nms.imi.web.RateLimitInterceptor">
+                <constructor-arg value="2"></constructor-arg> </bean>
+        </mvc:interceptor>
     </mvc:interceptors>
     <bean id="moduleRegistrationData" class="org.motechproject.osgi.web.ModuleRegistrationData">
         <constructor-arg name="moduleName" value="imi" />
