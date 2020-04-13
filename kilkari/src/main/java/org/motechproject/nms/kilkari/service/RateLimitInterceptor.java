@@ -18,7 +18,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     private final String api;
     private final String USER_AGENT = "Mozilla/5.0";
     private final int capacity;
-    private final String email = "srivalli@beehyv.com";
+    private final String email = "swathi.g@beehyv.com";
 
     public RateLimitInterceptor(int capacity, String api) {
         this.capacity = capacity;
@@ -38,7 +38,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
             Long remTokens = probe.getRemainingTokens();
             response.addHeader("X-Rate-Limit-Remaining",
                     Long.toString(remTokens));
-            if(remTokens<=(0.5*capacity)){
+            if(remTokens==(0.6*capacity)){
                 sendEmailAlert(remTokens);
                 System.out.println("sendEmailAlert "+api + remTokens);
             }
