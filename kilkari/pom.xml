@@ -60,6 +60,10 @@
             <artifactId>rejection-handler</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.vladimir-bukhtoyarov</groupId>
+            <artifactId>org.motechproject.com.github.vladimir-bukhtoyarov</artifactId>
+        </dependency>
 
     </dependencies>
 
