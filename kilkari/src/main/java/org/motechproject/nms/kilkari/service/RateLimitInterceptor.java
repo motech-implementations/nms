@@ -18,7 +18,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     private final String api;
     private final String USER_AGENT = "Mozilla/5.0";
     private final int capacity;
-    private final String email = "swathi.g@beehyv.com";
+    private final String email = "srivalli@beehyv.com";
 
     public RateLimitInterceptor(int capacity, String api) {
         this.capacity = capacity;
@@ -35,12 +35,16 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         ConsumptionProbe probe = this.bucket.tryConsumeAndReturnRemaining(1);
 
         if (probe.isConsumed()) {
-            Long remTokens = probe.getRemainingTokens();
+            long remTokens = probe.getRemainingTokens();
             response.addHeader("X-Rate-Limit-Remaining",
                     Long.toString(remTokens));
+            System.out.println("remaning tokens for this api for this min "+remTokens);
             if(remTokens==(0.4*capacity)){
-                sendEmailAlert(remTokens);
+                sendEmailAlert(remTokens, "warning", 60);
                 System.out.println("sendEmailAlert "+api + remTokens);
+            }
+            if(remTokens==(0.2*capacity)){
+                sendEmailAlert(remTokens, "critical", 80);
             }
             return true;
         }
@@ -63,8 +67,9 @@ public class RateLimitInterceptor implements HandlerInterceptor {
                                 Object handler, Exception ex)  throws Exception {
     }
 
-    public void sendEmailAlert(Long remTokens) throws Exception {
-        String finalUrl = url + "?api=" + api + "&remTokens=" + remTokens + "email=" + email;
+    public void sendEmailAlert(long remTokens, String status, long perc) throws Exception {
+        String finalUrl = url + "?api=" + api + "&remTokens=" + remTokens + "&email=" + email + "&status=" + status
+                 + "&perc=" + perc;
         URL obj = new URL(finalUrl);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 

@@ -15,77 +15,77 @@
         <mvc:interceptor>
             <mvc:mapping path="/kilkari/user"/>
             <bean class="org.motechproject.nms.kilkari.service.RateLimitInterceptor">
-                <constructor-arg type="java.lang.String" value="kilkari/user"></constructor-arg>
+                <constructor-arg type="java.lang.String" value="kilkari_user"></constructor-arg>
                 <constructor-arg type="int" value="100"></constructor-arg>
             </bean>
         </mvc:interceptor>
         <mvc:interceptor>
             <mvc:mapping path="/kilkari/inbox"/>
             <bean class="org.motechproject.nms.kilkari.service.RateLimitInterceptor">
-                <constructor-arg type="java.lang.String" value="kilkari/inbox"></constructor-arg>
+                <constructor-arg type="java.lang.String" value="kilkari_inbox"></constructor-arg>
                 <constructor-arg type="int" value="100"></constructor-arg>
             </bean>
         </mvc:interceptor>
         <mvc:interceptor>
             <mvc:mapping path="/kilkari/subscription"/>
             <bean class="org.motechproject.nms.kilkari.service.RateLimitInterceptor">
-                <constructor-arg type="java.lang.String" value="kilkari/subscription"></constructor-arg>
+                <constructor-arg type="java.lang.String" value="kilkari_subscription"></constructor-arg>
                 <constructor-arg type="int" value="200"></constructor-arg>
             </bean>
         </mvc:interceptor>
         <mvc:interceptor>
             <mvc:mapping path="/kilkari/inboxCallDetails"/>
             <bean class="org.motechproject.nms.kilkari.service.RateLimitInterceptor">
-                <constructor-arg type="java.lang.String" value="kilkari/inboxCallDetails"></constructor-arg>
+                <constructor-arg type="java.lang.String" value="kilkari_inboxCallDetails"></constructor-arg>
                 <constructor-arg type="int" value="100"></constructor-arg>
             </bean>
         </mvc:interceptor>
         <mvc:interceptor>
             <mvc:mapping path="/mobileacademy/user"/>
             <bean class="org.motechproject.nms.kilkari.service.RateLimitInterceptor">
-                <constructor-arg type="java.lang.String" value="mobileacademy/user"></constructor-arg>
+                <constructor-arg type="java.lang.String" value="mobileacademy_user"></constructor-arg>
                 <constructor-arg type="int" value="100"></constructor-arg>
             </bean>
         </mvc:interceptor>
         <mvc:interceptor>
             <mvc:mapping path="/mobileacademy/sms/status/imi"/>
             <bean class="org.motechproject.nms.kilkari.service.RateLimitInterceptor">
-                <constructor-arg type="java.lang.String" value="sms/status/imi"></constructor-arg>
+                <constructor-arg type="java.lang.String" value="sms_status_imi"></constructor-arg>
                 <constructor-arg type="int" value="100"></constructor-arg>
             </bean>
         </mvc:interceptor>
         <mvc:interceptor>
             <mvc:mapping path="/mobileacademy/course"/>
             <bean class="org.motechproject.nms.kilkari.service.RateLimitInterceptor">
-            <constructor-arg type="java.lang.String" value="mobileacademy/course"></constructor-arg>
+            <constructor-arg type="java.lang.String" value="mobileacademy_course"></constructor-arg>
             <constructor-arg type="int" value="100"></constructor-arg>
             </bean>
         </mvc:interceptor>
         <mvc:interceptor>
             <mvc:mapping path="/mobileacademy/courseVersion"/>
             <bean class="org.motechproject.nms.kilkari.service.RateLimitInterceptor">
-                <constructor-arg type="java.lang.String" value="mobileacademy/courseVersion"></constructor-arg>
+                <constructor-arg type="java.lang.String" value="mobileacademy_courseVersion"></constructor-arg>
                 <constructor-arg type="int" value="100"></constructor-arg>
             </bean>
         </mvc:interceptor>
         <mvc:interceptor>
             <mvc:mapping path="/mobileacademy/bookmarkWithScore"/>
             <bean class="org.motechproject.nms.kilkari.service.RateLimitInterceptor">
-            <constructor-arg type="java.lang.String" value="mobileacademy/bookmarkWithScore"></constructor-arg>
+            <constructor-arg type="java.lang.String" value="mobileacademy_bookmarkWithScore"></constructor-arg>
             <constructor-arg type="int" value="200"></constructor-arg>
             </bean>
         </mvc:interceptor>
         <mvc:interceptor>
             <mvc:mapping path="/mobileacademy/callDetails"/>
             <bean class="org.motechproject.nms.kilkari.service.RateLimitInterceptor">
-                <constructor-arg type="java.lang.String" value="mobileacademy/callDetails"></constructor-arg>
+                <constructor-arg type="java.lang.String" value="mobileacademy_callDetails"></constructor-arg>
                 <constructor-arg type="int" value="100"></constructor-arg>
             </bean>
         </mvc:interceptor>
         <mvc:interceptor>
             <mvc:mapping path="/mobileacademy/languageLocationCode"/>
             <bean class="org.motechproject.nms.kilkari.service.RateLimitInterceptor">
-                <constructor-arg type="java.lang.String" value="mobileacademy/languageLocationCode"></constructor-arg>
+                <constructor-arg type="java.lang.String" value="mobileacademy_languageLocationCode"></constructor-arg>
                 <constructor-arg type="int" value="100"></constructor-arg>
             </bean>
         </mvc:interceptor>
