@@ -18,7 +18,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     private final String api;
     private final String USER_AGENT = "Mozilla/5.0";
     private final int capacity;
-    private final String email = "srivalli@beehyv.com";
+    private final String email = "motech-support@beehyv.in";
 
     public RateLimitInterceptor(int capacity, String api) {
         this.capacity = capacity;
@@ -68,7 +68,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     }
 
     public void sendEmailAlert(long remTokens, String status, long perc) throws Exception {
-        String finalUrl = url + "?api=" + api + "&remTokens=" + remTokens + "&email=" + email + "&status=" + status
+        String finalUrl = url + "?api=" + api + "&capacity=" + remTokens + "&email=" + email + "&status=" + status
                  + "&perc=" + perc;
         URL obj = new URL(finalUrl);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
