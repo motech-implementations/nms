@@ -195,11 +195,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         mother.setName(name);
         mother.setDateOfBirth(motherDOB);
-        mother.setLastMenstrualPeriod(lmp);
+        //mother.setLastMenstrualPeriod(lmp);
         mother.setUpdatedDateNic(lastUpdatedDateNic);
-        if (mother.getId() != null) {
+        if (mother.getId() != null && mother.getLastMenstrualPeriod() == null) {
             mctsMotherDataService.update(mother);
         }
+        mother.setLastMenstrualPeriod(lmp);
 
 
         // Check if existing subscription needs to be deactivated
