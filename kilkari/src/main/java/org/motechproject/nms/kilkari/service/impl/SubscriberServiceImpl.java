@@ -365,6 +365,8 @@ public class SubscriberServiceImpl implements SubscriberService {
                     subscriberByRchId.setCallingNumber(msisdn);
                     Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                     subscriberByRchId.setLastMenstrualPeriod(lmp);
+                    subscriberByRchId.setCaseNo(caseNo);
+                    motherUpdate.setMaxCaseNo(caseNo);
                     subscriberByRchId.setModificationDate(DateTime.now());
                     return updateOrCreateSubscription(subscriberByRchId, subscription, lmp, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
                 }
