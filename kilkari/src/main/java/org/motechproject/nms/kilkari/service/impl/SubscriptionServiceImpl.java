@@ -65,6 +65,7 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Implementation of the {@link SubscriptionService} interface.
@@ -86,6 +87,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private BlockedMsisdnRecordDataService blockedMsisdnRecordDataService;
     private DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService;
     private SubscriberMsisdnTrackerDataService subscriberMsisdnTrackerDataService;
+    public static AtomicBoolean isCapacityAvailable = new AtomicBoolean(true);
 
 
     @Autowired
@@ -490,16 +492,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         Subscription subscription = new Subscription(subscriber, pack, importOrigin);
         subscription.setStartDate(startDate);
         subscription.setNeedsWelcomeMessageViaObd(true);
+        LOGGER.info("capacity"+isCapacityAvailable.get());
+            if (isCapacityAvailable.get()) {
+                subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
+            } else {
+                LOGGER.debug("System at capacity, No new MCTS subscriptions allowed. Setting status to HOLD");
+                subscription.setStatus(SubscriptionStatus.HOLD);
+            }
 
-        if (allowMctsSubscriptions) {
-            subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
-        } else {
-            LOGGER.debug("System at capacity, No new MCTS subscriptions allowed. Setting status to HOLD");
-            subscription.setStatus(SubscriptionStatus.HOLD);
-        }
-
-        LOGGER.info("Creating Subscription ()", subscription.getSubscriptionId());
-        return subscriptionDataService.create(subscription);
+            LOGGER.info("Creating Subscription ()", subscription.getSubscriptionId());
+            return subscriptionDataService.create(subscription);
     }
 
     /**

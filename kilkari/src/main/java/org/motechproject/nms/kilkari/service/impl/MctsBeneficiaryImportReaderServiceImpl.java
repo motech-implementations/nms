@@ -21,9 +21,11 @@ import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.region.service.LocationService;
+import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
@@ -52,17 +54,19 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
     private static final Logger LOGGER = LoggerFactory.getLogger(MctsBeneficiaryImportReaderServiceImpl.class);
 
     //Number of records to be processed by each thread
-    private static final int RECORDS_PART_SIZE = 10000;
+    private static final String RECORDS_PART_SIZE = "kilkari.thread.size";
 
     private MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor;
     private MctsBeneficiaryImportService mctsBeneficiaryImportService;
     private LocationService locationService;
+    private SettingsFacade settingsFacade;
 
     @Autowired
-    public MctsBeneficiaryImportReaderServiceImpl(MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor, MctsBeneficiaryImportService mctsBeneficiaryImportService, LocationService locationService) {
+    public MctsBeneficiaryImportReaderServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade, MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor, MctsBeneficiaryImportService mctsBeneficiaryImportService, LocationService locationService) {
         this.mctsBeneficiaryValueProcessor = mctsBeneficiaryValueProcessor;
         this.mctsBeneficiaryImportService = mctsBeneficiaryImportService;
         this.locationService = locationService;
+        this.settingsFacade = settingsFacade;
     }
 
     @Override //NO CHECKSTYLE Cyclomatic Complexity
@@ -72,6 +76,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
          * This is used just for debugging purpose.
          */
         int rejectedWithException = 0;
+        mctsBeneficiaryImportService.setChildRecords(0);
 
         BufferedReader bufferedReader = new BufferedReader(reader);
         Map<String, CellProcessor> cellProcessorMapper;
@@ -170,6 +175,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
          * This is used just for debugging purpose.
          */
         int rejectedWithException = 0;
+        mctsBeneficiaryImportService.setRecords(0);
 
         BufferedReader bufferedReader = new BufferedReader(reader);
         Map<String, CellProcessor> cellProcessorMapper;
@@ -254,7 +260,8 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
         int count = 0;
         while (count < recordList.size()) {
             List<Map<String, Object>> recordListPart = new ArrayList<>();
-            while (recordListPart.size() < RECORDS_PART_SIZE && count < recordList.size()) {
+            int threadSize = Integer.parseInt(settingsFacade.getProperty(RECORDS_PART_SIZE));
+            while (recordListPart.size() < threadSize && count < recordList.size()) {
                 recordListPart.add(recordList.get(count));
                 count++;
             }

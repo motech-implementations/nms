@@ -237,6 +237,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
     public MctsImportAudit saveImportedMothersData(MothersDataSet mothersDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) { //NOPMD NcssMethodCount
         LOGGER.info("Starting mother import for state {}", stateName);
+        mctsBeneficiaryImportService.setRecords(0);
         List<MotherRecord> motherRecords = mothersDataSet.getRecords();
         List<Map<String, Object>> validMotherRecords = new ArrayList<>();
         validMotherRecords = getLMPValidRecords(motherRecords);
@@ -413,6 +414,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
 
         int saved = 0;
         int rejected = childRecords.size() - validChildRecords.size();
+        mctsBeneficiaryImportService.setChildRecords(0);
 
         Map<String, Object> rejectedChilds = new HashMap<>();
         Map<String, Object> rejectionStatus = new HashMap<>();
