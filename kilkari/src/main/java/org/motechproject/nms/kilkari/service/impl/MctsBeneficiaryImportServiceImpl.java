@@ -193,14 +193,13 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
            return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
         }
 
-        mother.setName(name);
-        mother.setDateOfBirth(motherDOB);
-        //mother.setLastMenstrualPeriod(lmp);
-        mother.setUpdatedDateNic(lastUpdatedDateNic);
         if (mother.getId() != null && mother.getLastMenstrualPeriod() == null) {
+            mother.setName(name);
+            mother.setDateOfBirth(motherDOB);
+            //mother.setLastMenstrualPeriod(lmp);
+            mother.setUpdatedDateNic(lastUpdatedDateNic);
             mctsMotherDataService.update(mother);
         }
-        mother.setLastMenstrualPeriod(lmp);
 
 
         // Check if existing subscription needs to be deactivated
@@ -234,7 +233,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block " + beneficiaryId);
                     return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ACTIVE_CHILD_PRESENT, false);
                 }
-                subscription = subscriberService.updateMotherSubscriber(msisdn, mother, lmp, record, action);
+                subscription = subscriberService.updateMotherSubscriber(msisdn, mother, lmp, record, action,name,motherDOB,lastUpdatedDateNic);
                 if (subscription == null) {
                     LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block " + beneficiaryId);
                     return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED, false);
@@ -252,7 +251,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block " + beneficiaryId);
                     return motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.INVALID_CASE_NO.toString(), action);
                 }
-                subscription = subscriberService.updateRchMotherSubscriber(msisdn, mother, lmp, caseNo, deactivate, record, action);
+                subscription = subscriberService.updateRchMotherSubscriber(msisdn, mother, lmp, caseNo, deactivate, record, action,name,motherDOB,lastUpdatedDateNic);
                 if (subscription == null) {
                     LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block " + beneficiaryId);
                     return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED, false);
