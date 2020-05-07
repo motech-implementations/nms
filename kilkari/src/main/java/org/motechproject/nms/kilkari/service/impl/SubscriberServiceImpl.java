@@ -248,29 +248,19 @@ public class SubscriberServiceImpl implements SubscriberService {
                             Subscription childSubscription = subscriptionService.getIVRSubscription(subscriptions, SubscriptionPackType.CHILD);
                             if (childSubscription == null) {
                                 //update the anonymous mother with MCTS details
+                                motherUpdate.setLastMenstrualPeriod(lmp);
                                 subscriber.setLastMenstrualPeriod(lmp);
                                 subscriber.setMother(motherUpdate);
                                 subscriber.setModificationDate(DateTime.now());
-
-                                //change 1
-                                motherUpdate.setName(name);
-                                motherUpdate.setDateOfBirth(motherDOB);
-                                motherUpdate.setLastMenstrualPeriod(lmp);
-                                motherUpdate.setUpdatedDateNic(lastUpdatedDateNic);
                                 return updateOrCreateSubscription(subscriber, motherSubscription, lmp, pack, language, circle, SubscriptionOrigin.MCTS_IMPORT, false);
                             } else {
                                 // Both IVR mother and child exists. Create a new subscriber record for mother and set the same in existing motherSubscription
                                 subscriberByMctsId = new Subscriber(msisdn, language);
                                 subscriberByMctsId.setLastMenstrualPeriod(lmp);
+                                motherUpdate.setLastMenstrualPeriod(lmp);
                                 subscriberByMctsId.setMother(motherUpdate);
                                 subscriberByMctsId = create(subscriberByMctsId);
                                 motherSubscription.setSubscriber(subscriberByMctsId);
-
-                                //change 2
-                                motherUpdate.setName(name);
-                                motherUpdate.setDateOfBirth(motherDOB);
-                                motherUpdate.setLastMenstrualPeriod(lmp);
-                                motherUpdate.setUpdatedDateNic(lastUpdatedDateNic);
 
                                 return updateOrCreateSubscription(subscriberByMctsId, motherSubscription, lmp, pack, language, circle, SubscriptionOrigin.MCTS_IMPORT, false);
                             }
@@ -283,30 +273,26 @@ public class SubscriberServiceImpl implements SubscriberService {
             if (subscriberByMsisdns.isEmpty()) {   //no subscriber attached to the new number
                 // We got here because beneficiary's phone number changed
                 subscriptionService.deleteBlockedMsisdn(motherUpdate.getId(), subscriberByMctsId.getCallingNumber(), msisdn);
+                motherUpdate.setName(name);
+                motherUpdate.setDateOfBirth(motherDOB);
+                motherUpdate.setLastMenstrualPeriod(lmp);
+                motherUpdate.setUpdatedDateNic(lastUpdatedDateNic);
                 subscriberByMctsId.setCallingNumber(msisdn);
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
                 subscriberByMctsId.setLastMenstrualPeriod(lmp);
                 subscriberByMctsId.setModificationDate(DateTime.now());
 
-                //change 3
-                motherUpdate.setName(name);
-                motherUpdate.setDateOfBirth(motherDOB);
-                motherUpdate.setLastMenstrualPeriod(lmp);
-                motherUpdate.setUpdatedDateNic(lastUpdatedDateNic);
                 return updateOrCreateSubscription(subscriberByMctsId, subscription, lmp, pack, language, circle, SubscriptionOrigin.MCTS_IMPORT, false);
             } else {    // we have a subscriber by phone# and also one with the MCTS id
                 for (Subscriber subscriber : subscriberByMsisdns) {
                     if (subscriberByMctsId.getId().equals(subscriber.getId())) {
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriberByMctsId, pack.getType());
-                        subscriberByMctsId.setLastMenstrualPeriod(lmp);
-                        subscriberByMctsId.setModificationDate(DateTime.now());
-
-
-                        //change 4
                         motherUpdate.setName(name);
                         motherUpdate.setDateOfBirth(motherDOB);
                         motherUpdate.setLastMenstrualPeriod(lmp);
                         motherUpdate.setUpdatedDateNic(lastUpdatedDateNic);
+                        subscriberByMctsId.setLastMenstrualPeriod(lmp);
+                        subscriberByMctsId.setModificationDate(DateTime.now());
                         return updateOrCreateSubscription(subscriberByMctsId, subscription, lmp, pack, language, circle, SubscriptionOrigin.MCTS_IMPORT, false);
                     }
                 }
@@ -335,15 +321,10 @@ public class SubscriberServiceImpl implements SubscriberService {
                 // create subscriber, beneficiary, subscription and return
                 Subscriber subscriberByMsisdn = new Subscriber(msisdn, language);
                 subscriberByMsisdn.setLastMenstrualPeriod(lmp);
+                motherUpdate.setLastMenstrualPeriod(lmp);
                 subscriberByMsisdn.setMother(motherUpdate);
                 subscriberByMsisdn.setCaseNo(caseNo);
                 motherUpdate.setMaxCaseNo(caseNo);
-
-                //change 1
-                motherUpdate.setName(name);
-                motherUpdate.setDateOfBirth(motherDOB);
-                motherUpdate.setLastMenstrualPeriod(lmp);
-                motherUpdate.setUpdatedDateNic(lastUpdatedDateNic);
 
                 create(subscriberByMsisdn);
                 return subscriptionService.createSubscription(subscriberByMsisdn, msisdn, language, circle, pack, SubscriptionOrigin.RCH_IMPORT);
@@ -354,15 +335,10 @@ public class SubscriberServiceImpl implements SubscriberService {
                 } else {
                     Subscriber subscriberByMsisdn = new Subscriber(msisdn, language);
                     subscriberByMsisdn.setLastMenstrualPeriod(lmp);
+                    motherUpdate.setLastMenstrualPeriod(lmp);
                     subscriberByMsisdn.setMother(motherUpdate);
                     subscriberByMsisdn.setCaseNo(caseNo);
                     motherUpdate.setMaxCaseNo(caseNo);
-
-                    //change 2
-                    motherUpdate.setName(name);
-                    motherUpdate.setDateOfBirth(motherDOB);
-                    motherUpdate.setLastMenstrualPeriod(lmp);
-                    motherUpdate.setUpdatedDateNic(lastUpdatedDateNic);
 
                     create(subscriberByMsisdn);
                     return subscriptionService.createSubscription(subscriberByMsisdn, msisdn, language, circle, pack, SubscriptionOrigin.RCH_IMPORT);
@@ -383,8 +359,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                 subscriberByRchId.setLastMenstrualPeriod(lmp);
                 subscriberByRchId.setModificationDate(DateTime.now());
-
-                //channge 3
                 motherUpdate.setName(name);
                 motherUpdate.setDateOfBirth(motherDOB);
                 motherUpdate.setLastMenstrualPeriod(lmp);
@@ -398,7 +372,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                         motherUpdate.setMaxCaseNo(caseNo);
                         subscriberByRchId.setLastMenstrualPeriod(lmp);
 
-                        //change 4
                         motherUpdate.setName(name);
                         motherUpdate.setDateOfBirth(motherDOB);
                         motherUpdate.setLastMenstrualPeriod(lmp);
@@ -420,15 +393,14 @@ public class SubscriberServiceImpl implements SubscriberService {
                     subscriberByRchId.setCallingNumber(msisdn);
                     Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                     subscriberByRchId.setLastMenstrualPeriod(lmp);
-                    subscriberByRchId.setCaseNo(caseNo);
-                    motherUpdate.setMaxCaseNo(caseNo);
-                    subscriberByRchId.setModificationDate(DateTime.now());
-
-                    //change 5
                     motherUpdate.setName(name);
                     motherUpdate.setDateOfBirth(motherDOB);
                     motherUpdate.setLastMenstrualPeriod(lmp);
                     motherUpdate.setUpdatedDateNic(lastUpdatedDateNic);
+                    subscriberByRchId.setCaseNo(caseNo);
+                    motherUpdate.setMaxCaseNo(caseNo);
+                    subscriberByRchId.setModificationDate(DateTime.now());
+
                     return updateOrCreateSubscription(subscriberByRchId, subscription, lmp, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
                 }
             }
