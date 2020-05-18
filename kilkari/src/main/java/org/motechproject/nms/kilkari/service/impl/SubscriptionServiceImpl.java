@@ -500,7 +500,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 subscription.setStatus(SubscriptionStatus.HOLD);
             }
 
-            LOGGER.info("Creating Subscription ()", subscription.getSubscriptionId());
+            LOGGER.info("Creating Subscription ()" + subscription.getSubscriptionId()+" with status "+subscription.getStatus().toString());
             return subscriptionDataService.create(subscription);
     }
 
