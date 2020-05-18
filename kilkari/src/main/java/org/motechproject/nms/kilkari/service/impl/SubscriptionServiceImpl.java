@@ -728,7 +728,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             } else { // CHILD pack
                 subscription.setStartDate(newReferenceDate);
             }
+            if (isCapacityAvailable.get())
             subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
+            else subscription.setStatus(SubscriptionStatus.HOLD);
             if (subscription.getOrigin() == SubscriptionOrigin.IVR) {  // Start Date gets updated through MCTS
                 subscription.setOrigin(SubscriptionOrigin.MCTS_IMPORT);
             }
