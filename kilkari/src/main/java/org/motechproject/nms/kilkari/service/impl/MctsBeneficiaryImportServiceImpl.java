@@ -433,7 +433,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 Long maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_CAP));
                 LOGGER.info("subscription capacity" + maxActiveSubscriptions + " " + childRecords);
                 Long currentActive = subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
-                LOGGER.info("current active" + currentActive + " " + childRecords);
+                LOGGER.info("current active" + currentActive);
                 SubscriptionServiceImpl.isCapacityAvailable.set(currentActive < maxActiveSubscriptions);
             }
             LOGGER.info("capacity available"+SubscriptionServiceImpl.isCapacityAvailable.get());
