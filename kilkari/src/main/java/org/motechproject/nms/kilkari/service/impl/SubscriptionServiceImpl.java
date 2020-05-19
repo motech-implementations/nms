@@ -728,12 +728,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             } else { // CHILD pack
                 subscription.setStartDate(newReferenceDate);
             }
-            if (isCapacityAvailable.get())
-            subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
-            else subscription.setStatus(SubscriptionStatus.HOLD);
+            if (isCapacityAvailable.get()||(!isCapacityAvailable.get()&&subscription.getStatus()==SubscriptionStatus.ACTIVE)) {
+                subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
+            }
+            else {
+                subscription.setStatus(SubscriptionStatus.HOLD);
+            }
             if (subscription.getOrigin() == SubscriptionOrigin.IVR) {  // Start Date gets updated through MCTS
                 subscription.setOrigin(SubscriptionOrigin.MCTS_IMPORT);
             }
+            LOGGER.info("Updating subscription "+subscription.getSubscriptionId()+" with status "+subscription.getStatus().toString());
             subscriptionDataService.update(subscription);
         } catch (ConstraintViolationException e) {
             LOGGER.error("3: List of constraints: {}", e.getConstraintViolations());
