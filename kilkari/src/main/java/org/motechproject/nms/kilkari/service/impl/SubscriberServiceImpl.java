@@ -637,6 +637,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriber, pack.getType());
                         finalSubscription = updateOrCreateSubscription(subscriber, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
                     } else {
+                        //this method is checking only with active child subscriber, to fix this we use boolean activeSubscriptionExists
 //                        if (subscriptionService.activeSubscriptionByMsisdnRch(subscribersByMsisdn,msisdn, SubscriptionPackType.CHILD, motherRchId, childUpdate.getRchId())) {
                        if(activeSubscriptionExists){
                             return childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action);
@@ -658,6 +659,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     create(subscriber);
                     finalSubscription = subscriptionService.createSubscription(subscriber, msisdn, language, pack, SubscriptionOrigin.RCH_IMPORT);
                 } else {
+                    //this method is checking only with active child subscriber, to fix this we use boolean activeSubscriptionExists
 //                    if (subscriptionService.activeSubscriptionByMsisdnRch(subscribersByMsisdn,msisdn, SubscriptionPackType.CHILD, motherRchId, childUpdate.getRchId())) {
                       if(activeSubscriptionExists){
                         return childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action);
