@@ -84,7 +84,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                 return motherByRchId;
             } else {
                 motherByMctsId = mctsMotherDataService.findByBeneficiaryId(mctsId);
-                if (motherByMctsId == null && motherByRchId.getBeneficiaryId() != null) {
+                if (motherByMctsId == null) { // removed the condition motherByRchId.getBeneficiaryId() != null to fix "mcts null field update" issue
                     motherByRchId.setBeneficiaryId(mctsId);
                     return motherByRchId;
                 } else {
