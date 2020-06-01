@@ -1,0 +1,6 @@
+package org.motechproject.nms.rejectionhandler.service.impl;
+
+import org.motechproject.nms.rejectionhandler.service.VillageHealthSubFacilityRejectionService;
+
+public class VillageHealthSubFacilityRejectionServiceImpl implements VillageHealthSubFacilityRejectionService {
+}

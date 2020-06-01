@@ -15,6 +15,9 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.utils.LocationConstants;
+import org.motechproject.nms.rejectionhandler.domain.DistrictImportRejection;
+import org.motechproject.nms.rejectionhandler.repository.DistrictRejectionDataService;
+import org.motechproject.nms.rejectionhandler.service.DistrictRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.motechproject.nms.region.domain.LocationRejectionReasons;
 @Service("districtService")
 public class DistrictServiceImpl implements DistrictService {
 
@@ -40,11 +44,14 @@ public class DistrictServiceImpl implements DistrictService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DistrictServiceImpl.class);
 
     private DistrictDataService districtDataService;
+    private DistrictRejectionService districtRejectionService;
 
     @Autowired
-    public DistrictServiceImpl(DistrictDataService districtDataService) {
+    public DistrictServiceImpl(DistrictDataService districtDataService, DistrictRejectionService districtRejectionService) {
         this.districtDataService = districtDataService;
+        this.districtRejectionService  = districtRejectionService;
     }
+
 
     @Override
     public Set<District> getAllForLanguage(final Language language) {
@@ -209,7 +216,28 @@ public class DistrictServiceImpl implements DistrictService {
                     stringBuilder.append(")");
 
                     i++;
+                }else if(state == null){
+                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID),(Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.PARENT_LOCATION_NOT_PRESENT_IN_DB.toString());
+                    districtRejectionService.createUpdateRejectedDistrict(districtImportRejection);
                 }
+                else if(state != null && districtCode == null){
+                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), null,(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.DISTRICT_CODE_NOT_PRESENT_IN_FILE.toString());
+                    districtRejectionService.createUpdateRejectedDistrict(districtImportRejection);
+                }
+                else if(state !=null && districtCode != null && (districtName == null || districtName.trim().isEmpty())){
+                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), null,(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.DISTRICT_NAME_NOT_PRESENT_IN_FILE.toString());
+                    districtRejectionService.createUpdateRejectedDistrict(districtImportRejection);
+                }
+                else if(state != null && districtCode != null && (districtName != null && !districtName.trim().isEmpty()) && ((Long) (0L)).equals(districtCode)){
+                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), null,(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.DISTRICT_CODE_ZERO_IN_FILE.toString());
+                    districtRejectionService.createUpdateRejectedDistrict(districtImportRejection);
+                }
+
+
+            }
+            else {
+                DistrictImportRejection districtImportRejection = new DistrictImportRejection(null,(Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
+                districtRejectionService.createUpdateRejectedDistrict(districtImportRejection);
             }
         }
 
