@@ -18,6 +18,6 @@ public class DistrictRejectionServiceImpl implements DistrictRejectionService {
 
     @Override
     public void createUpdateRejectedDistrict(DistrictImportRejection districtImportRejection) {
-
+        districtRejectionDataService.createOrUpdate(districtImportRejection);
     }
 }

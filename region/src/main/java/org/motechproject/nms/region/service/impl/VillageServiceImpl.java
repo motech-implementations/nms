@@ -14,6 +14,7 @@ import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.repository.VillageDataService;
 import org.motechproject.nms.region.service.VillageService;
 import org.motechproject.nms.region.utils.LocationConstants;
+import org.motechproject.nms.rejectionhandler.service.VillageRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,9 @@ public class VillageServiceImpl implements VillageService {
 
     @Autowired
     private VillageDataService dataService;
+
+    @Autowired
+    private VillageRejectionService villageRejectionService;
 
 
     @Override
@@ -151,6 +155,9 @@ public class VillageServiceImpl implements VillageService {
 
                     i++;
                 }
+            }
+            else if(village.get(LocationConstants.CSV_STATE_ID) == null || village.get(LocationConstants.DISTRICT_ID) == null || village.get(LocationConstants.TALUKA_ID) != null){
+
             }
         }
 

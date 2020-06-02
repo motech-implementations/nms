@@ -221,15 +221,15 @@ public class DistrictServiceImpl implements DistrictService {
                     districtRejectionService.createUpdateRejectedDistrict(districtImportRejection);
                 }
                 else if(state != null && districtCode == null){
-                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), null,(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.DISTRICT_CODE_NOT_PRESENT_IN_FILE.toString());
+                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), null,(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString());
                     districtRejectionService.createUpdateRejectedDistrict(districtImportRejection);
                 }
                 else if(state !=null && districtCode != null && (districtName == null || districtName.trim().isEmpty())){
-                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), null,(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.DISTRICT_NAME_NOT_PRESENT_IN_FILE.toString());
+                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), null,(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString());
                     districtRejectionService.createUpdateRejectedDistrict(districtImportRejection);
                 }
                 else if(state != null && districtCode != null && (districtName != null && !districtName.trim().isEmpty()) && ((Long) (0L)).equals(districtCode)){
-                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), null,(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.DISTRICT_CODE_ZERO_IN_FILE.toString());
+                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), null,(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString());
                     districtRejectionService.createUpdateRejectedDistrict(districtImportRejection);
                 }
 

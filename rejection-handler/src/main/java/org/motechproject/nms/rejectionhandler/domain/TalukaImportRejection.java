@@ -54,4 +54,16 @@ public class TalukaImportRejection {
     public String getRejectionReason() {     return rejectionReason;    }
 
     public void setRejectionReason(String rejectionReason) {     this.rejectionReason = rejectionReason;    }
+
+    public TalukaImportRejection() {
+    }
+
+    public TalukaImportRejection(Long stateId, Long districtCode, String talukaCode, String talukaName, Boolean accepted, String rejectionReason) {
+        this.stateId = stateId;
+        this.districtCode = districtCode;
+        this.talukaCode = talukaCode;
+        this.talukaName = talukaName;
+        this.accepted = accepted;
+        this.rejectionReason = rejectionReason;
+    }
 }

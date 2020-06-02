@@ -90,4 +90,17 @@ public class VillageImportRejection {
     public void setRejectionReason(String rejectionReason) {
         this.rejectionReason = rejectionReason;
     }
+
+    public VillageImportRejection() {
+    }
+
+    public VillageImportRejection(Long stateId, Long districtCode, String talukaCode, Long villageCode, String villageName, Boolean accepted, String rejectionReason) {
+        this.stateId = stateId;
+        this.districtCode = districtCode;
+        this.talukaCode = talukaCode;
+        this.villageCode = villageCode;
+        this.villageName = villageName;
+        this.accepted = accepted;
+        this.rejectionReason = rejectionReason;
+    }
 }
