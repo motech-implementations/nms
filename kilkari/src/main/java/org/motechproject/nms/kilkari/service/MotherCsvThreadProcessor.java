@@ -69,12 +69,12 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
         for (Map<String, Object> record : recordList) {
             count++;
             LOGGER.debug("Started mother import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
-            if(record.get(id).toString().length()!=12){
-                //apply filter on rch id here
+            //apply filter on rch id here
+//            if(record.get(id).toString().length()!=12){
                 String newRchId=(String)record.get(id);
-                newRchId=newRchId.replaceAll("\n","");
+                newRchId=newRchId.replaceAll("[\\n\\t\\r ]","");
                 record.replace(id,newRchId);
-            }
+//            }
             MctsMother mother = mctsImport ? mctsBeneficiaryValueProcessor.getOrCreateMotherInstance((String) record.get(id)) : mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
             if (mother == null) {
                 MotherImportRejection motherImportRejection1 = motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), KilkariConstants.CREATE);
