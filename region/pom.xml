@@ -121,6 +121,9 @@
                             org.datanucleus.enhancement,
                             org.springframework.validation.beanvalidation,
                             org.springframework.core,
+                            org.motechproject.nms.rejectionhandler.service,
+                            org.motechproject.nms.rejectionhandler.domain,
+                            org.motechproject.nms.rejectionhandler.repository,
                             *
                         </Import-Package>
                     </instructions>

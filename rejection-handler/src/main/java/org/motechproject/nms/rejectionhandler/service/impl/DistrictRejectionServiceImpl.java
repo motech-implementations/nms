@@ -9,15 +9,14 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
-@Service
+@Service("districtRejectionService")
 public class DistrictRejectionServiceImpl implements DistrictRejectionService {
 
     @Autowired
     DistrictRejectionDataService districtRejectionDataService;
 
     @Override
-    public void createUpdateRejectedDistrict(DistrictImportRejection districtImportRejection) {
-        districtRejectionDataService.createOrUpdate(districtImportRejection);
+    public void saveRejectedDistrict(DistrictImportRejection districtImportRejection) {
+        districtRejectionDataService.create(districtImportRejection);
     }
 }

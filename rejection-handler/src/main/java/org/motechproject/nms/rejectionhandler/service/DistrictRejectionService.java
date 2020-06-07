@@ -1,10 +1,10 @@
 package org.motechproject.nms.rejectionhandler.service;
 
 import org.motechproject.nms.rejectionhandler.domain.DistrictImportRejection;
+import org.springframework.stereotype.Service;
 
-import java.util.Map;
 
 public interface DistrictRejectionService {
 
-    void createUpdateRejectedDistrict(DistrictImportRejection districtImportRejection);
+    void saveRejectedDistrict(DistrictImportRejection districtImportRejection);
 }

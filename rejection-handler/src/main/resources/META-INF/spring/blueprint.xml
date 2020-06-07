@@ -22,4 +22,53 @@
 
     <osgi:reference id="childImportRejectionDataService"
                     interface="org.motechproject.nms.rejectionhandler.repository.ChildRejectionDataService" />
+
+    <osgi:service ref="districtRejectionService"
+                  interface="org.motechproject.nms.rejectionhandler.service.DistrictRejectionService" />
+
+    <osgi:reference id="districtRejectionDataService"
+                    interface="org.motechproject.nms.rejectionhandler.repository.DistrictRejectionDataService" />
+
+    <osgi:service ref="healthBlockRejectionService"
+                  interface="org.motechproject.nms.rejectionhandler.service.HealthBlockRejectionService" />
+
+    <osgi:reference id="healthBlockRejectionDataService"
+                    interface="org.motechproject.nms.rejectionhandler.repository.HealthBlockRejectionDataService" />
+
+    <osgi:service ref="talukaRejectionService"
+                  interface="org.motechproject.nms.rejectionhandler.service.TalukaRejectionService" />
+
+    <osgi:reference id="talukaRejectionDataService"
+                    interface="org.motechproject.nms.rejectionhandler.repository.TalukaRejectionDataService" />
+
+    <osgi:service ref="villageRejectionService"
+                  interface="org.motechproject.nms.rejectionhandler.service.VillageRejectionService" />
+
+    <osgi:reference id="villageRejectionDataService"
+                    interface="org.motechproject.nms.rejectionhandler.repository.VillageRejectionDataService" />
+
+    <osgi:service ref="healthSubFacilityRejectionService"
+                  interface="org.motechproject.nms.rejectionhandler.service.HealthSubFacilityRejectionService" />
+
+    <osgi:reference id="healthSubFacilityRejectionDataService"
+                    interface="org.motechproject.nms.rejectionhandler.repository.HealthSubFacilityRejectionDataService" />
+
+    <osgi:service ref="healthFacilityRejectionService"
+                  interface="org.motechproject.nms.rejectionhandler.service.HealthFacilityRejectionService" />
+
+    <osgi:reference id="healthFacilityRejectionDataService"
+                    interface="org.motechproject.nms.rejectionhandler.repository.HealthFacilityRejectionDataService" />
+
+    <osgi:service ref="talukaHealthBlockRejectionService"
+                  interface="org.motechproject.nms.rejectionhandler.service.TalukaHealthBlockRejectionService" />
+
+    <osgi:reference id="talukaHealthBlockRejectionDataService"
+                    interface="org.motechproject.nms.rejectionhandler.repository.TalukaHealthBlockRejectionDataService" />
+
+    <osgi:service ref="villageHealthSubFacilityRejectionService"
+                  interface="org.motechproject.nms.rejectionhandler.service.VillageHealthSubFacilityRejectionService" />
+
+    <osgi:reference id="villageHealthSubFacilityRejectionDataService"
+                    interface="org.motechproject.nms.rejectionhandler.repository.VillageHealthSubFacilityRejectionDataService" />
+
 </beans>

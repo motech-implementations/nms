@@ -7,13 +7,11 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.metrics.service.Timer;
-import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.State;
-import org.motechproject.nms.region.domain.Taluka;
-import org.motechproject.nms.region.domain.Village;
+import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.repository.VillageDataService;
 import org.motechproject.nms.region.service.VillageService;
 import org.motechproject.nms.region.utils.LocationConstants;
+import org.motechproject.nms.rejectionhandler.domain.VillageImportRejection;
 import org.motechproject.nms.rejectionhandler.service.VillageRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -155,9 +153,26 @@ public class VillageServiceImpl implements VillageService {
 
                     i++;
                 }
+                else if(taluka == null || taluka.getId() == null){
+                    VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),null,(Long) village.get(LocationConstants.VILLAGE_ID),(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.PARENT_LOCATION_NOT_PRESENT_IN_DB.toString());
+                    villageRejectionService.saveRejectedVillage(villageImportRejection);
+                }
+                else if(taluka != null && taluka.getId() != null && villageCode == null ){
+                    VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),null,(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString());
+                    villageRejectionService.saveRejectedVillage(villageImportRejection);
+                }
+                else if(taluka != null && taluka.getId() != null && villageCode != null && ((Long) (0L)).equals(villageCode)){
+                    VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),0L,(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString());
+                    villageRejectionService.saveRejectedVillage(villageImportRejection);
+                }
+                else if(taluka != null && taluka.getId() != null && villageCode != null && !((Long) (0L)).equals(villageCode) && (villageName == null || villageName.trim().isEmpty())){
+                    VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),0L,null,false, LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString());
+                    villageRejectionService.saveRejectedVillage(villageImportRejection);
+                }
             }
-            else if(village.get(LocationConstants.CSV_STATE_ID) == null || village.get(LocationConstants.DISTRICT_ID) == null || village.get(LocationConstants.TALUKA_ID) != null){
-
+            else if(village.get(LocationConstants.CSV_STATE_ID) == null || village.get(LocationConstants.DISTRICT_ID) == null || village.get(LocationConstants.TALUKA_ID) == null){
+                VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),(Long) village.get(LocationConstants.VILLAGE_ID),(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
+                villageRejectionService.saveRejectedVillage(villageImportRejection);
             }
         }
 

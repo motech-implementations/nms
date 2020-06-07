@@ -90,4 +90,17 @@ public class HealthBlockImportRejection {
     public void setRejectionReason(String rejectionReason) {
         this.rejectionReason = rejectionReason;
     }
+
+    public HealthBlockImportRejection() {
+    }
+
+    public HealthBlockImportRejection(Long stateId, Long districtCode, String talukaCode, Long healthBlockCode, String healthBlockName, Boolean accepted, String rejectionReason) {
+        this.stateId = stateId;
+        this.districtCode = districtCode;
+        this.talukaCode = talukaCode;
+        this.healthBlockCode = healthBlockCode;
+        this.healthBlockName = healthBlockName;
+        this.accepted = accepted;
+        this.rejectionReason = rejectionReason;
+    }
 }

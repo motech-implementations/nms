@@ -97,4 +97,22 @@
     <!-- Event Relay -->
     <osgi:reference id="eventRelay" interface="org.motechproject.event.listener.EventRelay"/>
 
+    <!-- Rejection handler services -->
+    <osgi:reference id="districtRejectionService"
+                  interface="org.motechproject.nms.rejectionhandler.service.DistrictRejectionService" />
+    <osgi:reference id="healthBlockRejectionService"
+                  interface="org.motechproject.nms.rejectionhandler.service.HealthBlockRejectionService" />
+    <osgi:reference id="talukaRejectionService"
+                  interface="org.motechproject.nms.rejectionhandler.service.TalukaRejectionService" />
+    <osgi:reference id="healthFacilityRejectionService"
+                  interface="org.motechproject.nms.rejectionhandler.service.HealthFacilityRejectionService" />
+    <osgi:reference id="healthSubFacilityRejectionService"
+                    interface="org.motechproject.nms.rejectionhandler.service.HealthSubFacilityRejectionService" />
+    <osgi:reference id="villageRejectionService"
+                    interface="org.motechproject.nms.rejectionhandler.service.VillageRejectionService" />
+    <osgi:reference id="talukaHealthBlockRejectionService"
+                    interface="org.motechproject.nms.rejectionhandler.service.TalukaHealthBlockRejectionService" />
+    <osgi:reference id="villageHealthSubFacilityRejectionService"
+                    interface="org.motechproject.nms.rejectionhandler.service.VillageHealthSubFacilityRejectionService" />
+
 </beans>

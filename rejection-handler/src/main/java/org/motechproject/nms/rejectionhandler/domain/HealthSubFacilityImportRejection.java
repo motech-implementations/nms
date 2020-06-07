@@ -100,4 +100,18 @@ public class HealthSubFacilityImportRejection {
     public void setRejectionReason(String rejectionReason) {
         this.rejectionReason = rejectionReason;
     }
+
+    public HealthSubFacilityImportRejection() {
+    }
+
+    public HealthSubFacilityImportRejection(Long stateId, Long districtCode, String talukaCode, Long healthFacilityCode, Long healthSubFacilityCode, String healthSubFacilityName, Boolean accepted, String rejectionReason) {
+        this.stateId = stateId;
+        this.districtCode = districtCode;
+        this.talukaCode = talukaCode;
+        this.healthFacilityCode = healthFacilityCode;
+        this.healthSubFacilityCode = healthSubFacilityCode;
+        this.healthSubFacilityName = healthSubFacilityName;
+        this.accepted = accepted;
+        this.rejectionReason = rejectionReason;
+    }
 }
