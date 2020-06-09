@@ -47,4 +47,15 @@ public class TalukaHealthBlockImportRejection {
     public String getRejectionReason() {      return rejectionReason;    }
 
     public void setRejectionReason(String rejectionReason) {    this.rejectionReason = rejectionReason;    }
+
+    public TalukaHealthBlockImportRejection() {
+    }
+
+    public TalukaHealthBlockImportRejection(Long stateId, String talukaCode, Long healthBlockCode, Boolean accepted, String rejectionReason) {
+        this.stateId = stateId;
+        this.talukaCode = talukaCode;
+        this.healthBlockCode = healthBlockCode;
+        this.accepted = accepted;
+        this.rejectionReason = rejectionReason;
+    }
 }

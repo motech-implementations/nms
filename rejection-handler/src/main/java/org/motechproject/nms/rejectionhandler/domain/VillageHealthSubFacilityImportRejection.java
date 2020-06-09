@@ -54,4 +54,16 @@ public class VillageHealthSubFacilityImportRejection {
     public String getRejectionReason() {     return rejectionReason;   }
 
     public void setRejectionReason(String rejectionReason) {   this.rejectionReason = rejectionReason;    }
+
+    public VillageHealthSubFacilityImportRejection() {
+    }
+
+    public VillageHealthSubFacilityImportRejection(Long stateId, Long districtCode, Long villageCode, Long healthSubFacilityCode, Boolean accepted, String rejectionReason) {
+        this.stateId = stateId;
+        this.districtCode = districtCode;
+        this.villageCode = villageCode;
+        this.healthSubFacilityCode = healthSubFacilityCode;
+        this.accepted = accepted;
+        this.rejectionReason = rejectionReason;
+    }
 }

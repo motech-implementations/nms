@@ -245,7 +245,7 @@ public class TalukaServiceImpl implements TalukaService {
                     talukaRejectionService.saveRejectedTaluka(talukaImportRejection);
                 }
             }else if((taluka.get(LocationConstants.CSV_STATE_ID) == null)||(taluka.get(LocationConstants.CSV_STATE_ID) != null && taluka.get(LocationConstants.DISTRICT_ID) == null)) {
-                TalukaImportRejection talukaImportRejection = new TalukaImportRejection(null,null,null,taluka.get(LocationConstants.TALUKA_NAME).toString(),false, LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
+                TalukaImportRejection talukaImportRejection = new TalukaImportRejection((Long) taluka.get(LocationConstants.CSV_STATE_ID),(Long) taluka.get(LocationConstants.DISTRICT_ID),(String) taluka.get(LocationConstants.TALUKA_ID),taluka.get(LocationConstants.TALUKA_NAME).toString(),false, LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
                 talukaRejectionService.saveRejectedTaluka(talukaImportRejection);
             }
 

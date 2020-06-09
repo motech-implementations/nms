@@ -220,11 +220,11 @@ public class DistrictServiceImpl implements DistrictService {
                     districtRejectionService.saveRejectedDistrict(districtImportRejection);
                 }
                 else if(state !=null && districtCode != null && (districtName == null || districtName.trim().isEmpty())){
-                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), null,(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString());
+                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), (Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString());
                     districtRejectionService.saveRejectedDistrict(districtImportRejection);
                 }
                 else if(state != null && districtCode != null && (districtName != null && !districtName.trim().isEmpty()) && ((Long) (0L)).equals(districtCode)){
-                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), null,(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString());
+                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), (Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString());
                     districtRejectionService.saveRejectedDistrict(districtImportRejection);
                 }
 

@@ -12,7 +12,9 @@ import org.motechproject.nms.region.repository.HealthBlockDataService;
 import org.motechproject.nms.region.service.HealthBlockService;
 import org.motechproject.nms.region.utils.LocationConstants;
 import org.motechproject.nms.rejectionhandler.domain.HealthBlockImportRejection;
+import org.motechproject.nms.rejectionhandler.domain.TalukaHealthBlockImportRejection;
 import org.motechproject.nms.rejectionhandler.service.HealthBlockRejectionService;
+import org.motechproject.nms.rejectionhandler.service.TalukaHealthBlockRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,11 +22,7 @@ import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
 import javax.jdo.annotations.Transactional;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Service("healthBlockService")
 public class HealthBlockServiceImpl implements HealthBlockService {
@@ -43,6 +41,9 @@ public class HealthBlockServiceImpl implements HealthBlockService {
 
     @Autowired
     private HealthBlockRejectionService healthBlockRejectionService;
+
+    @Autowired
+    private TalukaHealthBlockRejectionService talukaHealthBlockRejectionService;
 
     @Override
     // Since Taluka <-> HealthBlocks are many to many, but we don't model that in our system
@@ -316,6 +317,10 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                                 record.get(LocationConstants.HEALTHBLOCK_ID).toString() +
                                 " where s.code = " + record.get(LocationConstants.CSV_STATE_ID).toString();
                         count--;
+                    }
+                    else {
+                        TalukaHealthBlockImportRejection talukaHealthBlockImportRejection = new TalukaHealthBlockImportRejection((Long)record.get(LocationConstants.CSV_STATE_ID),(String)record.get(LocationConstants.TALUKA_ID),(Long)record.get(LocationConstants.HEALTHBLOCK_ID),false,LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
+                        talukaHealthBlockRejectionService.saveRejectedTalukaHealthBlock(talukaHealthBlockImportRejection);
                     }
                 }
 

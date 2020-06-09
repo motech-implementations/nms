@@ -12,7 +12,9 @@ import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
 import org.motechproject.nms.region.service.HealthSubFacilityService;
 import org.motechproject.nms.region.utils.LocationConstants;
 import org.motechproject.nms.rejectionhandler.domain.HealthSubFacilityImportRejection;
+import org.motechproject.nms.rejectionhandler.domain.VillageHealthSubFacilityImportRejection;
 import org.motechproject.nms.rejectionhandler.service.HealthSubFacilityRejectionService;
+import org.motechproject.nms.rejectionhandler.service.VillageHealthSubFacilityRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,9 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
 
     @Autowired
     private HealthSubFacilityRejectionService healthSubFacilityRejectionService;
+
+    @Autowired
+    private VillageHealthSubFacilityRejectionService villageHealthSubFacilityRejectionService;
 
     @Override
     public HealthSubFacility findByHealthFacilityAndCode(final HealthFacility healthFacility, final Long code) {
@@ -212,6 +217,9 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
                                 record.get(LocationConstants.HEALTHSUBFACILITY_ID).toString() +
                                 " where s.code = " + record.get(LocationConstants.CSV_STATE_ID).toString();
                         count--;
+                    }else {
+                        VillageHealthSubFacilityImportRejection villageHealthSubFacilityImportRejection = new VillageHealthSubFacilityImportRejection((Long)record.get(LocationConstants.CSV_STATE_ID),(Long) record.get(LocationConstants.DISTRICT_ID),(Long)record.get(LocationConstants.VILLAGE_ID),(Long)record.get(LocationConstants.HEALTHSUBFACILITY_ID),false,LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
+                        villageHealthSubFacilityRejectionService.saveRejectedVillageHealthSubFacility(villageHealthSubFacilityImportRejection);
                     }
                 }
 
