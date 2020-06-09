@@ -320,6 +320,12 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             beneficiaryId = (String) recordMap.get(KilkariConstants.BENEFICIARY_ID);
             msisdn = (Long) recordMap.get(KilkariConstants.MSISDN);
             DateTime lmp = (DateTime) recordMap.get(KilkariConstants.LMP);
+
+            // removing special char from beneficiary id
+            LOGGER.debug("filtring mcts mother beneficiary id in event");
+            beneficiaryId=beneficiaryId.replaceAll("[\\n\\t\\r ]","");
+            recordMap.replace(KilkariConstants.BENEFICIARY_ID,beneficiaryId);
+
             mother = mctsBeneficiaryValueProcessor.getOrCreateMotherInstance(beneficiaryId);
             recordMap.put(KilkariConstants.MCTS_MOTHER, mother);
             if(mother == null) {
@@ -493,6 +499,13 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             childId = (String) recordMap.get(KilkariConstants.BENEFICIARY_ID);
             msisdn = (Long) recordMap.get(KilkariConstants.MSISDN);
             DateTime dob = (DateTime) recordMap.get(KilkariConstants.DOB);
+
+            // removing special char from beneficiary id
+            LOGGER.debug("filtring child  beneficiary id and recors id--> "+recordMap);
+            childId=childId.replaceAll("[\\n\\t\\r ]","");
+            recordMap.replace(KilkariConstants.BENEFICIARY_ID,childId);
+            LOGGER.debug("record map after filter on ids'--> "+recordMap);
+
             // add child to the record
             child = mctsBeneficiaryValueProcessor.getOrCreateChildInstance(childId);
             recordMap.put(KilkariConstants.MCTS_CHILD, child);

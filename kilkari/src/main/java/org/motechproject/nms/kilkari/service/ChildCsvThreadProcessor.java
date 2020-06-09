@@ -1,10 +1,7 @@
 package org.motechproject.nms.kilkari.service;
 
 import org.motechproject.metrics.service.Timer;
-import org.motechproject.nms.kilkari.domain.MctsChild;
-import org.motechproject.nms.kilkari.domain.RejectionReasons;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.ThreadProcessorObject;
+import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
@@ -54,20 +51,67 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
         String id;
         String contactNumber;
         String childInstance;
+        String mctsIdForRchChild=null;
+        String motherId;
+        String mctsMotherIdForChild=null;
         if (mctsImport) {
             id = KilkariConstants.BENEFICIARY_ID;
             contactNumber = KilkariConstants.MSISDN;
             childInstance = KilkariConstants.MCTS_CHILD;
+            motherId=KilkariConstants.MOTHER_ID;
         } else {
             id = KilkariConstants.RCH_ID;
             contactNumber = KilkariConstants.MOBILE_NO;
             childInstance = KilkariConstants.RCH_CHILD;
+            mctsIdForRchChild=KilkariConstants.MCTS_ID;
+            motherId=KilkariConstants.RCH_MOTHER_ID;
+            mctsMotherIdForChild=KilkariConstants.MCTS_MOTHER_ID;
         }
         int count = 0;
         Timer timer = new Timer("kid", "kids");
         for(Map<String, Object> record : recordList) {
             count++;
             LOGGER.debug("Started child import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
+
+            //filter for  rch child's Registration_No and mcts child's ID_no
+            String newRchId=(String)record.get(id);
+            newRchId=newRchId.replaceAll("[\\n\\t\\r ]","");
+            record.replace(id,newRchId);
+            //filter for rch child's MCTS_Mother_ID_No and mcts child's Mother_ID
+
+            if(!mctsImport) {
+                //for rch child's mother registration no
+                try {
+                    LOGGER.debug("Mother Id---=>"+motherId);
+                    LOGGER.debug("record ----=>"+record);
+                    String childLinkedMother=(String)record.get(motherId);
+                    childLinkedMother=childLinkedMother.replaceAll("[\\n\\t\\r ]","");
+                    record.replace(motherId,childLinkedMother);
+                }
+                catch (Exception e){
+                    LOGGER.debug("no mother for child");
+                }
+                //for rch child's MCTS_ID_No
+                try {
+                    LOGGER.debug("------in Mcts Id filter for rch child-----");
+                    String newMctsId=(String)record.get(mctsIdForRchChild);
+                    newMctsId=newMctsId.replaceAll("[\\n\\t\\r ]","");
+                    record.replace(mctsIdForRchChild,newMctsId);
+                }
+                catch (Exception e){
+                    LOGGER.debug("no mcts id for child");
+                }
+                // for rch child's MCTS_Mother_Id_N0
+                try{
+                    LOGGER.debug("------Mcts mother Id filter for rch child-----");
+                    String newMctsMotherId=(String)record.get(mctsMotherIdForChild);
+                    newMctsMotherId=newMctsMotherId.replaceAll("[\\n\\t\\r ]","");
+                    record.replace(mctsMotherIdForChild,newMctsMotherId);
+                }
+                catch (Exception e){
+                    LOGGER.debug("no mcts mother id for child");
+                }
+            }
 
             MctsChild child = mctsImport ? mctsBeneficiaryValueProcessor.getOrCreateChildInstance((String) record.get(id)) : mctsBeneficiaryValueProcessor.getOrCreateRchChildInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
             if (child == null) {

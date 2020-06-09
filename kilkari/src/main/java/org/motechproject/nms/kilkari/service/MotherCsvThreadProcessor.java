@@ -55,6 +55,7 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
         String id;
         String contactNumber;
         String motherInstance;
+        String mctsIDForRchMother=null;
         if (mctsImport) {
             id = KilkariConstants.BENEFICIARY_ID;
             contactNumber = KilkariConstants.MSISDN;
@@ -63,18 +64,32 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
             id = KilkariConstants.RCH_ID;
             contactNumber = KilkariConstants.MOBILE_NO;
             motherInstance = KilkariConstants.RCH_MOTHER;
+            mctsIDForRchMother = KilkariConstants.MCTS_ID;
         }
         int count = 0;
         Timer timer = new Timer("mom", "moms");
         for (Map<String, Object> record : recordList) {
             count++;
             LOGGER.debug("Started mother import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
-            //apply filter on rch id here
-//            if(record.get(id).toString().length()!=12){
-                String newRchId=(String)record.get(id);
-                newRchId=newRchId.replaceAll("[\\n\\t\\r ]","");
-                record.replace(id,newRchId);
-//            }
+
+            LOGGER.debug("---------mother record----------=>"+record);
+            //filter for  rch mother's Registration_No and mcts mother's ID_no
+            String newRchId=(String)record.get(id);
+            newRchId=newRchId.replaceAll("[\\n\\t\\r ]","");
+            record.replace(id,newRchId);
+            //for rch mother's MCTS_ID_No
+            if(!mctsImport){
+                try {
+                    LOGGER.debug("------Mcts Id filter for rch mother-----");
+                    String newMctsId=(String)record.get(mctsIDForRchMother);
+                    newMctsId=newMctsId.replaceAll("[\\n\\t\\r ]","");
+                    record.replace(mctsIDForRchMother,newMctsId);
+                }
+                catch (Exception e){
+                    LOGGER.debug("no mcts id for the rch mother");
+                }
+            }
+
             MctsMother mother = mctsImport ? mctsBeneficiaryValueProcessor.getOrCreateMotherInstance((String) record.get(id)) : mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
             if (mother == null) {
                 MotherImportRejection motherImportRejection1 = motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), KilkariConstants.CREATE);
