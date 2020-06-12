@@ -4,7 +4,10 @@ import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+import javax.jdo.annotations.Unique;
+
 @Entity(tableName = "nms_taluka_rejects")
+@Unique(name = "UNIQUE_STATE_TALUKA_CODE", members = { "stateId", "talukaCode" })
 public class TalukaImportRejection {
     @Field
     private Long stateId;

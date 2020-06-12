@@ -4,7 +4,10 @@ import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+import javax.jdo.annotations.Unique;
+
 @Entity(tableName = "nms_health_sub_facility_rejects")
+@Unique(name = "UNIQUE_STATE_HEALTH_SUB_FACILITY_CODE", members = { "stateId", "healthSubFacilityCode" })
 public class HealthSubFacilityImportRejection {
     @Field
     private Long stateId;

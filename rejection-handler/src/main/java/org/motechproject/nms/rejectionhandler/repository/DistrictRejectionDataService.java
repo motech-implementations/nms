@@ -7,9 +7,7 @@ import org.motechproject.nms.rejectionhandler.domain.DistrictImportRejection;
 
 public interface DistrictRejectionDataService extends MotechDataService<DistrictImportRejection> {
 
-
     @Lookup
-    DistrictImportRejection findByDistrictCode(@LookupField(name = "districtCode") Long districtCode);
-
+    DistrictImportRejection findByUniqueCode(@LookupField(name = "stateId") Long stateId,@LookupField(name = "districtCode") Long districtCode);
 
 }

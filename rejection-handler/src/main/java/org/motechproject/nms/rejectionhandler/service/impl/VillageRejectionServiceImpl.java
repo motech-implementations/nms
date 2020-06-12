@@ -11,9 +11,18 @@ public class VillageRejectionServiceImpl implements VillageRejectionService {
     @Autowired
     private VillageRejectionDataService villageRejectionDataService;
 
+
     @Override
     public void saveRejectedVillage(VillageImportRejection villageImportRejection) {
-        villageRejectionDataService.create(villageImportRejection);
+        if(   villageRejectionDataService.findByUniqueCode(villageImportRejection.getStateId(),villageImportRejection.getVillageCode()) == null){
+            villageRejectionDataService.create(villageImportRejection);
+        }
+        else {
+            villageRejectionDataService.update(villageImportRejection);
+        }
+    }
+    @Override
+    public void createRejectedVillage(VillageImportRejection villageImportRejection) {
 
     }
 }

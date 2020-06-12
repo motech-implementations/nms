@@ -12,7 +12,18 @@ public class HealthSubFacilityRejectionServiceImpl implements HealthSubFacilityR
     private HealthSubFacilityRejectionDataService healthSubFacilityRejectionDataService;
 
     @Override
-    public void saveREjectedHealthSubFacility(HealthSubFacilityImportRejection healthSubFacilityImportRejection) {
+    public void saveRejectedHealthSubFacility(HealthSubFacilityImportRejection healthSubFacilityImportRejection) {
+        if(  healthSubFacilityRejectionDataService.findByUniqueCode(healthSubFacilityImportRejection.getStateId(),healthSubFacilityImportRejection.getHealthSubFacilityCode()) == null){
+            healthSubFacilityRejectionDataService.create(healthSubFacilityImportRejection);
+        }
+        else {
+            healthSubFacilityRejectionDataService.update(healthSubFacilityImportRejection);
+        }
+    }
+
+    @Override
+    public void createRejectedHealthSubFacility(HealthSubFacilityImportRejection healthSubFacilityImportRejection) {
         healthSubFacilityRejectionDataService.create(healthSubFacilityImportRejection);
+
     }
 }

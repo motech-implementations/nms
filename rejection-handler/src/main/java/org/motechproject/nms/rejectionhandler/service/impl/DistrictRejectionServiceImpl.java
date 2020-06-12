@@ -16,7 +16,19 @@ public class DistrictRejectionServiceImpl implements DistrictRejectionService {
     DistrictRejectionDataService districtRejectionDataService;
 
     @Override
-    public void saveRejectedDistrict(DistrictImportRejection districtImportRejection) {
+    public void createRejectedDistrict(DistrictImportRejection districtImportRejection) {
         districtRejectionDataService.create(districtImportRejection);
+
     }
+
+    @Override
+    public void saveRejectedDistrict(DistrictImportRejection districtImportRejection) {
+        if (districtRejectionDataService.findByUniqueCode(districtImportRejection.getStateId(), districtImportRejection.getDistrictCode()) == null) {
+            districtRejectionDataService.create(districtImportRejection);
+        } else {
+            districtRejectionDataService.update(districtImportRejection);
+        }
+    }
+
+
 }

@@ -14,6 +14,15 @@ public class HealthFacilityRejectionServiceImpl implements HealthFacilityRejecti
 
     @Override
     public void saveRejectedHealthFacility(HealthFacilityImportRejection healthFacilityImportRejection) {
+        if(   healthFacilityRejectionDataService.findByUniqueCode(healthFacilityImportRejection.getStateId(),healthFacilityImportRejection.getHealthFacilityCode()) == null){
+            healthFacilityRejectionDataService.create(healthFacilityImportRejection);
+        }
+        else {
+            healthFacilityRejectionDataService.update(healthFacilityImportRejection);
+        }
+    }
+    @Override
+    public void createRejectedHealthFacility(HealthFacilityImportRejection healthFacilityImportRejection) {
         healthFacilityRejectionDataService.create(healthFacilityImportRejection);
     }
 }

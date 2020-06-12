@@ -14,6 +14,15 @@ public class TalukaRejectionServiceImpl implements TalukaRejectionService {
 
     @Override
     public void saveRejectedTaluka(TalukaImportRejection talukaImportRejection){
+        if(   talukaRejectionDataService.findByUniqueCode(talukaImportRejection.getStateId(),talukaImportRejection.getTalukaCode()) == null){
+            talukaRejectionDataService.create(talukaImportRejection);
+        }
+        else {
+            talukaRejectionDataService.update(talukaImportRejection);
+        }
+    }
+    @Override
+    public void createRejectedTaluka(TalukaImportRejection talukaImportRejection){
         talukaRejectionDataService.create(talukaImportRejection);
 
     }

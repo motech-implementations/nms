@@ -13,6 +13,16 @@ public class HealthBlockRejectionServiceImpl implements HealthBlockRejectionServ
 
     @Override
     public void saveRejectedHealthBlock(HealthBlockImportRejection healthBlockImportRejection) {
+        if(   healthBlockRejectionDataService.findByUniqueCode(healthBlockImportRejection.getStateId(),healthBlockImportRejection.getHealthBlockCode()) == null){
+            healthBlockRejectionDataService.create(healthBlockImportRejection);
+        }
+        else {
+            healthBlockRejectionDataService.update(healthBlockImportRejection);
+        }
+    }
+
+    @Override
+    public void createRejectedHealthBlock(HealthBlockImportRejection healthBlockImportRejection) {
         healthBlockRejectionDataService.create(healthBlockImportRejection);
     }
 }

@@ -13,7 +13,18 @@ public class VillageHealthSubFacilityRejectionServiceImpl implements VillageHeal
     private VillageHealthSubFacilityRejectionDataService villageHealthSubFacilityRejectionDataService;
 
     @Override
-    public void saveRejectedVillageHealthSubFacility(VillageHealthSubFacilityImportRejection villageHealthSubFacilityImportRejection) {
+    public void createRejectedVillageHealthSubFacility(VillageHealthSubFacilityImportRejection villageHealthSubFacilityImportRejection) {
         villageHealthSubFacilityRejectionDataService.create(villageHealthSubFacilityImportRejection);
     }
+
+    @Override
+    public void saveRejectedVillageHealthSubFacility(VillageHealthSubFacilityImportRejection villageHealthSubFacilityImportRejection) {
+        if(   villageHealthSubFacilityRejectionDataService.findByUniqueCode(villageHealthSubFacilityImportRejection.getVillageCode(),villageHealthSubFacilityImportRejection.getHealthSubFacilityCode()) == null){
+            villageHealthSubFacilityRejectionDataService.create(villageHealthSubFacilityImportRejection);
+        }
+        else {
+            villageHealthSubFacilityRejectionDataService.update(villageHealthSubFacilityImportRejection);
+        }
+    }
+
 }

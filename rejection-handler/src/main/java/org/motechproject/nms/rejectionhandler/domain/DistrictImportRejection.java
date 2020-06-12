@@ -4,7 +4,10 @@ import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
+import javax.jdo.annotations.Unique;
+
 @Entity(tableName = "nms_district_rejects")
+@Unique(name = "UNIQUE_STATE_DISTRICT_CODE", members = { "stateId", "districtCode" })
 public class DistrictImportRejection {
     @Field
     private Long stateId;

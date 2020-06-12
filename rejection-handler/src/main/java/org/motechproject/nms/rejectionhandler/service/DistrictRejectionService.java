@@ -6,5 +6,6 @@ import org.springframework.stereotype.Service;
 
 public interface DistrictRejectionService {
 
+    void createRejectedDistrict(DistrictImportRejection districtImportRejection);
     void saveRejectedDistrict(DistrictImportRejection districtImportRejection);
 }

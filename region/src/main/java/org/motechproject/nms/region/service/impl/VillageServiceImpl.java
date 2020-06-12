@@ -152,25 +152,28 @@ public class VillageServiceImpl implements VillageService {
                     stringBuilder.append(")");
 
                     i++;
+                }else if(villageCode == null){
+                    VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),null,(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString());
+                    villageRejectionService.createRejectedVillage(villageImportRejection);
                 }
-                else if(taluka == null || taluka.getId() == null){
+                else if((taluka == null || taluka.getId() == null) ){
                     VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),null,(Long) village.get(LocationConstants.VILLAGE_ID),(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.PARENT_LOCATION_NOT_PRESENT_IN_DB.toString());
                     villageRejectionService.saveRejectedVillage(villageImportRejection);
                 }
-                else if(taluka != null && taluka.getId() != null && villageCode == null ){
-                    VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),null,(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString());
-                    villageRejectionService.saveRejectedVillage(villageImportRejection);
-                }
-                else if(taluka != null && taluka.getId() != null && villageCode != null && ((Long) (0L)).equals(villageCode)){
+                else if(((Long) (0L)).equals(villageCode)){
                     VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),0L,(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString());
                     villageRejectionService.saveRejectedVillage(villageImportRejection);
                 }
-                else if(taluka != null && taluka.getId() != null && villageCode != null && !((Long) (0L)).equals(villageCode) && (villageName == null || villageName.trim().isEmpty())){
+                else if(villageName == null || villageName.trim().isEmpty()){
                     VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),0L,null,false, LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString());
                     villageRejectionService.saveRejectedVillage(villageImportRejection);
                 }
             }
-            else if(village.get(LocationConstants.CSV_STATE_ID) == null || village.get(LocationConstants.DISTRICT_ID) == null || village.get(LocationConstants.TALUKA_ID) == null){
+            else if(village.get(LocationConstants.CSV_STATE_ID) == null  ){
+                VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),(Long) village.get(LocationConstants.VILLAGE_ID),(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
+                villageRejectionService.createRejectedVillage(villageImportRejection);
+            }
+            else {
                 VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),(Long) village.get(LocationConstants.VILLAGE_ID),(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
                 villageRejectionService.saveRejectedVillage(villageImportRejection);
             }

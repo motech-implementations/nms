@@ -12,7 +12,18 @@ public class TalukaHealthBlockRejectionServiceImpl implements TalukaHealthBlockR
     private TalukaHealthBlockRejectionDataService talukaHealthBlockRejectionDataService;
 
     @Override
-    public void saveRejectedTalukaHealthBlock(TalukaHealthBlockImportRejection talukaHealthBlockImportRejection) {
-        talukaHealthBlockRejectionDataService.create(talukaHealthBlockImportRejection);
+    public void createRejectedTalukaHealthBlock(TalukaHealthBlockImportRejection talukaHealthBlockImportRejection) {
+       talukaHealthBlockRejectionDataService.create(talukaHealthBlockImportRejection);
     }
+
+    @Override
+    public void saveRejectedTalukaHealthBlock(TalukaHealthBlockImportRejection talukaHealthBlockImportRejection) {
+        if(   talukaHealthBlockRejectionDataService.findByUniqueCode(talukaHealthBlockImportRejection.getHealthBlockCode(),talukaHealthBlockImportRejection.getTalukaCode()) == null){
+            talukaHealthBlockRejectionDataService.create(talukaHealthBlockImportRejection);
+        }
+        else {
+            talukaHealthBlockRejectionDataService.update(talukaHealthBlockImportRejection);
+        }
+    }
+
 }
