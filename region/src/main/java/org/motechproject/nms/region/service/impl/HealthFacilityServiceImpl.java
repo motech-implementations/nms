@@ -198,7 +198,7 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> healthFacility : healthFacilities) {
             if (healthFacility.get(LocationConstants.CSV_STATE_ID) != null && healthFacility.get(LocationConstants.DISTRICT_ID) != null &&
-                    healthFacility.get(LocationConstants.TALUKA_ID) != null && healthFacility.get(LocationConstants.HEALTHBLOCK_ID) != null) {
+                    healthFacility.get(LocationConstants.TALUKA_ID) != null && !healthFacility.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty() && healthFacility.get(LocationConstants.HEALTHBLOCK_ID) != null) {
                 State state = stateHashMap.get(healthFacility.get(LocationConstants.CSV_STATE_ID).toString());
                 District district = districtHashMap.get(healthFacility.get(LocationConstants.CSV_STATE_ID).toString() + "_" + healthFacility.get(LocationConstants.DISTRICT_ID).toString());
                 Taluka taluka = talukaHashMap.get(healthFacility.get(LocationConstants.CSV_STATE_ID).toString() + "_" +

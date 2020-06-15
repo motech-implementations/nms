@@ -129,7 +129,7 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> healthSubFacility : healthSubFacilities) {
             if (healthSubFacility.get(LocationConstants.CSV_STATE_ID) != null && healthSubFacility.get(LocationConstants.DISTRICT_ID) != null &&
-                    healthSubFacility.get(LocationConstants.TALUKA_ID) != null && healthSubFacility.get(LocationConstants.HEALTHFACILITY_ID) != null) {
+                    healthSubFacility.get(LocationConstants.TALUKA_ID) != null && !healthSubFacility.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty() && healthSubFacility.get(LocationConstants.HEALTHFACILITY_ID) != null) {
                 State state = stateHashMap.get(healthSubFacility.get(LocationConstants.CSV_STATE_ID).toString());
                 District district = districtHashMap.get(healthSubFacility.get(LocationConstants.CSV_STATE_ID).toString() + "_" + healthSubFacility.get(LocationConstants.DISTRICT_ID).toString());
                 Taluka taluka = talukaHashMap.get(healthSubFacility.get(LocationConstants.CSV_STATE_ID).toString() + "_" +

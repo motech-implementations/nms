@@ -238,7 +238,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> healthBlock : healthBlocks) {
             if (healthBlock.get(LocationConstants.CSV_STATE_ID) != null && healthBlock.get(LocationConstants.DISTRICT_ID) != null &&
-                    healthBlock.get(LocationConstants.TALUKA_ID) != null) {
+                    healthBlock.get(LocationConstants.TALUKA_ID) != null && !healthBlock.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty() ) {
                 State state = stateHashMap.get(healthBlock.get(LocationConstants.CSV_STATE_ID).toString());
                 District district = districtHashMap.get(healthBlock.get(LocationConstants.CSV_STATE_ID).toString() + "_" + healthBlock.get(LocationConstants.DISTRICT_ID).toString());
                 Taluka taluka = talukaHashMap.get(healthBlock.get(LocationConstants.CSV_STATE_ID).toString() + "_" + healthBlock.get(LocationConstants.DISTRICT_ID).toString() + "_" +
@@ -277,7 +277,6 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                     HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString());
                     healthBlockRejectionService.saveRejectedHealthBlock(healthBlockImportRejection);
                 }
-
                 else if(((Long) (0L)).equals(healthBlockCode)){
                     HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString());
                     healthBlockRejectionService.saveRejectedHealthBlock(healthBlockImportRejection);

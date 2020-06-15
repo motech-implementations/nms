@@ -240,11 +240,11 @@ public class DistrictServiceImpl implements DistrictService {
                 DistrictImportRejection districtImportRejection = new DistrictImportRejection(null,(Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
                 districtRejectionService.createRejectedDistrict(districtImportRejection);
             }
-            else {
-                DistrictImportRejection districtImportRejection = new DistrictImportRejection(null,(Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
-                districtRejectionService.saveRejectedDistrict(districtImportRejection);
-
-            }
+//            else {
+//                DistrictImportRejection districtImportRejection = new DistrictImportRejection(null,(Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
+//                districtRejectionService.saveRejectedDistrict(districtImportRejection);
+//
+//            }
         }
 //        LOGGER.debug("Size of rejected districts is : " + rejectedDistricts.size() + "!!!");
 //        if (rejectedDistricts.size() != 0){
@@ -253,6 +253,7 @@ public class DistrictServiceImpl implements DistrictService {
 //                LOGGER.debug("updating" + j + "th record");
 //            }
 //        }
+        LOGGER.debug("printing district query :" +stringBuilder.toString());
 
 
         return stringBuilder.toString();
