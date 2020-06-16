@@ -5,5 +5,5 @@ import org.springframework.stereotype.Service;
 
 public interface HealthBlockRejectionService {
     void createRejectedHealthBlock(HealthBlockImportRejection healthBlockImportRejection);
-    void saveRejectedHealthBlock(HealthBlockImportRejection healthBlockImportRejection);
+    Long saveRejectedHealthBlock(HealthBlockImportRejection healthBlockImportRejection);
 }

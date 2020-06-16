@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 
 public interface VillageRejectionService {
 
-    void saveRejectedVillage(VillageImportRejection villageImportRejection);
+    Long saveRejectedVillage(VillageImportRejection villageImportRejection);
     void createRejectedVillage(VillageImportRejection villageImportRejection);
 
 }

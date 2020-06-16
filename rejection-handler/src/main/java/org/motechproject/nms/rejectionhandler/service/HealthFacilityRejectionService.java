@@ -6,5 +6,5 @@ public interface HealthFacilityRejectionService {
 
     void createRejectedHealthFacility(HealthFacilityImportRejection healthFacilityImportRejection);
 
-    void saveRejectedHealthFacility(HealthFacilityImportRejection healthFacilityImportRejection);
+    Long saveRejectedHealthFacility(HealthFacilityImportRejection healthFacilityImportRejection);
 }
