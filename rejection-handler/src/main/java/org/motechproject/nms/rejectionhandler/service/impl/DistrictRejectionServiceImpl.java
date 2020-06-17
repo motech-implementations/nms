@@ -41,7 +41,7 @@ public class DistrictRejectionServiceImpl implements DistrictRejectionService {
                 DateTime dateTimeNow = new DateTime();
                 DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
                 LOGGER.info("In getSqlQuery");
-                String districtValues = "(" + districtImportRejection.getStateId() + ", " + districtImportRejection.getDistrictCode()+", '"+districtImportRejection.getDistrictName()+",' "  + districtImportRejection.getAccepted() + ", '" + districtImportRejection.getRejectionReason() +"', "+MOTECH_STRING+MOTECH_STRING+MOTECH_STRING+"'"+ dateTimeFormatter.print(dateTimeNow)+"', '"+dateTimeFormatter.print(dateTimeNow)+"')";
+                String districtValues = "(" + districtImportRejection.getStateId() + ", " + districtImportRejection.getDistrictCode()+", '"+districtImportRejection.getDistrictName()+"', "  + districtImportRejection.getAccepted() + ", '" + districtImportRejection.getRejectionReason() +"', "+MOTECH_STRING+MOTECH_STRING+MOTECH_STRING+"'"+ dateTimeFormatter.print(dateTimeNow)+"', '"+dateTimeFormatter.print(dateTimeNow)+"')";
                 LOGGER.info(districtValues);
                 String query = "INSERT into nms_district_rejects (`stateId`, `districtCode`, `districtName`,`accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
                         districtValues + " ON DUPLICATE KEY UPDATE " +
