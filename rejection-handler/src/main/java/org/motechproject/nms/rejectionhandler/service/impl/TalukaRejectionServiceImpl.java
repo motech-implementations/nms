@@ -37,7 +37,7 @@ public class TalukaRejectionServiceImpl implements TalukaRejectionService {
                 String healthBlockValues = "(" + talukaImportRejection.getStateId() + ", " + talukaImportRejection.getDistrictCode() + ", '" + talukaImportRejection.getTalukaCode() + "', '" +
                         talukaImportRejection.getTalukaName() + "', " + talukaImportRejection.getAccepted() + ", '" + talukaImportRejection.getRejectionReason() +"', "+MOTECH_STRING+MOTECH_STRING+MOTECH_STRING+"'"+ dateTimeFormatter.print(dateTimeNow)+"', '"+dateTimeFormatter.print(dateTimeNow)+"')";
                 LOGGER.info(healthBlockValues);
-                String query = "INSERT into nms_health_block_rejects (`stateId`, `districtCode`, `talukaCode`, `talukaName`," +
+                String query = "INSERT into nms_taluka_rejects (`stateId`, `districtCode`, `talukaCode`, `talukaName`," +
                         " `accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
                         healthBlockValues + " ON DUPLICATE KEY UPDATE " +
                         "districtCode = VALUES(districtCode), talukaName = VALUES(talukaName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";

@@ -37,7 +37,7 @@ public class VillageRejectionServiceImpl implements VillageRejectionService {
                 String healthBlockValues = "(" + villageImportRejection.getStateId() + ", " + villageImportRejection.getDistrictCode() + ", '" + villageImportRejection.getTalukaCode() + "', " +
                         villageImportRejection.getVillageCode()+", "+villageImportRejection.getVillageName()+", "  + villageImportRejection.getAccepted() + ", '" + villageImportRejection.getRejectionReason() +"', "+MOTECH_STRING+MOTECH_STRING+MOTECH_STRING+"'"+ dateTimeFormatter.print(dateTimeNow)+"', '"+dateTimeFormatter.print(dateTimeNow)+"')";
                 LOGGER.info(healthBlockValues);
-                String query = "INSERT into nms_health_block_rejects (`stateId`, `districtCode`, `talukaCode`, `villageCode`, `villageName`," +
+                String query = "INSERT into nms_village_rejects (`stateId`, `districtCode`, `talukaCode`, `villageCode`, `villageName`," +
                         " `accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
                         healthBlockValues + " ON DUPLICATE KEY UPDATE " +
                         "districtCode = VALUES(districtCode), talukaCode = VALUES(talukaCode), villageName = VALUES(villageName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";

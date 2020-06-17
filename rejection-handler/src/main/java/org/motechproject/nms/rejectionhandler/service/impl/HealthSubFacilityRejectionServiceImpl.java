@@ -36,7 +36,7 @@ public class HealthSubFacilityRejectionServiceImpl implements HealthSubFacilityR
                 String healthBlockValues = "(" + healthSubFacilityImportRejection.getStateId() + ", " + healthSubFacilityImportRejection.getDistrictCode() + ", '" + healthSubFacilityImportRejection.getTalukaCode() + "', " +
                         healthSubFacilityImportRejection.getHealthFacilityCode()+", "+healthSubFacilityImportRejection.getHealthSubFacilityCode()+", '" + healthSubFacilityImportRejection.getHealthSubFacilityName() + "', " + healthSubFacilityImportRejection.getAccepted() + ", '" + healthSubFacilityImportRejection.getRejectionReason() +"', "+MOTECH_STRING+MOTECH_STRING+MOTECH_STRING+"'"+ dateTimeFormatter.print(dateTimeNow)+"', '"+dateTimeFormatter.print(dateTimeNow)+"')";
                 LOGGER.info(healthBlockValues);
-                String query = "INSERT into nms_health_block_rejects (`stateId`, `districtCode`, `talukaCode`, `healthFacilityCode`, `healthSubFacilityCode`, `healthSubFacilityName`," +
+                String query = "INSERT into nms_health_sub_facility_rejects (`stateId`, `districtCode`, `talukaCode`, `healthFacilityCode`, `healthSubFacilityCode`, `healthSubFacilityName`," +
                         " `accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
                         healthBlockValues + " ON DUPLICATE KEY UPDATE " +
                         "districtCode = VALUES(districtCode), talukaCode = VALUES(talukaCode),healthFacilityCode = VALUES(healthFacilityCode), healthSubFacilityName = VALUES(healthSubFacilityName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
