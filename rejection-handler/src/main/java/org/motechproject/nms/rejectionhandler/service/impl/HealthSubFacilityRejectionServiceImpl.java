@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
+import javax.jdo.annotations.Transactional;
 
 @Service("healthSubFacilityRejectionService")
 public class HealthSubFacilityRejectionServiceImpl implements HealthSubFacilityRejectionService {
@@ -26,6 +27,7 @@ public class HealthSubFacilityRejectionServiceImpl implements HealthSubFacilityR
     private HealthSubFacilityRejectionDataService healthSubFacilityRejectionDataService;
 
     @Override
+    @Transactional
     public Long saveRejectedHealthSubFacility(HealthSubFacilityImportRejection healthSubFacilityImportRejection) {
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
             @Override
@@ -33,12 +35,12 @@ public class HealthSubFacilityRejectionServiceImpl implements HealthSubFacilityR
                 DateTime dateTimeNow = new DateTime();
                 DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
                 LOGGER.info("In getSqlQuery");
-                String healthBlockValues = "(" + healthSubFacilityImportRejection.getStateId() + ", " + healthSubFacilityImportRejection.getDistrictCode() + ", '" + healthSubFacilityImportRejection.getTalukaCode() + "', " +
+                String healthSubFacilityValues = "(" + healthSubFacilityImportRejection.getStateId() + ", " + healthSubFacilityImportRejection.getDistrictCode() + ", '" + healthSubFacilityImportRejection.getTalukaCode() + "', " +
                         healthSubFacilityImportRejection.getHealthFacilityCode()+", "+healthSubFacilityImportRejection.getHealthSubFacilityCode()+", '" + healthSubFacilityImportRejection.getHealthSubFacilityName() + "', " + healthSubFacilityImportRejection.getAccepted() + ", '" + healthSubFacilityImportRejection.getRejectionReason() +"', "+MOTECH_STRING+MOTECH_STRING+MOTECH_STRING+"'"+ dateTimeFormatter.print(dateTimeNow)+"', '"+dateTimeFormatter.print(dateTimeNow)+"')";
-                LOGGER.info(healthBlockValues);
+                LOGGER.info(healthSubFacilityValues);
                 String query = "INSERT into nms_health_sub_facility_rejects (`stateId`, `districtCode`, `talukaCode`, `healthFacilityCode`, `healthSubFacilityCode`, `healthSubFacilityName`," +
                         " `accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
-                        healthBlockValues + " ON DUPLICATE KEY UPDATE " +
+                        healthSubFacilityValues + " ON DUPLICATE KEY UPDATE " +
                         "districtCode = VALUES(districtCode), talukaCode = VALUES(talukaCode),healthFacilityCode = VALUES(healthFacilityCode), healthSubFacilityName = VALUES(healthSubFacilityName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
                 LOGGER.info("Printing Query for rejected HSF: "+ query);
                 return query;
@@ -47,7 +49,7 @@ public class HealthSubFacilityRejectionServiceImpl implements HealthSubFacilityR
             }
             @Override
             public Long execute(Query query) {
-                query.setClass(HealthFacilityImportRejection.class);
+                query.setClass(HealthSubFacilityImportRejection.class);
                 LOGGER.info("HSF class reject query: " + query.toString());
                 return (Long) query.execute();
             }

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
+import javax.jdo.annotations.Transactional;
 
 @Service("talukaRejectionService")
 public class TalukaRejectionServiceImpl implements TalukaRejectionService {
@@ -27,6 +28,7 @@ public class TalukaRejectionServiceImpl implements TalukaRejectionService {
     TalukaRejectionDataService talukaRejectionDataService;
 
     @Override
+    @Transactional
     public Long saveRejectedTaluka(TalukaImportRejection talukaImportRejection){
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
             @Override
@@ -34,16 +36,15 @@ public class TalukaRejectionServiceImpl implements TalukaRejectionService {
                 DateTime dateTimeNow = new DateTime();
                 DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
                 LOGGER.info("In getSqlQuery");
-                String healthBlockValues = "(" + talukaImportRejection.getStateId() + ", " + talukaImportRejection.getDistrictCode() + ", '" + talukaImportRejection.getTalukaCode() + "', '" +
+                String talukaValues = "(" + talukaImportRejection.getStateId() + ", " + talukaImportRejection.getDistrictCode() + ", '" + talukaImportRejection.getTalukaCode() + "', '" +
                         talukaImportRejection.getTalukaName() + "', " + talukaImportRejection.getAccepted() + ", '" + talukaImportRejection.getRejectionReason() +"', "+MOTECH_STRING+MOTECH_STRING+MOTECH_STRING+"'"+ dateTimeFormatter.print(dateTimeNow)+"', '"+dateTimeFormatter.print(dateTimeNow)+"')";
-                LOGGER.info(healthBlockValues);
+                LOGGER.info(talukaValues);
                 String query = "INSERT into nms_taluka_rejects (`stateId`, `districtCode`, `talukaCode`, `talukaName`," +
                         " `accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
-                        healthBlockValues + " ON DUPLICATE KEY UPDATE " +
+                        talukaValues + " ON DUPLICATE KEY UPDATE " +
                         "districtCode = VALUES(districtCode), talukaName = VALUES(talukaName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
                 LOGGER.info("Printing Query for rejected Taluka: "+ query);
                 return query;
-
 
             }
             @Override

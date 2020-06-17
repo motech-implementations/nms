@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
+import javax.jdo.annotations.Transactional;
 
 @Service("villageRejectionService")
 public class VillageRejectionServiceImpl implements VillageRejectionService {
@@ -27,6 +28,7 @@ public class VillageRejectionServiceImpl implements VillageRejectionService {
 
 
     @Override
+    @Transactional
     public Long saveRejectedVillage(VillageImportRejection villageImportRejection) {
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
             @Override
@@ -34,21 +36,19 @@ public class VillageRejectionServiceImpl implements VillageRejectionService {
                 DateTime dateTimeNow = new DateTime();
                 DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
                 LOGGER.info("In getSqlQuery");
-                String healthBlockValues = "(" + villageImportRejection.getStateId() + ", " + villageImportRejection.getDistrictCode() + ", '" + villageImportRejection.getTalukaCode() + "', " +
+                String villageValues = "(" + villageImportRejection.getStateId() + ", " + villageImportRejection.getDistrictCode() + ", '" + villageImportRejection.getTalukaCode() + "', " +
                         villageImportRejection.getVillageCode()+", "+villageImportRejection.getVillageName()+", "  + villageImportRejection.getAccepted() + ", '" + villageImportRejection.getRejectionReason() +"', "+MOTECH_STRING+MOTECH_STRING+MOTECH_STRING+"'"+ dateTimeFormatter.print(dateTimeNow)+"', '"+dateTimeFormatter.print(dateTimeNow)+"')";
-                LOGGER.info(healthBlockValues);
+                LOGGER.info(villageValues);
                 String query = "INSERT into nms_village_rejects (`stateId`, `districtCode`, `talukaCode`, `villageCode`, `villageName`," +
                         " `accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
-                        healthBlockValues + " ON DUPLICATE KEY UPDATE " +
+                        villageValues + " ON DUPLICATE KEY UPDATE " +
                         "districtCode = VALUES(districtCode), talukaCode = VALUES(talukaCode), villageName = VALUES(villageName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
                 LOGGER.info("Printing Query for rejected Village: "+ query);
                 return query;
-
-
             }
             @Override
             public Long execute(Query query) {
-                query.setClass(HealthFacilityImportRejection.class);
+                query.setClass(VillageImportRejection.class);
                 LOGGER.info("Village class reject query: " + query.toString());
                 return (Long) query.execute();
             }

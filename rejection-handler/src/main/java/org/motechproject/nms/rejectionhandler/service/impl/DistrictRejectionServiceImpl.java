@@ -34,16 +34,17 @@ public class DistrictRejectionServiceImpl implements DistrictRejectionService {
     @Override
     @Transactional
     public Long saveRejectedDistrict(DistrictImportRejection districtImportRejection) {
+        LOGGER.info("In saveRejectedDistrict");
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
             @Override
             public String getSqlQuery() {
                 DateTime dateTimeNow = new DateTime();
                 DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
                 LOGGER.info("In getSqlQuery");
-                String healthBlockValues = "(" + districtImportRejection.getStateId() + ", " + districtImportRejection.getDistrictCode()+", '"+districtImportRejection.getDistrictName()+",' "  + districtImportRejection.getAccepted() + ", '" + districtImportRejection.getRejectionReason() +"', "+MOTECH_STRING+MOTECH_STRING+MOTECH_STRING+"'"+ dateTimeFormatter.print(dateTimeNow)+"', '"+dateTimeFormatter.print(dateTimeNow)+"')";
-                LOGGER.info(healthBlockValues);
+                String districtValues = "(" + districtImportRejection.getStateId() + ", " + districtImportRejection.getDistrictCode()+", '"+districtImportRejection.getDistrictName()+",' "  + districtImportRejection.getAccepted() + ", '" + districtImportRejection.getRejectionReason() +"', "+MOTECH_STRING+MOTECH_STRING+MOTECH_STRING+"'"+ dateTimeFormatter.print(dateTimeNow)+"', '"+dateTimeFormatter.print(dateTimeNow)+"')";
+                LOGGER.info(districtValues);
                 String query = "INSERT into nms_district_rejects (`stateId`, `districtCode`, `districtName`,`accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
-                        healthBlockValues + " ON DUPLICATE KEY UPDATE " +
+                        districtValues + " ON DUPLICATE KEY UPDATE " +
                         " districtName = VALUES(districtName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
                 LOGGER.info("Printing Query for rejected District: "+ query);
                 return query;
