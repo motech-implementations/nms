@@ -1,6 +1,8 @@
 package org.motechproject.nms.kilkari.service.impl;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.joda.time.DateTime;
+import org.joda.time.Days;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
@@ -180,9 +182,19 @@ public class CsrServiceImpl implements CsrService {
                     break;
 
                 case FAILED:
-                    if (callRetry == null ||
-                            !csrDto.getTargetFileTimeStamp().equals(callRetry.getTargetFiletimestamp())) {
-                        doReschedule(subscription, callRetry, csrDto);
+                    String weekId = getWeekIdForSubscription(subscription.getStartDate());
+                    //If there was a DOB/LMP update during RCH import, number of weeks into subscription would have changed.
+                    //No need to reschedule this call. Exception for w1, because regardless of which week the subscription starts in, user
+                    //always gets w1 message initially
+                    if(!csrDto.getWeekId().equals("w1_1")&&!weekId.equals(csrDto.getWeekId())){
+                        if(callRetry!=null){
+                            callRetryDataService.delete(callRetry);
+                        }
+                    } else {
+                        if (callRetry == null ||
+                                !csrDto.getTargetFileTimeStamp().equals(callRetry.getTargetFiletimestamp())) {
+                            doReschedule(subscription, callRetry, csrDto);
+                        }
                     }
                     whatHappened = "FA";
                     break;
@@ -228,6 +240,12 @@ public class CsrServiceImpl implements CsrService {
             subscription.setNeedsWelcomeMessageViaObd(false);
             subscriptionDataService.update(subscription);
         }
+    }
+
+    private String getWeekIdForSubscription(DateTime startDate) {
+        int daysIntoSubscription = Days.daysBetween(startDate, DateTime.now()).getDays();
+        int currentWeek = (daysIntoSubscription / 7) + 1;
+        return String.format("w%d_%d", currentWeek, 1);
     }
 
 }
