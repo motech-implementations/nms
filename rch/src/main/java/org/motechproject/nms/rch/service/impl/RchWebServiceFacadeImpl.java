@@ -1824,6 +1824,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
         LOGGER.debug("Thread Processing Start");
         Integer recordsProcessed = 0;
+        mctsBeneficiaryImportService.setRecords(0);
         ExecutorService executor = Executors.newCachedThreadPool();
         List<Future<ThreadProcessorObject>> list = new ArrayList<>();
 
@@ -1918,6 +1919,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private RchImportAudit saveImportedChildrenData(RchChildrenDataSet childrenDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {  //NOPMD NcssMethodCount
         LOGGER.info("Starting RCH children import for state {}", stateName);
+        mctsBeneficiaryImportService.setChildRecords(0);
         List<RchChildRecord> childRecords = childrenDataSet.getRecords();
         List<Map<String, Object>> validChildRecords = new ArrayList<>();
         validChildRecords = getDOBValidChildRecords(childRecords);

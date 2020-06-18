@@ -20,6 +20,7 @@ import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
 import org.motechproject.nms.kilkari.exception.MultipleSubscriberException;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
+import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
@@ -37,9 +38,11 @@ import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
 import org.motechproject.nms.rejectionhandler.service.ChildRejectionService;
 import org.motechproject.nms.rejectionhandler.service.MotherRejectionService;
+import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.supercsv.cellprocessor.Optional;
@@ -53,6 +56,7 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionMcts;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.motherRejectionMcts;
@@ -83,6 +87,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     // Number of rejected mother/children in a single query for bulk insert/update
     private static final Integer REJECTION_PART_SIZE = 5000;
+    private static final String CHUNK_SIZE = "kilkari.chunk.size";
     private static final String SUBSCRIPTION_COMPLETED = "Subscription completed";
     private static final String USER_DEACTIVATED = "User deactivated";
     private static final String GET_CREATION = "getCreationDate";
@@ -91,15 +96,20 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private static final String SET_ID = "setId";
     private static final String IGNORE_CREATION_DATE = "Ignoring creation date and setting as now";
     private static final String IMPORT_STATS_LOG = "Inserted {} and updated {} rejection records into database";
+    private SubscriptionDataService subscriptionDataService;
+    private SettingsFacade settingsFacade;
+    private static AtomicLong records = new AtomicLong(0);
+    private static AtomicLong childRecords =  new AtomicLong(0);
 
     @Autowired
-    public MctsBeneficiaryImportServiceImpl(SubscriptionService subscriptionService,
+    public MctsBeneficiaryImportServiceImpl(@Qualifier("kilkariSettings") SettingsFacade settingsFacade, SubscriptionService subscriptionService,
                                             SubscriptionErrorDataService subscriptionErrorDataService,
                                             SubscriberService subscriberService,
                                             MctsBeneficiaryValueProcessor mctsBeneficiaryValueProcessor,
                                             MctsMotherDataService mctsMotherDataService,
                                             MctsChildDataService mctsChildDataService,
-                                            DeactivatedBeneficiaryService deactivatedBeneficiaryService) {
+                                            DeactivatedBeneficiaryService deactivatedBeneficiaryService,
+                                            SubscriptionDataService subscriptionDataService) {
         this.subscriptionService = subscriptionService;
         this.subscriptionErrorDataService = subscriptionErrorDataService;
         this.subscriberService = subscriberService;
@@ -107,6 +117,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         this.mctsMotherDataService = mctsMotherDataService;
         this.deactivatedBeneficiaryService = deactivatedBeneficiaryService;
         this.mctsChildDataService = mctsChildDataService;
+        this.settingsFacade = settingsFacade;
+        this.subscriptionDataService = subscriptionDataService;
     }
 
     @Autowired
@@ -118,6 +130,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     @Autowired
     private ActionFinderService actionFinderService;
 
+    @Override
+    public void setRecords(int i){this.records.set(i);}
+
+    @Override
+    public void setChildRecords(int i){this.childRecords.set(i);}
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
@@ -205,6 +222,17 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         List<DeactivatedBeneficiary> deactivatedUsers = null;
         synchronized (this) {
+            records.addAndGet(1);
+            Long chunkSize = Long.parseLong(settingsFacade.getProperty(CHUNK_SIZE));
+            LOGGER.info("Records processed"+records);
+            if(records.get()%chunkSize==0||records.get()==1) {
+                Long maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_CAP));
+                LOGGER.info("Subscription Cap" + maxActiveSubscriptions + " " + records);
+                Long currentActive = subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
+                LOGGER.info("current active" + currentActive);
+                SubscriptionServiceImpl.isCapacityAvailable.set(currentActive < maxActiveSubscriptions);
+            }
+            LOGGER.info("capacity available"+SubscriptionServiceImpl.isCapacityAvailable.get());
             LOGGER.debug("MotherImportRejection::importMotherRecord Start synchronized block " + beneficiaryId);
             deactivatedUsers = deactivatedBeneficiaryService.findDeactivatedBeneficiariesOtherThanManualDeactivation(beneficiaryId);
             LOGGER.debug("MotherImportRejection::importMotherRecord Got deactived users " + beneficiaryId);
@@ -405,6 +433,17 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         List<DeactivatedBeneficiary> deactivatedUsers = null;
         synchronized(this) {
+            childRecords.addAndGet(1);
+            Long chunkSize = Long.parseLong(settingsFacade.getProperty(CHUNK_SIZE));
+            LOGGER.info("records processed"+childRecords);
+            if(childRecords.get()%chunkSize==0||childRecords.get()==1) {
+                Long maxActiveSubscriptions = Long.parseLong(settingsFacade.getProperty(KilkariConstants.SUBSCRIPTION_CAP));
+                LOGGER.info("subscription capacity" + maxActiveSubscriptions + " " + childRecords);
+                Long currentActive = subscriptionDataService.countFindByStatus(SubscriptionStatus.ACTIVE);
+                LOGGER.info("current active" + currentActive);
+                SubscriptionServiceImpl.isCapacityAvailable.set(currentActive < maxActiveSubscriptions);
+            }
+            LOGGER.info("capacity available"+SubscriptionServiceImpl.isCapacityAvailable.get());
             if (childById != null && subscriptionService.getActiveSubscription(subscriberService.getSubscriberByBeneficiary(childById), SubscriptionPackType.PREGNANCY) != null && subscriptionService.getActiveSubscription(subscriberService.getSubscriberByBeneficiary(childById), SubscriptionPackType.PREGNANCY).getStatus() == SubscriptionStatus.ACTIVE) {
                 LOGGER.debug("Active mother. We ignore the deactivated case scenario.");
             } else {
