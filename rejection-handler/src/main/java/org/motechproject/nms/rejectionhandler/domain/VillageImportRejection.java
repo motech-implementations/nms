@@ -7,7 +7,7 @@ import org.motechproject.mds.annotations.Field;
 import javax.jdo.annotations.Unique;
 
 @Entity(tableName = "nms_village_rejects")
-@Unique(name = "UNIQUE_STATE_TALUKA_CODE", members = { "stateId", "talukaCode" })
+@Unique(name = "UNIQUE_STATE_VILLAGE_CODE", members = { "stateId", "villageCode" })
 public class VillageImportRejection {
     @Field
     private Long stateId;
