@@ -63,6 +63,6 @@ public class VillageRejectionServiceImpl implements VillageRejectionService {
     }
     @Override
     public void createRejectedVillage(VillageImportRejection villageImportRejection) {
-
+        villageRejectionDataService.create(villageImportRejection);
     }
 }
