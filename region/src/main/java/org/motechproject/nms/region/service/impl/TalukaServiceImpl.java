@@ -209,7 +209,7 @@ public class TalukaServiceImpl implements TalukaService {
                 District district = districtHashMap.get(taluka.get(LocationConstants.CSV_STATE_ID).toString() + "_" + taluka.get(LocationConstants.DISTRICT_ID).toString());
                 String talukaName = taluka.get(LocationConstants.TALUKA_NAME).toString();
                 if (district != null && taluka.get(LocationConstants.TALUKA_ID) != null && !taluka.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty() && (talukaName != null && !talukaName.trim().isEmpty()) &&
-                        !("0000").equals(taluka.get(LocationConstants.TALUKA_ID).toString().trim())) {
+                        !(Integer.parseInt((taluka.get(LocationConstants.TALUKA_ID).toString().trim())) ==0)) {
                     if (i != 0) {
                         stringBuilder.append(", ");
                     }
@@ -236,7 +236,8 @@ public class TalukaServiceImpl implements TalukaService {
                 } else if ((talukaName == null || talukaName.trim().isEmpty())) {
                     TalukaImportRejection talukaImportRejection = new TalukaImportRejection(state.getCode(), district.getCode(), (String) taluka.get(LocationConstants.TALUKA_ID), talukaName, false, LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString());
                     talukaRejectionService.saveRejectedTaluka(talukaImportRejection);
-                } else if (("0000").equals(taluka.get(LocationConstants.TALUKA_ID).toString().trim())) {
+                } else if ((Integer.parseInt((taluka.get(LocationConstants.TALUKA_ID).toString().trim())) ==0)) {
+                    LOGGER.debug("printing Zero Taluka code: "+Integer.parseInt((taluka.get(LocationConstants.TALUKA_ID).toString().trim())) );
                     TalukaImportRejection talukaImportRejection = new TalukaImportRejection(state.getCode(), district.getCode(), (String) taluka.get(LocationConstants.TALUKA_ID), talukaName, false, LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString());
                     talukaRejectionService.saveRejectedTaluka(talukaImportRejection);
                 }

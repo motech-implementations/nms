@@ -260,9 +260,17 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
                     healthFacilityRejectionService.createRejectedHealthFacility(healthFacilityImportRejection);
                 }
                 else if(taluka == null || healthBlock == null ) {
-                    LOGGER.debug("rejection reason Parent Location code null");
-                    HealthFacilityImportRejection healthFacilityImportRejection = new HealthFacilityImportRejection((Long)healthFacility.get(LocationConstants.CSV_STATE_ID),(Long)healthFacility.get(LocationConstants.DISTRICT_ID),(String)healthFacility.get(LocationConstants.TALUKA_ID),(Long)healthFacility.get(LocationConstants.HEALTHBLOCK_ID),(Long) healthFacility.get(LocationConstants.HEALTHFACILITY_ID),(String) healthFacility.get(LocationConstants.HEALTHFACILITY_NAME),false,LocationRejectionReasons.PARENT_LOCATION_NOT_PRESENT_IN_DB.toString());
-                    healthFacilityRejectionService.saveRejectedHealthFacility(healthFacilityImportRejection);
+                    if(district!=null && taluka==null){
+                        LOGGER.debug("taluka rejection reason Parent Location code null");
+                        HealthFacilityImportRejection healthFacilityImportRejection = new HealthFacilityImportRejection((Long)healthFacility.get(LocationConstants.CSV_STATE_ID),(Long)healthFacility.get(LocationConstants.DISTRICT_ID),(String)healthFacility.get(LocationConstants.TALUKA_ID),(Long)healthFacility.get(LocationConstants.HEALTHBLOCK_ID),(Long) healthFacility.get(LocationConstants.HEALTHFACILITY_ID),(String) healthFacility.get(LocationConstants.HEALTHFACILITY_NAME),false,LocationRejectionReasons.TALUKA_ID_NOT_PRESENT_IN_DB.toString());
+                        healthFacilityRejectionService.saveRejectedHealthFacility(healthFacilityImportRejection);
+                    }
+                    else {
+                        LOGGER.debug("rejection reason Parent Location code null");
+                        HealthFacilityImportRejection healthFacilityImportRejection = new HealthFacilityImportRejection((Long)healthFacility.get(LocationConstants.CSV_STATE_ID),(Long)healthFacility.get(LocationConstants.DISTRICT_ID),(String)healthFacility.get(LocationConstants.TALUKA_ID),(Long)healthFacility.get(LocationConstants.HEALTHBLOCK_ID),(Long) healthFacility.get(LocationConstants.HEALTHFACILITY_ID),(String) healthFacility.get(LocationConstants.HEALTHFACILITY_NAME),false,LocationRejectionReasons.PARENT_LOCATION_NOT_PRESENT_IN_DB.toString());
+                        healthFacilityRejectionService.saveRejectedHealthFacility(healthFacilityImportRejection);
+                    }
+
                 }
 
             }
