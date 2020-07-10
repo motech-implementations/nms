@@ -77,39 +77,35 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
             String newRchId=(String)record.get(id);
             newRchId=newRchId.replaceAll("[\\n\\t\\r ]","");
             record.replace(id,newRchId);
-            //filter for rch child's MCTS_Mother_ID_No and mcts child's Mother_ID
+            //filter for rch child's MCTS_Mother_ID_No
 
             if(!mctsImport) {
                 //for rch child's mother registration no
                 try {
-                    LOGGER.debug("Mother Id---=>"+motherId);
-                    LOGGER.debug("record ----=>"+record);
                     String childLinkedMother=(String)record.get(motherId);
                     childLinkedMother=childLinkedMother.replaceAll("[\\n\\t\\r ]","");
                     record.replace(motherId,childLinkedMother);
                 }
                 catch (Exception e){
-                    LOGGER.debug("no mother for child");
+                    //LOGGER.debug("no mother for child");
                 }
                 //for rch child's MCTS_ID_No
                 try {
-                    LOGGER.debug("------in Mcts Id filter for rch child-----");
                     String newMctsId=(String)record.get(mctsIdForRchChild);
                     newMctsId=newMctsId.replaceAll("[\\n\\t\\r ]","");
                     record.replace(mctsIdForRchChild,newMctsId);
                 }
                 catch (Exception e){
-                    LOGGER.debug("no mcts id for child");
+                    //LOGGER.debug("no mcts id for child");
                 }
                 // for rch child's MCTS_Mother_Id_N0
                 try{
-                    LOGGER.debug("------Mcts mother Id filter for rch child-----");
                     String newMctsMotherId=(String)record.get(mctsMotherIdForChild);
                     newMctsMotherId=newMctsMotherId.replaceAll("[\\n\\t\\r ]","");
                     record.replace(mctsMotherIdForChild,newMctsMotherId);
                 }
                 catch (Exception e){
-                    LOGGER.debug("no mcts mother id for child");
+                    //LOGGER.debug("no mcts mother id for child");
                 }
             }
 

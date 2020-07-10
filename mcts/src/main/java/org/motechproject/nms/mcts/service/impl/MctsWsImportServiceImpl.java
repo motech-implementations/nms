@@ -322,7 +322,6 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             DateTime lmp = (DateTime) recordMap.get(KilkariConstants.LMP);
 
             // removing special char from beneficiary id
-            LOGGER.debug("filtring mcts mother beneficiary id in event");
             beneficiaryId=beneficiaryId.replaceAll("[\\n\\t\\r ]","");
             recordMap.replace(KilkariConstants.BENEFICIARY_ID,beneficiaryId);
 
@@ -501,10 +500,8 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             DateTime dob = (DateTime) recordMap.get(KilkariConstants.DOB);
 
             // removing special char from beneficiary id
-            LOGGER.debug("filtring child  beneficiary id and recors id--> "+recordMap);
             childId=childId.replaceAll("[\\n\\t\\r ]","");
             recordMap.replace(KilkariConstants.BENEFICIARY_ID,childId);
-            LOGGER.debug("record map after filter on ids'--> "+recordMap);
 
             // add child to the record
             child = mctsBeneficiaryValueProcessor.getOrCreateChildInstance(childId);

@@ -72,7 +72,6 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
             count++;
             LOGGER.debug("Started mother import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
 
-            LOGGER.debug("---------mother record----------=>"+record);
             //filter for  rch mother's Registration_No and mcts mother's ID_no
             String newRchId=(String)record.get(id);
             newRchId=newRchId.replaceAll("[\\n\\t\\r ]","");
@@ -80,13 +79,12 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
             //for rch mother's MCTS_ID_No
             if(!mctsImport){
                 try {
-                    LOGGER.debug("------Mcts Id filter for rch mother-----");
                     String newMctsId=(String)record.get(mctsIDForRchMother);
                     newMctsId=newMctsId.replaceAll("[\\n\\t\\r ]","");
                     record.replace(mctsIDForRchMother,newMctsId);
                 }
                 catch (Exception e){
-                    LOGGER.debug("no mcts id for the rch mother");
+                    //LOGGER.debug("no mcts id for the rch mother");
                 }
             }
 
