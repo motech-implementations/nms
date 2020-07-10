@@ -73,17 +73,18 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
             count++;
             LOGGER.debug("Started child import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
 
-            //filter for  rch child's Registration_No and mcts child's ID_no
+            //filter on  rch child's Registration_No and mcts child's ID_no
             String newRchId=(String)record.get(id);
             newRchId=newRchId.replaceAll("[\\n\\t\\r ]","");
             record.replace(id,newRchId);
-            //filter for rch child's MCTS_Mother_ID_No
+            //filter on rch child's MCTS_Mother_ID_No and mcts child's Mother_ID
 
             if(!mctsImport) {
                 //for rch child's mother registration no
                 try {
                     String childLinkedMother=(String)record.get(motherId);
-                    childLinkedMother=childLinkedMother.replaceAll("[\\n\\t\\r ]","");
+                    childLinkedMother=childLinkedMother
+                            .replaceAll("[\\n\\t\\r ]","");
                     record.replace(motherId,childLinkedMother);
                 }
                 catch (Exception e){
@@ -100,6 +101,7 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
                 }
                 // for rch child's MCTS_Mother_Id_N0
                 try{
+                    LOGGER.debug("------Mcts mother Id filter for rch child-----");
                     String newMctsMotherId=(String)record.get(mctsMotherIdForChild);
                     newMctsMotherId=newMctsMotherId.replaceAll("[\\n\\t\\r ]","");
                     record.replace(mctsMotherIdForChild,newMctsMotherId);
