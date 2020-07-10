@@ -83,8 +83,7 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
                 //for rch child's mother registration no
                 try {
                     String childLinkedMother=(String)record.get(motherId);
-                    childLinkedMother=childLinkedMother
-                            .replaceAll("[\\n\\t\\r ]","");
+                    childLinkedMother=childLinkedMother.replaceAll("[\\n\\t\\r ]","");
                     record.replace(motherId,childLinkedMother);
                 }
                 catch (Exception e){
