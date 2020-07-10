@@ -77,7 +77,7 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
             String newRchId=(String)record.get(id);
             newRchId=newRchId.replaceAll("[\\n\\t\\r ]","");
             record.replace(id,newRchId);
-            //filter on rch child's MCTS_Mother_ID_No and mcts child's Mother_ID
+            //filter on rch child's MCTS_Mother_ID_No
 
             if(!mctsImport) {
                 //for rch child's mother registration no
