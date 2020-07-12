@@ -321,10 +321,14 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             msisdn = (Long) recordMap.get(KilkariConstants.MSISDN);
             DateTime lmp = (DateTime) recordMap.get(KilkariConstants.LMP);
 
-            // removing special char from beneficiary id
-//            LOGGER.debug("filtring mcts mother beneficiary id in event");
-//            beneficiaryId=beneficiaryId.replaceAll("[\\n\\t\\r ]","");
-//            recordMap.replace(KilkariConstants.BENEFICIARY_ID,beneficiaryId);
+            ArrayList<String > listOfIds=new ArrayList<>();
+            listOfIds.add(KilkariConstants.BENEFICIARY_ID);
+            LOGGER.debug("-----------record before filter---------------------------------=>", recordMap.toString());
+
+            mctsBeneficiaryImportService.removeSpecialChar(listOfIds,recordMap);
+
+            LOGGER.debug("------------------------record after filter-------------------=>", recordMap.toString());
+            LOGGER.debug("-----------------------id after filter-------------------------=>", recordMap.get(KilkariConstants.BENEFICIARY_ID));
 
             mother = mctsBeneficiaryValueProcessor.getOrCreateMotherInstance(beneficiaryId);
             recordMap.put(KilkariConstants.MCTS_MOTHER, mother);
@@ -500,9 +504,15 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             msisdn = (Long) recordMap.get(KilkariConstants.MSISDN);
             DateTime dob = (DateTime) recordMap.get(KilkariConstants.DOB);
 
-            // removing special char from beneficiary id
-//            childId=childId.replaceAll("[\\n\\t\\r ]","");
-//            recordMap.replace(KilkariConstants.BENEFICIARY_ID,childId);
+            ArrayList<String > listOfIds=new ArrayList<>();
+            listOfIds.add(KilkariConstants.BENEFICIARY_ID);
+            LOGGER.debug("-----------record before filter---------------------------------=>", recordMap.toString());
+
+            mctsBeneficiaryImportService.removeSpecialChar(listOfIds,recordMap);
+
+            LOGGER.debug("------------------------record after filter-------------------=>", recordMap.toString());
+            LOGGER.debug("-----------------------id after filter-------------------------=>", recordMap.get(KilkariConstants.BENEFICIARY_ID));
+
 
             // add child to the record
             child = mctsBeneficiaryValueProcessor.getOrCreateChildInstance(childId);

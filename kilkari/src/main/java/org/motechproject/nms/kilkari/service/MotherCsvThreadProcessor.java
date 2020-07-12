@@ -11,6 +11,7 @@ import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,21 +73,17 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
             count++;
             LOGGER.debug("Started mother import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
 
-            //filter for  rch mother's Registration_No and mcts mother's ID_no
-//            String newRchId=(String)record.get(id);
-//            newRchId=newRchId.replaceAll("[\\n\\t\\r ]","");
-//            record.replace(id,newRchId);
-            //for rch mother's MCTS_ID_No
-//            if(!mctsImport){
-//                try {
-//                    String newMctsId=(String)record.get(mctsIDForRchMother);
-//                    newMctsId=newMctsId.replaceAll("[\\n\\t\\r ]","");
-//                    record.replace(mctsIDForRchMother,newMctsId);
-//                }
-//                catch (Exception e){
-//                    //LOGGER.debug("no mcts id for the rch mother");
-//                }
-//            }
+
+            ArrayList<String > listOfIds=new ArrayList<>();
+            listOfIds.add(id);
+            listOfIds.add(mctsIDForRchMother);
+
+            LOGGER.debug("-----------record before filter---------------------------------=>", record.toString());
+            mctsBeneficiaryImportService.removeSpecialChar(listOfIds,record);
+
+            LOGGER.debug("------------------------record after filter-------------------=>", record.toString());
+
+            LOGGER.debug("-----------------------id after filter-------------------------=>", record.get(id));
 
             MctsMother mother = mctsImport ? mctsBeneficiaryValueProcessor.getOrCreateMotherInstance((String) record.get(id)) : mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
             if (mother == null) {
