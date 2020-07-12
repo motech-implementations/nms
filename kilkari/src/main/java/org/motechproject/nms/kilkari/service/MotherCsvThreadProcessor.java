@@ -72,18 +72,11 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
         for (Map<String, Object> record : recordList) {
             count++;
             LOGGER.debug("Started mother import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
-
-
+            //changes made to remove special character form the listofids
             ArrayList<String > listOfIds=new ArrayList<>();
             listOfIds.add(id);
             listOfIds.add(mctsIDForRchMother);
-
-            LOGGER.debug("-----------record before filter---------------------------------=>", record.toString());
             mctsBeneficiaryImportService.removeSpecialChar(listOfIds,record);
-
-            LOGGER.debug("------------------------record after filter-------------------=>", record.toString());
-
-            LOGGER.debug("-----------------------id after filter-------------------------=>", record.get(id));
 
             MctsMother mother = mctsImport ? mctsBeneficiaryValueProcessor.getOrCreateMotherInstance((String) record.get(id)) : mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
             if (mother == null) {

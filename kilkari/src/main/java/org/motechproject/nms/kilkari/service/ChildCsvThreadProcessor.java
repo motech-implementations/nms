@@ -74,17 +74,13 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
             count++;
             LOGGER.debug("Started child import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
 
+            //changes made to remove special character form the listofids
             ArrayList<String > listOfIds=new ArrayList<>();
             listOfIds.add(id);
             listOfIds.add(motherId);
             listOfIds.add(mctsIdForRchChild);
             listOfIds.add(mctsMotherIdForChild);
-            LOGGER.debug("-----------record before filter---------------------------------=>", record.toString());
             mctsBeneficiaryImportService.removeSpecialChar(listOfIds,record);
-
-            LOGGER.debug("------------------------record after filter-------------------=>", record.toString());
-
-            LOGGER.debug("-----------------------id after filter-------------------------=>", record.get(id));
 
             MctsChild child = mctsImport ? mctsBeneficiaryValueProcessor.getOrCreateChildInstance((String) record.get(id)) : mctsBeneficiaryValueProcessor.getOrCreateRchChildInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
             if (child == null) {

@@ -321,14 +321,10 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             msisdn = (Long) recordMap.get(KilkariConstants.MSISDN);
             DateTime lmp = (DateTime) recordMap.get(KilkariConstants.LMP);
 
+            //changes made to remove special character form the listofids
             ArrayList<String > listOfIds=new ArrayList<>();
             listOfIds.add(KilkariConstants.BENEFICIARY_ID);
-            LOGGER.debug("-----------record before filter---------------------------------=>", recordMap.toString());
-
             mctsBeneficiaryImportService.removeSpecialChar(listOfIds,recordMap);
-
-            LOGGER.debug("------------------------record after filter-------------------=>", recordMap.toString());
-            LOGGER.debug("-----------------------id after filter-------------------------=>", recordMap.get(KilkariConstants.BENEFICIARY_ID));
 
             mother = mctsBeneficiaryValueProcessor.getOrCreateMotherInstance(beneficiaryId);
             recordMap.put(KilkariConstants.MCTS_MOTHER, mother);
@@ -504,15 +500,10 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             msisdn = (Long) recordMap.get(KilkariConstants.MSISDN);
             DateTime dob = (DateTime) recordMap.get(KilkariConstants.DOB);
 
+            //changes made to remove special character form the listofids
             ArrayList<String > listOfIds=new ArrayList<>();
             listOfIds.add(KilkariConstants.BENEFICIARY_ID);
-            LOGGER.debug("-----------record before filter---------------------------------=>", recordMap.toString());
-
             mctsBeneficiaryImportService.removeSpecialChar(listOfIds,recordMap);
-
-            LOGGER.debug("------------------------record after filter-------------------=>", recordMap.toString());
-            LOGGER.debug("-----------------------id after filter-------------------------=>", recordMap.get(KilkariConstants.BENEFICIARY_ID));
-
 
             // add child to the record
             child = mctsBeneficiaryValueProcessor.getOrCreateChildInstance(childId);
