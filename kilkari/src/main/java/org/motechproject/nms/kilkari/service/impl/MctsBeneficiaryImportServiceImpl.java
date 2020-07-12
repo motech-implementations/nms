@@ -304,10 +304,10 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 try {
                     MctsMother motherInstance = (MctsMother) motherRecord;
                     //removing special char from mcts child's mother_id
-                    String mctsMotherId=motherInstance.getBeneficiaryId();
-                    mctsMotherId=mctsMotherId.replaceAll("[\\n\\t\\r ]","");
-                    motherInstance.setBeneficiaryId(mctsMotherId);
-                    record.replace(KilkariConstants.MOTHER_ID,motherInstance);
+//                    String mctsMotherId=motherInstance.getBeneficiaryId();
+//                    mctsMotherId=mctsMotherId.replaceAll("[\\n\\t\\r ]","");
+//                    motherInstance.setBeneficiaryId(mctsMotherId);
+//                    record.replace(KilkariConstants.MOTHER_ID,motherInstance);
 
                     mother = mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherInstance.getBeneficiaryId());
                 } catch (Exception e) {
@@ -983,8 +983,22 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         return mapping;
     }
+    public void removeSpecialChar(ArrayList<String > listOfIds,Map<String, Object> record){
+
+        for(String id :listOfIds){
+            try{
+                String idValue=(String)record.get(id);
+                idValue=idValue.replaceAll("[\\n\\t\\r ]","");
+                record.replace(id,idValue);
+                LOGGER.debug("-----------------method called and filtered the record-------------------=>", record);
+
+            }
+            catch (Exception e){
+                continue;
+            }
+        }
 
 
-
+    }
 
 }

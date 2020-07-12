@@ -9,6 +9,7 @@ import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
 import org.springframework.transaction.annotation.Transactional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 /**
@@ -37,4 +38,5 @@ public interface MctsBeneficiaryImportService {
     Map<String, CellProcessor> getRchMotherProcessorMapping();
 
     Map<String, CellProcessor> getRchAshaProcessorMapping();
-}
+    public void removeSpecialChar(ArrayList<String > listOfIds, Map<String, Object> record);
+    }

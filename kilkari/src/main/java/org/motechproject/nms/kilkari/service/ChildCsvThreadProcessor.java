@@ -8,6 +8,7 @@ import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,42 +74,55 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
             count++;
             LOGGER.debug("Started child import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
 
+            ArrayList<String > listOfIds=new ArrayList<>();
+            listOfIds.add(id);
+            listOfIds.add(motherId);
+            listOfIds.add(mctsIdForRchChild);
+            listOfIds.add(mctsMotherIdForChild);
+            LOGGER.debug("-----------record before filter---------------------------------=>", record);
+            mctsBeneficiaryImportService.removeSpecialChar(listOfIds,record);
+
+            LOGGER.debug("------------------------record after filter-------------------=>", record);
+
+            LOGGER.debug("-----------------------id after filter-------------------------=>", record.get(id));
+
+
             //filter on  rch child's Registration_No and mcts child's ID_no
-            String newRchId=(String)record.get(id);
-            newRchId=newRchId.replaceAll("[\\n\\t\\r ]","");
-            record.replace(id,newRchId);
+//            String newRchId=(String)record.get(id);
+//            newRchId=newRchId.replaceAll("[\\n\\t\\r ]","");
+//            record.replace(id,newRchId);
             //filter on rch child's MCTS_Mother_ID_No
 
-            if(!mctsImport) {
-                //for rch child's mother registration no
-                try {
-                    String childLinkedMother=(String)record.get(motherId);
-                    childLinkedMother=childLinkedMother.replaceAll("[\\n\\t\\r ]","");
-                    record.replace(motherId,childLinkedMother);
-                }
-                catch (Exception e){
-                    //LOGGER.debug("no mother for child");
-                }
-                //for rch child's MCTS_ID_No
-                try {
-                    String newMctsId=(String)record.get(mctsIdForRchChild);
-                    newMctsId=newMctsId.replaceAll("[\\n\\t\\r ]","");
-                    record.replace(mctsIdForRchChild,newMctsId);
-                }
-                catch (Exception e){
-                    //LOGGER.debug("no mcts id for child");
-                }
-                // for rch child's MCTS_Mother_Id_N0
-                try{
-                    LOGGER.debug("------Mcts mother Id filter for rch child-----");
-                    String newMctsMotherId=(String)record.get(mctsMotherIdForChild);
-                    newMctsMotherId=newMctsMotherId.replaceAll("[\\n\\t\\r ]","");
-                    record.replace(mctsMotherIdForChild,newMctsMotherId);
-                }
-                catch (Exception e){
-                    //LOGGER.debug("no mcts mother id for child");
-                }
-            }
+//            if(!mctsImport) {
+//                //for rch child's mother registration no
+//                try {
+//                    String childLinkedMother=(String)record.get(motherId);
+//                    childLinkedMother=childLinkedMother.replaceAll("[\\n\\t\\r ]","");
+//                    record.replace(motherId,childLinkedMother);
+//                }
+//                catch (Exception e){
+//                    //LOGGER.debug("no mother for child");
+//                }
+//                //for rch child's MCTS_ID_No
+//                try {
+//                    String newMctsId=(String)record.get(mctsIdForRchChild);
+//                    newMctsId=newMctsId.replaceAll("[\\n\\t\\r ]","");
+//                    record.replace(mctsIdForRchChild,newMctsId);
+//                }
+//                catch (Exception e){
+//                    //LOGGER.debug("no mcts id for child");
+//                }
+//                // for rch child's MCTS_Mother_Id_N0
+//                try{
+//                    LOGGER.debug("------Mcts mother Id filter for rch child-----");
+//                    String newMctsMotherId=(String)record.get(mctsMotherIdForChild);
+//                    newMctsMotherId=newMctsMotherId.replaceAll("[\\n\\t\\r ]","");
+//                    record.replace(mctsMotherIdForChild,newMctsMotherId);
+//                }
+//                catch (Exception e){
+//                    //LOGGER.debug("no mcts mother id for child");
+//                }
+//            }
 
             MctsChild child = mctsImport ? mctsBeneficiaryValueProcessor.getOrCreateChildInstance((String) record.get(id)) : mctsBeneficiaryValueProcessor.getOrCreateRchChildInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
             if (child == null) {
