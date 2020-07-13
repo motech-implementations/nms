@@ -38,5 +38,4 @@ public interface MctsBeneficiaryImportService {
     Map<String, CellProcessor> getRchMotherProcessorMapping();
 
     Map<String, CellProcessor> getRchAshaProcessorMapping();
-    void removeSpecialChar(ArrayList<String > listOfIds, Map<String, Object> record);
     }

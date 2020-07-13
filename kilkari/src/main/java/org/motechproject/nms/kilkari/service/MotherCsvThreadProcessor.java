@@ -6,6 +6,7 @@ import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.ThreadProcessorObject;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
+import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
 import org.slf4j.Logger;
@@ -75,8 +76,10 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
             //changes made to remove special character form the listofids
             ArrayList<String > listOfIds=new ArrayList<>();
             listOfIds.add(id);
-            listOfIds.add(mctsIDForRchMother);
-            mctsBeneficiaryImportService.removeSpecialChar(listOfIds,record);
+            if (!mctsImport) {
+                listOfIds.add(mctsIDForRchMother);
+            }
+            MctsBeneficiaryUtils.idCleanup(listOfIds,record);
 
             MctsMother mother = mctsImport ? mctsBeneficiaryValueProcessor.getOrCreateMotherInstance((String) record.get(id)) : mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
             if (mother == null) {

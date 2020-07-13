@@ -20,6 +20,7 @@ import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 
 import javax.validation.ConstraintViolation;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 
@@ -91,4 +92,13 @@ public final class MctsBeneficiaryUtils {
         }
     }
 
+    public static void idCleanup(ArrayList<String > listOfIds, Map<String, Object> record){
+        for(String id :listOfIds){
+            if(record.get(id)!=null){
+                String idValue=(String)record.get(id);
+                idValue=idValue.replaceAll(KilkariConstants.SPECIAL_CHAR_STRING,"");
+                record.replace(id,idValue);
+            }
+        }
+    }
 }

@@ -28,6 +28,7 @@ import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
+import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.motechproject.nms.mcts.contract.AnmAshaDataSet;
 import org.motechproject.nms.kilkari.contract.AnmAshaRecord;
 import org.motechproject.nms.kilkari.contract.ChildRecord;
@@ -324,7 +325,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             //changes made to remove special character form the listofids
             ArrayList<String > listOfIds=new ArrayList<>();
             listOfIds.add(KilkariConstants.BENEFICIARY_ID);
-            mctsBeneficiaryImportService.removeSpecialChar(listOfIds,recordMap);
+            MctsBeneficiaryUtils.idCleanup(listOfIds,recordMap);
 
             mother = mctsBeneficiaryValueProcessor.getOrCreateMotherInstance(beneficiaryId);
             recordMap.put(KilkariConstants.MCTS_MOTHER, mother);
@@ -503,8 +504,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             //changes made to remove special character form the listofids
             ArrayList<String > listOfIds=new ArrayList<>();
             listOfIds.add(KilkariConstants.BENEFICIARY_ID);
-            mctsBeneficiaryImportService.removeSpecialChar(listOfIds,recordMap);
-
+            MctsBeneficiaryUtils.idCleanup(listOfIds,recordMap);
             // add child to the record
             child = mctsBeneficiaryValueProcessor.getOrCreateChildInstance(childId);
             recordMap.put(KilkariConstants.MCTS_CHILD, child);

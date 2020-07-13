@@ -6,6 +6,7 @@ import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.ThreadProcessorObject;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
+import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.slf4j.Logger;
@@ -80,10 +81,12 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
             //changes made to remove special character form the listofids
             ArrayList<String > listOfIds=new ArrayList<>();
             listOfIds.add(id);
-            listOfIds.add(motherId);
-            listOfIds.add(mctsIdForRchChild);
-            listOfIds.add(mctsMotherIdForChild);
-            mctsBeneficiaryImportService.removeSpecialChar(listOfIds,record);
+            if (!mctsImport) {
+                listOfIds.add(motherId);
+                listOfIds.add(mctsIdForRchChild);
+                listOfIds.add(mctsMotherIdForChild);
+            }
+            MctsBeneficiaryUtils.idCleanup(listOfIds,record);
 
             MctsChild child = mctsImport ? mctsBeneficiaryValueProcessor.getOrCreateChildInstance((String) record.get(id)) : mctsBeneficiaryValueProcessor.getOrCreateRchChildInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
             if (child == null) {
