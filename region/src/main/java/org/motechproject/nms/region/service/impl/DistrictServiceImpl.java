@@ -11,10 +11,13 @@ import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.LocationRejectionReasons;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.utils.LocationConstants;
+import org.motechproject.nms.rejectionhandler.domain.DistrictImportRejection;
+import org.motechproject.nms.rejectionhandler.service.DistrictRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,12 +25,7 @@ import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
 import javax.jdo.annotations.Transactional;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import java.util.*;
 @Service("districtService")
 public class DistrictServiceImpl implements DistrictService {
 
@@ -41,10 +39,14 @@ public class DistrictServiceImpl implements DistrictService {
 
     private DistrictDataService districtDataService;
 
+    private DistrictRejectionService districtRejectionService;
+
     @Autowired
-    public DistrictServiceImpl(DistrictDataService districtDataService) {
+    public DistrictServiceImpl(DistrictDataService districtDataService, DistrictRejectionService districtRejectionService) {
         this.districtDataService = districtDataService;
+        this.districtRejectionService  = districtRejectionService;
     }
+
 
     @Override
     public Set<District> getAllForLanguage(final Language language) {
@@ -146,8 +148,8 @@ public class DistrictServiceImpl implements DistrictService {
     @Override
     @Transactional
     public Long createUpdateDistricts(final List<Map<String, Object>> districts, final Map<String, State> stateHashMap) {
+        LOGGER.debug("starting making query for district");
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
-
             @Override
             public String getSqlQuery() {
                 String districtValues = districtQuerySet(districts, stateHashMap);
@@ -187,6 +189,7 @@ public class DistrictServiceImpl implements DistrictService {
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> district : districts) {
             if (district.get(LocationConstants.CSV_STATE_ID) != null) {
+                LOGGER.debug("Entering rejection/accepting district process!!!!!");
                 State state = stateHashMap.get(district.get(LocationConstants.CSV_STATE_ID).toString());
                 Long districtCode = (Long) district.get(LocationConstants.DISTRICT_ID);
                 String districtName = (String) district.get(LocationConstants.DISTRICT_NAME);
@@ -210,8 +213,35 @@ public class DistrictServiceImpl implements DistrictService {
 
                     i++;
                 }
+                else if(districtCode == null){
+                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), null,(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString());
+                    districtRejectionService.createRejectedDistrict(districtImportRejection);
+                }
+                else if(state == null){
+                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID),(Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.PARENT_LOCATION_NOT_PRESENT_IN_DB.toString());
+                    districtRejectionService.saveRejectedDistrict(districtImportRejection);
+                }
+
+                else if((districtName == null || districtName.trim().isEmpty())){
+                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), (Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString());
+                    districtRejectionService.saveRejectedDistrict(districtImportRejection);
+
+                }
+                else if( ((Long) (0L)).equals(districtCode)){
+                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), (Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString());
+                    districtRejectionService.saveRejectedDistrict(districtImportRejection);
+
+                }
+
+
             }
+            else if(district.get(LocationConstants.CSV_STATE_ID) == null){
+                DistrictImportRejection districtImportRejection = new DistrictImportRejection(null,(Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
+                districtRejectionService.createRejectedDistrict(districtImportRejection);
+            }
+
         }
+        LOGGER.debug("printing district query :" +stringBuilder.toString());
 
         return stringBuilder.toString();
     }

@@ -7,13 +7,14 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.metrics.service.Timer;
-import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.HealthBlock;
-import org.motechproject.nms.region.domain.State;
-import org.motechproject.nms.region.domain.Taluka;
+import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.repository.HealthBlockDataService;
 import org.motechproject.nms.region.service.HealthBlockService;
 import org.motechproject.nms.region.utils.LocationConstants;
+import org.motechproject.nms.rejectionhandler.domain.HealthBlockImportRejection;
+import org.motechproject.nms.rejectionhandler.domain.TalukaHealthBlockImportRejection;
+import org.motechproject.nms.rejectionhandler.service.HealthBlockRejectionService;
+import org.motechproject.nms.rejectionhandler.service.TalukaHealthBlockRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,11 +22,7 @@ import org.springframework.stereotype.Service;
 
 import javax.jdo.Query;
 import javax.jdo.annotations.Transactional;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Service("healthBlockService")
 public class HealthBlockServiceImpl implements HealthBlockService {
@@ -38,9 +35,14 @@ public class HealthBlockServiceImpl implements HealthBlockService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HealthBlockServiceImpl.class);
 
-
     @Autowired
     private HealthBlockDataService healthBlockDataService;
+
+    @Autowired
+    private HealthBlockRejectionService healthBlockRejectionService;
+
+    @Autowired
+    private TalukaHealthBlockRejectionService talukaHealthBlockRejectionService;
 
     @Override
     // Since Taluka <-> HealthBlocks are many to many, but we don't model that in our system
@@ -126,6 +128,8 @@ public class HealthBlockServiceImpl implements HealthBlockService {
     @Override
     @Transactional
     public Long createUpdateHealthBlocks(final List<Map<String, Object>> healthBlocks, final Map<String, State> stateHashMap, final Map<String, District> districtHashMap, final Map<String, Taluka> talukaHashMap) {
+        LOGGER.info("In createUpdateHealthBlocks");
+        LOGGER.info(healthBlocks.toString());
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
@@ -141,8 +145,6 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
-
-
 
             @Override
             public Long execute(Query query) {
@@ -229,13 +231,14 @@ public class HealthBlockServiceImpl implements HealthBlockService {
     }
 
     private String healthBlockQuerySet(List<Map<String, Object>> healthBlocks, Map<String, State> stateHashMap, Map<String, District> districtHashMap, Map<String, Taluka> talukaHashMap) { //NO CHECKSTYLE Cyclomatic Complexity
+        LOGGER.info("In healthBlockQuerySet");
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> healthBlock : healthBlocks) {
             if (healthBlock.get(LocationConstants.CSV_STATE_ID) != null && healthBlock.get(LocationConstants.DISTRICT_ID) != null &&
-                    healthBlock.get(LocationConstants.TALUKA_ID) != null) {
+                    healthBlock.get(LocationConstants.TALUKA_ID) != null && !healthBlock.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty() ) {
                 State state = stateHashMap.get(healthBlock.get(LocationConstants.CSV_STATE_ID).toString());
                 District district = districtHashMap.get(healthBlock.get(LocationConstants.CSV_STATE_ID).toString() + "_" + healthBlock.get(LocationConstants.DISTRICT_ID).toString());
                 Taluka taluka = talukaHashMap.get(healthBlock.get(LocationConstants.CSV_STATE_ID).toString() + "_" + healthBlock.get(LocationConstants.DISTRICT_ID).toString() + "_" +
@@ -262,6 +265,44 @@ public class HealthBlockServiceImpl implements HealthBlockService {
 
                     i++;
                 }
+                else if( healthBlockCode == null ){
+                    LOGGER.info("In code null");
+                    HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString());
+                    healthBlockRejectionService.createRejectedHealthBlock(healthBlockImportRejection);
+                }
+                else if(district == null ){
+                    LOGGER.info("In parent null");
+                    HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.PARENT_LOCATION_NOT_PRESENT_IN_DB.toString());
+                    healthBlockRejectionService.saveRejectedHealthBlock(healthBlockImportRejection);
+                }
+                else if(taluka == null ){
+                    HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.TALUKA_ID_NOT_PRESENT_IN_DB.toString());
+                    healthBlockRejectionService.saveRejectedHealthBlock(healthBlockImportRejection);
+                }
+                else if((healthBlockName == null || healthBlockName.trim().isEmpty()) ){
+                    LOGGER.info("In name empty");
+                    HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString());
+                    healthBlockRejectionService.saveRejectedHealthBlock(healthBlockImportRejection);
+                }
+                else if(((Long) (0L)).equals(healthBlockCode)){
+                    LOGGER.info("In code zero");
+                    HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString());
+                    healthBlockRejectionService.saveRejectedHealthBlock(healthBlockImportRejection);
+                }
+            }
+            else if(healthBlock.get(LocationConstants.CSV_STATE_ID) == null){
+                LOGGER.info("In state null");
+                HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
+                healthBlockRejectionService.createRejectedHealthBlock(healthBlockImportRejection);
+            }
+            else if(healthBlock.get(LocationConstants.TALUKA_ID) == null || healthBlock.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty()){
+                HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.TALUKA_ID_NOT_PRESENT_IN_FILE.toString());
+                healthBlockRejectionService.saveRejectedHealthBlock(healthBlockImportRejection);
+            }
+            else {
+                LOGGER.info("last");
+                HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
+                healthBlockRejectionService.saveRejectedHealthBlock(healthBlockImportRejection);
             }
         }
 
@@ -294,6 +335,10 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                                 record.get(LocationConstants.HEALTHBLOCK_ID).toString() +
                                 " where s.code = " + record.get(LocationConstants.CSV_STATE_ID).toString();
                         count--;
+                    }
+                    else {
+                        TalukaHealthBlockImportRejection talukaHealthBlockImportRejection = new TalukaHealthBlockImportRejection((Long)record.get(LocationConstants.CSV_STATE_ID),(String)record.get(LocationConstants.TALUKA_ID),(Long)record.get(LocationConstants.HEALTHBLOCK_ID),false,LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
+                        talukaHealthBlockRejectionService.saveRejectedTalukaHealthBlock(talukaHealthBlockImportRejection);
                     }
                 }
 

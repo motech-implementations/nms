@@ -56,6 +56,18 @@
             <groupId>org.apache.servicemix.bundles</groupId>
             <artifactId>org.apache.servicemix.bundles.spring-test</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>rejection-handler</artifactId>
+            <version>1.0.38.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.motechproject.nms</groupId>
+            <artifactId>rejection-handler</artifactId>
+            <version>1.0.38.1</version>
+            <scope>compile</scope>
+        </dependency>
 
     </dependencies>
 
@@ -109,6 +121,9 @@
                             org.datanucleus.enhancement,
                             org.springframework.validation.beanvalidation,
                             org.springframework.core,
+                            org.motechproject.nms.rejectionhandler.service,
+                            org.motechproject.nms.rejectionhandler.domain,
+                            org.motechproject.nms.rejectionhandler.repository,
                             *
                         </Import-Package>
                     </instructions>
