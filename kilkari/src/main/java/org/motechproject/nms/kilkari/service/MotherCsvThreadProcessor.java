@@ -6,11 +6,13 @@ import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.ThreadProcessorObject;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
+import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +57,7 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
         String id;
         String contactNumber;
         String motherInstance;
+        String mctsIDForRchMother=null;
         if (mctsImport) {
             id = KilkariConstants.BENEFICIARY_ID;
             contactNumber = KilkariConstants.MSISDN;
@@ -63,12 +66,21 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
             id = KilkariConstants.RCH_ID;
             contactNumber = KilkariConstants.MOBILE_NO;
             motherInstance = KilkariConstants.RCH_MOTHER;
+            mctsIDForRchMother = KilkariConstants.MCTS_ID;
         }
         int count = 0;
         Timer timer = new Timer("mom", "moms");
         for (Map<String, Object> record : recordList) {
             count++;
             LOGGER.debug("Started mother import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
+
+            //changes made to remove special character form the listofids
+            ArrayList<String > listOfIds=new ArrayList<>();
+            listOfIds.add(id);
+            if (!mctsImport) {
+                listOfIds.add(mctsIDForRchMother);
+            }
+            MctsBeneficiaryUtils.idCleanup(listOfIds,record);
 
             MctsMother mother = mctsImport ? mctsBeneficiaryValueProcessor.getOrCreateMotherInstance((String) record.get(id)) : mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
             if (mother == null) {

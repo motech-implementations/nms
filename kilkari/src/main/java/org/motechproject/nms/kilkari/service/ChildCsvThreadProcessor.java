@@ -6,11 +6,13 @@ import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.ThreadProcessorObject;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
+import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.motechproject.nms.region.domain.LocationFinder;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,20 +56,37 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
         String id;
         String contactNumber;
         String childInstance;
+        String mctsIdForRchChild=null;
+        String motherId;
+        String mctsMotherIdForChild=null;
         if (mctsImport) {
             id = KilkariConstants.BENEFICIARY_ID;
             contactNumber = KilkariConstants.MSISDN;
             childInstance = KilkariConstants.MCTS_CHILD;
+            motherId=KilkariConstants.MOTHER_ID;
         } else {
             id = KilkariConstants.RCH_ID;
             contactNumber = KilkariConstants.MOBILE_NO;
             childInstance = KilkariConstants.RCH_CHILD;
+            mctsIdForRchChild=KilkariConstants.MCTS_ID;
+            motherId=KilkariConstants.RCH_MOTHER_ID;
+            mctsMotherIdForChild=KilkariConstants.MCTS_MOTHER_ID;
         }
         int count = 0;
         Timer timer = new Timer("kid", "kids");
         for(Map<String, Object> record : recordList) {
             count++;
             LOGGER.debug("Started child import for msisdn {} beneficiary_id {}", record.get(contactNumber), record.get(id));
+
+            //changes made to remove special character form the listofids
+            ArrayList<String > listOfIds=new ArrayList<>();
+            listOfIds.add(id);
+            if (!mctsImport) {
+                listOfIds.add(motherId);
+                listOfIds.add(mctsIdForRchChild);
+                listOfIds.add(mctsMotherIdForChild);
+            }
+            MctsBeneficiaryUtils.idCleanup(listOfIds,record);
 
             MctsChild child = mctsImport ? mctsBeneficiaryValueProcessor.getOrCreateChildInstance((String) record.get(id)) : mctsBeneficiaryValueProcessor.getOrCreateRchChildInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
             if (child == null) {

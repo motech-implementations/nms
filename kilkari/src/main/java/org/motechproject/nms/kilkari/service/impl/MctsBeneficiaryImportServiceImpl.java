@@ -338,6 +338,17 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
                 try {
                     MctsMother motherInstance = (MctsMother) motherRecord;
+
+                    String mctsMotherId=motherInstance.getBeneficiaryId();
+                    ArrayList<String > listOfIds=new ArrayList<>();
+                    listOfIds.add("ID_No");
+                    Map<String, Object> motherRecordTemp= new HashMap<>();;
+                    motherRecordTemp.put("ID_No",mctsMotherId);
+                    MctsBeneficiaryUtils.idCleanup(listOfIds,motherRecordTemp);
+                    mctsMotherId=(String)motherRecordTemp.get("ID_No");
+                    motherInstance.setBeneficiaryId(mctsMotherId);
+                    record.replace(KilkariConstants.MOTHER_ID,motherInstance);
+
                     mother = mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherInstance.getBeneficiaryId());
                 } catch (Exception e) {
                     mother = mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(motherRecord.toString());

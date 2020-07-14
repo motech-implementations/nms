@@ -28,6 +28,7 @@ import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
+import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.motechproject.nms.mcts.contract.AnmAshaDataSet;
 import org.motechproject.nms.kilkari.contract.AnmAshaRecord;
 import org.motechproject.nms.kilkari.contract.ChildRecord;
@@ -321,6 +322,12 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             beneficiaryId = (String) recordMap.get(KilkariConstants.BENEFICIARY_ID);
             msisdn = (Long) recordMap.get(KilkariConstants.MSISDN);
             DateTime lmp = (DateTime) recordMap.get(KilkariConstants.LMP);
+
+            //changes made to remove special character form the listofids
+            ArrayList<String > listOfIds=new ArrayList<>();
+            listOfIds.add(KilkariConstants.BENEFICIARY_ID);
+            MctsBeneficiaryUtils.idCleanup(listOfIds,recordMap);
+
             mother = mctsBeneficiaryValueProcessor.getOrCreateMotherInstance(beneficiaryId);
             recordMap.put(KilkariConstants.MCTS_MOTHER, mother);
             if(mother == null) {
@@ -495,6 +502,12 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             childId = (String) recordMap.get(KilkariConstants.BENEFICIARY_ID);
             msisdn = (Long) recordMap.get(KilkariConstants.MSISDN);
             DateTime dob = (DateTime) recordMap.get(KilkariConstants.DOB);
+
+            //changes made to remove special character form the listofids
+            ArrayList<String > listOfIds=new ArrayList<>();
+            listOfIds.add(KilkariConstants.BENEFICIARY_ID);
+            MctsBeneficiaryUtils.idCleanup(listOfIds,recordMap);
+
             // add child to the record
             child = mctsBeneficiaryValueProcessor.getOrCreateChildInstance(childId);
             recordMap.put(KilkariConstants.MCTS_CHILD, child);
