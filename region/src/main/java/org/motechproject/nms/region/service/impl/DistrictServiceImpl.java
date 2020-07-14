@@ -187,7 +187,6 @@ public class DistrictServiceImpl implements DistrictService {
         int i = 0;
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
-//        List<DistrictImportRejection> rejectedDistricts = new ArrayList<>();
         for (Map<String, Object> district : districts) {
             if (district.get(LocationConstants.CSV_STATE_ID) != null) {
                 LOGGER.debug("Entering rejection/accepting district process!!!!!");
@@ -240,21 +239,9 @@ public class DistrictServiceImpl implements DistrictService {
                 DistrictImportRejection districtImportRejection = new DistrictImportRejection(null,(Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
                 districtRejectionService.createRejectedDistrict(districtImportRejection);
             }
-//            else {
-//                DistrictImportRejection districtImportRejection = new DistrictImportRejection(null,(Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
-//                districtRejectionService.saveRejectedDistrict(districtImportRejection);
-//
-//            }
-        }
-//        LOGGER.debug("Size of rejected districts is : " + rejectedDistricts.size() + "!!!");
-//        if (rejectedDistricts.size() != 0){
-//            for (int j =0; j<rejectedDistricts.size();j++){
-//                districtRejectionService.saveRejectedDistrict(rejectedDistricts.get(j));
-//                LOGGER.debug("updating" + j + "th record");
-//            }
-//        }
-        LOGGER.debug("printing district query :" +stringBuilder.toString());
 
+        }
+        LOGGER.debug("printing district query :" +stringBuilder.toString());
 
         return stringBuilder.toString();
     }

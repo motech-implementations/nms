@@ -35,7 +35,6 @@ public class HealthBlockServiceImpl implements HealthBlockService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HealthBlockServiceImpl.class);
 
-
     @Autowired
     private HealthBlockDataService healthBlockDataService;
 
@@ -146,8 +145,6 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
-
-
 
             @Override
             public Long execute(Query query) {

@@ -18,10 +18,12 @@ public class TalukaHealthBlockRejectionServiceImpl implements TalukaHealthBlockR
 
     @Override
     public void saveRejectedTalukaHealthBlock(TalukaHealthBlockImportRejection talukaHealthBlockImportRejection) {
-        if(   talukaHealthBlockRejectionDataService.findByUniqueCode(talukaHealthBlockImportRejection.getHealthBlockCode(),talukaHealthBlockImportRejection.getTalukaCode()) == null){
+        TalukaHealthBlockImportRejection talukaHealthBlockImportRejection1= talukaHealthBlockRejectionDataService.findByUniqueCode(talukaHealthBlockImportRejection.getHealthBlockCode(),talukaHealthBlockImportRejection.getTalukaCode());
+        if( talukaHealthBlockImportRejection1  == null){
             talukaHealthBlockRejectionDataService.create(talukaHealthBlockImportRejection);
         }
         else {
+            /** this update does not work, TODO: when implementing for mapping locations this needs to be changed */
             talukaHealthBlockRejectionDataService.update(talukaHealthBlockImportRejection);
         }
     }

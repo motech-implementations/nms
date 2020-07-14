@@ -19,10 +19,12 @@ public class VillageHealthSubFacilityRejectionServiceImpl implements VillageHeal
 
     @Override
     public void saveRejectedVillageHealthSubFacility(VillageHealthSubFacilityImportRejection villageHealthSubFacilityImportRejection) {
-        if(   villageHealthSubFacilityRejectionDataService.findByUniqueCode(villageHealthSubFacilityImportRejection.getVillageCode(),villageHealthSubFacilityImportRejection.getHealthSubFacilityCode()) == null){
+        VillageHealthSubFacilityImportRejection villageHealthSubFacilityImportRejection1 = villageHealthSubFacilityRejectionDataService.findByUniqueCode(villageHealthSubFacilityImportRejection.getVillageCode(),villageHealthSubFacilityImportRejection.getHealthSubFacilityCode());
+        if( villageHealthSubFacilityImportRejection1  == null){
             villageHealthSubFacilityRejectionDataService.create(villageHealthSubFacilityImportRejection);
         }
         else {
+            /** this update does not work, TODO: when implementing for mapping locations this needs to be changed */
             villageHealthSubFacilityRejectionDataService.update(villageHealthSubFacilityImportRejection);
         }
     }

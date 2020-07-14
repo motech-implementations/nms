@@ -100,8 +100,6 @@ public class VillageServiceImpl implements VillageService {
                 return query;
             }
 
-
-
             @Override
             public Long execute(Query query) {
                 return (Long) query.execute();
@@ -152,7 +150,8 @@ public class VillageServiceImpl implements VillageService {
                     stringBuilder.append(")");
 
                     i++;
-                }else if(villageCode == null){
+                }
+                else if(villageCode == null){
                     VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),null,(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString());
                     villageRejectionService.createRejectedVillage(villageImportRejection);
                 }
@@ -178,7 +177,6 @@ public class VillageServiceImpl implements VillageService {
                 villageRejectionService.saveRejectedVillage(villageImportRejection);
             }
         }
-
         return stringBuilder.toString();
     }
 }
