@@ -215,7 +215,7 @@ public class DistrictServiceImpl implements DistrictService {
                 }
                 else if(districtCode == null){
                     DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), null,(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString());
-                    districtRejectionService.createRejectedDistrict(districtImportRejection);
+                    districtRejectionService.saveRejectedDistrict(districtImportRejection);
                 }
                 else if(state == null){
                     DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID),(Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.PARENT_LOCATION_NOT_PRESENT_IN_DB.toString());
@@ -237,7 +237,7 @@ public class DistrictServiceImpl implements DistrictService {
             }
             else if(district.get(LocationConstants.CSV_STATE_ID) == null){
                 DistrictImportRejection districtImportRejection = new DistrictImportRejection(null,(Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
-                districtRejectionService.createRejectedDistrict(districtImportRejection);
+                districtRejectionService.saveRejectedDistrict(districtImportRejection);
             }
 
         }

@@ -268,7 +268,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                 else if( healthBlockCode == null ){
                     LOGGER.info("In code null");
                     HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString());
-                    healthBlockRejectionService.createRejectedHealthBlock(healthBlockImportRejection);
+                    healthBlockRejectionService.saveRejectedHealthBlock(healthBlockImportRejection);
                 }
                 else if(district == null ){
                     LOGGER.info("In parent null");
@@ -293,7 +293,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
             else if(healthBlock.get(LocationConstants.CSV_STATE_ID) == null){
                 LOGGER.info("In state null");
                 HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
-                healthBlockRejectionService.createRejectedHealthBlock(healthBlockImportRejection);
+                healthBlockRejectionService.saveRejectedHealthBlock(healthBlockImportRejection);
             }
             else if(healthBlock.get(LocationConstants.TALUKA_ID) == null || healthBlock.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty()){
                 HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.TALUKA_ID_NOT_PRESENT_IN_FILE.toString());

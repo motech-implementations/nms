@@ -224,7 +224,7 @@ public class TalukaServiceImpl implements TalukaService {
                 }
                 else if (taluka.get(LocationConstants.TALUKA_ID) == null || taluka.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty()) {
                     TalukaImportRejection talukaImportRejection = new TalukaImportRejection(state.getCode(), (Long) taluka.get(LocationConstants.DISTRICT_ID), null, talukaName, false, LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString());
-                    talukaRejectionService.createRejectedTaluka(talukaImportRejection);
+                    talukaRejectionService.saveRejectedTaluka(talukaImportRejection);
                 }
                 else if (district == null) {
                     TalukaImportRejection talukaImportRejection = new TalukaImportRejection(state.getCode(), (Long) taluka.get(LocationConstants.DISTRICT_ID), (String) taluka.get(LocationConstants.TALUKA_ID), talukaName, false, LocationRejectionReasons.PARENT_LOCATION_NOT_PRESENT_IN_DB.toString());
@@ -242,7 +242,7 @@ public class TalukaServiceImpl implements TalukaService {
             }
             else if(taluka.get(LocationConstants.CSV_STATE_ID) == null) {
                 TalukaImportRejection talukaImportRejection = new TalukaImportRejection((Long) taluka.get(LocationConstants.CSV_STATE_ID),(Long) taluka.get(LocationConstants.DISTRICT_ID),(String) taluka.get(LocationConstants.TALUKA_ID),taluka.get(LocationConstants.TALUKA_NAME).toString(),false, LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
-                talukaRejectionService.createRejectedTaluka(talukaImportRejection);
+                talukaRejectionService.saveRejectedTaluka(talukaImportRejection);
             }
             else {
                 TalukaImportRejection talukaImportRejection = new TalukaImportRejection((Long) taluka.get(LocationConstants.CSV_STATE_ID),(Long) taluka.get(LocationConstants.DISTRICT_ID),(String) taluka.get(LocationConstants.TALUKA_ID),taluka.get(LocationConstants.TALUKA_NAME).toString(),false, LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
