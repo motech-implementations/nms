@@ -18,4 +18,16 @@ public final class MarshallUtils {
 
         return unmarshaller.unmarshal(reader);
     }
+    public static Object unmarshallJson(String jsonResult, Class... classesToBeBound) throws JAXBException {
+
+        JAXBContext jc = JAXBContext.newInstance(classesToBeBound);
+
+        Unmarshaller unmarshaller = jc.createUnmarshaller();
+        unmarshaller.setProperty("eclipselink.media-type", "application/json");
+        unmarshaller.setProperty("eclipselink.json.include-root", false);
+
+        StringReader reader = new StringReader(jsonResult);
+
+        return unmarshaller.unmarshal(reader);
+    }
 }

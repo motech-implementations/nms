@@ -133,6 +133,9 @@ public final class KilkariConstants {
     public static final String ACCEPT_NEW_SUBSCRIPTION_FOR_BLOCKED_MSISDN = "kilkari.accept_new_subscription_for_blocked_msisdn";
     public static final String SPECIAL_CHAR_STRING="[\\n\\t\\r ]";
 
+    //newly added field of locations
+    public static final String MDDS_CODE = "MDDS_Code";
+
     private KilkariConstants() {
     }
 }

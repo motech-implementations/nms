@@ -111,6 +111,29 @@ public final class Constants {
     public static final String END_DATE_PARAM = "end_date";
     public static final String STATE_PARAM = "state";
 
+    //API base URL
+    public static final String LOCATION_API_BASE_URL ="rch.location.base_url";
+    //API parameter
+    public static final String LOCATION_USER_NAME = "rch.location.username";
+    public static final String LOCATION_API_TOKEN = "rch.location.api_token";
+    public static final String LOCATION_TIME_STAMP = "rch.location.time_stamp";
+    public static final String LOCATION_DISTRICT_CODE = "rch.location.district_code";
+    public static final String LOCATION_TALUKA_CODE = "rch.location.taluka_code";
+    public static final String LOCATION_HEALTH_BLOCK_ID = "rch.location.healthblock_id";
+    public static final String LOCATION_HEALTH_FACILITY_TYPE = "rch.location.health_facility_type";
+    public static final String LOCATION_HEALTH_FACILITY_ID = "rch.location.healthfacilityid";
+    public static final String LOCATION_HEALTH_SUB_FACILITY_ID = "rch.location.healthsubfacilityid";
+    public static final String LOCATION_VILLAGE_ID = "rch.location.village_id";
+
+    //Type Id for different type of location
+    public static final String TYPE_ID_DISTRICT = "rch.typeid.district";
+    public static final String TYPE_ID_SUB_DISTRICT = "rch.typeid.sub_district";
+    public static final String TYPE_ID_VILLAGE = "rch.typeid.village";
+    public static final String TYPE_ID_HEALTH_BLOCK = "rch.typeid.health_block";
+    public static final String TYPE_ID_HEALTH_FACILITY = "rch.typeid.health_facility";
+    public static final String TYPE_ID_HEALTH_SUB_FACILITY = "rch.typeid.health_sub_facility";
+    public static final String TYPE_ID_HEALTH_VILLAGE = "rch.typeid.health_village";
+
 
     private Constants() {
     }
