@@ -15,6 +15,7 @@ public final class MarshallUtils {
         JAXBContext context = JAXBContext.newInstance(classesToBeBound);
         Unmarshaller unmarshaller = context.createUnmarshaller();
         StringReader reader = new StringReader(xml);
+
         return unmarshaller.unmarshal(reader);
     }
 }
