@@ -3,7 +3,7 @@ package org.motechproject.nms.kilkari.contract;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**Created by vishnu on 27/6/18.
- * update by rakesh on 17/08/20.
+ * update by rakesh on 20/08/20.
  */
 
 public class RchDistrictRecord {

@@ -18,7 +18,6 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import org.json.JSONObject;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
@@ -52,12 +51,10 @@ import org.motechproject.nms.rch.exception.RchWebServiceException;
 import org.motechproject.nms.rch.repository.RchImportAuditDataService;
 import org.motechproject.nms.rch.repository.RchImportFacilitatorDataService;
 import org.motechproject.nms.rch.repository.RchImportFailRecordDataService;
+import org.motechproject.nms.rch.service.NmsWebServices;
 import org.motechproject.nms.rch.service.RchImportFacilitatorService;
 import org.motechproject.nms.rch.service.RchWebServiceFacade;
-import org.motechproject.nms.rch.soap.DS_DataResponseDS_DataResult;
-import org.motechproject.nms.rch.soap.Irchwebservices;
-import org.motechproject.nms.rch.soap.LocationWebServices;
-import org.motechproject.nms.rch.soap.RchwebservicesLocator;
+import org.motechproject.nms.rch.soap.*;
 import org.motechproject.nms.rch.utils.Constants;
 import org.motechproject.nms.rch.utils.ExecutionHelper;
 import org.motechproject.nms.rch.utils.MarshallUtils;
@@ -183,6 +180,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     @Autowired
     private EventRelay eventRelay;
 
+    @Autowired
+    NmsWebServices nmsWebServices;
+
     private String createErrorMessage(String message, Exception e) {
         final int START = 0;
         final int END = 99;
@@ -260,7 +260,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     result= readResponsesFromXml(localResponseFile);
                 }
                 else{
-                    result= readResponsesFromJson(localResponseFile); // need to change according to rch user
+                    result= readResponsesFromJson(localResponseFile);
                 }
 
                 State importState = stateDataService.findByCode(stateId);
@@ -285,7 +285,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                             result= readResponsesFromXml(localResponseFile);
                         }
                         else{
-                            result= readResponsesFromJson(localResponseFile); // need to change according to rch user
+                            result= readResponsesFromJson(localResponseFile);
                         }
                         State importState = stateDataService.findByCode(stateId);
                         String stateName = importState.getName();
@@ -410,21 +410,16 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     public boolean getDistrictData(LocalDate from, LocalDate to, URL endpoint, Long stateId) {
         boolean status = false;
         LOGGER.info(FROM_DATE_LOG, from);
-        String APIresponse=null;
-        File responseFile=null;
         try {
             String url= getLocationStringUrl(stateId.toString(),settingsFacade.getProperty(Constants.TYPE_ID_DISTRICT));
-            APIresponse=LocationWebServices.getLocationResponse(url); // we can add more exception based on response code
-
-            JSONObject jsonObject = new JSONObject(APIresponse);
+            String APIresponse= nmsWebServices.getLocationApiResponse(url); // we can add more exception based on response code
 
             LOGGER.debug("writing RCH District response to file");
-            responseFile = generateJsonResponseFile(jsonObject, RchUserType.DISTRICT, stateId); // need to send serialized object
+            File responseFile = generateJsonResponseFile(APIresponse, RchUserType.DISTRICT, stateId);
             if (responseFile != null) {
                 LOGGER.info("RCH district response successfully written to file. Copying to remote directory.");
                 status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.DISTRICT, 0);
-            }
-            else {
+            } else {
                 LOGGER.error("Error writing {} response to file for state {}", RchUserType.DISTRICT, stateId);
             }
 
@@ -433,7 +428,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             e.printStackTrace();
 
         }
-
         return status;
     }
 
@@ -1739,13 +1733,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
         return localResponseFile;
     }
-    private File generateJsonResponseFile( JSONObject  result, RchUserType userType, Long stateId) {
+     private File generateJsonResponseFile(String  APIresponse, RchUserType userType, Long stateId) {
+
         String targetFileName = targetFileName(TIME_FORMATTER.print(DateTime.now()), userType, stateId);
         File localResponseDir = localResponseDir();
         File localResponseFile = new File(localResponseDir, targetFileName);
         try {
             FileWriter writer = new FileWriter(localResponseFile);
-            writer.write(result.toString());
+            writer.write(APIresponse);
             writer.flush();
             writer.close();
         } catch (Exception e) {
@@ -2148,6 +2143,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         map.put(KilkariConstants.DISTRICT_ID, districtRecord.getDistrictCode());
         map.put(KilkariConstants.DISTRICT_NAME, districtRecord.getDistrictName());
         map.put(KilkariConstants.MDDS_CODE, districtRecord.getMDDS_Code());
+        map.put(KilkariConstants.STATE_CODE_ID, districtRecord.getStateCode());
     }
 
     private void toMapTaluka(Map<String, Object> map, RchTalukaRecord talukaRecord, Long stateCode) {
