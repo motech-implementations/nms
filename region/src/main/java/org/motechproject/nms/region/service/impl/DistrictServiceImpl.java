@@ -41,6 +41,8 @@ public class DistrictServiceImpl implements DistrictService {
 
     private DistrictRejectionService districtRejectionService;
 
+    private static Boolean rejectionChecks=true;
+
     @Autowired
     public DistrictServiceImpl(DistrictDataService districtDataService, DistrictRejectionService districtRejectionService) {
         this.districtDataService = districtDataService;
@@ -149,6 +151,7 @@ public class DistrictServiceImpl implements DistrictService {
     @Transactional
     public Long createUpdateDistricts(final List<Map<String, Object>> districts, final Map<String, State> stateHashMap) {
         LOGGER.debug("starting making query for district");
+        rejectionChecks=true;
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
             @Override
             public String getSqlQuery() {
@@ -213,21 +216,21 @@ public class DistrictServiceImpl implements DistrictService {
 
                     i++;
                 }
-                else if(districtCode == null){
+                else if(districtCode == null && rejectionChecks){
                     DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), null,(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString());
                     districtRejectionService.saveRejectedDistrict(districtImportRejection);
                 }
-                else if(state == null){
+                else if(state == null && rejectionChecks){
                     DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID),(Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.PARENT_LOCATION_NOT_PRESENT_IN_DB.toString());
                     districtRejectionService.saveRejectedDistrict(districtImportRejection);
                 }
 
-                else if((districtName == null || districtName.trim().isEmpty())){
+                else if((districtName == null || districtName.trim().isEmpty()) && rejectionChecks){
                     DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), (Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString());
                     districtRejectionService.saveRejectedDistrict(districtImportRejection);
 
                 }
-                else if( ((Long) (0L)).equals(districtCode)){
+                else if( ((Long) (0L)).equals(districtCode) && rejectionChecks){
                     DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), (Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString());
                     districtRejectionService.saveRejectedDistrict(districtImportRejection);
 
@@ -235,12 +238,13 @@ public class DistrictServiceImpl implements DistrictService {
 
 
             }
-            else if(district.get(LocationConstants.CSV_STATE_ID) == null){
+            else if(district.get(LocationConstants.CSV_STATE_ID) == null && rejectionChecks){
                 DistrictImportRejection districtImportRejection = new DistrictImportRejection(null,(Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
                 districtRejectionService.saveRejectedDistrict(districtImportRejection);
             }
 
         }
+        rejectionChecks=false;
         LOGGER.debug("printing district query :" +stringBuilder.toString());
 
         return stringBuilder.toString();

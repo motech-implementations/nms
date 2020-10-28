@@ -37,6 +37,7 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HealthSubFacilityServiceImpl.class);
 
+    private static Boolean rejectionChecks=true;
 
     @Autowired
     private HealthSubFacilityDataService dataService;
@@ -88,6 +89,7 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
     @Override
     @Transactional
     public Long createUpdateHealthSubFacilities(final List<Map<String, Object>> healthSubFacilities, final Map<String, State> stateHashMap, final Map<String, District> districtHashMap, final Map<String, Taluka> talukaHashMap, final Map<String, HealthFacility> healthFacilityHashMap) {
+        rejectionChecks=true;
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
@@ -162,11 +164,11 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
 
                     i++;
                 }
-                else if(healthSubFacilityCode == null){
+                else if(healthSubFacilityCode == null && rejectionChecks){
                     HealthSubFacilityImportRejection healthSubFacilityImportRejection = new HealthSubFacilityImportRejection((Long)healthSubFacility.get(LocationConstants.CSV_STATE_ID),(Long)healthSubFacility.get(LocationConstants.DISTRICT_ID),(String)healthSubFacility.get(LocationConstants.TALUKA_ID),(Long)healthSubFacility.get(LocationConstants.HEALTHFACILITY_ID),(Long) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_ID),(String) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME),false,LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString());
                     healthSubFacilityRejectionService.saveRejectedHealthSubFacility(healthSubFacilityImportRejection);
                 }
-                else if(taluka == null || healthFacility == null){
+                else if((taluka == null || healthFacility == null) && rejectionChecks){
                     if(district!=null && taluka == null){
                         HealthSubFacilityImportRejection healthSubFacilityImportRejection = new HealthSubFacilityImportRejection((Long)healthSubFacility.get(LocationConstants.CSV_STATE_ID),(Long)healthSubFacility.get(LocationConstants.DISTRICT_ID),(String)healthSubFacility.get(LocationConstants.TALUKA_ID),(Long)healthSubFacility.get(LocationConstants.HEALTHFACILITY_ID),(Long) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_ID),(String) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME),false,LocationRejectionReasons.TALUKA_ID_NOT_PRESENT_IN_DB.toString());
                         healthSubFacilityRejectionService.saveRejectedHealthSubFacility(healthSubFacilityImportRejection);
@@ -176,29 +178,31 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
                         healthSubFacilityRejectionService.saveRejectedHealthSubFacility(healthSubFacilityImportRejection);
                     }
                 }
-                else if ((healthSubFacilityName == null || healthSubFacilityName.trim().isEmpty()) ){
+                else if ((healthSubFacilityName == null || healthSubFacilityName.trim().isEmpty()) && rejectionChecks ){
                     HealthSubFacilityImportRejection healthSubFacilityImportRejection = new HealthSubFacilityImportRejection((Long)healthSubFacility.get(LocationConstants.CSV_STATE_ID),(Long)healthSubFacility.get(LocationConstants.DISTRICT_ID),(String)healthSubFacility.get(LocationConstants.TALUKA_ID),(Long)healthSubFacility.get(LocationConstants.HEALTHFACILITY_ID),(Long) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_ID),(String) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME),false,LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString());
                     healthSubFacilityRejectionService.saveRejectedHealthSubFacility(healthSubFacilityImportRejection);
                 }
-                else if( ((Long) (0L)).equals(healthSubFacilityCode)) {
+                else if( ((Long) (0L)).equals(healthSubFacilityCode) && rejectionChecks) {
                     HealthSubFacilityImportRejection healthSubFacilityImportRejection = new HealthSubFacilityImportRejection((Long)healthSubFacility.get(LocationConstants.CSV_STATE_ID),(Long)healthSubFacility.get(LocationConstants.DISTRICT_ID),(String)healthSubFacility.get(LocationConstants.TALUKA_ID),(Long)healthSubFacility.get(LocationConstants.HEALTHFACILITY_ID),(Long) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_ID),(String) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME),false,LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString());
                     healthSubFacilityRejectionService.saveRejectedHealthSubFacility(healthSubFacilityImportRejection);
                 }
             }
-            else if(healthSubFacility.get(LocationConstants.CSV_STATE_ID) == null ){
+            else if(healthSubFacility.get(LocationConstants.CSV_STATE_ID) == null && rejectionChecks){
                 HealthSubFacilityImportRejection healthSubFacilityImportRejection = new HealthSubFacilityImportRejection((Long)healthSubFacility.get(LocationConstants.CSV_STATE_ID),(Long)healthSubFacility.get(LocationConstants.DISTRICT_ID),(String)healthSubFacility.get(LocationConstants.TALUKA_ID),(Long)healthSubFacility.get(LocationConstants.HEALTHFACILITY_ID),(Long) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_ID),(String) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME),false,LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
                 healthSubFacilityRejectionService.saveRejectedHealthSubFacility(healthSubFacilityImportRejection);
             }
-            else if(healthSubFacility.get(LocationConstants.TALUKA_ID) == null || healthSubFacility.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty()){
+            else if((healthSubFacility.get(LocationConstants.TALUKA_ID) == null || healthSubFacility.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty()) && rejectionChecks){
                 HealthSubFacilityImportRejection healthSubFacilityImportRejection = new HealthSubFacilityImportRejection((Long)healthSubFacility.get(LocationConstants.CSV_STATE_ID),(Long)healthSubFacility.get(LocationConstants.DISTRICT_ID),(String)healthSubFacility.get(LocationConstants.TALUKA_ID),(Long)healthSubFacility.get(LocationConstants.HEALTHFACILITY_ID),(Long) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_ID),(String) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME),false,LocationRejectionReasons.TALUKA_ID_NOT_PRESENT_IN_FILE.toString());
                 healthSubFacilityRejectionService.saveRejectedHealthSubFacility(healthSubFacilityImportRejection);
             }
             else {
-                HealthSubFacilityImportRejection healthSubFacilityImportRejection = new HealthSubFacilityImportRejection((Long)healthSubFacility.get(LocationConstants.CSV_STATE_ID),(Long)healthSubFacility.get(LocationConstants.DISTRICT_ID),(String)healthSubFacility.get(LocationConstants.TALUKA_ID),(Long)healthSubFacility.get(LocationConstants.HEALTHFACILITY_ID),(Long) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_ID),(String) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME),false,LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
-                healthSubFacilityRejectionService.saveRejectedHealthSubFacility(healthSubFacilityImportRejection);
+                if(rejectionChecks){
+                    HealthSubFacilityImportRejection healthSubFacilityImportRejection = new HealthSubFacilityImportRejection((Long)healthSubFacility.get(LocationConstants.CSV_STATE_ID),(Long)healthSubFacility.get(LocationConstants.DISTRICT_ID),(String)healthSubFacility.get(LocationConstants.TALUKA_ID),(Long)healthSubFacility.get(LocationConstants.HEALTHFACILITY_ID),(Long) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_ID),(String) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME),false,LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
+                    healthSubFacilityRejectionService.saveRejectedHealthSubFacility(healthSubFacilityImportRejection);
+                }
             }
         }
-
+        rejectionChecks=false;
         return stringBuilder.toString();
     }
 

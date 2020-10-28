@@ -35,6 +35,8 @@ public class HealthBlockServiceImpl implements HealthBlockService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HealthBlockServiceImpl.class);
 
+    private static Boolean rejectionChecks=true;
+
     @Autowired
     private HealthBlockDataService healthBlockDataService;
 
@@ -129,6 +131,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
     @Transactional
     public Long createUpdateHealthBlocks(final List<Map<String, Object>> healthBlocks, final Map<String, State> stateHashMap, final Map<String, District> districtHashMap, final Map<String, Taluka> talukaHashMap) {
         LOGGER.info("In createUpdateHealthBlocks");
+        rejectionChecks=true;
         LOGGER.info(healthBlocks.toString());
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
@@ -265,47 +268,50 @@ public class HealthBlockServiceImpl implements HealthBlockService {
 
                     i++;
                 }
-                else if( healthBlockCode == null ){
+                else if( healthBlockCode == null && rejectionChecks){
                     LOGGER.info("In code null");
                     HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString());
                     healthBlockRejectionService.saveRejectedHealthBlock(healthBlockImportRejection);
                 }
-                else if(district == null ){
+                else if(district == null && rejectionChecks){
                     LOGGER.info("In parent null");
                     HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.PARENT_LOCATION_NOT_PRESENT_IN_DB.toString());
                     healthBlockRejectionService.saveRejectedHealthBlock(healthBlockImportRejection);
                 }
-                else if(taluka == null ){
+                else if(taluka == null && rejectionChecks){
                     HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.TALUKA_ID_NOT_PRESENT_IN_DB.toString());
                     healthBlockRejectionService.saveRejectedHealthBlock(healthBlockImportRejection);
                 }
-                else if((healthBlockName == null || healthBlockName.trim().isEmpty()) ){
+                else if((healthBlockName == null || healthBlockName.trim().isEmpty()) && rejectionChecks){
                     LOGGER.info("In name empty");
                     HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString());
                     healthBlockRejectionService.saveRejectedHealthBlock(healthBlockImportRejection);
                 }
-                else if(((Long) (0L)).equals(healthBlockCode)){
+                else if(((Long) (0L)).equals(healthBlockCode) && rejectionChecks){
                     LOGGER.info("In code zero");
                     HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString());
                     healthBlockRejectionService.saveRejectedHealthBlock(healthBlockImportRejection);
                 }
             }
-            else if(healthBlock.get(LocationConstants.CSV_STATE_ID) == null){
+            else if(healthBlock.get(LocationConstants.CSV_STATE_ID) == null && rejectionChecks){
                 LOGGER.info("In state null");
                 HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
                 healthBlockRejectionService.saveRejectedHealthBlock(healthBlockImportRejection);
             }
-            else if(healthBlock.get(LocationConstants.TALUKA_ID) == null || healthBlock.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty()){
+            else if((healthBlock.get(LocationConstants.TALUKA_ID) == null || healthBlock.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty()) && rejectionChecks){
                 HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.TALUKA_ID_NOT_PRESENT_IN_FILE.toString());
                 healthBlockRejectionService.saveRejectedHealthBlock(healthBlockImportRejection);
             }
             else {
-                LOGGER.info("last");
-                HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
-                healthBlockRejectionService.saveRejectedHealthBlock(healthBlockImportRejection);
+                if(rejectionChecks){
+                    LOGGER.info("last");
+                    HealthBlockImportRejection healthBlockImportRejection = new HealthBlockImportRejection((Long)healthBlock.get(LocationConstants.CSV_STATE_ID),(Long)healthBlock.get(LocationConstants.DISTRICT_ID),(String)healthBlock.get(LocationConstants.TALUKA_ID),(Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID),(String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME),false, LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
+                    healthBlockRejectionService.saveRejectedHealthBlock(healthBlockImportRejection);
+                }
+
             }
         }
-
+        rejectionChecks=false;
         return stringBuilder.toString();
     }
 
