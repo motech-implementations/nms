@@ -5,8 +5,6 @@ import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 
 import javax.jdo.annotations.Unique;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
 
 @Entity(tableName = "nms_village_rejects")
 @Unique(name = "UNIQUE_STATE_VILLAGE_CODE_SVID", members = { "stateId", "villageCode","svid" })
