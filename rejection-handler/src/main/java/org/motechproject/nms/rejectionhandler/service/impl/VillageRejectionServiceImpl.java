@@ -37,10 +37,10 @@ public class VillageRejectionServiceImpl implements VillageRejectionService {
                 DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
                 LOGGER.info("In getSqlQuery");
                 String villageValues = "(" + villageImportRejection.getStateId() + ", " + villageImportRejection.getDistrictCode() + ", '" + villageImportRejection.getTalukaCode() + "', " +
-                        villageImportRejection.getVillageCode()+",' "+villageImportRejection.getVillageName()+"', "  + villageImportRejection.getAccepted() + ", '" + villageImportRejection.getRejectionReason() +"', "+MOTECH_STRING+MOTECH_STRING+MOTECH_STRING+"'"+ dateTimeFormatter.print(dateTimeNow)+"', '"+dateTimeFormatter.print(dateTimeNow)+"')";
+                        villageImportRejection.getVillageCode()+",' "+villageImportRejection.getVillageName()+"', "  + villageImportRejection.getAccepted() + ", '" + villageImportRejection.getRejectionReason() +"', "+MOTECH_STRING+MOTECH_STRING+MOTECH_STRING+"'"+ dateTimeFormatter.print(dateTimeNow)+"', '"+dateTimeFormatter.print(dateTimeNow)+"', '"+0+"')";
                 LOGGER.info(villageValues);
                 String query = "INSERT into nms_village_rejects (`stateId`, `districtCode`, `talukaCode`, `villageCode`, `villageName`," +
-                        " `accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                        " `accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`,`svid`) VALUES " +
                         villageValues + " ON DUPLICATE KEY UPDATE " +
                         "districtCode = VALUES(districtCode), talukaCode = VALUES(talukaCode), villageName = VALUES(villageName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
                 LOGGER.info("Printing Query for rejected Village: "+ query);
