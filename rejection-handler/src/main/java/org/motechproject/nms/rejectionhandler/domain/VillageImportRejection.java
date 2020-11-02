@@ -33,6 +33,9 @@ public class VillageImportRejection {
     @Field
     private String rejectionReason;
 
+    @Field
+    private long svid;
+
 
     public Long getStateId() {    return stateId;    }
 

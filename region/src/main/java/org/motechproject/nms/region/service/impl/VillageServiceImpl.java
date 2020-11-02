@@ -157,24 +157,18 @@ public class VillageServiceImpl implements VillageService {
                 }
                 else if(rejectionChecks){
                     if(villageCode == null ){
-                        LOGGER.debug("--------------------------------1111111111111111-----------------------------");
                         VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),null,(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString());
                         villageRejectionService.saveRejectedVillage(villageImportRejection);
                     }
                     else if((taluka == null || taluka.getId() == null) ){
-                        LOGGER.debug("--------------------------------2222222222222222-----------------------------");
-
                         VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),(Long) village.get(LocationConstants.VILLAGE_ID),(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.PARENT_LOCATION_NOT_PRESENT_IN_DB.toString());
                         villageRejectionService.saveRejectedVillage(villageImportRejection);
                     }
                     else if(((Long) (0L)).equals(villageCode) ){
-                        LOGGER.debug("--------------------------------3333333333333333-----------------------------");
-
                         VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),0L,(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString());
                         villageRejectionService.saveRejectedVillage(villageImportRejection);
                     }
                     else if((villageName == null || villageName.trim().isEmpty()) ){
-                        LOGGER.debug("--------------------------------4444444444444444-----------------------------");
                         VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),(Long) village.get(LocationConstants.VILLAGE_ID),villageName,false, LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString());
                         villageRejectionService.saveRejectedVillage(villageImportRejection);
                     }
@@ -182,7 +176,6 @@ public class VillageServiceImpl implements VillageService {
 
             }
             else if (rejectionChecks){
-                LOGGER.debug("--------------------------------55555555555555-----------------------------");
                 VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),(Long) village.get(LocationConstants.VILLAGE_ID),(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
                 villageRejectionService.saveRejectedVillage(villageImportRejection);
             }
