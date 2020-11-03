@@ -67,4 +67,34 @@ public class HealthBlockRejectionServiceImpl implements HealthBlockRejectionServ
     public void createRejectedHealthBlock(HealthBlockImportRejection healthBlockImportRejection) {
         healthBlockRejectionDataService.create(healthBlockImportRejection);
     }
+
+    @Override
+    @Transactional
+    public Long saveRejectedHealthBlockInBulk(String rejectedHealthBlockValues) {
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+            @Override
+            public String getSqlQuery() {
+                String query = "INSERT into nms_health_block_rejects (`stateId`, `districtCode`, `talukaCode`, `healthBlockCode`, `healthBlockName`, " +
+                        " `accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                        rejectedHealthBlockValues + " ON DUPLICATE KEY UPDATE " +
+                        "districtCode = VALUES(districtCode), talukaCode = VALUES(talukaCode), healthBlockName = VALUES(healthBlockName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                LOGGER.info("Printing Query for rejected HB: "+ query);
+                return query;
+
+            }
+            @Override
+            public Long execute(Query query) {
+                query.setClass(HealthBlockImportRejection.class);
+                return (Long) query.execute();
+            }
+
+        };
+        Long rejectedHealthBlock = 0L;
+
+        if(!rejectedHealthBlockValues.isEmpty()){
+            rejectedHealthBlock = healthBlockRejectionDataService.executeSQLQuery(queryExecution);
+        }
+        return rejectedHealthBlock;
+    }
+
 }

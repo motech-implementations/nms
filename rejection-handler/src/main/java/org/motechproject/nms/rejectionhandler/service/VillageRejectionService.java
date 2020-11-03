@@ -7,5 +7,5 @@ public interface VillageRejectionService {
 
     Long saveRejectedVillage(VillageImportRejection villageImportRejection);
     void createRejectedVillage(VillageImportRejection villageImportRejection);
-
+    Long saveRejectedVillageInBulk(String rejectedVillageValues);
 }

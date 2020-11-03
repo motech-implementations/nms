@@ -6,5 +6,5 @@ import org.springframework.stereotype.Service;
 public interface TalukaRejectionService {
     Long saveRejectedTaluka(TalukaImportRejection talukaImportRejection);
     void createRejectedTaluka(TalukaImportRejection talukaImportRejection);
-
+    Long saveRejectedTalukaInBulk(String talukarejectedValues);
 }

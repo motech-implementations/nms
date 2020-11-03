@@ -65,4 +65,33 @@ public class HealthFacilityRejectionServiceImpl implements HealthFacilityRejecti
     public void createRejectedHealthFacility(HealthFacilityImportRejection healthFacilityImportRejection) {
         healthFacilityRejectionDataService.create(healthFacilityImportRejection);
     }
+
+    @Override
+    @Transactional
+    public Long saveRejectedHealthFacilityInBulk(String rejectedHealthFacilityValues) {
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+            @Override
+            public String getSqlQuery() {
+                String query = "INSERT into nms_health_facility_rejects (`stateId`, `districtCode`, `talukaCode`, `healthBlockCode`, `healthFacilityCode`, `healthFacilityName`," +
+                        " `accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                        rejectedHealthFacilityValues + " ON DUPLICATE KEY UPDATE " +
+                        "districtCode = VALUES(districtCode), talukaCode = VALUES(talukaCode),healthBlockCode = VALUES(healthBlockCode), healthFacilityName = VALUES(healthFacilityName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                LOGGER.info("Printing Query for rejected HF: "+ query);
+                return query;
+
+            }
+            @Override
+            public Long execute(Query query) {
+                query.setClass(HealthFacilityImportRejection.class);
+                return (Long) query.execute();
+            }
+
+        };
+        Long rejectedHealthFacility = 0L;
+
+        if(!rejectedHealthFacilityValues.isEmpty()){
+            rejectedHealthFacility = healthFacilityRejectionDataService.executeSQLQuery(queryExecution);
+        }
+        return rejectedHealthFacility;
+    }
 }

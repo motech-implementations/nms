@@ -7,4 +7,6 @@ public interface DistrictRejectionService {
 
     void createRejectedDistrict(DistrictImportRejection districtImportRejection);
     Long saveRejectedDistrict(DistrictImportRejection districtImportRejection);
+    Long saveRejectedDistrictInBulk(String rejectedDistrictValues);
+
 }

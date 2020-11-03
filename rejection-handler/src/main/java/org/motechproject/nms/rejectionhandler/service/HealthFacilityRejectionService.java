@@ -7,4 +7,6 @@ public interface HealthFacilityRejectionService {
     void createRejectedHealthFacility(HealthFacilityImportRejection healthFacilityImportRejection);
 
     Long saveRejectedHealthFacility(HealthFacilityImportRejection healthFacilityImportRejection);
+    Long saveRejectedHealthFacilityInBulk(String rejectedHealthFacilityValues);
+
 }

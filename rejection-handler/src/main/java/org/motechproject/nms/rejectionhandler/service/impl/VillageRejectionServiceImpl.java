@@ -65,4 +65,33 @@ public class VillageRejectionServiceImpl implements VillageRejectionService {
     public void createRejectedVillage(VillageImportRejection villageImportRejection) {
         villageRejectionDataService.create(villageImportRejection);
     }
+    @Override
+    @Transactional
+    public Long saveRejectedVillageInBulk(String rejectedVillageValues) {
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+            @Override
+            public String getSqlQuery() {
+                String query = "INSERT into nms_village_rejects (`stateId`, `districtCode`, `talukaCode`, `villageCode`, `villageName`," +
+                        " `accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`, `svid`) VALUES " +
+                        rejectedVillageValues + " ON DUPLICATE KEY UPDATE " +
+                        "districtCode = VALUES(districtCode), talukaCode = VALUES(talukaCode), villageName = VALUES(villageName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                LOGGER.info("Printing Query for rejected Village: "+ query);
+                return query;
+            }
+            @Override
+            public Long execute(Query query) {
+                query.setClass(VillageImportRejection.class);
+                return (Long) query.execute();
+            }
+
+        };
+        Long rejectedVillage = 0L;
+
+        if(!rejectedVillageValues.isEmpty()){
+            rejectedVillage = villageRejectionDataService.executeSQLQuery(queryExecution);
+        }
+
+        return rejectedVillage;
+    }
+
 }

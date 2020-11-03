@@ -66,5 +66,34 @@ public class DistrictRejectionServiceImpl implements DistrictRejectionService {
         return rejectedDistricts;
     }
 
+    @Override
+    @Transactional
+    public Long saveRejectedDistrictInBulk(String rejectedDistrictValues) {
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+            @Override
+            public String getSqlQuery() {
+                String query = "INSERT into nms_district_rejects (`stateId`, `districtCode`, `districtName`,`accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                        rejectedDistrictValues + " ON DUPLICATE KEY UPDATE " +
+                        " districtName = VALUES(districtName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                LOGGER.info("Printing Query for rejected District: "+ query);
+                return query;
+
+            }
+            @Override
+            public Long execute(Query query) {
+                query.setClass(DistrictImportRejection.class);
+                return (Long) query.execute();
+            }
+
+        };
+        Long rejectedDistricts = 0L;
+
+        if(!rejectedDistrictValues.isEmpty()){
+            rejectedDistricts = districtRejectionDataService.executeSQLQuery(queryExecution);
+        }
+
+        return rejectedDistricts;
+    }
+
 
 }

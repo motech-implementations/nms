@@ -67,4 +67,33 @@ public class TalukaRejectionServiceImpl implements TalukaRejectionService {
         talukaRejectionDataService.create(talukaImportRejection);
 
     }
+
+    @Override
+    @Transactional
+    public Long saveRejectedTalukaInBulk(String talukarejectedValues){
+        SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
+            @Override
+            public String getSqlQuery() {
+                String query = "INSERT into nms_taluka_rejects (`stateId`, `districtCode`, `talukaCode`, `talukaName`," +
+                        " `accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                        talukarejectedValues + " ON DUPLICATE KEY UPDATE " +
+                        "districtCode = VALUES(districtCode), talukaName = VALUES(talukaName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                LOGGER.info("Printing Query for rejected Taluka: "+ query);
+                return query;
+
+            }
+            @Override
+            public Long execute(Query query) {
+                query.setClass(TalukaImportRejection.class);
+                return (Long) query.execute();
+            }
+
+        };
+        Long rejectedTaluka = 0L;
+        if(!talukarejectedValues.isEmpty()){
+            rejectedTaluka = talukaRejectionDataService.executeSQLQuery(queryExecution);
+
+        }
+        return rejectedTaluka;
+    }
 }

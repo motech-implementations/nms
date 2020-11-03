@@ -5,5 +5,5 @@ import org.motechproject.nms.rejectionhandler.domain.HealthSubFacilityImportReje
 public interface HealthSubFacilityRejectionService {
     Long saveRejectedHealthSubFacility(HealthSubFacilityImportRejection healthSubFacilityImportRejection);
     void createRejectedHealthSubFacility(HealthSubFacilityImportRejection healthSubFacilityImportRejection);
-
+    Long saveRejectedHealthSubFacilityInBulk(String rejectedHealthSubFacilityValues);
 }
