@@ -14,7 +14,6 @@ import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.motechproject.nms.region.utils.LocationConstants;
-import org.motechproject.nms.rejectionhandler.domain.TalukaImportRejection;
 import org.motechproject.nms.rejectionhandler.service.TalukaRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

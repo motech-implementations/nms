@@ -11,7 +11,6 @@ import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.repository.HealthSubFacilityDataService;
 import org.motechproject.nms.region.service.HealthSubFacilityService;
 import org.motechproject.nms.region.utils.LocationConstants;
-import org.motechproject.nms.rejectionhandler.domain.HealthSubFacilityImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.VillageHealthSubFacilityImportRejection;
 import org.motechproject.nms.rejectionhandler.service.HealthSubFacilityRejectionService;
 import org.motechproject.nms.rejectionhandler.service.VillageHealthSubFacilityRejectionService;
@@ -106,8 +105,6 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
-
-
 
             @Override
             public Long execute(Query query) {
@@ -222,7 +219,6 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
 
                 k++;
             }
-
         }
         if(k>0){
             healthSubFacilityRejectionService.saveRejectedHealthSubFacilityInBulk(rejectionStringBuilder.toString());

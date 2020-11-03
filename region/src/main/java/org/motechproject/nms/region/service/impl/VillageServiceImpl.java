@@ -11,7 +11,6 @@ import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.repository.VillageDataService;
 import org.motechproject.nms.region.service.VillageService;
 import org.motechproject.nms.region.utils.LocationConstants;
-import org.motechproject.nms.rejectionhandler.domain.VillageImportRejection;
 import org.motechproject.nms.rejectionhandler.service.VillageRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

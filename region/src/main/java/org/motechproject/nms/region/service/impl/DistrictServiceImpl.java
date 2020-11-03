@@ -16,7 +16,6 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.utils.LocationConstants;
-import org.motechproject.nms.rejectionhandler.domain.DistrictImportRejection;
 import org.motechproject.nms.rejectionhandler.service.DistrictRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +25,7 @@ import org.springframework.stereotype.Service;
 import javax.jdo.Query;
 import javax.jdo.annotations.Transactional;
 import java.util.*;
+
 @Service("districtService")
 public class DistrictServiceImpl implements DistrictService {
 
@@ -150,7 +150,6 @@ public class DistrictServiceImpl implements DistrictService {
     @Override
     @Transactional
     public Long createUpdateDistricts(final List<Map<String, Object>> districts, final Map<String, State> stateHashMap) {
-        LOGGER.debug("starting making query for district");
         rejectionChecks=true;
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
             @Override
@@ -167,8 +166,6 @@ public class DistrictServiceImpl implements DistrictService {
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
-
-
 
             @Override
             public Long execute(Query query) {
@@ -195,7 +192,6 @@ public class DistrictServiceImpl implements DistrictService {
         for (Map<String, Object> district : districts) {
             String rejectionReason="";
             if (district.get(LocationConstants.CSV_STATE_ID) != null) {
-                LOGGER.debug("Entering rejection/accepting district process!!!!!");
                 State state = stateHashMap.get(district.get(LocationConstants.CSV_STATE_ID).toString());
                 Long districtCode = (Long) district.get(LocationConstants.DISTRICT_ID);
                 String districtName = (String) district.get(LocationConstants.DISTRICT_NAME);

@@ -11,7 +11,6 @@ import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.repository.HealthBlockDataService;
 import org.motechproject.nms.region.service.HealthBlockService;
 import org.motechproject.nms.region.utils.LocationConstants;
-import org.motechproject.nms.rejectionhandler.domain.HealthBlockImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.TalukaHealthBlockImportRejection;
 import org.motechproject.nms.rejectionhandler.service.HealthBlockRejectionService;
 import org.motechproject.nms.rejectionhandler.service.TalukaHealthBlockRejectionService;
@@ -130,9 +129,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
     @Override
     @Transactional
     public Long createUpdateHealthBlocks(final List<Map<String, Object>> healthBlocks, final Map<String, State> stateHashMap, final Map<String, District> districtHashMap, final Map<String, Taluka> talukaHashMap) {
-        LOGGER.info("In createUpdateHealthBlocks");
         rejectionChecks=true;
-        LOGGER.info(healthBlocks.toString());
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override

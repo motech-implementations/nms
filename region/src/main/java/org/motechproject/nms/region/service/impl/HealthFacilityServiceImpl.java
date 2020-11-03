@@ -11,7 +11,6 @@ import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.repository.HealthFacilityDataService;
 import org.motechproject.nms.region.service.HealthFacilityService;
 import org.motechproject.nms.region.utils.LocationConstants;
-import org.motechproject.nms.rejectionhandler.domain.HealthFacilityImportRejection;
 import org.motechproject.nms.rejectionhandler.service.HealthFacilityRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,14 +86,11 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
     @Override
     @Transactional
     public Long createUpdateHealthFacilities(final List<Map<String, Object>> healthFacilities, final Map<String, State> stateHashMap, final Map<String, District> districtHashMap, final Map<String, Taluka> talukaHashMap, final Map<String, HealthBlock> healthBlockHashMap) {
-        LOGGER.debug("Inside createUpdateHealthFacilities");
         rejectionChecks=true;
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
             public String getSqlQuery() {
-                LOGGER.debug("Inside getSqlQuery");
-
                 String healthFacilityValues = healthFacilityQuerySet(healthFacilities, stateHashMap, districtHashMap, talukaHashMap, healthBlockHashMap);
                 String query = "";
                 if (!healthFacilityValues.isEmpty()) {
@@ -107,8 +103,6 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
-
-
 
             @Override
             public Long execute(Query query) {
