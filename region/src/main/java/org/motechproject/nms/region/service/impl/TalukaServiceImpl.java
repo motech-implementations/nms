@@ -14,7 +14,6 @@ import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.repository.TalukaDataService;
 import org.motechproject.nms.region.service.TalukaService;
 import org.motechproject.nms.region.utils.LocationConstants;
-import org.motechproject.nms.rejectionhandler.domain.TalukaImportRejection;
 import org.motechproject.nms.rejectionhandler.service.TalukaRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +38,8 @@ public class TalukaServiceImpl implements TalukaService {
     private static final String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TalukaServiceImpl.class);
+
+    private static Boolean rejectionChecks=true;
 
     @Autowired
     private TalukaDataService dataService;
@@ -87,6 +88,7 @@ public class TalukaServiceImpl implements TalukaService {
     @Override
     @Transactional
     public Long createUpdateTalukas(final List<Map<String, Object>> talukas, final Map<String, State> stateHashMap, final Map<String, District> districtHashMap) {
+        rejectionChecks=true;
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
@@ -195,9 +197,12 @@ public class TalukaServiceImpl implements TalukaService {
     private String talukaQuerySet(List<Map<String, Object>> talukas, Map<String, State> stateHashMap, Map<String, District> districtHashMap) {
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
+        StringBuilder rejectionStringBuilder = new StringBuilder();
+        int k= 0;
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> taluka : talukas) {
+            String rejectionReason="";
             if (taluka.get(LocationConstants.CSV_STATE_ID) != null && taluka.get(LocationConstants.DISTRICT_ID) != null) {
                 State state = stateHashMap.get(taluka.get(LocationConstants.CSV_STATE_ID).toString());
                 District district = districtHashMap.get(taluka.get(LocationConstants.CSV_STATE_ID).toString() + "_" + taluka.get(LocationConstants.DISTRICT_ID).toString());
@@ -222,33 +227,54 @@ public class TalukaServiceImpl implements TalukaService {
 
                     i++;
                 }
-                else if (taluka.get(LocationConstants.TALUKA_ID) == null || taluka.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty()) {
-                    TalukaImportRejection talukaImportRejection = new TalukaImportRejection(state.getCode(), (Long) taluka.get(LocationConstants.DISTRICT_ID), null, talukaName, false, LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString());
-                    talukaRejectionService.createRejectedTaluka(talukaImportRejection);
+                else if(rejectionChecks){
+                        if ((taluka.get(LocationConstants.TALUKA_ID) == null || taluka.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty()) ) {
+                            rejectionReason=LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString();
+                        }
+                        else if (district == null) {
+                            rejectionReason=LocationRejectionReasons.PARENT_LOCATION_NOT_PRESENT_IN_DB.toString();
+                        }
+                        else if ((talukaName == null || talukaName.trim().isEmpty()) ) {
+                            rejectionReason=LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString();
+                        }
+                        else if ((Integer.parseInt((taluka.get(LocationConstants.TALUKA_ID).toString().trim())) ==0) ) {
+                            rejectionReason=LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString();
+                        }
                 }
-                else if (district == null) {
-                    TalukaImportRejection talukaImportRejection = new TalukaImportRejection(state.getCode(), (Long) taluka.get(LocationConstants.DISTRICT_ID), (String) taluka.get(LocationConstants.TALUKA_ID), talukaName, false, LocationRejectionReasons.PARENT_LOCATION_NOT_PRESENT_IN_DB.toString());
-                    talukaRejectionService.saveRejectedTaluka(talukaImportRejection);
-                }
-                else if ((talukaName == null || talukaName.trim().isEmpty())) {
-                    TalukaImportRejection talukaImportRejection = new TalukaImportRejection(state.getCode(), district.getCode(), (String) taluka.get(LocationConstants.TALUKA_ID), talukaName, false, LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString());
-                    talukaRejectionService.saveRejectedTaluka(talukaImportRejection);
-                }
-                else if ((Integer.parseInt((taluka.get(LocationConstants.TALUKA_ID).toString().trim())) ==0)) {
-                    LOGGER.debug("printing Zero Taluka code: "+Integer.parseInt((taluka.get(LocationConstants.TALUKA_ID).toString().trim())) );
-                    TalukaImportRejection talukaImportRejection = new TalukaImportRejection(state.getCode(), district.getCode(), (String) taluka.get(LocationConstants.TALUKA_ID), talukaName, false, LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString());
-                    talukaRejectionService.saveRejectedTaluka(talukaImportRejection);
-                }
+
             }
-            else if(taluka.get(LocationConstants.CSV_STATE_ID) == null) {
-                TalukaImportRejection talukaImportRejection = new TalukaImportRejection((Long) taluka.get(LocationConstants.CSV_STATE_ID),(Long) taluka.get(LocationConstants.DISTRICT_ID),(String) taluka.get(LocationConstants.TALUKA_ID),taluka.get(LocationConstants.TALUKA_NAME).toString(),false, LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
-                talukaRejectionService.createRejectedTaluka(talukaImportRejection);
+            else if(rejectionChecks){
+                rejectionReason=LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString();
             }
-            else {
-                TalukaImportRejection talukaImportRejection = new TalukaImportRejection((Long) taluka.get(LocationConstants.CSV_STATE_ID),(Long) taluka.get(LocationConstants.DISTRICT_ID),(String) taluka.get(LocationConstants.TALUKA_ID),taluka.get(LocationConstants.TALUKA_NAME).toString(),false, LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
-                talukaRejectionService.saveRejectedTaluka(talukaImportRejection);
+
+            if(!rejectionReason.isEmpty()){
+                if (k != 0) {
+                    rejectionStringBuilder.append(", ");
+                }
+                rejectionStringBuilder.append("(");
+                rejectionStringBuilder.append( taluka.get(LocationConstants.CSV_STATE_ID) + ", ");
+                rejectionStringBuilder.append( taluka.get(LocationConstants.DISTRICT_ID)+ ", ");
+                rejectionStringBuilder.append( QUOTATION + StringEscapeUtils.escapeSql(taluka.get(LocationConstants.TALUKA_ID) == null ?
+                        "" : taluka.get(LocationConstants.TALUKA_ID).toString().replaceAll(":", "")) + QUOTATION_COMMA);
+                rejectionStringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(taluka.get(LocationConstants.TALUKA_NAME) == null ?
+                        "" : taluka.get(LocationConstants.TALUKA_NAME).toString().replaceAll(":", "")) + QUOTATION_COMMA);
+
+                rejectionStringBuilder.append( 0+ ", ");
+                rejectionStringBuilder.append( QUOTATION+rejectionReason+QUOTATION+ ", ");
+                rejectionStringBuilder.append(MOTECH_STRING);
+                rejectionStringBuilder.append(MOTECH_STRING);
+                rejectionStringBuilder.append(MOTECH_STRING);
+                rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                rejectionStringBuilder.append(")");
+
+                k++;
             }
         }
+        if(k>0){
+            talukaRejectionService.saveRejectedTalukaInBulk(rejectionStringBuilder.toString());
+        }
+        rejectionChecks=false;
         return stringBuilder.toString();
     }
 }

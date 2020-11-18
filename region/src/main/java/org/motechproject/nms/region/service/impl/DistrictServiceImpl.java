@@ -16,7 +16,6 @@ import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.DistrictDataService;
 import org.motechproject.nms.region.service.DistrictService;
 import org.motechproject.nms.region.utils.LocationConstants;
-import org.motechproject.nms.rejectionhandler.domain.DistrictImportRejection;
 import org.motechproject.nms.rejectionhandler.service.DistrictRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +25,7 @@ import org.springframework.stereotype.Service;
 import javax.jdo.Query;
 import javax.jdo.annotations.Transactional;
 import java.util.*;
+
 @Service("districtService")
 public class DistrictServiceImpl implements DistrictService {
 
@@ -40,6 +40,8 @@ public class DistrictServiceImpl implements DistrictService {
     private DistrictDataService districtDataService;
 
     private DistrictRejectionService districtRejectionService;
+
+    private static Boolean rejectionChecks=true;
 
     @Autowired
     public DistrictServiceImpl(DistrictDataService districtDataService, DistrictRejectionService districtRejectionService) {
@@ -148,7 +150,7 @@ public class DistrictServiceImpl implements DistrictService {
     @Override
     @Transactional
     public Long createUpdateDistricts(final List<Map<String, Object>> districts, final Map<String, State> stateHashMap) {
-        LOGGER.debug("starting making query for district");
+        rejectionChecks=true;
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
             @Override
             public String getSqlQuery() {
@@ -164,8 +166,6 @@ public class DistrictServiceImpl implements DistrictService {
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
-
-
 
             @Override
             public Long execute(Query query) {
@@ -185,11 +185,13 @@ public class DistrictServiceImpl implements DistrictService {
     private String districtQuerySet(List<Map<String, Object>> districts, Map<String, State> stateHashMap) {
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
+        StringBuilder rejectionStringBuilder = new StringBuilder();
+        int k= 0;
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> district : districts) {
+            String rejectionReason="";
             if (district.get(LocationConstants.CSV_STATE_ID) != null) {
-                LOGGER.debug("Entering rejection/accepting district process!!!!!");
                 State state = stateHashMap.get(district.get(LocationConstants.CSV_STATE_ID).toString());
                 Long districtCode = (Long) district.get(LocationConstants.DISTRICT_ID);
                 String districtName = (String) district.get(LocationConstants.DISTRICT_NAME);
@@ -213,36 +215,51 @@ public class DistrictServiceImpl implements DistrictService {
 
                     i++;
                 }
-                else if(districtCode == null){
-                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), null,(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString());
-                    districtRejectionService.createRejectedDistrict(districtImportRejection);
+                else if(rejectionChecks){
+                    if(districtCode == null ){
+                        rejectionReason=LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString();
+                    }
+                    else if(state == null ){
+                        rejectionReason=LocationRejectionReasons.PARENT_LOCATION_NOT_PRESENT_IN_DB.toString();
+                    }
+
+                    else if((districtName == null || districtName.trim().isEmpty()) ){
+                        rejectionReason=LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString();
+                    }
+                    else if( ((Long) (0L)).equals(districtCode) ){
+                        rejectionReason=LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString();
+                    }
                 }
-                else if(state == null){
-                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID),(Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.PARENT_LOCATION_NOT_PRESENT_IN_DB.toString());
-                    districtRejectionService.saveRejectedDistrict(districtImportRejection);
-                }
-
-                else if((districtName == null || districtName.trim().isEmpty())){
-                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), (Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString());
-                    districtRejectionService.saveRejectedDistrict(districtImportRejection);
-
-                }
-                else if( ((Long) (0L)).equals(districtCode)){
-                    DistrictImportRejection districtImportRejection = new DistrictImportRejection((Long)district.get(LocationConstants.CSV_STATE_ID), (Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString());
-                    districtRejectionService.saveRejectedDistrict(districtImportRejection);
-
-                }
-
-
             }
-            else if(district.get(LocationConstants.CSV_STATE_ID) == null){
-                DistrictImportRejection districtImportRejection = new DistrictImportRejection(null,(Long) district.get(LocationConstants.DISTRICT_ID),(String) district.get(LocationConstants.DISTRICT_NAME),false,LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
-                districtRejectionService.createRejectedDistrict(districtImportRejection);
+            else if(district.get(LocationConstants.CSV_STATE_ID) == null && rejectionChecks){
+                rejectionReason=LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString();
             }
+            if(!rejectionReason.isEmpty()){
+                if (k != 0) {
+                    rejectionStringBuilder.append(", ");
+                }
+                rejectionStringBuilder.append("(");
+                rejectionStringBuilder.append( district.get(LocationConstants.CSV_STATE_ID) + ", ");
+                rejectionStringBuilder.append( district.get(LocationConstants.DISTRICT_ID)+ ", ");
+                rejectionStringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(district.get(LocationConstants.DISTRICT_NAME) == null ?
+                        "" : district.get(LocationConstants.DISTRICT_NAME).toString().replaceAll(":", "")) + QUOTATION_COMMA);
+                rejectionStringBuilder.append( 0+ ", ");
 
+                rejectionStringBuilder.append( QUOTATION+rejectionReason+QUOTATION+ ", ");
+                rejectionStringBuilder.append(MOTECH_STRING);
+                rejectionStringBuilder.append(MOTECH_STRING);
+                rejectionStringBuilder.append(MOTECH_STRING);
+                rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                rejectionStringBuilder.append(")");
+
+                k++;
+            }
         }
-        LOGGER.debug("printing district query :" +stringBuilder.toString());
-
+        if(k>0){
+            districtRejectionService.saveRejectedDistrictInBulk(rejectionStringBuilder.toString());
+        }
+        rejectionChecks=false;
         return stringBuilder.toString();
     }
 

@@ -11,7 +11,6 @@ import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.repository.VillageDataService;
 import org.motechproject.nms.region.service.VillageService;
 import org.motechproject.nms.region.utils.LocationConstants;
-import org.motechproject.nms.rejectionhandler.domain.VillageImportRejection;
 import org.motechproject.nms.rejectionhandler.service.VillageRejectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +32,8 @@ public class VillageServiceImpl implements VillageService {
     private static final String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(VillageServiceImpl.class);
+
+    private static Boolean rejectionChecks=true;
 
     @Autowired
     private VillageDataService dataService;
@@ -83,6 +84,7 @@ public class VillageServiceImpl implements VillageService {
     @Transactional
     public Long createUpdateVillages(final List<Map<String, Object>> villages, final Map<String, State> stateHashMap, final Map<String, District> districtHashMap, final Map<String, Taluka> talukaHashMap) {
         Timer queryTimer = new Timer();
+        rejectionChecks=true;
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
 
             @Override
@@ -118,9 +120,12 @@ public class VillageServiceImpl implements VillageService {
     private String villageQuerySet(List<Map<String, Object>> villages, Map<String, State> stateHashMap, Map<String, District> districtHashMap, Map<String, Taluka> talukaHashMap) { //NO CHECKSTYLE Cyclomatic Complexity
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
+        StringBuilder rejectionStringBuilder = new StringBuilder();
+        int k= 0;
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> village : villages) {
+            String rejectionReason="";
             if (village.get(LocationConstants.CSV_STATE_ID) != null && village.get(LocationConstants.DISTRICT_ID) != null &&
                     village.get(LocationConstants.TALUKA_ID) != null && !village.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty()) {
                 State state = stateHashMap.get(village.get(LocationConstants.CSV_STATE_ID).toString());
@@ -151,32 +156,55 @@ public class VillageServiceImpl implements VillageService {
 
                     i++;
                 }
-                else if(villageCode == null){
-                    VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),null,(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString());
-                    villageRejectionService.createRejectedVillage(villageImportRejection);
-                }
-                else if((taluka == null || taluka.getId() == null) ){
-                    VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),(Long) village.get(LocationConstants.VILLAGE_ID),(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.PARENT_LOCATION_NOT_PRESENT_IN_DB.toString());
-                    villageRejectionService.saveRejectedVillage(villageImportRejection);
-                }
-                else if(((Long) (0L)).equals(villageCode)){
-                    VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),0L,(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString());
-                    villageRejectionService.saveRejectedVillage(villageImportRejection);
-                }
-                else if(villageName == null || villageName.trim().isEmpty()){
-                    VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),(Long) village.get(LocationConstants.VILLAGE_ID),villageName,false, LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString());
-                    villageRejectionService.saveRejectedVillage(villageImportRejection);
+                else if(rejectionChecks){
+                    if(villageCode == null ){
+                        rejectionReason=LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString();
+                    }
+                    else if((taluka == null || taluka.getId() == null) ){
+                        rejectionReason=LocationRejectionReasons.PARENT_LOCATION_NOT_PRESENT_IN_DB.toString();
+                    }
+                    else if(((Long) (0L)).equals(villageCode) ){
+                        rejectionReason=LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString();
+                    }
+                    else if((villageName == null || villageName.trim().isEmpty()) ){
+                        rejectionReason=LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString();
+                    }
                 }
             }
-            else if(village.get(LocationConstants.CSV_STATE_ID) == null  ){
-                VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),(Long) village.get(LocationConstants.VILLAGE_ID),(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
-                villageRejectionService.createRejectedVillage(villageImportRejection);
+            else if (rejectionChecks){
+                rejectionReason=LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString();
             }
-            else {
-                VillageImportRejection villageImportRejection = new VillageImportRejection((Long) village.get(LocationConstants.CSV_STATE_ID),(Long)village.get(LocationConstants.DISTRICT_ID),(String)village.get(LocationConstants.TALUKA_ID),(Long) village.get(LocationConstants.VILLAGE_ID),(String) village.get(LocationConstants.VILLAGE_NAME),false, LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString());
-                villageRejectionService.saveRejectedVillage(villageImportRejection);
+
+            if(!rejectionReason.isEmpty()){
+                if (k != 0) {
+                    rejectionStringBuilder.append(", ");
+                }
+                rejectionStringBuilder.append("(");
+                rejectionStringBuilder.append( village.get(LocationConstants.CSV_STATE_ID) + ", ");
+                rejectionStringBuilder.append( village.get(LocationConstants.DISTRICT_ID)+ ", ");
+                rejectionStringBuilder.append( QUOTATION + StringEscapeUtils.escapeSql(village.get(LocationConstants.TALUKA_ID) == null ?
+                        "" : village.get(LocationConstants.TALUKA_ID).toString().replaceAll(":", "")) + QUOTATION_COMMA);
+                rejectionStringBuilder.append( village.get(LocationConstants.VILLAGE_ID)+ ", ");
+                rejectionStringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(village.get(LocationConstants.VILLAGE_NAME) == null ?
+                        "" : village.get(LocationConstants.VILLAGE_NAME).toString().replaceAll(":", "")) + QUOTATION_COMMA);
+
+                rejectionStringBuilder.append( 0+ ", ");
+                rejectionStringBuilder.append( QUOTATION+rejectionReason+QUOTATION+ ", ");
+                rejectionStringBuilder.append(MOTECH_STRING);
+                rejectionStringBuilder.append(MOTECH_STRING);
+                rejectionStringBuilder.append(MOTECH_STRING);
+                rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                rejectionStringBuilder.append( 0);
+                rejectionStringBuilder.append(")");
+
+                k++;
             }
         }
+        if(k>0){
+            villageRejectionService.saveRejectedVillageInBulk(rejectionStringBuilder.toString());
+        }
+        rejectionChecks=false;
         return stringBuilder.toString();
     }
 }

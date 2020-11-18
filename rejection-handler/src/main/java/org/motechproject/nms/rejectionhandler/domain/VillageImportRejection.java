@@ -7,7 +7,7 @@ import org.motechproject.mds.annotations.Field;
 import javax.jdo.annotations.Unique;
 
 @Entity(tableName = "nms_village_rejects")
-@Unique(name = "UNIQUE_STATE_VILLAGE_CODE", members = { "stateId", "villageCode" })
+@Unique(name = "UNIQUE_STATE_VILLAGE_CODE_SVID", members = { "stateId", "villageCode", "svid" })
 public class VillageImportRejection {
     @Field
     private Long stateId;
@@ -32,6 +32,9 @@ public class VillageImportRejection {
 
     @Field
     private String rejectionReason;
+
+    @Field
+    private long svid;
 
 
     public Long getStateId() {    return stateId;    }
@@ -95,6 +98,14 @@ public class VillageImportRejection {
     }
 
     public VillageImportRejection() {
+    }
+
+    public long getSvid() {
+        return svid;
+    }
+
+    public void setSvid(long svid) {
+        this.svid = svid;
     }
 
     public VillageImportRejection(Long stateId, Long districtCode, String talukaCode, Long villageCode, String villageName, Boolean accepted, String rejectionReason) {
