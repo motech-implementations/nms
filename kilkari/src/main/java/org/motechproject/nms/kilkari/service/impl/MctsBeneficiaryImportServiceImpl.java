@@ -187,6 +187,13 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.INVALID_LMP_DATE, false);
         }
 
+        //new rejection reason less_than_12_week
+        boolean isServiceable=validateIsServiceable(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, importOrigin);
+
+        if (!isServiceable) {
+            return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.LESS_THAN_12_WEEK, false);
+        }
+
         // validate msisdn
         if (!validateMsisdn(msisdn)) {
             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.MOBILE_NUMBER_EMPTY_OR_WRONG_FORMAT, false);
@@ -392,6 +399,15 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         if (isInValidDOB) {
             return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.INVALID_DOB, false);
         }
+
+
+        //new rejection reason less_than_12_week
+        boolean isServiceable=validateIsServiceable(dob, SubscriptionPackType.CHILD, msisdn, childId, importOrigin);
+
+        if (!isServiceable) {
+            return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.LESS_THAN_12_WEEK, false);
+        }
+
 
         //validate mother
         if (!validateMother(mother, child)) {
@@ -609,6 +625,35 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         return true;
     }
+
+
+    @Override
+    public boolean validateIsServiceable(DateTime referenceDate, SubscriptionPackType packType, Long msisdn, String beneficiaryId, SubscriptionOrigin importOrigin) {
+        if (pregnancyPack == null) {
+            pregnancyPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.PREGNANCY);
+        }
+        if (childPack == null) {
+            childPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.CHILD);
+        }
+        if (referenceDate == null) {
+            subscriptionErrorDataService.create(
+                    new SubscriptionError(msisdn, beneficiaryId,
+                            (packType == SubscriptionPackType.PREGNANCY) ?
+                                    SubscriptionRejectionReason.MISSING_LMP :
+                                    SubscriptionRejectionReason.MISSING_DOB,
+                            packType, "", importOrigin));
+            return false;
+        }
+
+        String referenceDateValidationError;
+        if (packType == SubscriptionPackType.PREGNANCY) {
+            referenceDateValidationError = pregnancyPack.isReferenceDateServiceable(referenceDate);
+        } else { // childPack
+            referenceDateValidationError = childPack.isReferenceDateServiceable(referenceDate);
+        }
+        return referenceDateValidationError.isEmpty();
+    }
+
 
     @Override
     @Transactional
