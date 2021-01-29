@@ -22,6 +22,8 @@ public interface MctsBeneficiaryImportService {
 
     boolean validateReferenceDate(DateTime referenceDate, SubscriptionPackType packType, Long msisdn, String beneficiaryId, SubscriptionOrigin importOrigin);
 
+    boolean validateIsServiceable(DateTime referenceDate, SubscriptionPackType packType, Long msisdn, String beneficiaryId, SubscriptionOrigin importOrigin);
+
     void createOrUpdateRchChildRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus);
 
     void createOrUpdateMctsChildRejections(Map<String, Object> rejectedRecords, Map<String, Object> rejectionStatus);
