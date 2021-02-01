@@ -27,6 +27,12 @@
             <version>${motech.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.github.vladimir-bukhtoyarov</groupId>
+            <artifactId>org.motechproject.com.github.vladimir-bukhtoyarov</artifactId>
+            <version>4.1.1-${external.dependency.release.tag.new}</version>
+        </dependency>
+
 
         <!-- common properties -->
         <dependency>
@@ -55,6 +61,7 @@
             <version>3.1.0</version>
             <scope>provided</scope>
         </dependency>
+
     </dependencies>
 
     <repositories>
@@ -97,6 +104,7 @@
                             net.sf.cglib.reflect,
                             org.springframework.transaction,
                             org.motechproject.nms.kilkari.repository,
+                            org.motechproject.nms.kilkari.service,
                             org.motechproject.nms.region.service,
                             org.motechproject.nms.region.utils,
                             org.datanucleus.enhancement,

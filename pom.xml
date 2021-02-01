@@ -662,6 +662,11 @@
                 </exclusions>
             </dependency>
             <dependency>
+                <groupId>com.github.vladimir-bukhtoyarov</groupId>
+                <artifactId>org.motechproject.com.github.vladimir-bukhtoyarov</artifactId>
+                <version>4.1.1-${external.dependency.release.tag.new}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.motechproject</groupId>
                 <artifactId>motech-platform-osgi-extender-fragment</artifactId>
                 <version>${motech.version}</version>

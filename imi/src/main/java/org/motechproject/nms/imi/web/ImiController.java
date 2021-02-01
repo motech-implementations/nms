@@ -212,7 +212,7 @@ public class ImiController {
                     null
             ));
             alertService.create(fileName, "scpCdrFromRemote", error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-            throw new IllegalArgumentException(e.getMessage(), e);
+            throw new IllegalArgumentException("Error copying CDR file", e);
         }
 
         // Copy the summary file from the IMI share (imi.remote_cdr_dir) into local cdr dir (imi.local_cdr_dir)
@@ -231,7 +231,7 @@ public class ImiController {
                     null
             ));
             alertService.create(fileName, "scpCdrFromRemote", error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-            throw new IllegalArgumentException(e.getMessage(), e);
+            throw new IllegalArgumentException("Error copying CSR file", e);
         }
 
         // Checks the CSR/CDR checksum, record count & csv, then sends an event to proceed to phase 2 of the
