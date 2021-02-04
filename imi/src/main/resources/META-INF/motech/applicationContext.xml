@@ -13,6 +13,7 @@
     <mvc:interceptors>
         <mvc:interceptor>
             <mvc:mapping path="/obdFileProcessedStatusNotification"/>
+            <mvc:mapping path="/obdFileProcessedStatusNotification/"/>
         <bean class="org.motechproject.nms.kilkari.service.RateLimitInterceptor">
             <constructor-arg type="java.lang.String" value="obdFileProcessedStatusNotification"></constructor-arg>
             <constructor-arg type="int" value="10"></constructor-arg>
@@ -20,6 +21,7 @@
         </mvc:interceptor>
         <mvc:interceptor>
             <mvc:mapping path="/cdrFileNotification"/>
+            <mvc:mapping path="/cdrFileNotification/"/>
             <bean class="org.motechproject.nms.kilkari.service.RateLimitInterceptor">
             <constructor-arg type="java.lang.String" value="cdrFileNotification"></constructor-arg>
             <constructor-arg type="int" value="10"></constructor-arg>
