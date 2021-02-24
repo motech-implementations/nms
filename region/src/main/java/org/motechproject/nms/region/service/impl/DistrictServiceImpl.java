@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 import javax.jdo.Query;
 import javax.jdo.annotations.Transactional;
 import java.util.*;
-
 @Service("districtService")
 public class DistrictServiceImpl implements DistrictService {
 
@@ -158,14 +157,16 @@ public class DistrictServiceImpl implements DistrictService {
                 String query = "";
                 if(!districtValues.isEmpty()) {
                     query = "INSERT into nms_districts (`code`, `name`, `regionalName`, `state_id_OID`, " +
-                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`, `stateCode`, `mddsCode`) VALUES " +
                             districtValues +
                             " ON DUPLICATE KEY UPDATE " +
-                            "name = VALUES(name), regionalName = VALUES(regionalName), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                            "name = VALUES(name), regionalName = VALUES(regionalName), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy), stateCode=VALUES(stateCode), mddsCode=VALUES(mddsCode)";
                 }
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
             }
+
+
 
             @Override
             public Long execute(Query query) {
@@ -195,6 +196,9 @@ public class DistrictServiceImpl implements DistrictService {
                 State state = stateHashMap.get(district.get(LocationConstants.CSV_STATE_ID).toString());
                 Long districtCode = (Long) district.get(LocationConstants.DISTRICT_ID);
                 String districtName = (String) district.get(LocationConstants.DISTRICT_NAME);
+                Long stateCode=(Long) district.get(LocationConstants.STATE_CODE_ID);
+                Long mdds_Code=(Long) district.get(LocationConstants.MDDS_CODE);
+
                 if (state != null && districtCode != null && (districtName != null && !districtName.trim().isEmpty()) && !((Long) (0L)).equals(districtCode)) {
                     if (i != 0) {
                         stringBuilder.append(", ");
@@ -210,7 +214,9 @@ public class DistrictServiceImpl implements DistrictService {
                     stringBuilder.append(MOTECH_STRING);
                     stringBuilder.append(MOTECH_STRING);
                     stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                    stringBuilder.append(QUOTATION + stateCode + QUOTATION_COMMA);
+                    stringBuilder.append(QUOTATION + mdds_Code + QUOTATION);
                     stringBuilder.append(")");
 
                     i++;
