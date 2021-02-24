@@ -1,5 +1,6 @@
 package org.motechproject.nms.rch.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.axis.Message;
 import org.apache.axis.MessageContext;
 import org.apache.axis.description.TypeDesc;
@@ -33,66 +34,32 @@ import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.exception.GfStatusInactiveException;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.kilkari.contract.RchAnmAshaRecord;
-import org.motechproject.nms.kilkari.contract.RchChildRecord;
-import org.motechproject.nms.kilkari.contract.RchDistrictRecord;
-import org.motechproject.nms.kilkari.contract.RchHealthBlockRecord;
-import org.motechproject.nms.kilkari.contract.RchHealthFacilityRecord;
-import org.motechproject.nms.kilkari.contract.RchHealthSubFacilityRecord;
-import org.motechproject.nms.kilkari.contract.RchMotherRecord;
-import org.motechproject.nms.kilkari.contract.RchTalukaHealthBlockRecord;
-import org.motechproject.nms.kilkari.contract.RchTalukaRecord;
-import org.motechproject.nms.kilkari.contract.RchVillageHealthSubFacilityRecord;
-import org.motechproject.nms.kilkari.contract.RchVillageRecord;
-import org.motechproject.nms.kilkari.domain.RejectionReasons;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.MctsMother;
-import org.motechproject.nms.kilkari.domain.MctsChild;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.ThreadProcessorObject;
-import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService;
-import org.motechproject.nms.kilkari.service.ChildCsvThreadProcessor;
-import org.motechproject.nms.kilkari.service.MotherCsvThreadProcessor;
-import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
-import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
-import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
+import org.motechproject.nms.kilkari.contract.*;
+import org.motechproject.nms.kilkari.domain.*;
+import org.motechproject.nms.kilkari.service.*;
+import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
-import org.motechproject.nms.rch.contract.RchAnmAshaDataSet;
-import org.motechproject.nms.rch.contract.RchChildrenDataSet;
-import org.motechproject.nms.rch.contract.RchDistrictDataSet;
-import org.motechproject.nms.rch.contract.RchHealthBlockDataSet;
-import org.motechproject.nms.rch.contract.RchHealthFacilityDataSet;
-import org.motechproject.nms.rch.contract.RchHealthSubFacilityDataSet;
-import org.motechproject.nms.rch.contract.RchMothersDataSet;
-import org.motechproject.nms.rch.contract.RchTalukaDataSet;
-import org.motechproject.nms.rch.contract.RchTalukaHealthBlockDataSet;
-import org.motechproject.nms.rch.contract.RchVillageDataSet;
-import org.motechproject.nms.rch.contract.RchVillageHealthSubFacilityDataSet;
+import org.motechproject.nms.rch.contract.*;
 import org.motechproject.nms.rch.domain.RchImportAudit;
 import org.motechproject.nms.rch.domain.RchImportFacilitator;
 import org.motechproject.nms.rch.domain.RchImportFailRecord;
 import org.motechproject.nms.rch.domain.RchUserType;
-import org.motechproject.nms.rch.exception.*;
+import org.motechproject.nms.rch.exception.ExecutionException;
+import org.motechproject.nms.rch.exception.RchFileManipulationException;
+import org.motechproject.nms.rch.exception.RchInvalidResponseStructureException;
+import org.motechproject.nms.rch.exception.RchWebServiceException;
 import org.motechproject.nms.rch.repository.RchImportAuditDataService;
 import org.motechproject.nms.rch.repository.RchImportFacilitatorDataService;
 import org.motechproject.nms.rch.repository.RchImportFailRecordDataService;
+import org.motechproject.nms.rch.service.NmsWebServices;
 import org.motechproject.nms.rch.service.RchImportFacilitatorService;
 import org.motechproject.nms.rch.service.RchWebServiceFacade;
-import org.motechproject.nms.rch.soap.DS_DataResponseDS_DataResult;
-import org.motechproject.nms.rch.soap.Irchwebservices;
-import org.motechproject.nms.rch.soap.RchwebservicesLocator;
+import org.motechproject.nms.rch.soap.*;
 import org.motechproject.nms.rch.utils.Constants;
 import org.motechproject.nms.rch.utils.ExecutionHelper;
 import org.motechproject.nms.rch.utils.MarshallUtils;
-import org.motechproject.nms.region.domain.HealthBlock;
-import org.motechproject.nms.region.domain.HealthFacility;
-import org.motechproject.nms.region.domain.HealthSubFacility;
-import org.motechproject.nms.region.domain.LocationEnum;
-import org.motechproject.nms.region.domain.LocationFinder;
-import org.motechproject.nms.region.domain.State;
-import org.motechproject.nms.region.domain.Taluka;
-import org.motechproject.nms.region.domain.Village;
+import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.nms.region.service.LocationService;
@@ -115,47 +82,18 @@ import javax.jdo.Query;
 import javax.xml.bind.JAXBException;
 import javax.xml.namespace.QName;
 import javax.xml.rpc.ServiceException;
-
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.FileReader;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.rmi.RemoteException;
 import java.text.ParseException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Objects;
 import java.text.SimpleDateFormat;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 
-import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanRchMotherRecords;
-import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanRchChildRecords;
-import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanRchFlwRecords;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionRch;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToRchChild;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToRchMother;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.motherRejectionRch;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.flwRejectionRch;
+import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.*;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.*;
 
 @Service("rchWebServiceFacade")
 public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
@@ -243,6 +181,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     @Autowired
     private EventRelay eventRelay;
 
+    @Autowired
+    NmsWebServices nmsWebServices;
+
     private String createErrorMessage(String message, Exception e) {
         final int START = 0;
         final int END = 99;
@@ -315,7 +256,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             File localResponseFile;
             if (rchImportFacilitatorTypes.isEmpty() && name != null) {
                 localResponseFile = scpResponseToLocal(name, remoteLocation);
-                String result = readResponsesFromXml(localResponseFile);
+                String result=null;
+                if(userType==RchUserType.MOTHER||userType==RchUserType.CHILD||userType==RchUserType.ASHA){
+                    result= readResponsesFromXml(localResponseFile);
+                }
+                else{
+                    result= readResponsesFromJson(localResponseFile);
+                }
+
                 State importState = stateDataService.findByCode(stateId);
                 String stateName = importState.getName();
                 Long stateCode = importState.getCode();
@@ -332,7 +280,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                         localResponseFile = scpResponseToLocal(name, remoteLocation);
                     }
                     if (localResponseFile != null) {
-                        String result = readResponsesFromXml(localResponseFile);
+
+                        String result=null;
+                        if(userType==RchUserType.MOTHER||userType==RchUserType.CHILD||userType==RchUserType.ASHA){
+                            result= readResponsesFromXml(localResponseFile);
+                        }
+                        else{
+                            result= readResponsesFromJson(localResponseFile);
+                        }
                         State importState = stateDataService.findByCode(stateId);
                         String stateName = importState.getName();
                         Long stateCode = importState.getCode();
@@ -356,7 +311,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
             eventParams.put(Constants.REMOTE_LOCATION, null);
             eventParams.put(Constants.FILE_NAME, null);
-            eventByUserType(eventParams, userType);
+//            eventByUserType(eventParams, userType); commented for testing purpose
         }
     }
 
@@ -454,26 +409,25 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     @Override
     public boolean getDistrictData(LocalDate from, LocalDate to, URL endpoint, Long stateId) {
-        DS_DataResponseDS_DataResult result;
-        Irchwebservices dataService = getService(endpoint);
         boolean status = false;
         LOGGER.info(FROM_DATE_LOG, from);
-
         try {
-            result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
-                    settingsFacade.getProperty(Constants.RCH_PASSWORD), from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString(),
-                    settingsFacade.getProperty(Constants.RCH_LOCATION_DISTRICT), settingsFacade.getProperty(Constants.RCH_DTID));
-        } catch (RemoteException e) {
-            throw new RchWebServiceException("Remote Server Error. Could Not Read RCH District Data.", e);
-        }
+            String url= getLocationStringUrl(stateId.toString(),settingsFacade.getProperty(Constants.TYPE_ID_DISTRICT));
+            String APIresponse= nmsWebServices.getLocationApiResponse(url); // we can add more exception based on response code
 
-        LOGGER.debug("writing RCH District response to file");
-        File responseFile = generateResponseFile(result, RchUserType.DISTRICT, stateId);
-        if (responseFile != null) {
-            LOGGER.info("RCH district response successfully written to file. Copying to remote directory.");
-            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.DISTRICT, 0);
-        } else {
-            LOGGER.error("Error writing {} response to file for state {}", RchUserType.DISTRICT, stateId);
+            LOGGER.debug("writing RCH District response to file");
+            File responseFile = generateJsonResponseFile(APIresponse, RchUserType.DISTRICT, stateId);
+            if (responseFile != null) {
+                LOGGER.info("RCH district response successfully written to file. Copying to remote directory.");
+                status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.DISTRICT, 0);
+            } else {
+                LOGGER.error("Error writing {} response to file for state {}", RchUserType.DISTRICT, stateId);
+            }
+
+        } catch (IOException e) {
+
+            e.printStackTrace();
+
         }
         return status;
     }
@@ -536,14 +490,15 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
         LOGGER.info("Starting location read.");
         List<Long> stateIds = getStateIds();
-        for (Long stateId : stateIds
-        ) {
+        Long stateId=stateIds.get(0);
+//        for (Long stateId : stateIds
+//        ) {
             Map<String, Object> eventParams = new HashMap<>();
             eventParams.put(Constants.STATE_ID_PARAM, stateId);
             eventParams.put(Constants.REMOTE_LOCATION, null);
             eventParams.put(Constants.FILE_NAME, null);
             eventRelay.sendEventMessage(new MotechEvent(Constants.RCH_DISTRICT_READ_SUBJECT, eventParams));
-        }
+//        }
     }
 
     /**
@@ -567,10 +522,11 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
 
             ArrayList<Map<String, Object>> districtArrList = new ArrayList<>();
-            if (result.contains(RECORDS)) {
-                RchDistrictDataSet districtDataSet = (result == null) ?
-                        null :
-                        (RchDistrictDataSet) MarshallUtils.unmarshall(result, RchDistrictDataSet.class);
+            if (result!=null) {
+                RchDistrictDataSet districtDataSet =new RchDistrictDataSet();
+                ObjectMapper mapper = new ObjectMapper();
+                List<RchDistrictRecord> records = Arrays.asList(mapper.readValue(result, RchDistrictRecord[].class));
+                districtDataSet.setRecords(records);
 
                 LOGGER.info("Starting RCH district import");
                 StopWatch stopWatch = new StopWatch();
@@ -613,7 +569,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
             }
 
-        } catch (JAXBException e) {
+        } catch (IOException e) { // exception according to deserialization
             String error = String.format("Cannot deserialize RCH district data from %s location.", stateId);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
@@ -1739,21 +1695,21 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             case ASHA:
                 return String.format("RCH_StateID_%d_Asha_Response_%s.xml", stateId, timeStamp);
             case TALUKA:
-                return String.format("RCH_StateID_%d_Taluka_Response_%s.xml", stateId, timeStamp);
+                return String.format("RCH_StateID_%d_Taluka_Response_%s.json", stateId, timeStamp);
             case HEALTHBLOCK:
-                return String.format("RCH_StateID_%d_HealthBlock_Response_%s.xml", stateId, timeStamp);
+                return String.format("RCH_StateID_%d_HealthBlock_Response_%s.json", stateId, timeStamp);
             case TALUKAHEALTHBLOCK:
-                return String.format("RCH_StateID_%d_Taluka_HealthBlock_Response_%s.xml", stateId, timeStamp);
+                return String.format("RCH_StateID_%d_Taluka_HealthBlock_Response_%s.json", stateId, timeStamp);
             case DISTRICT:
-                return String.format("RCH_StateID_%d_District_Response_%s.xml", stateId, timeStamp);
+                return String.format("RCH_StateID_%d_District_Response_%s.json", stateId, timeStamp);
             case VILLAGE:
-                return String.format("RCH_StateID_%d_Village_Response_%s.xml", stateId, timeStamp);
+                return String.format("RCH_StateID_%d_Village_Response_%s.json", stateId, timeStamp);
             case HEALTHFACILITY:
-                return String.format("RCH_StateID_%d_HealthFacility_Response_%s.xml", stateId, timeStamp);
+                return String.format("RCH_StateID_%d_HealthFacility_Response_%s.json", stateId, timeStamp);
             case HEALTHSUBFACILITY:
-                return String.format("RCH_StateID_%d_HealthSubFacility_Response_%s.xml", stateId, timeStamp);
+                return String.format("RCH_StateID_%d_HealthSubFacility_Response_%s.json", stateId, timeStamp);
             case VILLAGEHEALTHSUBFACILITY:
-                return String.format("RCH_StateID_%d_Village_HealthSubFacility_Response_%s.xml", stateId, timeStamp);
+                return String.format("RCH_StateID_%d_Village_HealthSubFacility_Response_%s.json", stateId, timeStamp);
             default:
                 return "Null";
         }
@@ -1778,7 +1734,23 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
         return localResponseFile;
     }
+     private File generateJsonResponseFile(String  APIresponse, RchUserType userType, Long stateId) {
 
+        String targetFileName = targetFileName(TIME_FORMATTER.print(DateTime.now()), userType, stateId);
+        File localResponseDir = localResponseDir();
+        File localResponseFile = new File(localResponseDir, targetFileName);
+        try {
+            FileWriter writer = new FileWriter(localResponseFile);
+            writer.write(APIresponse);
+            writer.flush();
+            writer.close();
+        } catch (Exception e) {
+            LOGGER.debug("Failed to generate file", e);
+            LOGGER.error((e.toString()));
+            return null;
+        }
+        return localResponseFile;
+    }
 
     private RchImportAudit saveImportedMothersData(RchMothersDataSet mothersDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) { //NOPMD NcssMethodCount
         LOGGER.info("Starting RCH mother import for state {}", stateName);
@@ -2171,7 +2143,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         map.put(KilkariConstants.CSV_STATE_ID, stateCode);
         map.put(KilkariConstants.DISTRICT_ID, districtRecord.getDistrictCode());
         map.put(KilkariConstants.DISTRICT_NAME, districtRecord.getDistrictName());
-        map.put(KilkariConstants.EXEC_DATE, districtRecord.getExecDate());
+        map.put(KilkariConstants.MDDS_CODE, districtRecord.getMDDS_Code());
+        map.put(KilkariConstants.STATE_CODE_ID, districtRecord.getStateCode());
     }
 
     private void toMapTaluka(Map<String, Object> map, RchTalukaRecord talukaRecord, Long stateCode) {
@@ -2448,6 +2421,17 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             throw new RchFileManipulationException("Failed to read response file.", e); //NOPMD
         }
         return "";
+    }
+    private String readResponsesFromJson(File file) throws RchFileManipulationException {
+        try {
+            String string=FileUtils.readFileToString(file);
+            string=string.replace("{\"RCH Data\":","");
+            string=string.replace("]}","]");
+            return string;
+
+        } catch (Exception e) {
+            throw new RchFileManipulationException("Failed to read response file.", e); //NOPMD
+        }
     }
 
 
@@ -3317,4 +3301,38 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         return stateIds;
     }
 
+   private String getLocationStringUrl(String stateId,String typeId) throws UnsupportedEncodingException {
+
+       Map<String, String> parameters = new HashMap<>();
+
+       parameters.put("Username", settingsFacade.getProperty(Constants.LOCATION_USER_NAME));
+       parameters.put("Api_Token", settingsFacade.getProperty(Constants.LOCATION_API_TOKEN));
+       parameters.put("Typeid", typeId);
+       parameters.put("State_code", stateId);
+       parameters.put("TimeStamp", settingsFacade.getProperty(Constants.LOCATION_TIME_STAMP));
+       parameters.put("District_Code", settingsFacade.getProperty(Constants.LOCATION_DISTRICT_CODE));
+       parameters.put("Taluka_Code", settingsFacade.getProperty(Constants.LOCATION_TALUKA_CODE));
+       parameters.put("HealthBlock_Id", settingsFacade.getProperty(Constants.LOCATION_HEALTH_BLOCK_ID));
+       parameters.put("Health_Facility_type", settingsFacade.getProperty(Constants.LOCATION_HEALTH_FACILITY_TYPE));
+       parameters.put("HealtfacilityID", settingsFacade.getProperty(Constants.LOCATION_HEALTH_FACILITY_ID));
+       parameters.put("HealtSubfacilityID", settingsFacade.getProperty(Constants.LOCATION_HEALTH_SUB_FACILITY_ID));
+       parameters.put("Village_Id", settingsFacade.getProperty(Constants.LOCATION_VILLAGE_ID));
+
+       String url=settingsFacade.getProperty(Constants.LOCATION_API_BASE_URL);
+
+       StringBuilder result = new StringBuilder();
+       result.append(url);
+       result.append("?");
+       for (Map.Entry<String, String> entry : parameters.entrySet()) {
+           result.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
+           result.append("=");
+           result.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
+           result.append("&");
+       }
+
+       String resultString = result.toString();
+       return resultString.length() > 0
+               ? resultString.substring(0, resultString.length() - 1)
+               : resultString;
+   }
 }
