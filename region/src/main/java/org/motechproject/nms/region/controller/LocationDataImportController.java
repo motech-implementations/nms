@@ -5,19 +5,12 @@ import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.csv.service.CsvAuditService;
-import org.motechproject.nms.region.csv.CensusVillageImportService;
-import org.motechproject.nms.region.csv.DistrictImportService;
-import org.motechproject.nms.region.csv.HealthBlockImportService;
-import org.motechproject.nms.region.csv.HealthFacilityImportService;
-import org.motechproject.nms.region.csv.HealthSubFacilityImportService;
-import org.motechproject.nms.region.csv.LocationDataImportService;
-import org.motechproject.nms.region.csv.NonCensusVillageImportService;
-import org.motechproject.nms.region.csv.StateImportService;
-import org.motechproject.nms.region.csv.TalukaImportService;
+import org.motechproject.nms.region.csv.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -50,6 +43,25 @@ public class LocationDataImportController {
     private CsvAuditService csvAuditService;
 
     private Map<String, LocationDataImportService> locationDataImportServiceMapping;
+
+    @Autowired
+    LanguageLocationImportService languageLocationImportService;
+
+    @RequestMapping(value = "/data/import", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<String> createCircle(@RequestParam("name") String name, @RequestParam("languageName") String languageName, @RequestParam("key") String key) {
+
+        String returnStatement;
+        if(key.equals("324tgyhdfwieagf2yge32dh2h")){
+            languageLocationImportService.createCircleRecord(name,languageName);
+            returnStatement="circle created/update with name "+name+" and its default language will be "+languageName;
+            return new ResponseEntity<>(returnStatement, HttpStatus.OK);
+        }
+        else {
+            returnStatement="Not Authorized";
+            return new ResponseEntity<>(returnStatement,HttpStatus.BAD_REQUEST);
+        }
+    }
 
     @RequestMapping(value = "/data/import/{location}", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
