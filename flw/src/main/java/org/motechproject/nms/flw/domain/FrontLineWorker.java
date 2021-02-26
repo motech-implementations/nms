@@ -19,7 +19,6 @@ import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.domain.validation.ValidFullLocation;
 import org.motechproject.nms.tracking.annotation.TrackClass;
 import org.motechproject.nms.tracking.annotation.TrackField;
-import org.motechproject.nms.tracking.annotation.TrackFields;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Index;
@@ -114,6 +113,9 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
     @TrackField
     private FlwJobStatus jobStatus;
 
+    @Field
+    @TrackField
+    private DateTime updatedOn;
 
     public FrontLineWorker(Long contactNumber) {
         this.contactNumber = contactNumber;
@@ -273,9 +275,21 @@ public class FrontLineWorker extends MdsEntity implements FullLocation {
         this.updatedDateNic = updatedDateNic;
     }
 
-    public FlwJobStatus getJobStatus() { return jobStatus; }
+    public FlwJobStatus getJobStatus() {
+        return jobStatus;
+    }
 
-    public void setJobStatus(FlwJobStatus jobStatus) { this.jobStatus = jobStatus; }
+    public void setJobStatus(FlwJobStatus jobStatus) {
+        this.jobStatus = jobStatus;
+    }
+
+    public DateTime getUpdatedOn() {
+        return updatedOn;
+    }
+
+    public void setUpdatedOn(DateTime updatedOn) {
+        this.updatedOn = updatedOn;
+    }
 
     @Override //NO CHECKSTYLE CyclomaticComplexity
     public boolean equals(Object o) {

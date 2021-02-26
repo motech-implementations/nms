@@ -34,6 +34,7 @@ public class RchAnmAshaRecord {
     private String gfType;
     private String execDate;
     private String gfStatus;
+    private String updatedOn;
 
     @XmlElement(name = "Taluka_Name")
     public void setTalukaName(String talukaName) {
@@ -206,6 +207,15 @@ public class RchAnmAshaRecord {
         this.gfStatus = gfStatus;
     }
 
+    public String getUpdatedOn() {
+        return updatedOn;
+    }
+
+    @XmlElement(name = "Updated_On")
+    public void setUpdatedOn(String updatedOn) {
+        this.updatedOn = updatedOn;
+    }
+
     public Map<String, Object> toFlwRecordMap() {
         Map<String, Object> map = new HashMap<>();
         map.put(FlwConstants.STATE_ID, getStateId());
@@ -227,6 +237,7 @@ public class RchAnmAshaRecord {
         map.put(FlwConstants.GF_TYPE, getGfType());
         map.put(FlwConstants.EXEC_DATE, "".equals(getExecDate()) ? null : LocalDate.parse(getExecDate(), DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")));
         map.put(FlwConstants.GF_STATUS, getGfStatus());
+        map.put(FlwConstants.UPDATED_ON, "".equals(getUpdatedOn()) ? null : getUpdatedOn());
         return map;
     }
 }

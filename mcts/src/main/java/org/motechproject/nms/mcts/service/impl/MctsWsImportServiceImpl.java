@@ -13,27 +13,28 @@ import org.motechproject.event.listener.EventRelay;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.util.Order;
+import org.motechproject.nms.flw.domain.FlwJobStatus;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
+import org.motechproject.nms.kilkari.contract.AnmAshaRecord;
+import org.motechproject.nms.kilkari.contract.ChildRecord;
+import org.motechproject.nms.kilkari.contract.MotherRecord;
+import org.motechproject.nms.kilkari.domain.MctsChild;
+import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.MctsMother;
-import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.utils.FlwConstants;
-import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
+import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.motechproject.nms.mcts.contract.AnmAshaDataSet;
-import org.motechproject.nms.kilkari.contract.AnmAshaRecord;
-import org.motechproject.nms.kilkari.contract.ChildRecord;
 import org.motechproject.nms.mcts.contract.ChildrenDataSet;
-import org.motechproject.nms.kilkari.contract.MotherRecord;
 import org.motechproject.nms.mcts.contract.MothersDataSet;
 import org.motechproject.nms.mcts.domain.MctsImportAudit;
 import org.motechproject.nms.mcts.domain.MctsImportFailRecord;
@@ -62,22 +63,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.ArrayList;
 
 import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanChildRecords;
-import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanFlwRecords;
 import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanMotherRecords;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionMcts;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToChild;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToMother;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.motherRejectionMcts;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionMcts;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.flwRejectionMcts;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.motherRejectionMcts;
 
 
 @Service("mctsWsImportService")
@@ -600,7 +603,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         String stateName = state.getName();
         Long stateCode = state.getCode();
         LOGGER.info("Starting ASHA import for state {}", stateName);
-        List<List<AnmAshaRecord>> ashaRecordsSet = cleanFlwRecords(anmAshaDataSet.getRecords());
+        List<List<AnmAshaRecord>> ashaRecordsSet = cleanFlwRecords(anmAshaDataSet.getRecords(), state);
         List<AnmAshaRecord> rejectedAshaRecords = ashaRecordsSet.get(0);
         String action = "";
         int saved = 0;
@@ -613,8 +616,6 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
             rejected++;
         }
         List<AnmAshaRecord> acceptedAshaRecords = ashaRecordsSet.get(1);
-
-
         for (AnmAshaRecord record : acceptedAshaRecords) {
             try {
                 record.setStateId(stateCode);
@@ -669,6 +670,74 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         }
         LOGGER.info("{} state, Total: {} Ashas imported, {} Ashas rejected", stateName, saved, rejected);
         return new MctsImportAudit(startReferenceDate, endReferenceDate, MctsUserType.ASHA, stateCode, stateName, saved, rejected, null);
+    }
+
+    private List<List<AnmAshaRecord>> cleanFlwRecords(List<AnmAshaRecord> anmAshaRecords, State state) {
+        try {
+            Collections.sort(anmAshaRecords, new Comparator<AnmAshaRecord>() {
+                @Override
+                public int compare(AnmAshaRecord t1, AnmAshaRecord t2) {
+
+                    String a = t1.getGfStatus();
+                    String b = t2.getGfStatus();
+                    LocalDateTime d1 = LocalDateTime.parse(t1.getUpdatedOn(), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
+                    LocalDateTime d2 = LocalDateTime.parse(t2.getUpdatedOn(), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
+
+                    if (a.equalsIgnoreCase("InActive") && b.equalsIgnoreCase("Active")) {
+                        return -1;
+                    } else if (a.equalsIgnoreCase("Active") && b.equalsIgnoreCase("InActive")) {
+                        return 1;
+                    } else if (a.equalsIgnoreCase("Active") && b.equalsIgnoreCase("Active")) {
+                        if (d1.isAfter(d2)) {
+                            return -1;
+                        } else {
+                            return 1;
+                        }
+                    } else {
+                        return 1;
+                    }
+                }
+            });
+        } catch (Exception e) {
+            LOGGER.error("Sorting is not performed correctly");
+        }
+
+
+        List<AnmAshaRecord> rejectedRecords = new ArrayList<>();
+        List<AnmAshaRecord> acceptedRecords = new ArrayList<>();
+        List<List<AnmAshaRecord>> full = new ArrayList<>();
+        HashMap<String, Long> ashaPhoneMap = new HashMap<>();
+
+        for (Integer i = 0; i < anmAshaRecords.size(); i++) {
+            AnmAshaRecord record = anmAshaRecords.get(i);
+            if (record.getGfStatus().equalsIgnoreCase("Active")) {
+                Long flwId = record.getId();
+                Long msisdn = Long.valueOf(record.getContactNo());
+                FrontLineWorker flw = frontLineWorkerService.getByMctsFlwIdAndState(flwId.toString(), state);
+                FrontLineWorker flw2 = frontLineWorkerService.getByContactNumber(msisdn);
+                if (flw2 != null && flw2.getJobStatus().equals(FlwJobStatus.ACTIVE)) {
+                    if (flw != null && flw.equals(flw2) && !ashaPhoneMap.containsKey(record.getContactNo())) {
+                        ashaPhoneMap.put(record.getContactNo(), record.getId());
+                    }
+                }
+            }
+        }
+        for (Integer i = 0; i < anmAshaRecords.size(); i++) {
+            AnmAshaRecord record = anmAshaRecords.get(i);
+            if (record.getGfStatus().equalsIgnoreCase("Active")) {
+                if (ashaPhoneMap.containsKey(record.getContactNo()) && !ashaPhoneMap.get(record.getContactNo()).equals(record.getId())) {
+                    rejectedRecords.add(record);
+                } else {
+                    acceptedRecords.add(record);
+                }
+            } else {
+                acceptedRecords.add(record);
+            }
+        }
+
+        full.add(rejectedRecords);
+        full.add(acceptedRecords);
+        return full;
     }
 
     private void deleteMctsImportFailRecords(final LocalDate startReferenceDate, final LocalDate endReferenceDate, final MctsUserType mctsUserType, final Long stateId) {
