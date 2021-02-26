@@ -1,5 +1,6 @@
 package org.motechproject.nms.region.csv.impl;
 
+import org.motechproject.commons.date.util.DateUtil;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
 import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
 import org.motechproject.nms.csv.utils.CsvImporterBuilder;
@@ -67,6 +68,31 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
                         ConstraintViolationUtils.toString(e.getConstraintViolations())), e);
             }
         }
+    }
+
+    @Override
+    @Transactional
+    public void createCircleRecord(String name,String languageName) {
+
+            Circle circle=new Circle();
+            Language language =languageDataService.findByName(languageName);
+
+            circle.setName(name);
+            circle.setDefaultLanguage(language);
+
+            circle.setCreator("motech");
+            circle.setOwner("motech");
+
+            Circle dbCircle=circleDataService.findByName(name);
+            if(dbCircle==null){
+                circleDataService.update(circle);
+            }
+            else {
+                dbCircle.setName(name);
+                dbCircle.setDefaultLanguage(language);
+                circleDataService.update(dbCircle);
+            }
+
     }
 
     private void importRecord(Map<String, Object> record) {

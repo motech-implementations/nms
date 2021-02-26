@@ -6,4 +6,5 @@ import java.io.Reader;
 public interface LanguageLocationImportService {
 
     void importData(Reader reader) throws IOException;
+    void createCircleRecord(String name,String languageName);
 }
