@@ -1,0 +1,17 @@
+[
+  {
+    "active": true,
+    "pattern": "/**/import/**",
+    "supportedSchemes": [
+      "NO_SECURITY"
+    ],
+    "protocol": "HTTPS",
+    "priority": 1,
+    "rest": true,
+    "origin": "SYSTEM_MODULE_REGION",
+    "version": "all",
+    "methodsRequired": [
+      "POST"
+    ]
+  }
+]

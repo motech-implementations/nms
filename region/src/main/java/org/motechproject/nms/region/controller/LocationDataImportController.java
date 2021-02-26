@@ -47,7 +47,7 @@ public class LocationDataImportController {
     @Autowired
     LanguageLocationImportService languageLocationImportService;
 
-    @RequestMapping(value = "/data/import", method = RequestMethod.POST)
+    @RequestMapping(value = "/data/import/circle", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<String> createCircle(@RequestParam("name") String name, @RequestParam("languageName") String languageName, @RequestParam("key") String key) {
 
