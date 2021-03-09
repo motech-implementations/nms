@@ -7,4 +7,5 @@ public interface LanguageLocationImportService {
 
     void importData(Reader reader) throws IOException;
     void createCircleRecord(String name,String languageName);
+    void createStateRecord(String name,Long code);
 }

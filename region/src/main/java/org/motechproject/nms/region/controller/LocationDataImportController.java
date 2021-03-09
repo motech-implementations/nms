@@ -63,6 +63,23 @@ public class LocationDataImportController {
         }
     }
 
+    @RequestMapping(value = "/data/import/state", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<String> createState(@RequestParam("name") String name, @RequestParam("code") Long code, @RequestParam("key") String key) {
+
+        String returnStatement;
+        if(key.equals("324tgyhdfwieagf2yge32dh2h")){
+            languageLocationImportService.createStateRecord(name,code);
+
+            returnStatement="State created/update with name "+name+" and code "+code;
+            return new ResponseEntity<>(returnStatement, HttpStatus.OK);
+        }
+        else {
+            returnStatement="Not Authorized";
+            return new ResponseEntity<>(returnStatement,HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @RequestMapping(value = "/data/import/{location}", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void importLocationData(@RequestParam MultipartFile csvFile, @PathVariable String location) {
