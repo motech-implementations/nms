@@ -28,6 +28,18 @@ public class VillageHealthSubFacility extends MdsEntity{
     @Column
     private Long healthSubFacilityIdOID;
 
+    @Field
+    private Long districtCode;
+
+    @Field
+    private String talukaCode;
+
+    @Field
+    private Long healthFacilityCode;
+
+    @Field
+    private String villageName;
+
     public Long getVillageIdOID() {
         return villageIdOID;
     }
@@ -42,5 +54,37 @@ public class VillageHealthSubFacility extends MdsEntity{
 
     public void setHealthSubFacilityIdOID(Long healthSubFacilityIdOID) {
         this.healthSubFacilityIdOID = healthSubFacilityIdOID;
+    }
+
+    public Long getDistrictCode() {
+        return districtCode;
+    }
+
+    public void setDistrictCode(Long districtCode) {
+        this.districtCode = districtCode;
+    }
+
+    public String getTalukaCode() {
+        return talukaCode;
+    }
+
+    public void setTalukaCode(String talukaCode) {
+        this.talukaCode = talukaCode;
+    }
+
+    public Long getHealthFacilityCode() {
+        return healthFacilityCode;
+    }
+
+    public void setHealthFacilityCode(Long healthFacilityCode) {
+        this.healthFacilityCode = healthFacilityCode;
+    }
+
+    public String getVillageName() {
+        return villageName;
+    }
+
+    public void setVillageName(String villageName) {
+        this.villageName = villageName;
     }
 }

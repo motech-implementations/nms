@@ -166,8 +166,6 @@ public class DistrictServiceImpl implements DistrictService {
                 return query;
             }
 
-
-
             @Override
             public Long execute(Query query) {
                 query.setClass(District.class);
@@ -241,6 +239,8 @@ public class DistrictServiceImpl implements DistrictService {
                 rejectionReason=LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString();
             }
             if(!rejectionReason.isEmpty()){
+                Long stateCode=(Long) district.get(LocationConstants.STATE_CODE_ID);
+                Long mdds_Code=(Long) district.get(LocationConstants.MDDS_CODE);
                 if (k != 0) {
                     rejectionStringBuilder.append(", ");
                 }
@@ -256,7 +256,9 @@ public class DistrictServiceImpl implements DistrictService {
                 rejectionStringBuilder.append(MOTECH_STRING);
                 rejectionStringBuilder.append(MOTECH_STRING);
                 rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-                rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                rejectionStringBuilder.append(QUOTATION + stateCode + QUOTATION_COMMA);
+                rejectionStringBuilder.append(QUOTATION + mdds_Code + QUOTATION);
                 rejectionStringBuilder.append(")");
 
                 k++;

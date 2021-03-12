@@ -1,29 +1,36 @@
 package org.motechproject.nms.kilkari.contract;
 
-import org.joda.time.DateTime;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
-/**
- * Created by beehyv on 18/7/18.
+/**Created by vishnu on 27/6/18.
+ * update by rakesh on 20/08/20.
  */
-@XmlType
-@XmlAccessorType(XmlAccessType.NONE)
+
 public class RchVillageHealthSubFacilityRecord {
 
-    private Long districtCode;
+    @JsonProperty("VillageID")
     private Long villageCode;
+
+    @JsonProperty("HealtSubfacilityID")
     private Long healthSubFacilityCode;
-    private DateTime execDate;
+
+    @JsonProperty("DistrictID")
+    private Long districtCode;
+
+    @JsonProperty("TalukaID")
+    private String talukaCode;
+
+    @JsonProperty("HealtfacilityID")
+    private Long healthFacilityCode;
+
+    @JsonProperty("VillageName")
+    private String villageName;
 
     public Long getDistrictCode() {
         return districtCode;
     }
 
-    @XmlElement(name = "District_ID")
     public void setDistrictCode(Long districtCode) {
         this.districtCode = districtCode;
     }
@@ -32,7 +39,6 @@ public class RchVillageHealthSubFacilityRecord {
         return villageCode;
     }
 
-    @XmlElement(name = "Village_ID")
     public void setVillageCode(Long villageCode) {
         this.villageCode = villageCode;
     }
@@ -41,17 +47,31 @@ public class RchVillageHealthSubFacilityRecord {
         return healthSubFacilityCode;
     }
 
-    @XmlElement(name = "HealthSubFacility_ID")
     public void setHealthSubFacilityCode(Long healthSubFacilityCode) {
         this.healthSubFacilityCode = healthSubFacilityCode;
     }
 
-    public DateTime getExecDate() {
-        return execDate;
+    public String getTalukaCode() {
+        return talukaCode;
     }
 
-    @XmlElement(name = "Exec_Date")
-    public void setExecDate(DateTime execDate) {
-        this.execDate = execDate;
+    public void setTalukaCode(String talukaCode) {
+        this.talukaCode = talukaCode;
+    }
+
+    public Long getHealthFacilityCode() {
+        return healthFacilityCode;
+    }
+
+    public void setHealthFacilityCode(Long healthFacilityCode) {
+        this.healthFacilityCode = healthFacilityCode;
+    }
+
+    public String getVillageName() {
+        return villageName;
+    }
+
+    public void setVillageName(String villageName) {
+        this.villageName = villageName;
     }
 }

@@ -97,10 +97,10 @@ public class TalukaServiceImpl implements TalukaService {
                 String query = "";
                 if (!talukaValues.isEmpty()) {
                     query = "INSERT into nms_talukas (`code`, `name`, `state_id_OID`, `district_id_OID`, " +
-                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`, `stateCode`, `mddsCode`) VALUES " +
                             talukaValues +
                             " ON DUPLICATE KEY UPDATE " +
-                            "name = VALUES(name), district_id_OID=VALUES(district_id_OID), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                            "name = VALUES(name), district_id_OID=VALUES(district_id_OID), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy), stateCode=VALUES(stateCode), mddsCode=VALUES(mddsCode) ";
                 }
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
@@ -203,6 +203,8 @@ public class TalukaServiceImpl implements TalukaService {
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> taluka : talukas) {
             String rejectionReason="";
+            Long stateCode=(Long) taluka.get(LocationConstants.STATE_CODE_ID);
+            Long mdds_Code=(Long) taluka.get(LocationConstants.MDDS_CODE);
             if (taluka.get(LocationConstants.CSV_STATE_ID) != null && taluka.get(LocationConstants.DISTRICT_ID) != null) {
                 State state = stateHashMap.get(taluka.get(LocationConstants.CSV_STATE_ID).toString());
                 District district = districtHashMap.get(taluka.get(LocationConstants.CSV_STATE_ID).toString() + "_" + taluka.get(LocationConstants.DISTRICT_ID).toString());
@@ -222,7 +224,9 @@ public class TalukaServiceImpl implements TalukaService {
                     stringBuilder.append(MOTECH_STRING);
                     stringBuilder.append(MOTECH_STRING);
                     stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                    stringBuilder.append(QUOTATION + stateCode + QUOTATION_COMMA);
+                    stringBuilder.append(QUOTATION + mdds_Code + QUOTATION);
                     stringBuilder.append(")");
 
                     i++;
@@ -265,7 +269,9 @@ public class TalukaServiceImpl implements TalukaService {
                 rejectionStringBuilder.append(MOTECH_STRING);
                 rejectionStringBuilder.append(MOTECH_STRING);
                 rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-                rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                rejectionStringBuilder.append(QUOTATION + stateCode + QUOTATION_COMMA);
+                rejectionStringBuilder.append(QUOTATION + mdds_Code + QUOTATION);
                 rejectionStringBuilder.append(")");
 
                 k++;

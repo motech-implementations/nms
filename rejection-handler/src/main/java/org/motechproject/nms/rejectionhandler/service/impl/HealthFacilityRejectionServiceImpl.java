@@ -27,9 +27,9 @@ public class HealthFacilityRejectionServiceImpl implements HealthFacilityRejecti
             @Override
             public String getSqlQuery() {
                 String query = "INSERT into nms_health_facility_rejects (`stateId`, `districtCode`, `talukaCode`, `healthBlockCode`, `healthFacilityCode`, `healthFacilityName`," +
-                        " `accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                        " `accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`, 'healthfacilityType' ) VALUES " +
                         rejectedHealthFacilityValues + " ON DUPLICATE KEY UPDATE " +
-                        "districtCode = VALUES(districtCode), talukaCode = VALUES(talukaCode),healthBlockCode = VALUES(healthBlockCode), healthFacilityName = VALUES(healthFacilityName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                        "districtCode = VALUES(districtCode), talukaCode = VALUES(talukaCode),healthBlockCode = VALUES(healthBlockCode), healthFacilityName = VALUES(healthFacilityName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy), healthfacilityType = VALUES(healthfacilityType) ";
                 LOGGER.info("Printing Query for rejected HF: "+ query);
                 return query;
 

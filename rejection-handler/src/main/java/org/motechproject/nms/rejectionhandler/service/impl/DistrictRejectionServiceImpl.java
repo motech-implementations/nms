@@ -26,9 +26,9 @@ public class DistrictRejectionServiceImpl implements DistrictRejectionService {
         SqlQueryExecution<Long> queryExecution = new SqlQueryExecution<Long>() {
             @Override
             public String getSqlQuery() {
-                String query = "INSERT into nms_district_rejects (`stateId`, `districtCode`, `districtName`,`accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                String query = "INSERT into nms_district_rejects (`stateId`, `districtCode`, `districtName`,`accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`, `stateCode`, `mddsCode` ) VALUES " +
                         rejectedDistrictValues + " ON DUPLICATE KEY UPDATE " +
-                        " districtName = VALUES(districtName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                        " districtName = VALUES(districtName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy), stateCode=VALUES(stateCode), mddsCode=VALUES(mddsCode) ";
                 LOGGER.info("Printing Query for rejected District: "+ query);
                 return query;
 

@@ -86,6 +86,9 @@ public class HealthFacility extends MdsEntity {
     @JsonManagedReference
     private List<HealthSubFacility> healthSubFacilities;
 
+    @Field
+    private Long healthfacilityType;
+
     public HealthFacility() {
         this.healthSubFacilities = new ArrayList<>();
     }
@@ -153,6 +156,14 @@ public class HealthFacility extends MdsEntity {
 
     public void setHealthSubFacilities(List<HealthSubFacility> healthSubFacilities) {
         this.healthSubFacilities = healthSubFacilities;
+    }
+
+    public Long getHealthfacilityType() {
+        return healthfacilityType;
+    }
+
+    public void setHealthfacilityType(Long healthfacilityType) {
+        this.healthfacilityType = healthfacilityType;
     }
 
     @Override

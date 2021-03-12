@@ -95,10 +95,10 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
                 String query = "";
                 if (!healthFacilityValues.isEmpty()) {
                     query = "INSERT into nms_health_facilities (`code`, `name`, `state_id_OID`, `district_id_OID`, `healthBlock_id_OID`, `taluka_id_oid`, " +
-                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`, 'healthfacilityType') VALUES " +
                             healthFacilityValues +
                             " ON DUPLICATE KEY UPDATE " +
-                            "name = VALUES(name), district_id_OID = VALUES(district_id_OID), healthBlock_id_OID = VALUES(healthBlock_id_OID), taluka_id_oid = VALUES(taluka_id_oid), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                            "name = VALUES(name), district_id_OID = VALUES(district_id_OID), healthBlock_id_OID = VALUES(healthBlock_id_OID), taluka_id_oid = VALUES(taluka_id_oid), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy), healthfacilityType = VALUES(healthfacilityType) ";
                 }
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
@@ -199,6 +199,7 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> healthFacility : healthFacilities) {
             String rejectionReason="";
+            Long healthfacilityType=(Long) healthFacility.get(LocationConstants.HEALTH_FACILITY_TYPE);
             if (healthFacility.get(LocationConstants.CSV_STATE_ID) != null && healthFacility.get(LocationConstants.DISTRICT_ID) != null &&
                     healthFacility.get(LocationConstants.TALUKA_ID) != null && !healthFacility.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty() && healthFacility.get(LocationConstants.HEALTHBLOCK_ID) != null) {
                 State state = stateHashMap.get(healthFacility.get(LocationConstants.CSV_STATE_ID).toString());
@@ -230,7 +231,8 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
                         stringBuilder.append(MOTECH_STRING);
                         stringBuilder.append(MOTECH_STRING);
                         stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-                        stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                        stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                        stringBuilder.append(QUOTATION +  healthfacilityType+ QUOTATION);
                         stringBuilder.append(")");
 
                         i++;
@@ -296,7 +298,8 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
                 rejectionStringBuilder.append(MOTECH_STRING);
                 rejectionStringBuilder.append(MOTECH_STRING);
                 rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-                rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                rejectionStringBuilder.append(QUOTATION +  healthfacilityType+ QUOTATION);
                 rejectionStringBuilder.append(")");
 
                 k++;

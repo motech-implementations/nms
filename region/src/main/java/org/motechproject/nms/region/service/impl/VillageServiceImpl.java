@@ -93,10 +93,10 @@ public class VillageServiceImpl implements VillageService {
                 String query = "";
                 if (!villageValues.isEmpty()) {
                     query = "INSERT into nms_villages (`vcode`, `svid`, `name`, `state_id_OID`, `district_id_OID`,`taluka_id_OID`, " +
-                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`, `mddsCode`) VALUES " +
                             villageValues +
                             " ON DUPLICATE KEY UPDATE " +
-                            "name = VALUES(name), district_id_OID = VALUES(district_id_OID), taluka_id_OID = VALUES(taluka_id_OID), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                            "name = VALUES(name), district_id_OID = VALUES(district_id_OID), taluka_id_OID = VALUES(taluka_id_OID), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy), mddsCode=VALUES(mddsCode) ";
                 }
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
@@ -126,6 +126,7 @@ public class VillageServiceImpl implements VillageService {
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> village : villages) {
             String rejectionReason="";
+            Long mdds_Code=(Long) village.get(LocationConstants.MDDS_CODE);
             if (village.get(LocationConstants.CSV_STATE_ID) != null && village.get(LocationConstants.DISTRICT_ID) != null &&
                     village.get(LocationConstants.TALUKA_ID) != null && !village.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty()) {
                 State state = stateHashMap.get(village.get(LocationConstants.CSV_STATE_ID).toString());
@@ -151,7 +152,8 @@ public class VillageServiceImpl implements VillageService {
                     stringBuilder.append(MOTECH_STRING);
                     stringBuilder.append(MOTECH_STRING);
                     stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                    stringBuilder.append(QUOTATION + mdds_Code + QUOTATION);
                     stringBuilder.append(")");
 
                     i++;
@@ -196,8 +198,8 @@ public class VillageServiceImpl implements VillageService {
                 rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
                 rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
                 rejectionStringBuilder.append( 0);
+                rejectionStringBuilder.append(","+QUOTATION + mdds_Code + QUOTATION);
                 rejectionStringBuilder.append(")");
-
                 k++;
             }
         }

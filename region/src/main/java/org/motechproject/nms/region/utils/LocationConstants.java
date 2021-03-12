@@ -38,6 +38,7 @@ public final class LocationConstants {
     //newly added field of locations
     public static final String MDDS_CODE = "MDDS_Code";
     public static final String STATE_CODE_ID = "StateCode";
+    public static final String HEALTH_FACILITY_TYPE = "HealthfacilityType";
 
     private LocationConstants() {
     }
