@@ -434,54 +434,100 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     @Override
     public boolean getTalukasData(LocalDate from, LocalDate to, URL endpoint, Long stateId) {
-        DS_DataResponseDS_DataResult result;
-        Irchwebservices dataService = getService(endpoint);
+
         boolean status = false;
         LOGGER.info(FROM_DATE_LOG, from);
-
         try {
-            result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
-                    settingsFacade.getProperty(Constants.RCH_PASSWORD), from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString(),
-                    settingsFacade.getProperty(Constants.RCH_LOCATION_TALUKA), settingsFacade.getProperty(Constants.RCH_DTID));
-        } catch (RemoteException e) {
-            throw new RchWebServiceException("Remote Server Error. Could Not Read RCH Taluka Data.", e);
-        }
+            String url= getLocationStringUrl(stateId.toString(),settingsFacade.getProperty(Constants.TYPE_ID_SUB_DISTRICT));
+            String APIresponse= nmsWebServices.getLocationApiResponse(url); // we can add more exception based on response code
 
-        LOGGER.debug("writing RCH taluka response to file");
-        File responseFile = generateResponseFile(result, RchUserType.TALUKA, stateId);
-        if (responseFile != null) {
-            LOGGER.info("RCH taluka response successfully written to file. Copying to remote directory.");
-            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.TALUKA, 0);
-        } else {
-            LOGGER.error("Error writing {} response to file for state {}", RchUserType.TALUKA, stateId);
+            LOGGER.debug("writing RCH taluka response to file");
+            File responseFile = generateJsonResponseFile(APIresponse, RchUserType.TALUKA, stateId);
+            if (responseFile != null) {
+                LOGGER.info("RCH taluka response successfully written to file. Copying to remote directory.");
+                status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.TALUKA, 0);
+            } else {
+                LOGGER.error("Error writing {} response to file for state {}", RchUserType.TALUKA, stateId);
+            }
+
+        } catch (IOException e) {
+
+            e.printStackTrace();
+
         }
         return status;
+
+//        DS_DataResponseDS_DataResult result;
+//        Irchwebservices dataService = getService(endpoint);
+//        boolean status = false;
+//        LOGGER.info(FROM_DATE_LOG, from);
+//
+//        try {
+//            result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
+//                    settingsFacade.getProperty(Constants.RCH_PASSWORD), from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString(),
+//                    settingsFacade.getProperty(Constants.RCH_LOCATION_TALUKA), settingsFacade.getProperty(Constants.RCH_DTID));
+//        } catch (RemoteException e) {
+//            throw new RchWebServiceException("Remote Server Error. Could Not Read RCH Taluka Data.", e);
+//        }
+//
+//        LOGGER.debug("writing RCH taluka response to file");
+//        File responseFile = generateResponseFile(result, RchUserType.TALUKA, stateId);
+//        if (responseFile != null) {
+//            LOGGER.info("RCH taluka response successfully written to file. Copying to remote directory.");
+//            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.TALUKA, 0);
+//        } else {
+//            LOGGER.error("Error writing {} response to file for state {}", RchUserType.TALUKA, stateId);
+//        }
+//        return status;
     }
 
     @Override
     public boolean getVillagesData(LocalDate from, LocalDate to, URL endpoint, Long stateId) {
-        DS_DataResponseDS_DataResult result;
-        Irchwebservices dataService = getService(endpoint);
+
         boolean status = false;
         LOGGER.info(FROM_DATE_LOG, from);
-
         try {
-            result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
-                    settingsFacade.getProperty(Constants.RCH_PASSWORD), from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString(),
-                    settingsFacade.getProperty(Constants.RCH_LOCATION_VILLAGE), settingsFacade.getProperty(Constants.RCH_DTID));
-        } catch (RemoteException e) {
-            throw new RchWebServiceException("Remote Server Error. Could Not Read RCH Village Data.", e);
-        }
+            String url= getLocationStringUrl(stateId.toString(),settingsFacade.getProperty(Constants.TYPE_ID_VILLAGE));
+            String APIresponse= nmsWebServices.getLocationApiResponse(url); // we can add more exception based on response code
 
-        LOGGER.debug("writing RCH Village response to file");
-        File responseFile = generateResponseFile(result, RchUserType.VILLAGE, stateId);
-        if (responseFile != null) {
-            LOGGER.info("RCH Village response successfully written to file. Copying to remote directory.");
-            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.VILLAGE, 0);
-        } else {
-            LOGGER.error("Error writing {} response to file for state {}", RchUserType.VILLAGE, stateId);
+            LOGGER.debug("writing RCH Village response to file");
+            File responseFile = generateJsonResponseFile(APIresponse, RchUserType.VILLAGE, stateId);
+            if (responseFile != null) {
+                LOGGER.info("RCH Village response successfully written to file. Copying to remote directory.");
+                status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.VILLAGE, 0);
+            } else {
+                LOGGER.error("Error writing {} response to file for state {}", RchUserType.VILLAGE, stateId);
+            }
+
+        } catch (IOException e) {
+
+            e.printStackTrace();
+
         }
         return status;
+
+//        DS_DataResponseDS_DataResult result;
+//        Irchwebservices dataService = getService(endpoint);
+//        boolean status = false;
+//        LOGGER.info(FROM_DATE_LOG, from);
+//
+//        try {
+//            result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
+//                    settingsFacade.getProperty(Constants.RCH_PASSWORD), from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString(),
+//                    settingsFacade.getProperty(Constants.RCH_LOCATION_VILLAGE), settingsFacade.getProperty(Constants.RCH_DTID));
+//        } catch (RemoteException e) {
+//            throw new RchWebServiceException("Remote Server Error. Could Not Read RCH Village Data.", e);
+//        }
+//
+//        LOGGER.debug("writing RCH Village response to file");
+//        File responseFile = generateResponseFile(result, RchUserType.VILLAGE, stateId);
+//        if (responseFile != null) {
+//            LOGGER.info("RCH Village response successfully written to file. Copying to remote directory.");
+//            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.VILLAGE, 0);
+//        } else {
+//            LOGGER.error("Error writing {} response to file for state {}", RchUserType.VILLAGE, stateId);
+//        }
+//        return status;
     }
 
     @MotechListener(subjects = Constants.RCH_LOCATION_READ_SUBJECT) //NO CHECKSTYLE Cyclomatic Complexity
@@ -611,10 +657,17 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
 
             ArrayList<Map<String, Object>> talukaArrList = new ArrayList<>();
-            if (result.contains(RECORDS)) {
-                RchTalukaDataSet talukaDataSet = (result == null) ?
-                        null :
-                        (RchTalukaDataSet) MarshallUtils.unmarshall(result, RchTalukaDataSet.class);
+
+            if (result!=null) {
+                RchTalukaDataSet talukaDataSet= new RchTalukaDataSet();
+                ObjectMapper mapper = new ObjectMapper();
+                List<RchTalukaRecord> records = Arrays.asList(mapper.readValue(result, RchTalukaRecord[].class));
+                talukaDataSet.setRecords(records);
+
+//            if (result.contains(RECORDS)) {
+//                RchTalukaDataSet talukaDataSet = (result == null) ?
+//                        null :
+//                        (RchTalukaDataSet) MarshallUtils.unmarshall(result, RchTalukaDataSet.class);
 
                 LOGGER.info("Starting RCH taluka import");
                 StopWatch stopWatch = new StopWatch();
@@ -657,7 +710,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
             }
 
-        } catch (JAXBException e) {
+        } catch (IOException e) { // exception according to deserialization
             String error = String.format("Cannot deserialize RCH taluka data from %s location.", stateId);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
@@ -696,10 +749,17 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private void villageFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
         try {
             ArrayList<Map<String, Object>> villageArrList = new ArrayList<>();
-            if (result.contains(RECORDS)) {
-                RchVillageDataSet villageDataSet = (result == null) ?
-                        null :
-                        (RchVillageDataSet) MarshallUtils.unmarshall(result, RchVillageDataSet.class);
+
+            if (result!=null) {
+                RchVillageDataSet villageDataSet=new RchVillageDataSet();
+                ObjectMapper mapper = new ObjectMapper();
+                List<RchVillageRecord> records = Arrays.asList(mapper.readValue(result, RchVillageRecord[].class));
+                villageDataSet.setRecords(records);
+
+//            if (result.contains(RECORDS)) {
+//                RchVillageDataSet villageDataSet = (result == null) ?
+//                        null :
+//                        (RchVillageDataSet) MarshallUtils.unmarshall(result, RchVillageDataSet.class);
 
                 LOGGER.info("Starting RCH village import");
                 StopWatch stopWatch = new StopWatch();
@@ -742,7 +802,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 LOGGER.warn(warning);
             }
 
-        } catch (JAXBException e) {
+        } catch (IOException e) { // exception according to deserialization
             String error = String.format("Cannot deserialize RCH Village data from %s location.", stateId);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGE, stateId));
@@ -1288,80 +1348,149 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     @Override
     public boolean getHealthFacilityData(LocalDate from, LocalDate to, URL endpoint, Long stateId) {
-        DS_DataResponseDS_DataResult result;
-        Irchwebservices dataService = getService(endpoint);
+
         boolean status = false;
         LOGGER.info(FROM_DATE_LOG, from);
-
         try {
-            result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
-                    settingsFacade.getProperty(Constants.RCH_PASSWORD), from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString(),
-                    settingsFacade.getProperty(Constants.RCH_LOCATION_HEALTHFACILITY), settingsFacade.getProperty(Constants.RCH_DTID));
-        } catch (RemoteException e) {
-            throw new RchWebServiceException("Remote Server Error. Could Not Read RCH healthfacility Data.", e);
-        }
+            String url= getLocationStringUrl(stateId.toString(),settingsFacade.getProperty(Constants.TYPE_ID_HEALTH_FACILITY));
+            String APIresponse= nmsWebServices.getLocationApiResponse(url); // we can add more exception based on response code
 
-        LOGGER.debug("writing RCH healthfacility response to file");
-        File responseFile = generateResponseFile(result, RchUserType.HEALTHFACILITY, stateId);
-        if (responseFile != null) {
-            LOGGER.info("RCH healthfacility response successfully written to file. Copying to remote directory.");
-            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.HEALTHFACILITY, 0);
-        } else {
-            LOGGER.error("Error writing {} response to file for state {}", RchUserType.HEALTHFACILITY, stateId);
+            LOGGER.debug("writing RCH healthfacility response to file");
+            File responseFile = generateJsonResponseFile(APIresponse, RchUserType.HEALTHFACILITY, stateId);
+            if (responseFile != null) {
+                LOGGER.info("RCH healthfacility response successfully written to file. Copying to remote directory.");
+                status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.HEALTHFACILITY, 0);
+            } else {
+                LOGGER.error("Error writing {} response to file for state {}", RchUserType.HEALTHFACILITY, stateId);
+            }
+
+        } catch (IOException e) {
+
+            e.printStackTrace();
+
         }
         return status;
+
+        //        DS_DataResponseDS_DataResult result;
+//        Irchwebservices dataService = getService(endpoint);
+//        boolean status = false;
+//        LOGGER.info(FROM_DATE_LOG, from);
+//
+//        try {
+//            result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
+//                    settingsFacade.getProperty(Constants.RCH_PASSWORD), from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString(),
+//                    settingsFacade.getProperty(Constants.RCH_LOCATION_HEALTHFACILITY), settingsFacade.getProperty(Constants.RCH_DTID));
+//        } catch (RemoteException e) {
+//            throw new RchWebServiceException("Remote Server Error. Could Not Read RCH healthfacility Data.", e);
+//        }
+//
+//        LOGGER.debug("writing RCH healthfacility response to file");
+//        File responseFile = generateResponseFile(result, RchUserType.HEALTHFACILITY, stateId);
+//        if (responseFile != null) {
+//            LOGGER.info("RCH healthfacility response successfully written to file. Copying to remote directory.");
+//            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.HEALTHFACILITY, 0);
+//        } else {
+//            LOGGER.error("Error writing {} response to file for state {}", RchUserType.HEALTHFACILITY, stateId);
+//        }
+//        return status;
     }
 
     @Override
     public boolean getHealthSubFacilityData(LocalDate from, LocalDate to, URL endpoint, Long stateId) {
-        DS_DataResponseDS_DataResult result;
-        Irchwebservices dataService = getService(endpoint);
+
         boolean status = false;
         LOGGER.info(FROM_DATE_LOG, from);
-
         try {
-            result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
-                    settingsFacade.getProperty(Constants.RCH_PASSWORD), from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString(),
-                    settingsFacade.getProperty(Constants.RCH_LOCATION_HEALTHSUBFACILITY), settingsFacade.getProperty(Constants.RCH_DTID));
-        } catch (RemoteException e) {
-            throw new RchWebServiceException("Remote Server Error. Could Not Read RCH healthsubfacility Data.", e);
-        }
+            String url= getLocationStringUrl(stateId.toString(),settingsFacade.getProperty(Constants.TYPE_ID_HEALTH_SUB_FACILITY));
+            String APIresponse= nmsWebServices.getLocationApiResponse(url); // we can add more exception based on response code
 
-        LOGGER.debug("writing RCH healthsubfacility response to file");
-        File responseFile = generateResponseFile(result, RchUserType.HEALTHSUBFACILITY, stateId);
-        if (responseFile != null) {
-            LOGGER.info("RCH healthsubfacility response successfully written to file. Copying to remote directory.");
-            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.HEALTHSUBFACILITY, 0);
-        } else {
-            LOGGER.error("Error writing {} response to file for state {}", RchUserType.HEALTHSUBFACILITY, stateId);
+            LOGGER.debug("writing RCH healthsubfacility response to file");
+            File responseFile = generateJsonResponseFile(APIresponse, RchUserType.HEALTHSUBFACILITY, stateId);
+            if (responseFile != null) {
+                LOGGER.info("RCH healthsubfacility response successfully written to file. Copying to remote directory.");
+                status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.HEALTHSUBFACILITY, 0);
+            } else {
+                LOGGER.error("Error writing {} response to file for state {}", RchUserType.HEALTHSUBFACILITY, stateId);
+            }
+
+        } catch (IOException e) {
+
+            e.printStackTrace();
+
         }
         return status;
+
+//        DS_DataResponseDS_DataResult result;
+//        Irchwebservices dataService = getService(endpoint);
+//        boolean status = false;
+//        LOGGER.info(FROM_DATE_LOG, from);
+//
+//        try {
+//            result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
+//                    settingsFacade.getProperty(Constants.RCH_PASSWORD), from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString(),
+//                    settingsFacade.getProperty(Constants.RCH_LOCATION_HEALTHSUBFACILITY), settingsFacade.getProperty(Constants.RCH_DTID));
+//        } catch (RemoteException e) {
+//            throw new RchWebServiceException("Remote Server Error. Could Not Read RCH healthsubfacility Data.", e);
+//        }
+//
+//        LOGGER.debug("writing RCH healthsubfacility response to file");
+//        File responseFile = generateResponseFile(result, RchUserType.HEALTHSUBFACILITY, stateId);
+//        if (responseFile != null) {
+//            LOGGER.info("RCH healthsubfacility response successfully written to file. Copying to remote directory.");
+//            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.HEALTHSUBFACILITY, 0);
+//        } else {
+//            LOGGER.error("Error writing {} response to file for state {}", RchUserType.HEALTHSUBFACILITY, stateId);
+//        }
+//        return status;
     }
 
     @Override
     public boolean getVillageHealthSubFacilityData(LocalDate from, LocalDate to, URL endpoint, Long stateId) {
-        DS_DataResponseDS_DataResult result;
-        Irchwebservices dataService = getService(endpoint);
+
         boolean status = false;
         LOGGER.info(FROM_DATE_LOG, from);
-
         try {
-            result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
-                    settingsFacade.getProperty(Constants.RCH_PASSWORD), from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString(),
-                    settingsFacade.getProperty(Constants.RCH_LOCATION_VILLAGE_HEALTHSUBFACILITY), settingsFacade.getProperty(Constants.RCH_DTID));
-        } catch (RemoteException e) {
-            throw new RchWebServiceException("Remote Server Error. Could Not Read RCH villagehealthfacility Data.", e);
-        }
+            String url= getLocationStringUrl(stateId.toString(),settingsFacade.getProperty(Constants.TYPE_ID_HEALTH_VILLAGE));
+            String APIresponse= nmsWebServices.getLocationApiResponse(url); // we can add more exception based on response code
 
-        LOGGER.debug("writing RCH villagehealthfacility response to file");
-        File responseFile = generateResponseFile(result, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId);
-        if (responseFile != null) {
-            LOGGER.info("RCH villagehealthfacility response successfully written to file. Copying to remote directory.");
-            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.VILLAGEHEALTHSUBFACILITY, 0);
-        } else {
-            LOGGER.error("Error writing {} response to file for state {}", RchUserType.VILLAGEHEALTHSUBFACILITY, stateId);
+            LOGGER.debug("writing RCH villagehealthfacility response to file");
+            File responseFile = generateJsonResponseFile(APIresponse, RchUserType.HEALTHSUBFACILITY, stateId);
+            if (responseFile != null) {
+                LOGGER.info("RCH villagehealthfacility response successfully written to file. Copying to remote directory.");
+                status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.VILLAGEHEALTHSUBFACILITY, 0);
+            } else {
+                LOGGER.error("Error writing {} response to file for state {}", RchUserType.VILLAGEHEALTHSUBFACILITY, stateId);
+            }
+
+        } catch (IOException e) {
+
+            e.printStackTrace();
+
         }
         return status;
+
+//        DS_DataResponseDS_DataResult result;
+//        Irchwebservices dataService = getService(endpoint);
+//        boolean status = false;
+//        LOGGER.info(FROM_DATE_LOG, from);
+//
+//        try {
+//            result = dataService.DS_Data(settingsFacade.getProperty(Constants.RCH_PROJECT_ID), settingsFacade.getProperty(Constants.RCH_USER_ID),
+//                    settingsFacade.getProperty(Constants.RCH_PASSWORD), from.toString(DATE_FORMAT), to.toString(DATE_FORMAT), stateId.toString(),
+//                    settingsFacade.getProperty(Constants.RCH_LOCATION_VILLAGE_HEALTHSUBFACILITY), settingsFacade.getProperty(Constants.RCH_DTID));
+//        } catch (RemoteException e) {
+//            throw new RchWebServiceException("Remote Server Error. Could Not Read RCH villagehealthfacility Data.", e);
+//        }
+//
+//        LOGGER.debug("writing RCH villagehealthfacility response to file");
+//        File responseFile = generateResponseFile(result, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId);
+//        if (responseFile != null) {
+//            LOGGER.info("RCH villagehealthfacility response successfully written to file. Copying to remote directory.");
+//            status = retryScpAndAudit(responseFile.getName(), from, to, stateId, RchUserType.VILLAGEHEALTHSUBFACILITY, 0);
+//        } else {
+//            LOGGER.error("Error writing {} response to file for state {}", RchUserType.VILLAGEHEALTHSUBFACILITY, stateId);
+//        }
+//        return status;
     }
 
     /**
@@ -1385,10 +1514,17 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private void healthFacilityFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
         try {
             ArrayList<Map<String, Object>> healthFacilityArrList = new ArrayList<>();
-            if (result.contains(RECORDS)) {
-                RchHealthFacilityDataSet healthFacilityDataSet = (result == null) ?
-                        null :
-                        (RchHealthFacilityDataSet) MarshallUtils.unmarshall(result, RchHealthFacilityDataSet.class);
+
+            if (result!=null) {
+                RchHealthFacilityDataSet healthFacilityDataSet=new RchHealthFacilityDataSet();
+                ObjectMapper mapper = new ObjectMapper();
+                List<RchHealthFacilityRecord> records = Arrays.asList(mapper.readValue(result, RchHealthFacilityRecord[].class));
+                healthFacilityDataSet.setRecords(records);
+
+//            if (result.contains(RECORDS)) {
+//                RchHealthFacilityDataSet healthFacilityDataSet = (result == null) ?
+//                        null :
+//                        (RchHealthFacilityDataSet) MarshallUtils.unmarshall(result, RchHealthFacilityDataSet.class);
 
                 LOGGER.info("Starting RCH healthfacility import");
                 StopWatch stopWatch = new StopWatch();
@@ -1430,7 +1566,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHFACILITY, stateId));
             }
 
-        } catch (JAXBException e) {
+        } catch (IOException e) { // exception according to deserialization
             String error = String.format("Cannot deserialize RCH healthfacility data from %s location.", stateId);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHFACILITY, stateId));
@@ -1469,10 +1605,17 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private void healthsubfacilityFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
         try {
             ArrayList<Map<String, Object>> healthSubFacilityArrList = new ArrayList<>();
-            if (result.contains(RECORDS)) {
-                RchHealthSubFacilityDataSet healthSubFacilityDataSet = (result == null) ?
-                        null :
-                        (RchHealthSubFacilityDataSet) MarshallUtils.unmarshall(result, RchHealthSubFacilityDataSet.class);
+
+            if (result!=null) {
+                RchHealthSubFacilityDataSet healthSubFacilityDataSet=new RchHealthSubFacilityDataSet();
+                ObjectMapper mapper = new ObjectMapper();
+                List<RchHealthSubFacilityRecord> records = Arrays.asList(mapper.readValue(result, RchHealthSubFacilityRecord[].class));
+                healthSubFacilityDataSet.setRecords(records);
+
+//            if (result.contains(RECORDS)) {
+//                RchHealthSubFacilityDataSet healthSubFacilityDataSet = (result == null) ?
+//                        null :
+//                        (RchHealthSubFacilityDataSet) MarshallUtils.unmarshall(result, RchHealthSubFacilityDataSet.class);
 
                 LOGGER.info("Starting RCH healthsubfacility import");
                 StopWatch stopWatch = new StopWatch();
@@ -1514,7 +1657,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHSUBFACILITY, stateId));
             }
 
-        } catch (JAXBException e) {
+        } catch (IOException e) { // exception according to deserialization
             throw new RchInvalidResponseStructureException(String.format("Cannot deserialize RCH healthsubfacility data from %s location.", stateId), e);
         } catch (RchInvalidResponseStructureException e) {
             String error = String.format("Cannot read RCH healthsubfacility data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
@@ -1549,10 +1692,17 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private void vhsfFileProcess(String fileName, String result, Long stateId, String stateName, Long stateCode, LocalDate startDate, LocalDate endDate) {
         try {
             ArrayList<Map<String, Object>> villageHealthSubFacilityArrList = new ArrayList<>();
-            if (result.contains(RECORDS)) {
-                RchVillageHealthSubFacilityDataSet villageHealthSubFacilityDataSet = (result == null) ?
-                        null :
-                        (RchVillageHealthSubFacilityDataSet) MarshallUtils.unmarshall(result, RchVillageHealthSubFacilityDataSet.class);
+
+            if (result!=null) {
+                RchVillageHealthSubFacilityDataSet villageHealthSubFacilityDataSet=new RchVillageHealthSubFacilityDataSet();
+                ObjectMapper mapper = new ObjectMapper();
+                List<RchVillageHealthSubFacilityRecord> records = Arrays.asList(mapper.readValue(result, RchVillageHealthSubFacilityRecord[].class));
+                villageHealthSubFacilityDataSet.setRecords(records);
+
+//            if (result.contains(RECORDS)) {
+//                RchVillageHealthSubFacilityDataSet villageHealthSubFacilityDataSet = (result == null) ?
+//                        null :
+//                        (RchVillageHealthSubFacilityDataSet) MarshallUtils.unmarshall(result, RchVillageHealthSubFacilityDataSet.class);
 
                 LOGGER.info("Starting RCH villageHealthsubfacility import");
                 StopWatch stopWatch = new StopWatch();
@@ -1594,7 +1744,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId));
             }
 
-        } catch (JAXBException e) {
+        } catch (IOException e) { // exception according to deserialization
             String error = String.format("Cannot deserialize RCH villageHealthsubfacility data from %s location.", stateId);
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, error));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId));
@@ -2152,7 +2302,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         map.put(KilkariConstants.DISTRICT_ID, talukaRecord.getDistrictCode());
         map.put(KilkariConstants.TALUKA_ID, talukaRecord.getTalukaCode());
         map.put(KilkariConstants.TALUKA_NAME, talukaRecord.getTalukaName());
-        map.put(KilkariConstants.EXEC_DATE, talukaRecord.getExecDate());
+        map.put(KilkariConstants.MDDS_CODE, talukaRecord.getMDDS_Code());
+        map.put(KilkariConstants.STATE_CODE_ID, talukaRecord.getStateCode());
     }
 
     private void toMapVillage(Map<String, Object> map, RchVillageRecord villageRecord, Long stateCode) {
@@ -2161,7 +2312,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         map.put(KilkariConstants.TALUKA_ID, villageRecord.getTalukaCode());
         map.put(KilkariConstants.CENSUS_VILLAGE_ID, villageRecord.getVillageCode());
         map.put(KilkariConstants.VILLAGE_NAME, villageRecord.getVillageName());
-        map.put(KilkariConstants.EXEC_DATE, villageRecord.getExecDate());
+        map.put(KilkariConstants.MDDS_CODE, villageRecord.getMDDS_Code());
     }
 
     private void toMapHealthBlock(Map<String, Object> map, RchHealthBlockRecord healthBlockRecord, Long stateCode) {
@@ -2187,7 +2338,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         map.put(KilkariConstants.HEALTH_BLOCK_ID, healthFacilityRecord.getHealthBlockCode());
         map.put(KilkariConstants.HEALTH_FACILITY_ID, healthFacilityRecord.getHealthFacilityCode());
         map.put(KilkariConstants.HEALTH_FACILITY_NAME, healthFacilityRecord.getHealthFacilityName());
-        map.put(KilkariConstants.EXEC_DATE, healthFacilityRecord.getExecDate());
+        map.put(KilkariConstants.HEALTH_FACILITY_TYPE,healthFacilityRecord.getHealthfacilityType());
     }
 
     private void toMapHealthSubFacility(Map<String, Object> map, RchHealthSubFacilityRecord healthSubFacilityRecord, Long stateCode) {
@@ -2197,7 +2348,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         map.put(KilkariConstants.HEALTH_FACILITY_ID, healthSubFacilityRecord.getHealthFacilityCode());
         map.put(KilkariConstants.HEALTH_SUB_FACILITY_ID, healthSubFacilityRecord.getHealthSubFacilityCode());
         map.put(KilkariConstants.HEALTH_SUB_FACILITY_NAME, healthSubFacilityRecord.getHealthSubFacilityName());
-        map.put(KilkariConstants.EXEC_DATE, healthSubFacilityRecord.getExecDate());
     }
 
     private void toMapVillageHealthSubFacility(Map<String, Object> map, RchVillageHealthSubFacilityRecord villageHealthSubFacilityRecord, Long stateCode) {
@@ -2205,7 +2355,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         map.put(KilkariConstants.DISTRICT_ID, villageHealthSubFacilityRecord.getDistrictCode());
         map.put(KilkariConstants.CENSUS_VILLAGE_ID, villageHealthSubFacilityRecord.getVillageCode());
         map.put(KilkariConstants.HEALTH_SUB_FACILITY_ID, villageHealthSubFacilityRecord.getHealthSubFacilityCode());
-        map.put(KilkariConstants.EXEC_DATE, villageHealthSubFacilityRecord.getExecDate());
+        map.put(KilkariConstants.TALUKA_ID,villageHealthSubFacilityRecord.getTalukaCode());
+        map.put(KilkariConstants.HEALTH_FACILITY_ID,villageHealthSubFacilityRecord.getHealthFacilityCode());
+        map.put(KilkariConstants.VILLAGE_NAME,villageHealthSubFacilityRecord.getVillageName());
     }
 
     private Map<String, Object> toMap(RchChildRecord childRecord) {

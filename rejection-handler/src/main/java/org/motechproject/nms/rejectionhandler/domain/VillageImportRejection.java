@@ -36,6 +36,9 @@ public class VillageImportRejection {
     @Field
     private long svid;
 
+    @Field
+    private Long mddsCode;
+
 
     public Long getStateId() {    return stateId;    }
 
@@ -95,6 +98,14 @@ public class VillageImportRejection {
 
     public void setRejectionReason(String rejectionReason) {
         this.rejectionReason = rejectionReason;
+    }
+
+    public Long getMddsCode() {
+        return mddsCode;
+    }
+
+    public void setMddsCode(Long mddsCode) {
+        this.mddsCode = mddsCode;
     }
 
     public VillageImportRejection() {

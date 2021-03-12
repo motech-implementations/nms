@@ -98,6 +98,9 @@ public class Village extends MdsEntity {
     @Column
     private Long districtIdOID;
 
+    @Field
+    private Long mddsCode;
+
 
 //    @Persistent(mappedBy = "villages", defaultFetchGroup = "false")
 //    @JsonManagedReference
@@ -174,7 +177,16 @@ public class Village extends MdsEntity {
     public void setTaluka(Taluka taluka) {
         this.taluka = taluka;
     }
-//
+
+    public Long getMddsCode() {
+        return mddsCode;
+    }
+
+    public void setMddsCode(Long mddsCode) {
+        this.mddsCode = mddsCode;
+    }
+
+    //
 //    public Set<HealthSubFacility> getHealthSubFacilities() {
 //        return healthSubFacilities;
 //    }
