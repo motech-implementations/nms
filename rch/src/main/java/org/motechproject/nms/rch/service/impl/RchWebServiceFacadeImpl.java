@@ -2133,36 +2133,43 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
     private List<List<RchAnmAshaRecord>> cleanRchFlwRecords(List<RchAnmAshaRecord> rchAnmAshaRecords, Long stateCode) {
+        List<RchAnmAshaRecord> inactiveRecord = new ArrayList<>();
+        List<RchAnmAshaRecord> activeRecord = new ArrayList<>();
+
+        rchAnmAshaRecords.stream().forEach(rchAnmAshaRecord -> {
+            if (rchAnmAshaRecord.getGfStatus().equalsIgnoreCase("InActive")) {
+                inactiveRecord.add(rchAnmAshaRecord);
+            } else {
+                activeRecord.add(rchAnmAshaRecord);
+            }
+        });
+
+
         try {
-            Collections.sort(rchAnmAshaRecords, new Comparator<RchAnmAshaRecord>() {
-                @Override
-                public int compare(RchAnmAshaRecord t1, RchAnmAshaRecord t2) {
+            Collections.sort(activeRecord, (t1, t2) -> {
 
-                    String a = t1.getGfStatus();
-                    String b = t2.getGfStatus();
-                    LocalDateTime d1 = LocalDateTime.parse(t1.getUpdatedOn(), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
-                    LocalDateTime d2 = LocalDateTime.parse(t2.getUpdatedOn(), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
+                String a = t1.getGfStatus();
+                String b = t2.getGfStatus();
+                LocalDateTime d1 = LocalDateTime.parse(t1.getUpdatedOn(), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
+                LocalDateTime d2 = LocalDateTime.parse(t2.getUpdatedOn(), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
 
-                    if (a.equalsIgnoreCase("InActive") && b.equalsIgnoreCase("Active")) {
+                if (a.equalsIgnoreCase("Active") && b.equalsIgnoreCase("Active")) {
+                    if (d1.isAfter(d2)) {
                         return -1;
-                    } else if (a.equalsIgnoreCase("Active") && b.equalsIgnoreCase("InActive")) {
-                        return 1;
-                    } else if (a.equalsIgnoreCase("Active") && b.equalsIgnoreCase("Active")) {
-                        if (d1.isAfter(d2)) {
-                            return -1;
-                        } else {
-                            return 1;
-                        }
                     } else {
                         return 1;
                     }
+                } else {
+                    return 1;
                 }
             });
         } catch (Exception e) {
             LOGGER.error("Sorting is not performed correctly");
         }
 
-
+        rchAnmAshaRecords.clear();
+        rchAnmAshaRecords.addAll(inactiveRecord);
+        rchAnmAshaRecords.addAll(activeRecord);
         List<RchAnmAshaRecord> rejectedRecords = new ArrayList<>();
         List<RchAnmAshaRecord> acceptedRecords = new ArrayList<>();
         List<List<RchAnmAshaRecord>> full = new ArrayList<>();
@@ -2184,13 +2191,19 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 }
             }
         }
+        HashMap<Long, Integer> gfId = new HashMap<>();
         for (Integer i = 0; i < rchAnmAshaRecords.size(); i++) {
             RchAnmAshaRecord record = rchAnmAshaRecords.get(i);
             if (record.getGfStatus().equalsIgnoreCase("Active")) {
                 if (ashaPhoneMap.containsKey(record.getMobileNo()) && !ashaPhoneMap.get(record.getMobileNo()).equals(record.getGfId())) {
                     rejectedRecords.add(record);
                 } else {
-                    acceptedRecords.add(record);
+                    if (gfId.containsKey(record.getGfId())) {
+                        acceptedRecords.add(0, record);
+                    } else {
+                        acceptedRecords.add(record);
+                        gfId.put(record.getGfId(), 1);
+                    }
                 }
             } else {
                 acceptedRecords.add(record);

@@ -64,7 +64,6 @@ import java.io.Reader;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -224,34 +223,52 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     }
 
     private void reOrderRecords(List<Map<String, Object>> records) {
+
+        List<Map<String, Object>> inactiveRecords = new ArrayList<>();
+        List<Map<String, Object>> activeRecords = new ArrayList<>();
+        records.stream().forEach(t -> {
+            String a = (String) t.get(FlwConstants.GF_STATUS);
+            if (a.equalsIgnoreCase("InActive")) {
+                inactiveRecords.add(t);
+            } else {
+                activeRecords.add(t);
+            }
+        });
         try {
-            Collections.sort(records, new Comparator<Map<String, Object>>() {
-                @Override
-                public int compare(Map<String, Object> t1, Map<String, Object> t2) {
+            Collections.sort(activeRecords, (t1, t2) -> {
 
-                    String a = (String) t1.get(FlwConstants.GF_STATUS);
-                    String b = (String) t2.get(FlwConstants.GF_STATUS);
-                    LocalDateTime d1 = LocalDateTime.parse((CharSequence) t1.get(FlwConstants.UPDATED_ON), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
-                    LocalDateTime d2 = LocalDateTime.parse((CharSequence) t2.get(FlwConstants.UPDATED_ON), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
+                String a = (String) t1.get(FlwConstants.GF_STATUS);
+                String b = (String) t2.get(FlwConstants.GF_STATUS);
+                LocalDateTime d1 = LocalDateTime.parse((CharSequence) t1.get(FlwConstants.UPDATED_ON), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
+                LocalDateTime d2 = LocalDateTime.parse((CharSequence) t2.get(FlwConstants.UPDATED_ON), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
 
-                    if (a.equalsIgnoreCase("InActive") && b.equalsIgnoreCase("Active")) {
+                if (a.equalsIgnoreCase("Active") && b.equalsIgnoreCase("Active")) {
+                    if (d1.isAfter(d2)) {
                         return -1;
-                    } else if (a.equalsIgnoreCase("Active") && b.equalsIgnoreCase("InActive")) {
-                        return 1;
-                    } else if (a.equalsIgnoreCase("Active") && b.equalsIgnoreCase("Active")) {
-                        if (d1.isAfter(d2)) {
-                            return -1;
-                        } else {
-                            return 1;
-                        }
                     } else {
                         return 1;
                     }
+                } else {
+                    return 1;
                 }
             });
         } catch (Exception e) {
             LOGGER.error("Sorting is not performed correctly");
         }
+        List<Map<String, Object>> recordInOrderForActive = new ArrayList<>();
+        HashMap<String, Integer> gfId = new HashMap<>();
+        for (Map<String, Object> record : activeRecords) {
+            if (gfId.containsKey(record.get(FlwConstants.GF_ID).toString())) {
+                recordInOrderForActive.add(0, record);
+            } else {
+                recordInOrderForActive.add(record);
+                gfId.put(record.get(FlwConstants.GF_ID).toString(), 1);
+            }
+        }
+        records.clear();
+        records.addAll(inactiveRecords);
+        records.addAll(recordInOrderForActive);
+
     }
 
     // CHECKSTYLE:ON

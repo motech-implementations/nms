@@ -67,7 +67,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -673,36 +672,43 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
     }
 
     private List<List<AnmAshaRecord>> cleanFlwRecords(List<AnmAshaRecord> anmAshaRecords, State state) {
+
+        List<AnmAshaRecord> inactiveRecord = new ArrayList<>();
+        List<AnmAshaRecord> activeRecord = new ArrayList<>();
+
+        anmAshaRecords.stream().forEach(anmAshaRecord -> {
+            if (anmAshaRecord.getGfStatus().equalsIgnoreCase("InActive")) {
+                inactiveRecord.add(anmAshaRecord);
+            } else {
+                activeRecord.add(anmAshaRecord);
+            }
+        });
+
         try {
-            Collections.sort(anmAshaRecords, new Comparator<AnmAshaRecord>() {
-                @Override
-                public int compare(AnmAshaRecord t1, AnmAshaRecord t2) {
+            Collections.sort(activeRecord, (t1, t2) -> {
 
-                    String a = t1.getGfStatus();
-                    String b = t2.getGfStatus();
-                    LocalDateTime d1 = LocalDateTime.parse(t1.getUpdatedOn(), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
-                    LocalDateTime d2 = LocalDateTime.parse(t2.getUpdatedOn(), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
+                String a = t1.getGfStatus();
+                String b = t2.getGfStatus();
+                LocalDateTime d1 = LocalDateTime.parse(t1.getUpdatedOn(), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
+                LocalDateTime d2 = LocalDateTime.parse(t2.getUpdatedOn(), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
 
-                    if (a.equalsIgnoreCase("InActive") && b.equalsIgnoreCase("Active")) {
+                if (a.equalsIgnoreCase("Active") && b.equalsIgnoreCase("Active")) {
+                    if (d1.isAfter(d2)) {
                         return -1;
-                    } else if (a.equalsIgnoreCase("Active") && b.equalsIgnoreCase("InActive")) {
-                        return 1;
-                    } else if (a.equalsIgnoreCase("Active") && b.equalsIgnoreCase("Active")) {
-                        if (d1.isAfter(d2)) {
-                            return -1;
-                        } else {
-                            return 1;
-                        }
                     } else {
                         return 1;
                     }
+                } else {
+                    return 1;
                 }
             });
         } catch (Exception e) {
             LOGGER.error("Sorting is not performed correctly");
         }
 
-
+        anmAshaRecords.clear();
+        anmAshaRecords.addAll(inactiveRecord);
+        anmAshaRecords.addAll(activeRecord);
         List<AnmAshaRecord> rejectedRecords = new ArrayList<>();
         List<AnmAshaRecord> acceptedRecords = new ArrayList<>();
         List<List<AnmAshaRecord>> full = new ArrayList<>();
@@ -722,6 +728,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                 }
             }
         }
+        HashMap<String, Integer> gfId = new HashMap<>();
         for (Integer i = 0; i < anmAshaRecords.size(); i++) {
             AnmAshaRecord record = anmAshaRecords.get(i);
             if (record.getGfStatus().equalsIgnoreCase("Active")) {
@@ -731,7 +738,12 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
                     acceptedRecords.add(record);
                 }
             } else {
-                acceptedRecords.add(record);
+                if (gfId.containsKey(record.getGfStatus())) {
+                    acceptedRecords.add(0, record);
+                } else {
+                    acceptedRecords.add(record);
+                    gfId.put(record.getGfStatus(), 1);
+                }
             }
         }
 
