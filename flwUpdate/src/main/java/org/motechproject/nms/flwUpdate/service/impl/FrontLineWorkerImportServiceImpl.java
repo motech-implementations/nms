@@ -161,9 +161,11 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         State state = null;
 
         for (Map<String, Object> record : records) {
-            // all records have same stateId
+
+            state = stateDataService.findByCode((Long) record.get(FlwConstants.STATE_ID));
             if (state == null) {
-                state = stateDataService.findByCode((Long) record.get(FlwConstants.STATE_ID));
+                LOGGER.warn("State with code {} doesn't exist in database. Skipping FLW import for this state", record.get(FlwConstants.STATE_ID));
+                continue;
             }
             RchAnmAshaRecord frontLineWorker = convertMapToRchAsha(record);
             try {
