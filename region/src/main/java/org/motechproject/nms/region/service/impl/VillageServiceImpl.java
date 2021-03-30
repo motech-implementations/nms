@@ -93,10 +93,10 @@ public class VillageServiceImpl implements VillageService {
                 String query = "";
                 if (!villageValues.isEmpty()) {
                     query = "INSERT into nms_villages (`vcode`, `svid`, `name`, `state_id_OID`, `district_id_OID`,`taluka_id_OID`, " +
-                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`, `mddsCode`) VALUES " +
+                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`, `mddsCode`, `state_code`) VALUES " +
                             villageValues +
                             " ON DUPLICATE KEY UPDATE " +
-                            "name = VALUES(name), district_id_OID = VALUES(district_id_OID), taluka_id_OID = VALUES(taluka_id_OID), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy), mddsCode=VALUES(mddsCode) ";
+                            "name = VALUES(name), district_id_OID = VALUES(district_id_OID), taluka_id_OID = VALUES(taluka_id_OID), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy), mddsCode=VALUES(mddsCode), state_code=VALUES(state_code) ";
                 }
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
@@ -126,6 +126,7 @@ public class VillageServiceImpl implements VillageService {
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> village : villages) {
             String rejectionReason="";
+            Long stateCode=(Long) village.get(LocationConstants.STATE_CODE_ID);
             Long mdds_Code=(Long) village.get(LocationConstants.MDDS_CODE);
             if (village.get(LocationConstants.CSV_STATE_ID) != null && village.get(LocationConstants.DISTRICT_ID) != null &&
                     village.get(LocationConstants.TALUKA_ID) != null && !village.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty()) {
@@ -136,7 +137,7 @@ public class VillageServiceImpl implements VillageService {
                         village.get(LocationConstants.TALUKA_ID).toString().trim());
                 Long villageCode = (Long) village.get(LocationConstants.VILLAGE_ID);
                 String villageName = (String) village.get(LocationConstants.VILLAGE_NAME);
-                if (taluka != null && taluka.getId() != null && (villageName != null && !villageName.trim().isEmpty()) && villageCode != null && !((Long) (0L)).equals(villageCode)) {
+                if (taluka != null && taluka.getId() != null && (villageName != null && !villageName.trim().isEmpty()) && villageCode != null && !((Long) (0L)).equals(villageCode) && mdds_Code!=null) {
                     if (i != 0) {
                         stringBuilder.append(", ");
                     }
@@ -153,12 +154,17 @@ public class VillageServiceImpl implements VillageService {
                     stringBuilder.append(MOTECH_STRING);
                     stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
                     stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-                    stringBuilder.append(QUOTATION + mdds_Code + QUOTATION);
+                    stringBuilder.append(QUOTATION + mdds_Code + QUOTATION_COMMA);
+                    stringBuilder.append(QUOTATION + stateCode + QUOTATION);
                     stringBuilder.append(")");
 
                     i++;
                 }
                 else if(rejectionChecks){
+                    if(mdds_Code==null){
+                        mdds_Code=0L;
+                        rejectionReason=LocationRejectionReasons.NULL_MDDS_CODE.toString();
+                    }
                     if(villageCode == null ){
                         rejectionReason=LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString();
                     }
@@ -173,7 +179,7 @@ public class VillageServiceImpl implements VillageService {
                     }
                 }
             }
-            else if (rejectionChecks){
+            else {
                 rejectionReason=LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString();
             }
 
@@ -198,7 +204,8 @@ public class VillageServiceImpl implements VillageService {
                 rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
                 rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
                 rejectionStringBuilder.append( 0);
-                rejectionStringBuilder.append(","+QUOTATION + mdds_Code + QUOTATION);
+                rejectionStringBuilder.append(","+QUOTATION + mdds_Code + QUOTATION_COMMA);
+                rejectionStringBuilder.append(QUOTATION + stateCode + QUOTATION);
                 rejectionStringBuilder.append(")");
                 k++;
             }

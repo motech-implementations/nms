@@ -23,6 +23,9 @@ public class RchVillageRecord {
     @JsonProperty("MDDS_Code")
     private Long MDDS_Code;
 
+    @JsonProperty("StateCode")
+    private Long StateCode;
+
     public Long getDistrictCode() {
         return districtCode;
     }
@@ -61,5 +64,13 @@ public class RchVillageRecord {
 
     public void setMDDS_Code(Long MDDS_Code) {
         this.MDDS_Code = MDDS_Code;
+    }
+
+    public Long getStateCode() {
+        return StateCode;
+    }
+
+    public void setStateCode(Long stateCode) {
+        StateCode = stateCode;
     }
 }

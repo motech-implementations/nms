@@ -133,6 +133,7 @@ public final class Constants {
     public static final String TYPE_ID_HEALTH_FACILITY = "rch.typeid.health_facility";
     public static final String TYPE_ID_HEALTH_SUB_FACILITY = "rch.typeid.health_sub_facility";
     public static final String TYPE_ID_HEALTH_VILLAGE = "rch.typeid.health_village";
+    public static final String TYPE_ID_TALUKA_HEALTH_BLOCK = "rch.typeid.taluka_health_block";
 
 
     private Constants() {

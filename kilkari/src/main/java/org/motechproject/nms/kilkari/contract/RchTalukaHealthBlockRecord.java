@@ -1,29 +1,30 @@
 package org.motechproject.nms.kilkari.contract;
 
-import org.joda.time.DateTime;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
-
-/**
- * Created by vishnu on 3/7/18.
+/**Created by vishnu on 27/6/18.
+ * update by rakesh on 20/08/20.
  */
 
-@XmlType
-@XmlAccessorType(XmlAccessType.NONE)
 public class RchTalukaHealthBlockRecord {
 
+    @JsonProperty("TalukaID")
     private String talukaCode;
+
+    @JsonProperty("HealthBlockID")
     private Long healthBlockCode;
-    private DateTime execDate;
+
+    @JsonProperty("TalukaName")
+    private String talukaName;
+
+    @JsonProperty("DistrictID")
+    private Long districtCode;
+
 
     public String getTalukaCode() {
         return talukaCode;
     }
 
-    @XmlElement(name = "Taluka_ID")
     public void setTalukaCode(String talukaCode) {
         this.talukaCode = talukaCode;
     }
@@ -32,17 +33,23 @@ public class RchTalukaHealthBlockRecord {
         return healthBlockCode;
     }
 
-    @XmlElement(name = "HealthBlock_ID")
     public void setHealthBlockCode(Long healthBlockCode) {
         this.healthBlockCode = healthBlockCode;
     }
 
-    public DateTime getExecDate() {
-        return execDate;
+    public String getTalukaName() {
+        return talukaName;
     }
 
-    @XmlElement(name = "Exec_Date")
-    public void setExecDate(DateTime execDate) {
-        this.execDate = execDate;
+    public void setTalukaName(String talukaName) {
+        this.talukaName = talukaName;
+    }
+
+    public Long getDistrictCode() {
+        return districtCode;
+    }
+
+    public void setDistrictCode(Long districtCode) {
+        this.districtCode = districtCode;
     }
 }

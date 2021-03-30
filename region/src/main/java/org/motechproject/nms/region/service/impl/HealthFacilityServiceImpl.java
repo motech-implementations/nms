@@ -95,7 +95,7 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
                 String query = "";
                 if (!healthFacilityValues.isEmpty()) {
                     query = "INSERT into nms_health_facilities (`code`, `name`, `state_id_OID`, `district_id_OID`, `healthBlock_id_OID`, `taluka_id_oid`, " +
-                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`, 'healthfacilityType') VALUES " +
+                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`, `healthfacilityType`) VALUES " +
                             healthFacilityValues +
                             " ON DUPLICATE KEY UPDATE " +
                             "name = VALUES(name), district_id_OID = VALUES(district_id_OID), healthBlock_id_OID = VALUES(healthBlock_id_OID), taluka_id_oid = VALUES(taluka_id_oid), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy), healthfacilityType = VALUES(healthfacilityType) ";
