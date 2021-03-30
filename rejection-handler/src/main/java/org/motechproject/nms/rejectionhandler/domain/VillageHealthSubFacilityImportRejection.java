@@ -30,6 +30,15 @@ public class VillageHealthSubFacilityImportRejection {
     @Field
     private String rejectionReason;
 
+    @Field
+    private String talukaCode;
+
+    @Field
+    private Long healthFacilityCode;
+
+    @Field
+    private String villageName;
+
     public Long getStateId() {    return stateId;    }
 
     public void setStateId(Long stateId) {     this.stateId = stateId;    }
@@ -57,6 +66,30 @@ public class VillageHealthSubFacilityImportRejection {
     public String getRejectionReason() {     return rejectionReason;   }
 
     public void setRejectionReason(String rejectionReason) {   this.rejectionReason = rejectionReason;    }
+
+    public String getTalukaCode() {
+        return talukaCode;
+    }
+
+    public void setTalukaCode(String talukaCode) {
+        this.talukaCode = talukaCode;
+    }
+
+    public Long getHealthFacilityCode() {
+        return healthFacilityCode;
+    }
+
+    public void setHealthFacilityCode(Long healthFacilityCode) {
+        this.healthFacilityCode = healthFacilityCode;
+    }
+
+    public String getVillageName() {
+        return villageName;
+    }
+
+    public void setVillageName(String villageName) {
+        this.villageName = villageName;
+    }
 
     public VillageHealthSubFacilityImportRejection() {
     }
