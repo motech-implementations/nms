@@ -376,8 +376,11 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                     return query2;
                 }
 
-                LOGGER.debug("Taluka_HEALTHBLOCK Query: {}", query1 + query2);
-                return query1 + query2;
+                String query3=" ON DUPLICATE KEY UPDATE " +
+                        "modificationDate = VALUES(modificationDate), talukaName = VALUES(talukaName), districtCode = VALUES(districtCode)";
+
+                LOGGER.debug("Taluka_HEALTHBLOCK Query: {}", query1 + query2+query3);
+                return query1 + query2+query3;
             }
 
             @Override
