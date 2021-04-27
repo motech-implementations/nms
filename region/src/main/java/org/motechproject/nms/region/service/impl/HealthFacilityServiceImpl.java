@@ -112,7 +112,7 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
         };
 
         Long createdHealthFacilities = 0L;
-        if (!talukaHashMap.isEmpty() && !healthBlockHashMap.isEmpty() && !queryExecution.getSqlQuery().isEmpty()) {
+        if (!queryExecution.getSqlQuery().isEmpty() && !talukaHashMap.isEmpty() && !healthBlockHashMap.isEmpty()) {
             createdHealthFacilities = dataService.executeSQLQuery(queryExecution);
         }
 
