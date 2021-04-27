@@ -107,7 +107,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String REMOTE_RESPONSE_DIR_LOCATION = "rch.remote_response_dir_locations";
     private static final String NEXT_LINE = "\r\n";
     private static final String TAB = "\t";
-    private static final Integer LOCATION_PART_SIZE = 5000;
+    private static final Integer LOCATION_PART_SIZE = 500;
     private static final String RECORDS = "Records";
 
     private static final String QUOTATION = "'";
@@ -354,27 +354,27 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             case ASHA:
                 ashaFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
                 break;
-//            case DISTRICT:
-//                districtFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-//                break;
-//            case TALUKA:
-//                talukaFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-//                break;
-//            case HEALTHBLOCK:
-//                healthblockFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-//                break;
-//            case TALUKAHEALTHBLOCK:
-//                tHFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-//                break;
-//            case HEALTHFACILITY:
-//                healthFacilityFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-//                break;
-//            case HEALTHSUBFACILITY:
-//                healthsubfacilityFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-//                break;
-//            case VILLAGE:
-//                villageFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
-//                break;
+            case DISTRICT:
+                districtFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                break;
+            case TALUKA:
+                talukaFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                break;
+            case HEALTHBLOCK:
+                healthblockFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                break;
+            case TALUKAHEALTHBLOCK:
+                tHFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                break;
+            case HEALTHFACILITY:
+                healthFacilityFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                break;
+            case HEALTHSUBFACILITY:
+                healthsubfacilityFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                break;
+            case VILLAGE:
+                villageFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
+                break;
             case VILLAGEHEALTHSUBFACILITY:
                 vhsfFileProcess(name, result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
                 break;

@@ -114,7 +114,7 @@ public class TalukaServiceImpl implements TalukaService {
         };
 
         Long createdTalukas = 0L;
-        if (!districtHashMap.isEmpty() && !queryExecution.getSqlQuery().isEmpty()) {
+        if (!queryExecution.getSqlQuery().isEmpty() && !districtHashMap.isEmpty()) {
             createdTalukas = dataService.executeSQLQuery(queryExecution);
         }
 

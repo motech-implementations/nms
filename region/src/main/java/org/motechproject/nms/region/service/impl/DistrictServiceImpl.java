@@ -185,7 +185,7 @@ public class DistrictServiceImpl implements DistrictService {
         StringBuilder stringBuilder = new StringBuilder();
         int i = 0;
         StringBuilder rejectionStringBuilder = new StringBuilder();
-        int k= 0;
+        int k= 0; // no of rejected records
         DateTime dateTimeNow = new DateTime();
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> district : districts) {

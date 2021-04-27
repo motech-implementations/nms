@@ -154,7 +154,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
         };
 
         Long createdHealthBlocks = 0L;
-        if (!districtHashMap.isEmpty() && !talukaHashMap.isEmpty() && !queryExecution.getSqlQuery().isEmpty()) {
+        if (!queryExecution.getSqlQuery().isEmpty() && !districtHashMap.isEmpty() && !talukaHashMap.isEmpty()) {
             createdHealthBlocks = healthBlockDataService.executeSQLQuery(queryExecution);
         }
 
