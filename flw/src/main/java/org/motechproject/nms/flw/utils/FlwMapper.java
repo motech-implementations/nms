@@ -1,5 +1,6 @@
 package org.motechproject.nms.flw.utils;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -8,14 +9,16 @@ import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.utils.FlwConstants;
-import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthSubFacility;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.exception.InvalidLocationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
@@ -25,7 +28,7 @@ import java.util.Map;
 public final class FlwMapper {
 
     private static final String ACTIVE = "Active";
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(FlwMapper.class);
     private FlwMapper() { }
 
     public static FrontLineWorker createFlw(Map<String, Object> record, Map<String, Object> location)
@@ -109,6 +112,7 @@ public final class FlwMapper {
         }
 
         LocalDate date;
+        DateTime updatedOn = null;
         String datePattern = "\\d{4}-\\d{2}-\\d{2}";
         DateTimeFormatter dtf1 = DateTimeFormat.forPattern("yyyy-MM-dd");
         DateTimeFormatter dtf2 = DateTimeFormat.forPattern("dd-MM-yyyy");
@@ -122,11 +126,21 @@ public final class FlwMapper {
                     (record.get(FlwConstants.EXEC_DATE).toString().matches(datePattern) ?
                             LocalDate.parse(record.get(FlwConstants.EXEC_DATE).toString(), dtf1) :
                             LocalDate.parse(record.get(FlwConstants.EXEC_DATE).toString(), dtf2));
+
         }
         if (date != null) {
             flw.setUpdatedDateNic(date);
         }
-
+        if (record.get(FlwConstants.UPDATED_ON) != null && !record.get(FlwConstants.UPDATED_ON).toString().trim().isEmpty()) {
+            try {
+                updatedOn = DateTime.parse(record.get(FlwConstants.UPDATED_ON).toString(), DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ"));
+            } catch (Exception e) {
+                LOGGER.debug("Updated_On asha column is not parsed");
+            }
+        }
+        if (updatedOn != null) {
+            flw.setUpdatedOn(updatedOn);
+        }
 
         return flw;
     }

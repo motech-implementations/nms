@@ -1,7 +1,5 @@
 package org.motechproject.nms.kilkari.utils;
 
-import org.motechproject.nms.kilkari.contract.RchAnmAshaRecord;
-import org.motechproject.nms.kilkari.contract.AnmAshaRecord;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -149,64 +147,4 @@ public final class ObjectListCleaner {
         return full;
     }
 
-    public static List<List<AnmAshaRecord>> cleanFlwRecords(List<AnmAshaRecord> anmAshaRecords) {
-        List<AnmAshaRecord> rejectedRecords = new ArrayList<>();
-        List<AnmAshaRecord> acceptedRecords = new ArrayList<>();
-        List<List<AnmAshaRecord>> full = new ArrayList<>();
-        HashMap<String, Integer> motherPhoneMap = new HashMap<>();
-        HashMap<String, Long> motherPhoneIdMap = new HashMap<>();
-        for (AnmAshaRecord record : anmAshaRecords) {
-            if (motherPhoneMap.containsKey(record.getContactNo())) {
-                boolean identicalIdPhone = motherPhoneIdMap.get(record.getContactNo()).equals(record.getId());
-                if (!identicalIdPhone) {
-                    motherPhoneMap.put(record.getContactNo(), motherPhoneMap.get(record.getContactNo()) + 1);
-                }
-            } else {
-                motherPhoneMap.put(record.getContactNo(), 1);
-                motherPhoneIdMap.put(record.getContactNo(), record.getId());
-            }
-        }
-        for (AnmAshaRecord record : anmAshaRecords) {
-            Integer count = motherPhoneMap.get(record.getContactNo());
-            if (count > 1) {
-                rejectedRecords.add(record);
-            } else {
-                acceptedRecords.add(record);
-            }
-        }
-        full.add(rejectedRecords);
-        full.add(acceptedRecords);
-        return full;
-    }
-
-    public static List<List<RchAnmAshaRecord>> cleanRchFlwRecords(List<RchAnmAshaRecord> rchAnmAshaRecords) {
-        List<RchAnmAshaRecord> rejectedRecords = new ArrayList<>();
-        List<RchAnmAshaRecord> acceptedRecords = new ArrayList<>();
-        List<List<RchAnmAshaRecord>> full = new ArrayList<>();
-        HashMap<String, Integer> motherPhoneMap = new HashMap<>();
-        HashMap<String, Long> motherPhoneIdMap = new HashMap<>();
-        for (RchAnmAshaRecord record : rchAnmAshaRecords) {
-            if (motherPhoneMap.containsKey(record.getMobileNo())) {
-                boolean identicalIdPhone = motherPhoneIdMap.get(record.getMobileNo()).equals(record.getGfId());
-                if (!identicalIdPhone) {
-                    motherPhoneMap.put(record.getMobileNo(), motherPhoneMap.get(record.getMobileNo()) + 1);
-                }
-            } else {
-                motherPhoneMap.put(record.getMobileNo(), 1);
-                motherPhoneIdMap.put(record.getMobileNo(), record.getGfId());
-
-            }
-        }
-        for (RchAnmAshaRecord record : rchAnmAshaRecords) {
-            Integer count = motherPhoneMap.get(record.getMobileNo());
-            if (count > 1) {
-                rejectedRecords.add(record);
-            } else {
-                acceptedRecords.add(record);
-            }
-        }
-        full.add(rejectedRecords);
-        full.add(acceptedRecords);
-        return full;
-    }
 }

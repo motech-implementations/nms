@@ -5,43 +5,42 @@ import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.nms.csv.exception.CsvImportDataException;
+import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
+import org.motechproject.nms.csv.utils.CsvImporterBuilder;
+import org.motechproject.nms.csv.utils.CsvMapImporter;
 import org.motechproject.nms.csv.utils.GetBoolean;
 import org.motechproject.nms.csv.utils.GetInteger;
-import org.motechproject.nms.csv.utils.GetString;
-import org.motechproject.nms.csv.utils.CsvMapImporter;
-import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetLocalDate;
-import org.motechproject.nms.csv.utils.CsvImporterBuilder;
-import org.motechproject.nms.csv.utils.ConstraintViolationUtils;
-
-import org.motechproject.nms.flw.domain.FlwJobStatus;
-import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.csv.utils.GetLong;
+import org.motechproject.nms.csv.utils.GetString;
+import org.motechproject.nms.flw.domain.ContactNumberAudit;
 import org.motechproject.nms.flw.domain.FlwError;
 import org.motechproject.nms.flw.domain.FlwErrorReason;
+import org.motechproject.nms.flw.domain.FlwJobStatus;
+import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
-import org.motechproject.nms.flw.domain.ContactNumberAudit;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.exception.GfStatusInactiveException;
 import org.motechproject.nms.flw.repository.ContactNumberAuditDataService;
 import org.motechproject.nms.flw.repository.FlwErrorDataService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.flw.utils.FlwMapper;
+import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.contract.AnmAshaRecord;
 import org.motechproject.nms.kilkari.contract.RchAnmAshaRecord;
 import org.motechproject.nms.kilkari.domain.RejectionReasons;
-import org.motechproject.nms.kilkari.utils.FlwConstants;
-import org.motechproject.nms.flw.utils.FlwMapper;
-import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.kilkari.utils.RejectedObjectConverter;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.props.service.LogHelper;
-import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.domain.District;
-import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthSubFacility;
+import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.Taluka;
 import org.motechproject.nms.region.domain.Village;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.region.repository.StateDataService;
@@ -62,13 +61,18 @@ import javax.validation.ConstraintViolationException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import static org.motechproject.nms.flw.utils.FlwMapper.createFlw;
 import static org.motechproject.nms.flw.utils.FlwMapper.createRchFlw;
 import static org.motechproject.nms.flw.utils.FlwMapper.updateFlw;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.flwRejectionRch;
 
 @Service("frontLineWorkerImportService")
 public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportService {
@@ -80,9 +84,11 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     private FlwErrorDataService flwErrorDataService;
     private MobileAcademyService mobileAcademyService;
     private ContactNumberAuditDataService contactNumberAuditDataService;
-
+    private static final double THOUSAND = 1000d;
     @Autowired
     private FlwRejectionService flwRejectionService;
+    @Autowired
+    private FrontLineWorkerImportService frontLineWorkerImportService;
 
     /*
         Expected file format:
@@ -98,7 +104,6 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     public void importData(Reader reader, SubscriptionOrigin importOrigin) throws IOException, GfStatusInactiveException {
         BufferedReader bufferedReader = new BufferedReader(reader);
 
-        State state = importHeader(bufferedReader);
         CsvMapImporter csvImporter;
         String designation;
 
@@ -109,16 +114,19 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                     .createAndOpen(bufferedReader);
             try {
                 Map<String, Object> record;
+                List<Map<String, Object>> records = new ArrayList<>();
                 while (null != (record = csvImporter.read())) {
                     designation = (String) record.get(FlwConstants.TYPE);
                     designation = (designation != null) ? designation.trim() : designation;
                     if (FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation)) {
-                        importMctsFrontLineWorker(record, state);
+                        records.add(record);
                     }
                 }
+                reOrderRecords(records);
+                saveCsvAshaData(records, SubscriptionOrigin.MCTS_IMPORT);
             } catch (ConstraintViolationException e) {
                 throw new CsvImportDataException(createErrorMessage(e.getConstraintViolations(), csvImporter.getRowNumber()), e);
-            } catch (InvalidLocationException | FlwImportException | JDODataStoreException | FlwExistingRecordException e) {
+            } catch (FlwImportException | JDODataStoreException e) {
                 throw new CsvImportDataException(createErrorMessage(e.getMessage(), csvImporter.getRowNumber()), e);
             }
         } else {
@@ -128,19 +136,141 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                     .createAndOpen(bufferedReader);
             try {
                 Map<String, Object> record;
+                List<Map<String, Object>> records = new ArrayList<>();
                 while (null != (record = csvImporter.read())) {
                     designation = (String) record.get(FlwConstants.GF_TYPE);
                     designation = (designation != null) ? designation.trim() : designation;
                     if (FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation)) {
-                        importRchFrontLineWorker(record, state);
+                        records.add(record);
                     }
                 }
+                reOrderRecords(records);
+                saveCsvAshaData(records, SubscriptionOrigin.RCH_IMPORT);
             } catch (ConstraintViolationException e) {
                 throw new CsvImportDataException(createErrorMessage(e.getConstraintViolations(), csvImporter.getRowNumber()), e);
-            } catch (InvalidLocationException | FlwImportException | JDODataStoreException | FlwExistingRecordException e) {
+            } catch (FlwImportException | JDODataStoreException e) {
                 throw new CsvImportDataException(createErrorMessage(e.getMessage(), csvImporter.getRowNumber()), e);
             }
         }
+    }
+
+    private void saveCsvAshaData(List<Map<String, Object>> records, SubscriptionOrigin mctsImport) {
+        String action = "";
+        int saved = 0;
+        int rejected = 0;
+        State state = null;
+
+        for (Map<String, Object> record : records) {
+
+            state = stateDataService.findByCode((Long) record.get(FlwConstants.STATE_ID));
+            if (state == null) {
+                LOGGER.warn("State with code {} doesn't exist in database. Skipping FLW import for this state", record.get(FlwConstants.STATE_ID));
+                continue;
+            }
+            RchAnmAshaRecord frontLineWorker = convertMapToRchAsha(record);
+            try {
+
+                action = this.rchFlwActionFinder(frontLineWorker);
+                String designation = frontLineWorker.getGfType();
+                designation = (designation != null ? designation.trim() : designation);
+                Long msisdn = Long.parseLong(frontLineWorker.getMobileNo());
+                String flwId = frontLineWorker.getGfId().toString();
+                FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
+                if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || !state.equals(flw.getState()))) && !FrontLineWorkerStatus.ANONYMOUS.equals(flw.getStatus())) {
+                    LOGGER.debug("Existing FLW with same MSISDN but different MCTS ID");
+                    flwRejectionService.createUpdate(flwRejectionRch(frontLineWorker, false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
+                    rejected++;
+                } else {
+                    if (!(FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation))) {
+                        flwRejectionService.createUpdate(flwRejectionRch(frontLineWorker, false, RejectionReasons.FLW_TYPE_NOT_ASHA.toString(), action));
+                        rejected++;
+                    } else {
+                        try {
+                            Map<String, Object> recordMap = frontLineWorker.toFlwRecordMap();
+                            if (mctsImport.equals(SubscriptionOrigin.RCH_IMPORT)) {
+                                frontLineWorkerImportService.importRchFrontLineWorker(recordMap, state);
+                            } else if (mctsImport.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+                                frontLineWorkerImportService.importMctsFrontLineWorker(recordMap, state);
+                            }
+                            flwRejectionService.createUpdate(flwRejectionRch(frontLineWorker, true, null, action));
+                            saved++;
+                        } catch (InvalidLocationException e) {
+                            LOGGER.warn("Invalid location for FLW: ", e);
+                            flwRejectionService.createUpdate(flwRejectionRch(frontLineWorker, false, RejectionReasons.INVALID_LOCATION.toString(), action));
+                            rejected++;
+                        } catch (FlwExistingRecordException e) {
+                            LOGGER.debug("Existing FLW with same MSISDN but different ID", e);
+                            flwRejectionService.createUpdate(flwRejectionRch(frontLineWorker, false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
+                            rejected++;
+                        } catch (GfStatusInactiveException e) {
+                            LOGGER.debug("The flw has already resigned.");
+                            flwRejectionService.createUpdate(flwRejectionRch(frontLineWorker, false, RejectionReasons.GF_STATUS_INACTIVE.toString(), action));
+                            rejected++;
+                        } catch (Exception e) {
+                            LOGGER.error("Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}",
+                                    frontLineWorker.getGfId(), frontLineWorker.getMobileNo(), e);
+                            flwRejectionService.createUpdate(flwRejectionRch(frontLineWorker, false, RejectionReasons.FLW_IMPORT_ERROR.toString(), action));
+                            rejected++;
+                        }
+                    }
+                    if ((saved + rejected) % THOUSAND == 0) {
+                        LOGGER.debug("{} state, Progress: {} Ashas imported, {} Ashas rejected", state.getName(), saved, rejected);
+                    }
+                }
+            } catch (NumberFormatException e) {
+                LOGGER.error("Mobile number either not present or is not in number format");
+                flwRejectionService.createUpdate(flwRejectionRch(frontLineWorker, false, RejectionReasons.MOBILE_NUMBER_EMPTY_OR_WRONG_FORMAT.toString(), action));
+            }
+        }
+    }
+
+    private void reOrderRecords(List<Map<String, Object>> records) {
+
+        List<Map<String, Object>> inactiveRecords = new ArrayList<>();
+        List<Map<String, Object>> activeRecords = new ArrayList<>();
+        records.stream().forEach(t -> {
+            String a = (String) t.get(FlwConstants.GF_STATUS);
+            if (a.equalsIgnoreCase("InActive")) {
+                inactiveRecords.add(t);
+            } else {
+                activeRecords.add(t);
+            }
+        });
+        try {
+            Collections.sort(activeRecords, (t1, t2) -> {
+
+                String a = (String) t1.get(FlwConstants.GF_STATUS);
+                String b = (String) t2.get(FlwConstants.GF_STATUS);
+                LocalDateTime d1 = LocalDateTime.parse((CharSequence) t1.get(FlwConstants.UPDATED_ON), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
+                LocalDateTime d2 = LocalDateTime.parse((CharSequence) t2.get(FlwConstants.UPDATED_ON), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
+
+                if (a.equalsIgnoreCase("Active") && b.equalsIgnoreCase("Active")) {
+                    if (d1.isAfter(d2)) {
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                } else {
+                    return 1;
+                }
+            });
+        } catch (Exception e) {
+            LOGGER.error("Sorting is not performed correctly");
+        }
+        List<Map<String, Object>> recordInOrderForActive = new ArrayList<>();
+        HashMap<String, Integer> gfId = new HashMap<>();
+        for (Map<String, Object> record : activeRecords) {
+            if (gfId.containsKey(record.get(FlwConstants.GF_ID).toString())) {
+                recordInOrderForActive.add(0, record);
+            } else {
+                recordInOrderForActive.add(record);
+                gfId.put(record.get(FlwConstants.GF_ID).toString(), 1);
+            }
+        }
+        records.clear();
+        records.addAll(inactiveRecords);
+        records.addAll(recordInOrderForActive);
+
     }
 
     // CHECKSTYLE:ON
@@ -593,12 +723,13 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
 
         rchAnmAshaRecord.setVillageId(record.get(FlwConstants.CENSUS_VILLAGE_ID) == null ? null : (Long) record.get(FlwConstants.CENSUS_VILLAGE_ID));
         rchAnmAshaRecord.setVillageName(record.get(FlwConstants.VILLAGE_NAME) == null ? null : (String) record.get(FlwConstants.VILLAGE_NAME));
-        rchAnmAshaRecord.setGfId(record.get(FlwConstants.GF_ID) == null ? null : (Long) record.get(FlwConstants.GF_ID));
+        rchAnmAshaRecord.setGfId(record.get(FlwConstants.GF_ID) == null ? null : Long.valueOf((String) record.get(FlwConstants.GF_ID)));
         rchAnmAshaRecord.setMobileNo(record.get(FlwConstants.MOBILE_NO) == null ? null : record.get(FlwConstants.MOBILE_NO).toString());
         rchAnmAshaRecord.setGfName(record.get(FlwConstants.GF_NAME) == null ? null : (String) record.get(FlwConstants.GF_NAME));
         rchAnmAshaRecord.setGfType(record.get(FlwConstants.GF_TYPE) == null ? null : (String) record.get(FlwConstants.GF_TYPE));
         rchAnmAshaRecord.setExecDate(record.get(FlwConstants.EXEC_DATE) == null ? null : record.get(FlwConstants.EXEC_DATE).toString());
         rchAnmAshaRecord.setGfStatus(record.get(FlwConstants.GF_STATUS) == null ? null : (String) record.get(FlwConstants.GF_STATUS));
+        rchAnmAshaRecord.setUpdatedOn(record.get(FlwConstants.UPDATED_ON) == null ? null : (String) record.get(FlwConstants.UPDATED_ON));
         return rchAnmAshaRecord;
     }
 
@@ -668,9 +799,9 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         mapping.put(FlwConstants.GF_NAME, new GetString());
         getMapping(mapping);
         mapping.put(FlwConstants.GF_TYPE, new Optional(new GetString()));
-        mapping.put(FlwConstants.EXEC_DATE, new Optional(new GetLocalDate()));
+        mapping.put(FlwConstants.EXEC_DATE, new Optional(new GetString()));
         mapping.put(FlwConstants.GF_STATUS, new Optional(new GetString()));
-
+        mapping.put(FlwConstants.UPDATED_ON, new Optional(new GetString()));
         return mapping;
     }
 
@@ -789,4 +920,5 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             return "UPDATE";
         }
     }
+
 }

@@ -27,12 +27,13 @@ import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.mds.util.Order;
 import org.motechproject.metrics.service.Timer;
+import org.motechproject.nms.flw.domain.FlwJobStatus;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
-import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.exception.GfStatusInactiveException;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
+import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.contract.RchAnmAshaRecord;
 import org.motechproject.nms.kilkari.contract.RchChildRecord;
 import org.motechproject.nms.kilkari.contract.RchDistrictRecord;
@@ -44,19 +45,18 @@ import org.motechproject.nms.kilkari.contract.RchTalukaHealthBlockRecord;
 import org.motechproject.nms.kilkari.contract.RchTalukaRecord;
 import org.motechproject.nms.kilkari.contract.RchVillageHealthSubFacilityRecord;
 import org.motechproject.nms.kilkari.contract.RchVillageRecord;
+import org.motechproject.nms.kilkari.domain.MctsChild;
+import org.motechproject.nms.kilkari.domain.MctsMother;
 import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.MctsMother;
-import org.motechproject.nms.kilkari.domain.MctsChild;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
 import org.motechproject.nms.kilkari.domain.ThreadProcessorObject;
-import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService;
 import org.motechproject.nms.kilkari.service.ChildCsvThreadProcessor;
-import org.motechproject.nms.kilkari.service.MotherCsvThreadProcessor;
-import org.motechproject.nms.kilkari.utils.FlwConstants;
-import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
+import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
+import org.motechproject.nms.kilkari.service.MotherCsvThreadProcessor;
+import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.rch.contract.RchAnmAshaDataSet;
 import org.motechproject.nms.rch.contract.RchChildrenDataSet;
@@ -73,7 +73,10 @@ import org.motechproject.nms.rch.domain.RchImportAudit;
 import org.motechproject.nms.rch.domain.RchImportFacilitator;
 import org.motechproject.nms.rch.domain.RchImportFailRecord;
 import org.motechproject.nms.rch.domain.RchUserType;
-import org.motechproject.nms.rch.exception.*;
+import org.motechproject.nms.rch.exception.ExecutionException;
+import org.motechproject.nms.rch.exception.RchFileManipulationException;
+import org.motechproject.nms.rch.exception.RchInvalidResponseStructureException;
+import org.motechproject.nms.rch.exception.RchWebServiceException;
 import org.motechproject.nms.rch.repository.RchImportAuditDataService;
 import org.motechproject.nms.rch.repository.RchImportFacilitatorDataService;
 import org.motechproject.nms.rch.repository.RchImportFailRecordDataService;
@@ -115,47 +118,45 @@ import javax.jdo.Query;
 import javax.xml.bind.JAXBException;
 import javax.xml.namespace.QName;
 import javax.xml.rpc.ServiceException;
-
-
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.FileReader;
-import java.io.BufferedReader;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.Objects;
-import java.text.SimpleDateFormat;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanRchMotherRecords;
 import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanRchChildRecords;
-import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanRchFlwRecords;
+import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanRchMotherRecords;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionRch;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToRchChild;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.convertMapToRchMother;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.motherRejectionRch;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.flwRejectionRch;
+import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.motherRejectionRch;
 
 @Service("rchWebServiceFacade")
 public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
@@ -2062,12 +2063,12 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private RchImportAudit saveImportedAshaData(RchAnmAshaDataSet anmAshaDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) { //NOPMD NcssMethodCount // NO CHECKSTYLE Cyclomatic Complexity
         LOGGER.info("Starting RCH ASHA import for state {}", stateName);
-        List<List<RchAnmAshaRecord>> rchAshaRecordsSet = cleanRchFlwRecords(anmAshaDataSet.getRecords());
+        List<List<RchAnmAshaRecord>> rchAshaRecordsSet = cleanRchFlwRecords(anmAshaDataSet.getRecords(), stateCode);
         List<RchAnmAshaRecord> rejectedRchAshas = rchAshaRecordsSet.get(0);
         String action = "";
         for (RchAnmAshaRecord record : rejectedRchAshas) {
             action = this.rchFlwActionFinder(record);
-            LOGGER.debug("Existing Asha Record with same MSISDN in the data set");
+            LOGGER.debug("Existing Asha Record with same MSISDN in the data set with Active state");
             flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action));
         }
         List<RchAnmAshaRecord> acceptedRchAshas = rchAshaRecordsSet.get(1);
@@ -2129,6 +2130,89 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
         LOGGER.info("RCH import: {} state, Total: {} Ashas imported, {} Ashas rejected", stateName, saved, rejected);
         return new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, saved, rejected, null);
+    }
+
+    private List<List<RchAnmAshaRecord>> cleanRchFlwRecords(List<RchAnmAshaRecord> rchAnmAshaRecords, Long stateCode) {
+        List<RchAnmAshaRecord> inactiveRecord = new ArrayList<>();
+        List<RchAnmAshaRecord> activeRecord = new ArrayList<>();
+
+        rchAnmAshaRecords.stream().forEach(rchAnmAshaRecord -> {
+            if (rchAnmAshaRecord.getGfStatus().equalsIgnoreCase("InActive")) {
+                inactiveRecord.add(rchAnmAshaRecord);
+            } else {
+                activeRecord.add(rchAnmAshaRecord);
+            }
+        });
+
+
+        try {
+            Collections.sort(activeRecord, (t1, t2) -> {
+
+                String a = t1.getGfStatus();
+                String b = t2.getGfStatus();
+                LocalDateTime d1 = LocalDateTime.parse(t1.getUpdatedOn(), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
+                LocalDateTime d2 = LocalDateTime.parse(t2.getUpdatedOn(), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
+
+                if (a.equalsIgnoreCase("Active") && b.equalsIgnoreCase("Active")) {
+                    if (d1.isAfter(d2)) {
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                } else {
+                    return 1;
+                }
+            });
+        } catch (Exception e) {
+            LOGGER.error("Sorting is not performed correctly");
+        }
+
+        rchAnmAshaRecords.clear();
+        rchAnmAshaRecords.addAll(inactiveRecord);
+        rchAnmAshaRecords.addAll(activeRecord);
+        List<RchAnmAshaRecord> rejectedRecords = new ArrayList<>();
+        List<RchAnmAshaRecord> acceptedRecords = new ArrayList<>();
+        List<List<RchAnmAshaRecord>> full = new ArrayList<>();
+        HashMap<String, Long> ashaPhoneMap = new HashMap<>();
+        State state = stateDataService.findByCode(stateCode);
+
+
+        for (Integer i = 0; i < rchAnmAshaRecords.size(); i++) {
+            RchAnmAshaRecord record = rchAnmAshaRecords.get(i);
+            if (record.getGfStatus().equalsIgnoreCase("Active")) {
+                Long flwId = record.getGfId();
+                Long msisdn = Long.valueOf(record.getMobileNo());
+                FrontLineWorker flw = frontLineWorkerService.getByMctsFlwIdAndState(flwId.toString(), state);
+                FrontLineWorker flw2 = frontLineWorkerService.getByContactNumber(msisdn);
+                if (flw2 != null && flw2.getJobStatus().equals(FlwJobStatus.ACTIVE)) {
+                    if (flw != null && flw.equals(flw2) && !ashaPhoneMap.containsKey(record.getMobileNo())) {
+                        ashaPhoneMap.put(record.getMobileNo(), record.getGfId());
+                    }
+                }
+            }
+        }
+        HashMap<Long, Integer> gfId = new HashMap<>();
+        for (Integer i = 0; i < rchAnmAshaRecords.size(); i++) {
+            RchAnmAshaRecord record = rchAnmAshaRecords.get(i);
+            if (record.getGfStatus().equalsIgnoreCase("Active")) {
+                if (ashaPhoneMap.containsKey(record.getMobileNo()) && !ashaPhoneMap.get(record.getMobileNo()).equals(record.getGfId())) {
+                    rejectedRecords.add(record);
+                } else {
+                    if (gfId.containsKey(record.getGfId())) {
+                        acceptedRecords.add(0, record);
+                    } else {
+                        acceptedRecords.add(record);
+                        gfId.put(record.getGfId(), 1);
+                    }
+                }
+            } else {
+                acceptedRecords.add(record);
+            }
+        }
+
+        full.add(rejectedRecords);
+        full.add(acceptedRecords);
+        return full;
     }
 
     private Map<String, Object> toMap(RchMotherRecord motherRecord) {

@@ -1,13 +1,13 @@
 package org.motechproject.nms.kilkari.contract;
 
-import org.joda.time.LocalDate;
-import org.joda.time.format.DateTimeFormat;
 import org.motechproject.nms.kilkari.utils.FlwConstants;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -473,7 +473,7 @@ public class AnmAshaRecord {
         map.put(FlwConstants.PHC_ID, getPhcId());
         map.put(FlwConstants.TYPE, getType());
         map.put(FlwConstants.GF_STATUS, getGfStatus());
-        map.put(FlwConstants.UPDATED_ON, "".equals(getUpdatedOn()) ? null : LocalDate.parse(getUpdatedOn(), DateTimeFormat.forPattern("dd-MM-yyyy")));
+        map.put(FlwConstants.UPDATED_ON, "".equals(getUpdatedOn()) ? null : LocalDateTime.parse(getUpdatedOn(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")));
         return map;
     }
 }
