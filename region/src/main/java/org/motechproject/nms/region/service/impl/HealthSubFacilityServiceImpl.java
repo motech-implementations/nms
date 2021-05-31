@@ -143,14 +143,17 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
                         healthSubFacility.get(LocationConstants.HEALTHFACILITY_ID).toString());
                 Long healthSubFacilityCode = (Long) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_ID);
                 String healthSubFacilityName = (String) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME);
+
+                    if(healthSubFacilityName!=null) {
+                        healthSubFacilityName = healthSubFacilityName.replaceAll("[?]", "");
+                    }
                 if (taluka != null && healthFacility != null && (healthSubFacilityName != null && !healthSubFacilityName.trim().isEmpty()) && healthSubFacilityCode != null && !((Long) (0L)).equals(healthSubFacilityCode)) {
                     if (i != 0) {
                         stringBuilder.append(", ");
                     }
                     stringBuilder.append("(");
                     stringBuilder.append(healthSubFacilityCode + ", ");
-                    stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME) == null ?
-                            "" : healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME).toString()) + QUOTATION_COMMA);
+                    stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthSubFacilityName) + QUOTATION_COMMA);
                     stringBuilder.append(state.getId() + ", ");
                     stringBuilder.append(district.getId() + ", ");
                     stringBuilder.append(healthFacility.getId() + ", ");

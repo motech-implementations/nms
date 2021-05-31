@@ -107,7 +107,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String REMOTE_RESPONSE_DIR_LOCATION = "rch.remote_response_dir_locations";
     private static final String NEXT_LINE = "\r\n";
     private static final String TAB = "\t";
-    private static final Integer LOCATION_PART_SIZE = 500;
+    private static final Integer LOCATION_PART_SIZE = 1000;
     private static final String RECORDS = "Records";
 
     private static final String QUOTATION = "'";
