@@ -115,12 +115,22 @@ public class ImiController {
             return false;
         }
 
+        String cdrCsrFName=fileInfo.getCdrFile();
+        int nameLength=(targetFileName).length();
+        boolean isObdNameInFile=cdrCsrFName.contains(targetFileName.substring(0,nameLength-4));
         if (validateFieldPresent(errors, "cdrFile", fileInfo.getCdrFile())) {
-            if (!fileInfo.getCdrFile().equals(fieldName + "_" + targetFileName)) {
-                errors.append(String.format(INVALID, fieldName));
-                valid = false;
+                if (!(isObdNameInFile) ) {
+                    errors.append(String.format(INVALID, fieldName));
+                    valid = false;
+                }
             }
-        }
+
+//        if (validateFieldPresent(errors, "cdrFile", fileInfo.getCdrFile())) {
+//            if (!fileInfo.getCdrFile().equals(fieldName + "_" + targetFileName)) {
+//                errors.append(String.format(INVALID, fieldName));
+//                valid = false;
+//            }
+//        }
         
         if (!validateFieldPresent(errors, "checksum", fileInfo.getChecksum())) {
             valid = false;
