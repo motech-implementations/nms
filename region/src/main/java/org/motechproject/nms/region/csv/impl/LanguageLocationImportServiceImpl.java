@@ -95,6 +95,31 @@ public class LanguageLocationImportServiceImpl implements LanguageLocationImport
 
     }
 
+    @Override
+    @Transactional
+    public void createStateRecord(String name,Long code) {
+
+        State state=new State();
+
+        state.setName(name);
+        state.setCode(code);
+
+        state.setCreator("motech");
+        state.setOwner("motech");
+
+        State dbState=stateDataService.findByCode(code);
+
+        if(dbState==null){
+            stateDataService.update(state);
+        }
+        else {
+            dbState.setName(name);
+            dbState.setCode(code);
+            stateDataService.update(dbState);
+        }
+
+    }
+
     private void importRecord(Map<String, Object> record) {
         String languageCode = (String) record.get(LANGUAGE_CODE);
         String languageName = (String) record.get(LANGUAGE_NAME);
