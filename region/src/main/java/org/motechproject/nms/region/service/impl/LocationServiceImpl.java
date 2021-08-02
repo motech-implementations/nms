@@ -64,30 +64,7 @@ import java.util.Set;
 import java.util.List;
 
 import static org.motechproject.nms.region.domain.LocationEnum.VILLAGEHEALTHSUBFACILITY;
-import static org.motechproject.nms.region.utils.LocationConstants.CODE_SQL_STRING;
-import static org.motechproject.nms.region.utils.LocationConstants.CSV_STATE_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.DISTRICT_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.DISTRICT_NAME;
-import static org.motechproject.nms.region.utils.LocationConstants.HEALTHBLOCK_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.HEALTHBLOCK_NAME;
-import static org.motechproject.nms.region.utils.LocationConstants.HEALTHFACILITY_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.HEALTHFACILITY_NAME;
-import static org.motechproject.nms.region.utils.LocationConstants.HEALTHSUBFACILITY_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.HEALTHSUBFACILITY_NAME;
-import static org.motechproject.nms.region.utils.LocationConstants.INVALID;
-import static org.motechproject.nms.region.utils.LocationConstants.LOCATION_PART_SIZE;
-import static org.motechproject.nms.region.utils.LocationConstants.NON_CENSUS_VILLAGE;
-import static org.motechproject.nms.region.utils.LocationConstants.OR_SQL_STRING;
-import static org.motechproject.nms.region.utils.LocationConstants.PHC_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.PHC_NAME;
-import static org.motechproject.nms.region.utils.LocationConstants.SMALL_LOCATION_PART_SIZE;
-import static org.motechproject.nms.region.utils.LocationConstants.STATE_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.SUBCENTRE_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.SUBCENTRE_NAME;
-import static org.motechproject.nms.region.utils.LocationConstants.TALUKA_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.TALUKA_NAME;
-import static org.motechproject.nms.region.utils.LocationConstants.VILLAGE_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.VILLAGE_NAME;
+import static org.motechproject.nms.region.utils.LocationConstants.*;
 
 
 /**
@@ -736,6 +713,8 @@ public class LocationServiceImpl implements LocationService {
         mapping.put(CSV_STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(DISTRICT_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
+        mapping.put(MDDS_CODE, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(STATE_CODE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
 
         return mapping;
     }
@@ -747,7 +726,8 @@ public class LocationServiceImpl implements LocationService {
         mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(TALUKA_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
-
+        mapping.put(MDDS_CODE, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(STATE_CODE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         return mapping;
     }
 
@@ -760,6 +740,8 @@ public class LocationServiceImpl implements LocationService {
         mapping.put(NON_CENSUS_VILLAGE, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(VILLAGE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(VILLAGE_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
+        mapping.put(MDDS_CODE, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(STATE_CODE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
 
         return mapping;
     }
@@ -772,7 +754,7 @@ public class LocationServiceImpl implements LocationService {
         mapping.put(HEALTHBLOCK_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
-
+        mapping.put(MDDS_CODE, new org.supercsv.cellprocessor.Optional(new GetLong()));
         return mapping;
     }
 
@@ -783,7 +765,7 @@ public class LocationServiceImpl implements LocationService {
         mapping.put(HEALTHBLOCK_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(TALUKA_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
-
+        mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         return mapping;
     }
 
@@ -796,7 +778,7 @@ public class LocationServiceImpl implements LocationService {
         mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(HEALTHBLOCK_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
-
+        mapping.put(HEALTH_FACILITY_TYPE, new org.supercsv.cellprocessor.Optional(new GetLong()));
         return mapping;
     }
 
@@ -820,6 +802,9 @@ public class LocationServiceImpl implements LocationService {
         mapping.put(HEALTHSUBFACILITY_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(VILLAGE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
+        mapping.put(HEALTHFACILITY_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(VILLAGE_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
 
         return mapping;
     }
