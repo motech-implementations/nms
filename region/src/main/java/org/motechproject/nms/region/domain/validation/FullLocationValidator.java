@@ -152,15 +152,15 @@ public class FullLocationValidator implements ConstraintValidator<ValidFullLocat
                 isValid = false;
             }
         }
-
-        if (location.getHealthBlock() != null) {
+        // 2023-07-06 ... Taluka doesnt require to be checked for HealthBlock
+        /*if (location.getHealthBlock() != null) {
             if (location.getTaluka() == null) {
                 constraintValidatorContext.disableDefaultConstraintViolation();
                 constraintValidatorContext.buildConstraintViolationWithTemplate("Taluka must be set if block " +
                                                                          "is provided").addConstraintViolation();
                 isValid = false;
             }
-        }
+        }*/
 
         return isValid;
     }

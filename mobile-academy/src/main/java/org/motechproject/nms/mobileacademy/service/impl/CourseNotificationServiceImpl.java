@@ -26,7 +26,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This handles all the integration pieces between MA and sms module to trigger and handle notifications
@@ -45,6 +47,7 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
     private static final String DELIVERY_STATUS = "deliveryStatus";
     private static final String ADDRESS = "address";
     private static final String SMS_CONTENT_PREFIX = "sms.content.";
+    private static final String SMS_TEMPLATE_ID_PREFIX = "sms.templateId.";
     private static final String SMS_DEFAULT_LANGUAGE_PROPERTY = "default";
     private static final Logger LOGGER = LoggerFactory.getLogger(CourseNotificationServiceImpl.class);
 
@@ -131,9 +134,9 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
                 ccr.setNotificationRetryCount(ccr.getNotificationRetryCount() + 1);
             }
 
-            String smsContent = buildSmsContent(flwId, ccr);
+            Map<String, String> smsParams = buildSmsParams(flwId, ccr);
             long callingNumber = frontLineWorkerService.getById(flwId).getContactNumber();
-            ccr.setSentNotification(smsNotificationService.sendSms(callingNumber, smsContent));
+            ccr.setSentNotification(smsNotificationService.sendSms(callingNumber, smsParams));
             courseCompletionRecordDataService.update(ccr);
         } catch (IllegalStateException se) {
             LOGGER.error("Unable to send sms notification. Stack: " + se.toString());
@@ -178,10 +181,12 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
                 ccr.getNotificationRetryCount() < Integer.parseInt(settingsFacade.getProperty(SMS_RETRY_COUNT))) {
 
             try {
-                String smsContent = buildSmsContent(flwId, ccr);
+                Map<String, String> smsParams = buildSmsParams(flwId, ccr);
                 MotechEvent retryEvent = new MotechEvent(COURSE_COMPLETED_SUBJECT);
                 retryEvent.getParameters().put(FLWID, flwId);
-                retryEvent.getParameters().put(SMS_CONTENT, smsContent);
+                for (Map.Entry<String,String> entry : smsParams.entrySet()) {
+                    retryEvent.getParameters().put(entry.getKey(), entry.getValue());
+                }
                 retryEvent.getParameters().put(RETRY_FLAG, true);
 
                 if (nextRetryTime.isBefore(currentTime)) {
@@ -208,9 +213,9 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
     /**
      * Helper to generate the completion sms content for an flw
      * @param flwId calling number of the flw
-     * @return localized sms content based on flw preferences or national default otherwise
+     * @return localized sms params based on flw preferences or national default otherwise
      */
-    private String buildSmsContent(Long flwId, CourseCompletionRecord ccr) {
+    private Map<String, String> buildSmsParams(Long flwId, CourseCompletionRecord ccr) {
 
         FrontLineWorker flw = frontLineWorkerService.getById(flwId);
         String locationCode = "XX"; // unknown location id
@@ -256,6 +261,17 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
         String smsReferenceNumber = locationCode + callingNumber + attempts;
         ccr.setSmsReferenceNumber(smsReferenceNumber);
         courseCompletionRecordDataService.update(ccr);
-        return smsContent + smsReferenceNumber;
+
+        String smsEntityId = settingsFacade.getProperty("sms.entityId.default");
+        String smsTelemarketerId = settingsFacade.getProperty("sms.telemarketerId.default");
+        String smsTemplateId = settingsFacade.getProperty(SMS_TEMPLATE_ID_PREFIX + smsLanguageProperty);
+
+        Map<String, String> smsParams = new HashMap<String, String>();
+        smsParams.put("smsContent", smsContent);
+        smsParams.put("smsEntityId", smsEntityId);
+        smsParams.put("smsTelemarketerId", smsTelemarketerId);
+        smsParams.put("smsTemplateId", smsTemplateId);
+
+        return smsParams;
     }
 }

@@ -239,7 +239,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> healthBlock : healthBlocks) {
             String rejectionReason="";
-            Long mdds_Code=(Long) healthBlock.get(LocationConstants.MDDS_CODE);
+            Long mdds_Code=(healthBlock.get(LocationConstants.MDDS_CODE) == null ? 0 : (Long) healthBlock.get(LocationConstants.MDDS_CODE));
             if (healthBlock.get(LocationConstants.CSV_STATE_ID) != null && healthBlock.get(LocationConstants.DISTRICT_ID) != null &&
                     healthBlock.get(LocationConstants.TALUKA_ID) != null && !healthBlock.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty() ) {
                 State state = stateHashMap.get(healthBlock.get(LocationConstants.CSV_STATE_ID).toString());
@@ -248,7 +248,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                         healthBlock.get(LocationConstants.TALUKA_ID).toString().trim());
                 Long healthBlockCode = (Long) healthBlock.get(LocationConstants.HEALTHBLOCK_ID);
                 String healthBlockName = (String) healthBlock.get(LocationConstants.HEALTHBLOCK_NAME);
-                if (district != null && taluka != null && (healthBlockName != null && !healthBlockName.trim().isEmpty()) && healthBlockCode != null && !((Long) (0L)).equals(healthBlockCode) && mdds_Code!=null) {
+                if (district != null && taluka != null && (healthBlockName != null && !healthBlockName.trim().isEmpty()) && healthBlockCode != null && !((Long) (0L)).equals(healthBlockCode)) {
                     if (i != 0) {
                         stringBuilder.append(", ");
                     }
@@ -270,10 +270,6 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                     i++;
                 }
                 else if(rejectionChecks){
-                    if(mdds_Code==null){
-                        mdds_Code=0L;
-                        rejectionReason=LocationRejectionReasons.NULL_MDDS_CODE.toString();
-                    }
                     if( healthBlockCode == null ){
                         rejectionReason=LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString();
                     }
@@ -358,8 +354,8 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                         query2 += " select t.id, h.id, now(), now()" +", "+"'"+record.get(LocationConstants.TALUKA_NAME).toString()+"'"+", "+record.get(LocationConstants.DISTRICT_ID)+
                                 " from nms_states s " +
                                 " join nms_districts d on  d.state_id_OID = s.id " +
-                                " join nms_talukas t on t.district_id_OID = d.id and t.code = " +
-                                record.get(LocationConstants.TALUKA_ID).toString().trim() +
+                                " join nms_talukas t on t.district_id_OID = d.id and t.code = " + "'" +
+                                record.get(LocationConstants.TALUKA_ID).toString().trim() + "'" +
                                 " join nms_health_blocks h on h.district_id_OID = t.district_id_OID and h.code = " +
                                 record.get(LocationConstants.HEALTHBLOCK_ID).toString() +
                                 " where s.code = " + record.get(LocationConstants.CSV_STATE_ID).toString();

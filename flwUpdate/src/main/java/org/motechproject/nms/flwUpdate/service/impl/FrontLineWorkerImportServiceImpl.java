@@ -173,7 +173,15 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                 action = this.rchFlwActionFinder(frontLineWorker);
                 String designation = frontLineWorker.getGfType();
                 designation = (designation != null ? designation.trim() : designation);
-                Long msisdn = Long.parseLong(frontLineWorker.getMobileNo());
+                Long msisdn = Long.parseLong(frontLineWorker.getMobileNo()== null ? "0" : frontLineWorker.getMobileNo());
+                long SMALLEST_10_DIGIT_NUMBER = 1000000000L;
+                long LARGEST_10_DIGIT_NUMBER  = 9999999999L;
+                if (!(msisdn >= SMALLEST_10_DIGIT_NUMBER && msisdn <= LARGEST_10_DIGIT_NUMBER)) {
+                    LOGGER.error("Mobile number is not a 10 digit number");
+                    flwRejectionService.createUpdate(flwRejectionRch(frontLineWorker, false, RejectionReasons.MOBILE_NUMBER_EMPTY_OR_WRONG_FORMAT.toString(), action));
+                    rejected++;
+                    continue;
+                }
                 String flwId = frontLineWorker.getGfId().toString();
                 FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
                 if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || !state.equals(flw.getState()))) && !FrontLineWorkerStatus.ANONYMOUS.equals(flw.getStatus())) {
@@ -220,6 +228,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             } catch (NumberFormatException e) {
                 LOGGER.error("Mobile number either not present or is not in number format");
                 flwRejectionService.createUpdate(flwRejectionRch(frontLineWorker, false, RejectionReasons.MOBILE_NUMBER_EMPTY_OR_WRONG_FORMAT.toString(), action));
+                rejected++;
             }
         }
     }

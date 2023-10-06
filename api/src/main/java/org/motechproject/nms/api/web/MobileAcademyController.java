@@ -18,6 +18,7 @@ import org.motechproject.nms.mobileacademy.dto.MaCourse;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 import org.motechproject.nms.props.service.LogHelper;
+import org.motechproject.nms.rch.service.RchWebServiceFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +55,9 @@ public class MobileAcademyController extends BaseController {
 
     @Autowired
     private FrontLineWorkerService frontLineWorkerService;
+
+    @Autowired
+    private RchWebServiceFacade rchWebServiceFacade;
 
     /**
      * Event relay service to handle async notifications
@@ -255,6 +259,15 @@ public class MobileAcademyController extends BaseController {
             LOGGER.error("Could not send notification: " + cnc.toString());
             throw cnc;
         }
+    }
+
+    @RequestMapping(value = "/readBeneficiaryXmlFiles",
+            method = RequestMethod.GET)
+    @ResponseStatus(HttpStatus.OK)
+    public void updateRchData(){
+        log("REQUEST: /ops/readBeneficiaryXmlFiles");
+        String remoteLocation = "/usr/local/ManualRCH/";
+        rchWebServiceFacade.readBeneficiaryDataFromFile(remoteLocation);
     }
 
 }

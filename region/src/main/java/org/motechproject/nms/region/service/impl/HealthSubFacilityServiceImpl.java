@@ -252,7 +252,7 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
                         String village_name=record.get(LocationConstants.VILLAGE_NAME).toString();
                         village_name=village_name.replaceAll("\"","");
                         village_name=village_name.replaceAll("'","");
-                        query2 += " select v.id as village_Id, hsf.id as healthSubFacility_Id, now(), now()" +", "+record.get(LocationConstants.DISTRICT_ID)+", "+record.get(LocationConstants.TALUKA_ID)+", '"+village_name+"', "+record.get(LocationConstants.HEALTHFACILITY_ID)+
+                        query2 += " select v.id as village_Id, hsf.id as healthSubFacility_Id, now(), now()" +", "+record.get(LocationConstants.DISTRICT_ID)+", "+"'"+record.get(LocationConstants.TALUKA_ID)+"'"+", '"+village_name+"', "+record.get(LocationConstants.HEALTHFACILITY_ID)+
                                 " from nms_states s " +
                                 " JOIN nms_districts d on s.id=d.state_id_oid " +
                                 " JOIN nms_talukas t on t.district_id_oid = d.id " +

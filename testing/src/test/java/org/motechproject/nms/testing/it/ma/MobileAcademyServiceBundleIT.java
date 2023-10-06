@@ -452,7 +452,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         flw = frontLineWorkerService.getByContactNumber(callingNumber);
         MaBookmark bookmark = new MaBookmark(flw.getId(), VALID_CALL_ID, null, null);
         maService.setBookmark(bookmark);
-        List<Bookmark> added = bookmarkDataService.findBookmarksForUser(String.valueOf(flw.getId()));
+        List<Bookmark> added =
+                bookmarkDataService.findBookmarksForUser(String.valueOf(flw.getId()));
         assertTrue(added.size() == 1);
 
         bookmark.setBookmark(FINAL_BOOKMARK);

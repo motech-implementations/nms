@@ -14,36 +14,18 @@ import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.metrics.service.Timer;
-import org.motechproject.nms.kilkari.domain.MctsMother;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.SubscriberMsisdnTracker;
-import org.motechproject.nms.kilkari.domain.BlockedMsisdnRecord;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.CallRetry;
-import org.motechproject.nms.kilkari.domain.DeactivatedBeneficiary;
-import org.motechproject.nms.kilkari.domain.MctsChild;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionError;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
-import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
-import org.motechproject.nms.kilkari.repository.BlockedMsisdnRecordDataService;
-import org.motechproject.nms.kilkari.repository.DeactivatedBeneficiaryDataService;
-import org.motechproject.nms.kilkari.repository.SubscriberDataService;
-import org.motechproject.nms.kilkari.repository.SubscriberMsisdnTrackerDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
-import org.motechproject.nms.kilkari.repository.CallRetryDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.domain.*;
+import org.motechproject.nms.kilkari.repository.*;
 import org.motechproject.nms.kilkari.service.CsrVerifierService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.PhoneNumberHelper;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
-import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.*;
+import org.motechproject.nms.region.repository.HealthBlockDataService;
+import org.motechproject.nms.region.repository.StateDataService;
+import org.motechproject.nms.region.service.DistrictService;
+import org.motechproject.nms.region.service.HealthBlockService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +48,9 @@ import java.util.Set;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.motechproject.nms.region.utils.LocationConstants.DISTRICT_ID;
+import static org.motechproject.nms.region.utils.LocationConstants.STATE_ID;
 
 /**
  * Implementation of the {@link SubscriptionService} interface.
@@ -101,6 +86,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                    CsrVerifierService csrVerifierService,
                                    BlockedMsisdnRecordDataService blockedMsisdnRecordDataService,
                                    DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService,
+                                  //  ReactivatedBeneficiaryAuditDataService reactivatedBeneficiaryAuditDataService,
                                    SubscriberMsisdnTrackerDataService subscriberMsisdnTrackerDataService) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
@@ -113,6 +99,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.allowMctsSubscriptions = true;
         this.blockedMsisdnRecordDataService = blockedMsisdnRecordDataService;
         this.deactivatedBeneficiaryDataService = deactivatedBeneficiaryDataService;
+   //     this.reactivatedBeneficiaryAuditDataService = reactivatedBeneficiaryAuditDataService;
         this.subscriberMsisdnTrackerDataService = subscriberMsisdnTrackerDataService;
     }
 
@@ -879,7 +866,24 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             // This query looks a little complex but it is basically structured that way to sort users by most messages left
             @Override
             public String getSqlQuery() {
-                String query =  "SELECT res.id as id, res.activationDate, res.deactivationReason, res.endDate, res.firstMessageDayOfWeek, res.needsWelcomeMessageViaObd, " +
+                String query ="SELECT res1.id as id, res1.activationDate, res1.deactivationReason, res1.endDate, res1.firstMessageDayOfWeek, res1.needsWelcomeMessageViaObd, " +
+                        "res1.origin, res1.secondMessageDayOfWeek, res1.startDate, res1.status, res1.subscriber_id_OID, res1.subscriptionId, res1.subscriptionPack_id_OID, " +
+                        "res1.creationDate, res1.creator, res1.modificationDate, res1.modifiedBy, res1.owner, " +
+                        "CASE " +
+                        "WHEN res1.type = 'PREGNANCY' THEN DATE_ADD(res1.lastMenstrualPeriod, INTERVAL :pday DAY) " +
+                        "ELSE DATE_ADD(res1.dateOfBirth, INTERVAL :cday DAY) " +
+                        "END AS referenceDate, " +
+                        "res1.type " +
+                        "FROM " +
+                        "(SELECT ss.id as id, ss.activationDate, ss.deactivationReason, ss.endDate, ss.firstMessageDayOfWeek, ss.needsWelcomeMessageViaObd, " +
+                        "ss.origin, ss.secondMessageDayOfWeek, ss.startDate, ss.status, ss.subscriber_id_OID, ss.subscriptionId, ss.subscriptionPack_id_OID, " +
+                        "ss.creationDate, ss.creator, ss.modificationDate, ss.modifiedBy, ss.owner, s.dateOfBirth, s.lastMenstrualPeriod, sp.type FROM nms_subscriptions AS ss " +
+                        "JOIN nms_subscription_packs AS sp ON ss.subscriptionPack_id_OID = sp.id " +
+                        "JOIN nms_subscribers AS s ON ss.subscriber_id_OID = s.id " +
+                        "JOIN nms_mcts_mothers m ON s.mother_id_OID = m.id " +
+                        "WHERE ss.status = 'HOLD' AND m.healthBlock_id_OID IN (3122, 3139, 3144, 1669, 3027) AND origin in ('MCTS_IMPORT', 'RCH_IMPORT')) AS res1 " +
+                        "UNION " +
+                         "SELECT res.id as id, res.activationDate, res.deactivationReason, res.endDate, res.firstMessageDayOfWeek, res.needsWelcomeMessageViaObd, " +
                                 "res.origin, res.secondMessageDayOfWeek, res.startDate, res.status, res.subscriber_id_OID, res.subscriptionId, res.subscriptionPack_id_OID, " +
                                 "res.creationDate, res.creator, res.modificationDate, res.modifiedBy, res.owner, " +
                                 "CASE " +
@@ -887,15 +891,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                     "ELSE DATE_ADD(res.dateOfBirth, INTERVAL :cdays DAY) " +
                                 "END AS referenceDate, " +
                                 "res.type " +
-                                "FROM" +
+                                "FROM " +
                                     "(SELECT ss.id as id, ss.activationDate, ss.deactivationReason, ss.endDate, ss.firstMessageDayOfWeek, ss.needsWelcomeMessageViaObd, " +
                                     "ss.origin, ss.secondMessageDayOfWeek, ss.startDate, ss.status, ss.subscriber_id_OID, ss.subscriptionId, ss.subscriptionPack_id_OID, " +
                                     "ss.creationDate, ss.creator, ss.modificationDate, ss.modifiedBy, ss.owner, s.dateOfBirth, s.lastMenstrualPeriod, sp.type FROM nms_subscriptions AS ss " +
                                     "JOIN nms_subscription_packs AS sp ON ss.subscriptionPack_id_OID = sp.id " +
                                     "JOIN nms_subscribers AS s ON ss.subscriber_id_OID = s.id " +
                                     "WHERE ss.status = 'HOLD' AND origin in ('MCTS_IMPORT', 'RCH_IMPORT')) AS res " + // Origin is superfluous here since IVR doesn't go on hold
-                                "ORDER BY referenceDate DESC " +
-                                "LIMIT :limit";
+                                     "LIMIT :limit";
                 LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
                 return query;
             }
@@ -905,7 +908,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
                 query.setClass(Subscription.class);
 
-                Map params = new HashMap();
+                Map<String, Object> params = new HashMap<>();
+                params.put("pday", KilkariConstants.THREE_MONTHS + KilkariConstants.PREGNANCY_PACK_LENGTH_DAYS);
+                params.put("cday", KilkariConstants.CHILD_PACK_LENGTH_DAYS);
                 params.put("pdays", KilkariConstants.THREE_MONTHS + KilkariConstants.PREGNANCY_PACK_LENGTH_DAYS);
                 params.put("cdays", KilkariConstants.CHILD_PACK_LENGTH_DAYS);
                 params.put("limit", resultSize);
@@ -992,7 +997,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                 "WHERE s.id > :offset AND " +
                                 "(firstMessageDayOfWeek = :dow OR " +
                                 "(secondMessageDayOfWeek = :dow AND p.messagesPerWeek = 2)) AND " +
-                                "status = 'ACTIVE' " +
+                                "status = 'ACTIVE' AND " +
+                                "IVR_SERVICE IS TRUE "+
                                 "ORDER BY s.id " +
                                 "LIMIT :max";
                 LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
@@ -1026,9 +1032,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             public String getSqlQuery() {
                 String query = "select subscriptionId from (select subscriptionId from nms_mcts_mothers a LEFT JOIN " +
                         "nms_subscribers b on b.mother_id_oid=a.id LEFT JOIN nms_subscriptions c on c.subscriber_id_oid = b.id where rchId like 'JH%' " +
-                        "and subscriptionPack_id_OID = 1 UNION ALL select subscriptionId from nms_mcts_children a LEFT JOIN " +
+                        "and subscriptionPack_id_OID = 1 and IVR_SERVICE IS TRUE UNION ALL select subscriptionId from nms_mcts_children a LEFT JOIN " +
                         "nms_subscribers b on b.child_id_oid=a.id LEFT JOIN nms_subscriptions c on c.subscriber_id_oid = b.id " +
-                        "where rchId like 'JH%' and subscriptionPack_id_OID = 2) as  a;";
+                        "where rchId like 'JH%' and subscriptionPack_id_OID = 2 and IVR_SERVICE IS TRUE) as  a;";
                 LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
                 return query;
             }
@@ -1140,5 +1146,26 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     }
 
+//    @Override
+//    public void reactivateSubscription(Subscription subscription) {
+//        Subscriber subscriber = subscription.getSubscriber();
+//        ReactivatedBeneficiaryAudit reactivatedBeneficiaryAudit = new ReactivatedBeneficiaryAudit();
+//        reactivatedBeneficiaryAudit.setDeactivationReason(subscription.getDeactivationReason());
+//        reactivatedBeneficiaryAudit.setSubscriptionPack(subscription.getSubscriptionPack());
+//        reactivatedBeneficiaryAudit.setExternalId(subscription.getSubscriptionId());
+//        reactivatedBeneficiaryAudit.setDeactivationDate(subscription.getEndDate());
+//        reactivatedBeneficiaryAudit.setOrigin(subscription.getOrigin());
+//        reactivatedBeneficiaryAudit.setServiceReactivationDate(DateTime.now());
+//        reactivatedBeneficiaryAuditDataService.create(reactivatedBeneficiaryAudit);
+//        if(isCapacityAvailable.get()) subscription.setStatus(SubscriptionStatus.ACTIVE);
+//        else subscription.setStatus(SubscriptionStatus.HOLD);
+//        subscription.setDeactivationReason(null);
+//        subscriptionDataService.update(subscription);
+//        if (subscriber.getMother() != null) {
+//            deleteBlockedMsisdn(subscriber.getMother().getId(), null, subscriber.getCallingNumber());
+//        } else {
+//            deleteBlockedMsisdn(subscriber.getChild().getId(), null, subscriber.getCallingNumber());
+//        }
+//    }
 
 }

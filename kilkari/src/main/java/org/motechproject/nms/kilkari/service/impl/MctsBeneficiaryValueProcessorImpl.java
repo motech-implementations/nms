@@ -122,7 +122,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
     @Override
     public Boolean getDeathFromString(String value) {
         if (value != null) {
-            return "9".equals(value.trim()) || "Death".equalsIgnoreCase(value.trim()); // 9 indicates beneficiary death; other values do not
+            return "Death".equalsIgnoreCase(value.trim()); // 9 indicates beneficiary death; other values do not
         } else {
             return null;
         }
@@ -162,7 +162,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                 }
             }
         } else {
-            if (mctsId == null) {
+            if (mctsId == null || "NULL".equalsIgnoreCase(mctsId) || "".equals(mctsId.trim()) ) {
                 return childByRchId;
             } else {
                 childByMctsId = mctsChildDataService.findByBeneficiaryId(mctsId);
@@ -255,7 +255,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
             if (isValidID(record, KilkariConstants.DISTRICT_ID) && (locationFinder.getDistrictHashMap().get(mapKey.toString()) != null)) {
                 beneficiary.setDistrict(locationFinder.getDistrictHashMap().get(mapKey.toString()));
-                Long talukaCode = Long.parseLong(record.get(KilkariConstants.TALUKA_ID) == null ? "0" : record.get(KilkariConstants.TALUKA_ID).toString().trim());
+                String talukaCode = record.get(KilkariConstants.TALUKA_ID) == null ? "0" : record.get(KilkariConstants.TALUKA_ID).toString().trim();
                 mapKey.append("_");
                 mapKey.append(talukaCode);
                 Taluka taluka = locationFinder.getTalukaHashMap().get(mapKey.toString());
@@ -265,11 +265,11 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                     beneficiary.setTaluka(taluka);
                 } else {
                     beneficiary.setTaluka(null);
-                    beneficiary.setHealthBlock(null);
-                    beneficiary.setHealthFacility(null);
-                    beneficiary.setHealthSubFacility(null);
-                    beneficiary.setVillage(null);
-                    return;
+//                    beneficiary.setHealthBlock(null);
+//                    beneficiary.setHealthFacility(null);
+//                    beneficiary.setHealthSubFacility(null);
+//                    beneficiary.setVillage(null);
+//                    return;
                 }
 
                 String villageSvid = record.get(KilkariConstants.NON_CENSUS_VILLAGE_ID) == null ? "0" : record.get(KilkariConstants.NON_CENSUS_VILLAGE_ID).toString();
@@ -279,7 +279,7 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                 String healthSubFacilityCode = record.get(KilkariConstants.SUB_CENTRE_ID) == null ? "0" : record.get(KilkariConstants.SUB_CENTRE_ID).toString();
 
                 LOGGER.debug("State: {}, District: {}, Taluka: {}, VilageSvid: {}, VillageCode: {}, HB: {}, HF: {}, HSF: {}", record.get(KilkariConstants.STATE_ID).toString(), districtCode,
-                        talukaCode.toString(), villageSvid, villageCode, healthBlockCode, healthFacilityCode, healthSubFacilityCode);
+                        talukaCode, villageSvid, villageCode, healthBlockCode, healthFacilityCode, healthSubFacilityCode);
                 Village village = locationFinder.getVillageHashMap().get(mapKey.toString() + "_" + Long.parseLong(villageCode) + "_" + Long.parseLong(villageSvid));
                 if (village != null && village.getId() != null) {
                     beneficiary.setVillage(village);

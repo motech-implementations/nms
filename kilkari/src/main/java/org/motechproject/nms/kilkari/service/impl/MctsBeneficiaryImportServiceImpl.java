@@ -2,6 +2,8 @@ package org.motechproject.nms.kilkari.service.impl;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
@@ -222,7 +224,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
            return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
         }
         // Check if existing subscription needs to be deactivated
-        Boolean deactivate = ((abortion != null) && abortion) || ((stillBirth != null) && stillBirth) || ((death != null) && death);  // NO CHECKSTYLE Boolean Expression Complexity
+       /* Boolean deactivate = ((abortion != null) && abortion) || ((stillBirth != null) && stillBirth) || ((death != null) && death);*/ // NO CHECKSTYLE Boolean Expression Complexity
+        Boolean deactivate = ((abortion != null) && abortion) || ((death != null) && death);
         if (deactivate && (mother.getId() == null)) {
             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ABORT_STILLBIRTH_DEATH, false);
         }
@@ -307,9 +310,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 subscriptionService.deactivateSubscription(subscription, DeactivationReason.MISCARRIAGE_OR_ABORTION);
             }
 
-            if ((stillBirth != null) && stillBirth) {
-                subscriptionService.deactivateSubscription(subscription, DeactivationReason.STILL_BIRTH);
-            }
+//            if ((stillBirth != null) && stillBirth) {
+//                subscriptionService.deactivateSubscription(subscription, DeactivationReason.STILL_BIRTH);
+//            }
 
             if ((death != null) && death) {
                 subscriptionService.deactivateSubscription(subscription, DeactivationReason.MATERNAL_DEATH);

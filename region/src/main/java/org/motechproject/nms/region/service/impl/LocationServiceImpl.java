@@ -189,7 +189,9 @@ public class LocationServiceImpl implements LocationService {
             district.getTalukas().add(taluka);
             LOGGER.debug(String.format("Created {} in {} with id {}", taluka, district, taluka.getId()));
         }
-        locations.put(TALUKA_ID, taluka);
+        if (taluka!=null) {
+            locations.put(TALUKA_ID, taluka);
+        }
 
 
         // set and/or create village
@@ -207,7 +209,9 @@ public class LocationServiceImpl implements LocationService {
                 taluka.getVillages().add(village);
                 LOGGER.debug(String.format("Created %s in %s with id %d", village, taluka, village.getId()));
             }
-            locations.put(VILLAGE_ID + NON_CENSUS_VILLAGE, village);
+            if (village!=null) {
+                locations.put(VILLAGE_ID + NON_CENSUS_VILLAGE, village);
+            }
         }
 
 
@@ -228,6 +232,9 @@ public class LocationServiceImpl implements LocationService {
             district.getHealthBlocks().add(healthBlock);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthBlock, taluka, healthBlock.getId()));
         }
+        if (healthBlock==null) {
+            return locations;
+        }
         locations.put(HEALTHBLOCK_ID, healthBlock);
 
 
@@ -243,6 +250,9 @@ public class LocationServiceImpl implements LocationService {
             healthFacility.setName((String) map.get(PHC_NAME));
             healthBlock.getHealthFacilities().add(healthFacility);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthFacility, healthBlock, healthFacility.getId()));
+        }
+        if (healthFacility==null) {
+            return locations;
         }
         locations.put(PHC_ID, healthFacility);
 
@@ -262,6 +272,9 @@ public class LocationServiceImpl implements LocationService {
             healthFacility.getHealthSubFacilities().add(healthSubFacility);
             //village.addHealthSubFacility(healthSubFacility);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthSubFacility, healthFacility, healthSubFacility.getId()));
+        }
+        if (healthSubFacility==null) {
+            return locations;
         }
         locations.put(SUBCENTRE_ID, healthSubFacility);
 
@@ -499,7 +512,7 @@ public class LocationServiceImpl implements LocationService {
                             taluka.setCode(record.get(TALUKA_ID).toString().trim());
                             taluka.setName((String) record.get(TALUKA_NAME));
                             mapKey.append("_");
-                            mapKey.append(Long.parseLong(record.get(TALUKA_ID).toString().trim()));
+                            mapKey.append(record.get(TALUKA_ID).toString().trim());
                             talukaHashMap.put(mapKey.toString(), taluka);
 
                             Long svid = record.get(NON_CENSUS_VILLAGE) == null ? 0 : (Long) record.get(NON_CENSUS_VILLAGE);
@@ -987,7 +1000,7 @@ public class LocationServiceImpl implements LocationService {
                     count--;
                     String[] ids = talukaString.split("_");
                     Long districtId = districtHashMap.get(ids[0] + "_" + ids[1]).getId();
-                    query += CODE_SQL_STRING + ids[2] + " and district_id_oid = " + districtId + ")";
+                    query += CODE_SQL_STRING +"'"+ids[2]+"'" + " and district_id_oid = " + districtId + ")";
                     if (count > 0) {
                         query += OR_SQL_STRING;
                     }
@@ -1015,7 +1028,7 @@ public class LocationServiceImpl implements LocationService {
         if(talukas != null && !talukas.isEmpty()) {
             for (Taluka taluka : talukas) {
                 String districtKey = districtIdMap.get(taluka.getDistrict().getId());
-                talukaHashMap.put(districtKey + "_" + Long.parseLong(taluka.getCode()), taluka);
+                talukaHashMap.put(districtKey + "_" + taluka.getCode(), taluka);
             }
         }
     }

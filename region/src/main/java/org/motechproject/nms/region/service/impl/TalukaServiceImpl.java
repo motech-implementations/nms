@@ -158,7 +158,7 @@ public class TalukaServiceImpl implements TalukaService {
                         if (count != talukaKeys.size()) {
                             query += LocationConstants.OR_SQL_STRING;
                         }
-                        query += LocationConstants.CODE_SQL_STRING + ids[2] + " and district_id_oid = " + district.getId() + ")";
+                        query += LocationConstants.CODE_SQL_STRING +"'"+ ids[2] +"'"+ " and district_id_oid = " + district.getId() + ")";
                         LOGGER.debug("Query is ::  " + query);
                         count--;
                     }
@@ -209,8 +209,9 @@ public class TalukaServiceImpl implements TalukaService {
                 State state = stateHashMap.get(taluka.get(LocationConstants.CSV_STATE_ID).toString());
                 District district = districtHashMap.get(taluka.get(LocationConstants.CSV_STATE_ID).toString() + "_" + taluka.get(LocationConstants.DISTRICT_ID).toString());
                 String talukaName = taluka.get(LocationConstants.TALUKA_NAME).toString();
+                String taluka_id = taluka.get(LocationConstants.TALUKA_ID).toString().trim();
                 if (district != null && taluka.get(LocationConstants.TALUKA_ID) != null && !taluka.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty() && (talukaName != null && !talukaName.trim().isEmpty()) &&
-                        !(Integer.parseInt((taluka.get(LocationConstants.TALUKA_ID).toString().trim())) ==0) && mdds_Code!=null) {
+                        !(taluka_id.isEmpty() || ("0".equals(taluka_id))) && mdds_Code!=null) {
                     if (i != 0) {
                         stringBuilder.append(", ");
                     }
@@ -245,7 +246,7 @@ public class TalukaServiceImpl implements TalukaService {
                         else if ((talukaName == null || talukaName.trim().isEmpty()) ) {
                             rejectionReason=LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString();
                         }
-                        else if ((Integer.parseInt((taluka.get(LocationConstants.TALUKA_ID).toString().trim())) ==0) ) {
+                        else if (taluka_id.isEmpty() || ("0".equals(taluka_id))) {
                             rejectionReason=LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString();
                         }
                 }

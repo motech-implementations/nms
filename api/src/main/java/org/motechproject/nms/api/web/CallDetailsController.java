@@ -16,6 +16,8 @@ import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.Service;
 import org.motechproject.nms.props.service.LogHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -46,6 +48,7 @@ public class CallDetailsController extends BaseController {
     @Autowired
     private FlwStatusUpdateAuditDataService flwStatusUpdateAuditDataService;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CallDetailsController.class);
     /**
      * 2.2.6 Save CallDetails API
      * IVR shall invoke this API to send MA call details to MoTech.
@@ -66,6 +69,7 @@ public class CallDetailsController extends BaseController {
                                 @RequestBody CallDetailRecordRequest callDetailRecordRequest) {
 
         log(String.format("REQUEST: /%s/callDetails (POST)", serviceName), LogHelper.nullOrString(callDetailRecordRequest));
+        // log(new Gson().toJson(callDetailRecordRequest.getContent()));
 
         Service service = null;
         StringBuilder failureReasons;
@@ -121,10 +125,9 @@ public class CallDetailsController extends BaseController {
 
         // if this is the FLW's first time calling the service, set her status to ACTIVE based on NMS.GEN.FLW.003
         if (flw.getStatus() == FrontLineWorkerStatus.INACTIVE &&
-                validateFlwNameAndNumber(flw) &&
-                validateFlwLocation(flw)) {
-            flw.setStatus(FrontLineWorkerStatus.ACTIVE);
-            frontLineWorkerService.update(flw);
+                validateFlwNameAndNumber(flw)) {
+           // flw.setStatus(FrontLineWorkerStatus.ACTIVE);
+           // frontLineWorkerService.updateStatusToActive(flw);
             FlwStatusUpdateAudit flwStatusUpdateAudit = new FlwStatusUpdateAudit(DateTime.now(), flw.getFlwId(), flw.getMctsFlwId(), flw.getContactNumber(), UpdateStatusType.INACTIVE_TO_ACTIVE);
             flwStatusUpdateAuditDataService.create(flwStatusUpdateAudit);
         }
