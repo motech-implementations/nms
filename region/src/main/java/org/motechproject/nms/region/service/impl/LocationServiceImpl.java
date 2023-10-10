@@ -443,11 +443,13 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public HealthBlock getHealthBlock(Long stateId, Long districtId, String talukaId, Long healthBlockId) {
 
-        Taluka taluka = getTaluka(stateId, districtId, talukaId);
+//        Taluka taluka = getTaluka(stateId, districtId, talukaId);
+        //Previously we are getting healthblock from taluka now we are getting it from healthblock
+        District district = getDistrict(stateId , districtId);
 
-        if (taluka != null) {
+        if (district != null) {
 
-            return healthBlockService.findByTalukaAndCode(taluka, healthBlockId);
+            return healthBlockService.findByDistrictAndCode(district, healthBlockId);
         }
 
         return null;
@@ -525,7 +527,7 @@ public class LocationServiceImpl implements LocationService {
                                 villageHashMap.put(mapKey.toString() + "_" + vcode.toString() + "_" +
                                         svid.toString(), village);
                             }
-
+                        }
                             mapKey = new StringBuffer(record.get(STATE_ID).toString() + "_" +
                                     record.get(DISTRICT_ID).toString());
 
@@ -556,7 +558,7 @@ public class LocationServiceImpl implements LocationService {
                                 }
                             }
                         }
-                    }
+
                 }
             }
         } catch (ConstraintViolationException e) {
@@ -579,6 +581,7 @@ public class LocationServiceImpl implements LocationService {
                         fillVillages(villageHashMap, talukaHashMap);
                         locationFinder.setVillageHashMap(villageHashMap);
                     }
+                }
                     if (!healthBlockHashMap.isEmpty()) {
                         fillHealthBlocks(healthBlockHashMap, districtHashMap);
                         locationFinder.setHealthBlockHashMap(healthBlockHashMap);
@@ -593,7 +596,7 @@ public class LocationServiceImpl implements LocationService {
                             }
                         }
                     }
-                }
+
             }
         }
         LOGGER.debug("Locations processed. Records Processed : {}", count);

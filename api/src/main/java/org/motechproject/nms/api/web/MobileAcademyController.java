@@ -243,6 +243,15 @@ public class MobileAcademyController extends BaseController {
         LOGGER.debug("Sent event message to process completion notification");
     }
 
+    @RequestMapping(value = "/readxmlFilesWithoutRejecting" , method = RequestMethod.GET)
+    @ResponseStatus(HttpStatus.OK)
+    public void addRchData(){
+        log("REQUEST: /ops/readxmlFilesWithoutRejecting");
+        String remoteLocation = "/usr/local/xmlUpdate";
+        LOGGER.info("Calling API to readAllDataFromXMLFile. ");
+        rchWebServiceFacade.readAllDataFromXMLFile(remoteLocation);
+    }
+
     @Transactional
     @RequestMapping(
             value = "/notify",
