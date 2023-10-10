@@ -14,6 +14,12 @@
     <osgi:service ref="rchWsImportService"
                   interface="org.motechproject.nms.rch.service.RchWsImportService" />
 
+    <osgi:reference id="rchImportAllDataMotherXML"
+                    interface="org.motechproject.nms.rch.repository.RchImportAllDataMotherXML" />
+
+    <osgi:reference id="rchImportAllDataChildXML"
+                    interface="org.motechproject.nms.rch.repository.RchImportAllDataChildXML" />
+
     <osgi:reference id="rchImportAuditDataService"
                     interface="org.motechproject.nms.rch.repository.RchImportAuditDataService" />
 

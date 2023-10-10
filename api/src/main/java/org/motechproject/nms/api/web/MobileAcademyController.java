@@ -202,7 +202,7 @@ public class MobileAcademyController extends BaseController {
         }
 
         // validate scores
-        if (validateMAScores(bookmarkRequest.getScoresByChapter())) {
+        if (validateMAScores(bookmarkRequest.getScoresByChapter(), bookmarkRequest.getBookmark())) {
             FrontLineWorker flw = frontLineWorkerService.getByContactNumber(bookmarkRequest.getCallingNumber());
             Long flwId = flw.getId();
             MaBookmark bookmark = MobileAcademyConverter.convertSaveBookmarkRequest(bookmarkRequest, flwId);
