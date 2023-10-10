@@ -29,6 +29,7 @@ public class RchMotherRecord {
     private String name;
     private String mobileNo;
     private String lmpDate;
+    private String registrationDate;
     private String birthDate;
     private String abortionType;
     private String deliveryOutcomes;
@@ -205,6 +206,11 @@ public class RchMotherRecord {
     public void setLmpDate(String lmpDate) {
         this.lmpDate = lmpDate;
     }
+
+    public String getRegistrationDate(){ return registrationDate; }
+
+    @XmlElement(name = "Mother_Registration_Date")
+    public void setRegistrationDate(String registrationDate) { this.registrationDate = registrationDate;}
 
     public String getBirthDate() {
         return birthDate;

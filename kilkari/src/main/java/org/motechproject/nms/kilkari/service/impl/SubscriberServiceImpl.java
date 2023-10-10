@@ -303,7 +303,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    public Subscription updateRchMotherSubscriber(Long msisdn, MctsMother motherUpdate, DateTime lmp, Long caseNo, Boolean deactivate, Map<String, Object> record, String action, String name,DateTime motherDOB,LocalDate lastUpdatedDateNic) { //NOPMD NcssMethodCount
+    public Subscription updateRchMotherSubscriber(Long msisdn, MctsMother motherUpdate, DateTime lmp, Long caseNo, Boolean deactivate, Map<String, Object> record, String action, String name,DateTime motherDOB,LocalDate lastUpdatedDateNic , DateTime motherRegistrationDate) { //NOPMD NcssMethodCount
         District district = motherUpdate.getDistrict(); // district should never be null here since we validate upstream on setLocation
         Circle circle = district.getCircle();
         Language language = district.getLanguage();
@@ -325,7 +325,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 subscriberByMsisdn.setMother(motherUpdate);
                 subscriberByMsisdn.setCaseNo(caseNo);
                 motherUpdate.setMaxCaseNo(caseNo);
-
+                motherUpdate.setRegistrationDate(motherRegistrationDate);
                 create(subscriberByMsisdn);
                 return subscriptionService.createSubscription(subscriberByMsisdn, msisdn, language, circle, pack, SubscriptionOrigin.RCH_IMPORT);
             } else {  // subscriber (number) is already in use
@@ -339,7 +339,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     subscriberByMsisdn.setMother(motherUpdate);
                     subscriberByMsisdn.setCaseNo(caseNo);
                     motherUpdate.setMaxCaseNo(caseNo);
-
+                    motherUpdate.setRegistrationDate(motherRegistrationDate);
                     create(subscriberByMsisdn);
                     return subscriptionService.createSubscription(subscriberByMsisdn, msisdn, language, circle, pack, SubscriptionOrigin.RCH_IMPORT);
                 }
@@ -563,6 +563,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         Subscription finalSubscription = null;
         String motherRchId;
         String name = childUpdate.getName();
+        DateTime registrationDate ;
         if (childUpdate.getMother() != null) {
             motherRchId = childUpdate.getMother().getRchId();
         } else {

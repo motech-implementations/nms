@@ -59,6 +59,7 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
         String mctsIdForRchChild=null;
         String motherId;
         String mctsMotherIdForChild=null;
+        String registrationDate;
         if (mctsImport) {
             id = KilkariConstants.BENEFICIARY_ID;
             contactNumber = KilkariConstants.MSISDN;
@@ -72,6 +73,7 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
             motherId=KilkariConstants.RCH_MOTHER_ID;
             mctsMotherIdForChild=KilkariConstants.MCTS_MOTHER_ID;
         }
+        registrationDate = KilkariConstants.CHILD_REGISTRATION_DATE;
         int count = 0;
         Timer timer = new Timer("kid", "kids");
         for(Map<String, Object> record : recordList) {

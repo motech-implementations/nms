@@ -151,6 +151,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Boolean stillBirth;
         LocalDate lastUpdatedDateNic;
         String beneficiaryId;
+        DateTime motherRegistrationDate = null;
         String action = "";
         Boolean flagForMcts = true;
         if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
@@ -176,12 +177,30 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         LOGGER.trace("MotherImportRejection::importMotherRecord Start " + beneficiaryId) ;
         String name = (String) record.get(KilkariConstants.BENEFICIARY_NAME);
         DateTime lmp = (DateTime) record.get(KilkariConstants.LMP);
+        try {
+            String regDate = record.get(KilkariConstants.MOTHER_REGISTRATION_DATE).toString();
+            if(regDate != null && regDate.length() == 29){
+                //for csv processing
+                motherRegistrationDate = (DateTime) record.get(KilkariConstants.MOTHER_REGISTRATION_DATE);
+            }
+            else{
+                //for xml processing
+                DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ");
+                DateTime dateTime = formatter.parseDateTime(record.get(KilkariConstants.MOTHER_REGISTRATION_DATE).toString());
+                motherRegistrationDate = dateTime;
+            }
+        }
+        catch ( Exception e){
+            LOGGER.error(e.toString());
+        }
+
         DateTime motherDOB = (DateTime) record.get(KilkariConstants.MOTHER_DOB);
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
 
         if (mother == null) {
             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.DATA_INTEGRITY_ERROR, false);
         }
+        mother.setRegistrationDate(motherRegistrationDate);
 
         boolean isInvalidLMP = !validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, importOrigin);
 
@@ -250,7 +269,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
                     if (deactivatedUser.getOrigin() == importOrigin) {
                         String message = deactivatedUser.isCompletedSubscription() ? SUBSCRIPTION_COMPLETED : USER_DEACTIVATED;
-                        if (message.length() > 2) {
+                        if (message.equals(USER_DEACTIVATED) && deactivatedUser.getDeactivationDate().isAfter(DateTime.now().minusMonths(9))) {
                             LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block" +   beneficiaryId);
                             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
                         }
@@ -296,7 +315,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block " + beneficiaryId);
                     return motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.INVALID_CASE_NO.toString(), action);
                 }
-                subscription = subscriberService.updateRchMotherSubscriber(msisdn, mother, lmp, caseNo, deactivate, record, action,name,motherDOB,lastUpdatedDateNic);
+                subscription = subscriberService.updateRchMotherSubscriber(msisdn, mother, lmp, caseNo, deactivate, record, action,name,motherDOB,lastUpdatedDateNic, motherRegistrationDate);
                 if (subscription == null) {
                     LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block " + beneficiaryId);
                     return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED, false);
@@ -391,12 +410,14 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
         String name = (String) record.get(KilkariConstants.BENEFICIARY_NAME);
         DateTime dob = (DateTime) record.get(KilkariConstants.DOB);
+        DateTime regDate  = (DateTime) record.get(KilkariConstants.CHILD_REGISTRATION_DATE);
         Boolean death = (Boolean) record.get(KilkariConstants.DEATH);
         MctsChild childById = mctsChildDataService.findByBeneficiaryId(childId);
 
         if ((child == null)) {
             return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.DATA_INTEGRITY_ERROR, false);
         }
+        child.setRegistrationDate(regDate);
 
         boolean isInValidDOB = !validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, importOrigin);
         if (isInValidDOB) {
@@ -482,14 +503,14 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
                         if (deactivatedUser.getOrigin() == importOrigin) {
                             String message = deactivatedUser.isCompletedSubscription() ? SUBSCRIPTION_COMPLETED : USER_DEACTIVATED;
-                            if (message.length() > 2) {
+                            if (message.equals(USER_DEACTIVATED) && deactivatedUser.getDeactivationDate().isAfter(DateTime.now().minusMonths(9))) {
                                 return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
                             }
                         }
                     }
                 }
             }
-
+            child.setRegistrationDate(regDate);
             if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
                 return subscriberService.updateChildSubscriber(msisdn, child, dob, record, action);
             } else {
@@ -975,6 +996,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         mapping.put(KilkariConstants.BENEFICIARY_NAME, new GetString());
         mapping.put(KilkariConstants.LMP, new Optional(new GetInstanceByString<DateTime>() {
+            @Override
+            public DateTime retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getDateByString(value);
+            }
+        }));
+        mapping.put(KilkariConstants.MOTHER_REGISTRATION_DATE, new Optional(new GetInstanceByString<DateTime>() {
             @Override
             public DateTime retrieve(String value) {
                 return mctsBeneficiaryValueProcessor.getDateByString(value);

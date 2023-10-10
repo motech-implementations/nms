@@ -293,7 +293,7 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
             public String getSqlQuery() {
                 String query = "INSERT INTO nms_mother_rejects (stateId, districtId, districtName, talukaId, talukaName," +
                         " healthBlockId, healthBlockName, phcId, phcName, subcentreId, subcentreName, villageId," +
-                        " villageName, idNo, registrationNo, caseNo, name, mobileNo, lmpDate, birthDate, abortionType," +
+                        " villageName, idNo, registrationNo, caseNo, name, mobileNo, registrationDate, lmpDate, birthDate, abortionType," +
                         " deliveryOutcomes, entryType, execDate, source, accepted, rejectionReason, action, creator," +
                         " modifiedBy, creationDate, modificationDate) " +
                         "values  " +
@@ -331,7 +331,7 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
             public String getSqlQuery() {
                 String query = "INSERT INTO nms_mother_rejects (id, stateId, districtId, districtName, talukaId," +
                         " talukaName, healthBlockId, healthBlockName, phcId, phcName, subcentreId, subcentreName," +
-                        " villageId, villageName, idNo, registrationNo, caseNo, name, mobileNo, lmpDate, birthDate," +
+                        " villageId, villageName, idNo, registrationNo, caseNo, name, mobileNo, registrationDate, lmpDate, birthDate," +
                         " abortionType, deliveryOutcomes, entryType, execDate, source, accepted, rejectionReason, action," +
                         " creator, modifiedBy, creationDate, modificationDate)  " +
                         "values  " +
@@ -343,7 +343,7 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
                         " phcName = VALUES(phcName), subcentreId = VALUES(subcentreId), subcentreName = VALUES(subcentreName)," +
                         " villageId = VALUES(villageId), villageName = VALUES(villageName), idNo = VALUES(idNo)," +
                         " registrationNo = VALUES(registrationNo), caseNo = VALUES(caseNo), name = VALUES(name)," +
-                        " mobileNo = VALUES(mobileNo), lmpDate = VALUES(lmpDate), birthDate = VALUES(birthDate)," +
+                        " mobileNo = VALUES(mobileNo), registrationDate = VALUES(registrationDate) ,lmpDate = VALUES(lmpDate), birthDate = VALUES(birthDate)," +
                         " abortionType = VALUES(abortionType), deliveryOutcomes = VALUES(deliveryOutcomes)," +
                         " entryType = VALUES(entryType), execDate = VALUES(execDate), source = VALUES(source)," +
                         " accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason), action = VALUES(action)," +
@@ -577,6 +577,7 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
         stringBuilder.append(mother.getCaseNo() + ", ");
         stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(mother.getName()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getMobileNo() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + mother.getRegistrationDate() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getLmpDate() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getBirthDate() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getAbortionType() + QUOTATION_COMMA);

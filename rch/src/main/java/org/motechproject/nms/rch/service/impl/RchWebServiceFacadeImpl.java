@@ -2726,6 +2726,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         map.put(KilkariConstants.BENEFICIARY_NAME, motherRecord.getName());
         map.put(KilkariConstants.MOBILE_NO, mctsBeneficiaryValueProcessor.getMsisdnByString(motherRecord.getMobileNo()));
         map.put(KilkariConstants.LMP, mctsBeneficiaryValueProcessor.getDateByString(motherRecord.getLmpDate()));
+        map.put(KilkariConstants.MOTHER_REGISTRATION_DATE , motherRecord.getRegistrationDate());
         map.put(KilkariConstants.MOTHER_DOB, mctsBeneficiaryValueProcessor.getDateByString(motherRecord.getBirthDate()));
         map.put(KilkariConstants.ABORTION_TYPE, mctsBeneficiaryValueProcessor.getAbortionDataFromString(motherRecord.getAbortionType()));
         map.put(KilkariConstants.DELIVERY_OUTCOMES, mctsBeneficiaryValueProcessor.getStillBirthFromString(String.valueOf(motherRecord.getDeliveryOutcomes())));
@@ -2834,7 +2835,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
         map.put(KilkariConstants.MOBILE_NO, mctsBeneficiaryValueProcessor.getMsisdnByString(childRecord.getMobileNo()));
         map.put(KilkariConstants.DOB, mctsBeneficiaryValueProcessor.getDateByString(childRecord.getBirthdate()));
-
+        map.put(KilkariConstants.CHILD_REGISTRATION_DATE , mctsBeneficiaryValueProcessor.getDateByString(childRecord.getRegistrationDate()) );
         map.put(KilkariConstants.MCTS_ID, childRecord.getMctsId());
         map.put(KilkariConstants.MCTS_MOTHER_ID,
                 mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(childRecord.getMctsMotherIdNo()) == null ? null : mctsBeneficiaryValueProcessor.getMotherInstanceByBeneficiaryId(childRecord.getMctsMotherIdNo()).getBeneficiaryId());

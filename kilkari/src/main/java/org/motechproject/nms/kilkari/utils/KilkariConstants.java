@@ -138,6 +138,9 @@ public final class KilkariConstants {
     public static final String STATE_CODE_ID = "StateCode";
     public static final String HEALTH_FACILITY_TYPE = "HealthfacilityType";
 
+    public static final String MOTHER_REGISTRATION_DATE = "MotherRegistrationDate";
+
+    public static final String CHILD_REGISTRATION_DATE = "ChildRegistrationDate";
 
     private KilkariConstants() {
     }

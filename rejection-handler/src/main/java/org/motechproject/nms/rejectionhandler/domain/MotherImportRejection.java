@@ -100,6 +100,9 @@ public class MotherImportRejection {
     private String lmpDate;
 
     @Field
+    private String registrationDate;
+
+    @Field
     private String aNC1Date;
 
     @Field
@@ -546,6 +549,14 @@ public class MotherImportRejection {
 
     public void setLmpDate(String lmpDate) {
         this.lmpDate = lmpDate;
+    }
+
+    public String getRegistrationDate() {
+        return registrationDate;
+    }
+
+    public void setRegistrationDate(String registrationDate) {
+        this.registrationDate = registrationDate;
     }
 
     public String getaNC1Date() {
