@@ -65,6 +65,9 @@ public class RchChildXMLData {
     private String registrationNo;
 
     @Field
+    private String registrationDate;
+
+    @Field
     private String motherRegistrationNo;
 
     @Field
@@ -90,7 +93,7 @@ public class RchChildXMLData {
         this.xmlProcessingDate = xmlProcessingDate;
     }
 
-    public RchChildXMLData(Long stateId, Long districtId, String districtName, String talukaId, String talukaName, Long healthBlockId, String healthBlockName, Long phcId, String phcName, Long subCentreId, String subCentreName, Long villageId, String villageName, String name, String mobileNo, String birthdate, String registrationNo, String motherRegistrationNo, String entryType, String mctsId, String mctsMotherIdNo, String execDate, LocalDate xmlProcessingDate) {
+    public RchChildXMLData(Long stateId, Long districtId, String districtName, String talukaId, String talukaName, Long healthBlockId, String healthBlockName, Long phcId, String phcName, Long subCentreId, String subCentreName, Long villageId, String villageName, String name, String mobileNo, String birthdate, String registrationDate, String registrationNo, String motherRegistrationNo, String entryType, String mctsId, String mctsMotherIdNo, String execDate, LocalDate xmlProcessingDate) {
         this.stateId = stateId;
         this.districtId = districtId;
         this.districtName = districtName;
@@ -107,6 +110,7 @@ public class RchChildXMLData {
         this.name = name;
         this.mobileNo = mobileNo;
         this.birthdate = birthdate;
+        this.registrationDate = registrationDate;
         this.registrationNo = registrationNo;
         this.motherRegistrationNo = motherRegistrationNo;
         this.entryType = entryType;
@@ -291,4 +295,8 @@ public class RchChildXMLData {
     public void setExecDate(String execDate) {
         this.execDate = execDate;
     }
+
+    public String getRegistrationDate() { return registrationDate; }
+
+    public void setRegistrationDate(String registrationDate) { this.registrationDate = registrationDate; }
 }

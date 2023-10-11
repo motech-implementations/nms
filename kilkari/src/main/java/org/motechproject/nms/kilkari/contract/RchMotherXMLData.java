@@ -64,6 +64,9 @@ public class RchMotherXMLData {
     private String birthDate;
 
     @Field
+    private String registrationDate;
+
+    @Field
     private String abortionType;
 
     @Field
@@ -78,7 +81,7 @@ public class RchMotherXMLData {
     @Field
     private LocalDate xmlProcessingDate;
 
-    public RchMotherXMLData(Long stateId, Long districtId, String districtName, String talukaId, String talukaName, Long healthBlockId, String healthBlockName, Long phcId, String phcName, Long subCentreId, String subCentreName, Long villageId, String villageName, String mctsIdNo, String registrationNo, Long caseNo, String name, String mobileNo, String lmpDate, String birthDate, String abortionType, String deliveryOutcomes, Integer entryType, String execDate, LocalDate xmlProcessingDate) {
+    public RchMotherXMLData(Long stateId, Long districtId, String districtName, String talukaId, String talukaName, Long healthBlockId, String healthBlockName, Long phcId, String phcName, Long subCentreId, String subCentreName, Long villageId, String villageName, String mctsIdNo, String registrationNo, Long caseNo, String name, String mobileNo, String registrationDate, String lmpDate, String birthDate, String abortionType, String deliveryOutcomes, Integer entryType, String execDate, LocalDate xmlProcessingDate) {
         this.stateId = stateId;
         this.districtId = districtId;
         this.districtName = districtName;
@@ -97,6 +100,7 @@ public class RchMotherXMLData {
         this.caseNo = caseNo;
         this.name = name;
         this.mobileNo = mobileNo;
+        this.registrationDate = registrationDate;
         this.lmpDate = lmpDate;
         this.birthDate = birthDate;
         this.abortionType = abortionType;
@@ -308,6 +312,8 @@ public class RchMotherXMLData {
         this.execDate = execDate;
     }
 
+    public String getRegistrationDate() { return registrationDate; }
 
+    public void setRegistrationDate(String registrationDate) { this.registrationDate = registrationDate; }
 
 }
