@@ -350,7 +350,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 if (subscriberByRchId.getCaseNo() == null) {
                     subscriberByRchId.setCaseNo(caseNo);
                     motherUpdate.setMaxCaseNo(caseNo);
-                } else if (subscriberByRchId.getCaseNo() != caseNo) {
+                } else if (subscriberByRchId.getCaseNo() > caseNo) {
                     subscriptionErrorDataService.create(new SubscriptionError(msisdn, motherUpdate.getRchId(), SubscriptionRejectionReason.INVALID_CASE_NO, pack.getType(), "Active subscription exists with different caseNo", SubscriptionOrigin.RCH_IMPORT));
                     return null;
                 }
@@ -363,7 +363,9 @@ public class SubscriberServiceImpl implements SubscriberService {
                 motherUpdate.setDateOfBirth(motherDOB);
                 motherUpdate.setLastMenstrualPeriod(lmp);
                 motherUpdate.setUpdatedDateNic(lastUpdatedDateNic);
-
+                motherUpdate.setRegistrationDate(motherRegistrationDate);
+                subscriberByRchId.setCaseNo(caseNo);
+                motherUpdate.setMaxCaseNo(caseNo);
                 return updateOrCreateSubscription(subscriberByRchId, subscription, lmp, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
             } else {  // we have a subscriber by phone# and also one with the RCH id
                 for (Subscriber subscriber : subscribersByMsisdn) {
@@ -692,17 +694,33 @@ public class SubscriberServiceImpl implements SubscriberService {
 
     public Subscription updateOrCreateSubscription(Subscriber subscriber, Subscription subscription, DateTime dateTime, SubscriptionPack pack, Language language, Circle circle, SubscriptionOrigin origin, Boolean greaterCaseNo) { // NO CHECKSTYLE Cyclomatic Complexity
         Subscription deactivatedSubscripion = subscriptionService.getLatestDeactivatedSubscription(subscriber, pack.getType());
+        DateTime startDate;
+        DateTime currentDate = DateTime.now();
+        long differenceInMillis ;
+        long differenceInWeeks = 0;
+        if(deactivatedSubscripion != null){
+            startDate = deactivatedSubscripion.getStartDate();
+            differenceInMillis = currentDate.getMillis() - startDate.getMillis();
+            differenceInWeeks = differenceInMillis / (1000*60*60*24*7);
+        }
+        LOGGER.debug("Previous pack started " + differenceInWeeks + " weeks back.");
         if (subscription != null && (SubscriptionStatus.ACTIVE == subscription.getStatus() || SubscriptionStatus.PENDING_ACTIVATION == subscription.getStatus() || SubscriptionStatus.HOLD == subscription.getStatus())) {
             subscriptionService.updateStartDate(subscription, dateTime);
             return subscription;
         } else if (subscription == null && deactivatedSubscripion != null && pack.getType() == SubscriptionPackType.CHILD) {
             if (DeactivationReason.LOW_LISTENERSHIP == deactivatedSubscripion.getDeactivationReason() ||  DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED == deactivatedSubscripion.getDeactivationReason()) {
+                if(differenceInWeeks > 48){
+                    return subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), language, circle, pack, origin);
+                }
                 return reactivateSubscription(subscriber, deactivatedSubscripion, dateTime);
             } else {
                 LOGGER.debug("Reactivation is not valid in this scenario.");
                 return null;
             }
         } else if (subscription == null  && deactivatedSubscripion != null  && (DeactivationReason.LOW_LISTENERSHIP == deactivatedSubscripion.getDeactivationReason() ||  DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED == deactivatedSubscripion.getDeactivationReason())) {
+            if(differenceInWeeks > 60){
+                return subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), language, circle, pack, origin);
+            }
             if (!greaterCaseNo) {
                 return reactivateSubscription(subscriber, deactivatedSubscripion, dateTime);
             } else {
