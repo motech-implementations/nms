@@ -673,6 +673,9 @@ public class SubscriberServiceImpl implements SubscriberService {
                     if (subscriptionService.activeSubscriptionByMsisdnRch(subscribersByMsisdn,msisdn, SubscriptionPackType.CHILD, motherRchId, childUpdate.getRchId())) {
                         return childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action);
                     } else {
+                        if(subscriptionService.activeSubscriptionByMsisdnRch(subscribersByMsisdn, msisdn , SubscriptionPackType.PREGNANCY , motherRchId , childUpdate.getRchId())){
+                            return childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action);
+                        }
                         Subscriber subscriber = new Subscriber(msisdn, language);
                         subscriber.setDateOfBirth(dob);
                         if (childUpdate.getMother() != null) {
