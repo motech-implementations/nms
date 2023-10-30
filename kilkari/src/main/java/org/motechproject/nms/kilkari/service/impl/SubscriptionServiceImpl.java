@@ -103,6 +103,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.subscriberMsisdnTrackerDataService = subscriberMsisdnTrackerDataService;
     }
 
+    public SubscriptionServiceImpl() {}
 
     @PostConstruct
     public Boolean acceptNewSubscriptionForBlockedMsisdn() {
@@ -314,6 +315,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                             if (SubscriptionPackType.CHILD.equals(subscriptions.get(0).getSubscriptionPack().getType())) {
                                 return true;
                             } else {
+                                if(motherRchId == null){
+                                    return (subscriber.getMother() != null);
+                                }
                                 return (subscriber.getMother() != null && subscriber.getMother().getRchId() != null && !motherRchId.equals(subscriber.getMother().getRchId()));
                             }
                         } else {
