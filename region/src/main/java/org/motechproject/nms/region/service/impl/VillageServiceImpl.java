@@ -127,7 +127,7 @@ public class VillageServiceImpl implements VillageService {
         for (Map<String, Object> village : villages) {
             String rejectionReason="";
             Long stateCode=(Long) village.get(LocationConstants.STATE_CODE_ID);
-            Long mdds_Code=(Long) village.get(LocationConstants.MDDS_CODE);
+            Long mdds_Code= village.get(LocationConstants.MDDS_CODE) == null ? 0: (long) village.get(LocationConstants.MDDS_CODE);
             if (village.get(LocationConstants.CSV_STATE_ID) != null && village.get(LocationConstants.DISTRICT_ID) != null &&
                     village.get(LocationConstants.TALUKA_ID) != null && !village.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty()) {
                 State state = stateHashMap.get(village.get(LocationConstants.CSV_STATE_ID).toString());
@@ -137,7 +137,7 @@ public class VillageServiceImpl implements VillageService {
                         village.get(LocationConstants.TALUKA_ID).toString().trim());
                 Long villageCode = (Long) village.get(LocationConstants.VILLAGE_ID);
                 String villageName = (String) village.get(LocationConstants.VILLAGE_NAME);
-                if (taluka != null && taluka.getId() != null && (villageName != null && !villageName.trim().isEmpty()) && villageCode != null && !((Long) (0L)).equals(villageCode) && mdds_Code!=null) {
+                if (taluka != null && taluka.getId() != null && (villageName != null && !villageName.trim().isEmpty()) && villageCode != null && !((Long) (0L)).equals(villageCode)) {
                     if (i != 0) {
                         stringBuilder.append(", ");
                     }
@@ -161,10 +161,6 @@ public class VillageServiceImpl implements VillageService {
                     i++;
                 }
                 else if(rejectionChecks){
-                    if(mdds_Code==null){
-                        mdds_Code=0L;
-                        rejectionReason=LocationRejectionReasons.NULL_MDDS_CODE.toString();
-                    }
                     if(villageCode == null ){
                         rejectionReason=LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString();
                     }
