@@ -204,14 +204,14 @@ public class TalukaServiceImpl implements TalukaService {
         for (Map<String, Object> taluka : talukas) {
             String rejectionReason="";
             Long stateCode=(Long) taluka.get(LocationConstants.STATE_CODE_ID);
-            Long mdds_Code=(Long) taluka.get(LocationConstants.MDDS_CODE);
+            Long mdds_Code= taluka.get(LocationConstants.MDDS_CODE) == null ? 0 : (long) taluka.get(LocationConstants.MDDS_CODE);
             if (taluka.get(LocationConstants.CSV_STATE_ID) != null && taluka.get(LocationConstants.DISTRICT_ID) != null) {
                 State state = stateHashMap.get(taluka.get(LocationConstants.CSV_STATE_ID).toString());
                 District district = districtHashMap.get(taluka.get(LocationConstants.CSV_STATE_ID).toString() + "_" + taluka.get(LocationConstants.DISTRICT_ID).toString());
-                String talukaName = taluka.get(LocationConstants.TALUKA_NAME).toString();
+                String talukaName = taluka.get(LocationConstants.TALUKA_NAME) == null ? "" : taluka.get(LocationConstants.TALUKA_NAME).toString();
                 String taluka_id = taluka.get(LocationConstants.TALUKA_ID).toString().trim();
                 if (district != null && taluka.get(LocationConstants.TALUKA_ID) != null && !taluka.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty() && (talukaName != null && !talukaName.trim().isEmpty()) &&
-                        !(taluka_id.isEmpty() || ("0".equals(taluka_id))) && mdds_Code!=null) {
+                        !(taluka_id.isEmpty() || ("0".equals(taluka_id)))) {
                     if (i != 0) {
                         stringBuilder.append(", ");
                     }
@@ -233,10 +233,6 @@ public class TalukaServiceImpl implements TalukaService {
                     i++;
                 }
                 else if(rejectionChecks){
-                        if(mdds_Code==null){
-                            mdds_Code=0L;
-                            rejectionReason=LocationRejectionReasons.NULL_MDDS_CODE.toString();
-                        }
                         if ((taluka.get(LocationConstants.TALUKA_ID) == null || taluka.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty()) ) {
                             rejectionReason=LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString();
                         }

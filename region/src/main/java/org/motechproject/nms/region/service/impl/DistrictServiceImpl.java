@@ -195,9 +195,9 @@ public class DistrictServiceImpl implements DistrictService {
                 Long districtCode = (Long) district.get(LocationConstants.DISTRICT_ID);
                 String districtName = (String) district.get(LocationConstants.DISTRICT_NAME);
                 Long stateCode=(Long) district.get(LocationConstants.STATE_CODE_ID);
-                Long mdds_Code=(Long) district.get(LocationConstants.MDDS_CODE);
+                Long mdds_Code= district.get(LocationConstants.MDDS_CODE) == null ? 0 : (long) district.get(LocationConstants.MDDS_CODE);
 
-                if (state != null && districtCode != null && (districtName != null && !districtName.trim().isEmpty()) && !((Long) (0L)).equals(districtCode) && mdds_Code!=null) {
+                if (state != null && districtCode != null && (districtName != null && !districtName.trim().isEmpty()) && !((Long) (0L)).equals(districtCode)) {
                     if (i != 0) {
                         stringBuilder.append(", ");
                     }
@@ -220,10 +220,6 @@ public class DistrictServiceImpl implements DistrictService {
                     i++;
                 }
                 else if(rejectionChecks){
-                    if(mdds_Code==null){
-                        mdds_Code=0L;
-                        rejectionReason=LocationRejectionReasons.NULL_MDDS_CODE.toString();
-                    }
                     if(districtCode == null ){
                         rejectionReason=LocationRejectionReasons.LOCATION_CODE_NOT_PRESENT_IN_FILE.toString();
                     }
