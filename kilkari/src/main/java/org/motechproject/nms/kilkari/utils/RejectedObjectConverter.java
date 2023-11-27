@@ -123,7 +123,15 @@ public final class RejectedObjectConverter {
         childImportRejection.setPhcId(record.getPhcId());
         childImportRejection.setPhcName(record.getPhcName());
         childImportRejection.setBirthDate(record.getBirthdate());
-        childImportRejection.setRegistrationDate(record.getRegistrationDate());
+
+        if(record.getRegistrationDate() != null && record.getRegistrationDate().toString().length() == 29){
+            String regDate = record.getRegistrationDate().toString();
+            regDate = regDate.substring(0 , 19) + regDate.substring(23, 29);
+            childImportRejection.setRegistrationDate(regDate);
+        }
+        else{
+            childImportRejection.setRegistrationDate(record.getRegistrationDate());
+        }
         childImportRejection.setRegistrationNo(record.getRegistrationNo());
         childImportRejection.setEntryType(record.getEntryType());
         childImportRejection.setIdNo(record.getMctsId());
