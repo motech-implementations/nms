@@ -517,7 +517,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     }
                 }
             }
-            child.setRegistrationDate(regDate);
+
             if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
                 return subscriberService.updateChildSubscriber(msisdn, child, dob, record, action);
             } else {
