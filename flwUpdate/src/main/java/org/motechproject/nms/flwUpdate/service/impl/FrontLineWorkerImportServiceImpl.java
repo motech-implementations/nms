@@ -19,6 +19,7 @@ import org.motechproject.nms.flw.domain.FlwErrorReason;
 import org.motechproject.nms.flw.domain.FlwJobStatus;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
+import org.motechproject.nms.flw.exception.FlwExistingMobileNumberAlreadySubscribedException;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.FlwImportException;
 import org.motechproject.nms.flw.exception.GfStatusInactiveException;
@@ -206,14 +207,17 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                             LOGGER.warn("Invalid location for FLW: ", e);
                             flwRejectionService.createUpdate(flwRejectionRch(frontLineWorker, false, RejectionReasons.INVALID_LOCATION.toString(), action));
                             rejected++;
-                        } catch (FlwExistingRecordException e) {
-                            LOGGER.debug("Existing FLW with same MSISDN but different ID", e);
+                        } catch (FlwExistingMobileNumberAlreadySubscribedException e) {
+                            LOGGER.debug("Existing FLW with same MSISDN but different ID");
                             flwRejectionService.createUpdate(flwRejectionRch(frontLineWorker, false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
                             rejected++;
                         } catch (GfStatusInactiveException e) {
                             LOGGER.debug("The flw has already resigned.");
                             flwRejectionService.createUpdate(flwRejectionRch(frontLineWorker, false, RejectionReasons.GF_STATUS_INACTIVE.toString(), action));
                             rejected++;
+                        } catch (FlwExistingRecordException e){
+                            LOGGER.debug("Updated record already exits in system" );
+                            flwRejectionService.createUpdate(flwRejectionRch(frontLineWorker, false , RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS.toString() , action));
                         } catch (Exception e) {
                             LOGGER.error("Flw import Error. Cannot import FLW with ID: {}, and MSISDN (Mobile_No): {}",
                                     frontLineWorker.getGfId(), frontLineWorker.getMobileNo(), e);
@@ -326,7 +330,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
 
     @Override //NO CHECKSTYLE CyclomaticComplexity
     @Transactional
-    public void importRchFrontLineWorker(Map<String, Object> record, State state) throws InvalidLocationException, FlwExistingRecordException, GfStatusInactiveException {
+    public void importRchFrontLineWorker(Map<String, Object> record, State state) throws InvalidLocationException, FlwExistingRecordException, GfStatusInactiveException , FlwExistingMobileNumberAlreadySubscribedException{
         String flwId = (String) record.get(FlwConstants.GF_ID);
         Long msisdn = (Long) record.get(FlwConstants.MOBILE_NO);
 
@@ -335,26 +339,43 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
 
         FrontLineWorker flw = frontLineWorkerService.getByMctsFlwIdAndState(flwId, state);
         if (flw != null) {
-            FrontLineWorker flw2 = frontLineWorkerService.getByContactNumber(msisdn);
-            if (flw2 == null || flw2.getJobStatus().equals(FlwJobStatus.INACTIVE)) {
-                // update msisdn of existing asha worker
-                FrontLineWorker newFlw = createRchFlw(record, location);
-                if (newFlw != null) {
-                    FrontLineWorker flwInstance = updateFlw(flw, record, location, SubscriptionOrigin.RCH_IMPORT);
-                    frontLineWorkerService.update(flwInstance);
-                }
-            } else {
-                //we got here because an FLW exists with active job status and the same msisdn
-                //check if both these records are the same or not
-                if (flw.equals(flw2)) {
-                    FrontLineWorker flwInstance = updateFlw(flw, record, location, SubscriptionOrigin.RCH_IMPORT);
-                    frontLineWorkerService.update(flwInstance);
+            LocalDate rchUpdatedDateNic = null;
+            if(record.get(FlwConstants.EXEC_DATE) != null) {
+                String dateString = record.get(FlwConstants.EXEC_DATE).toString();
+                DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd");
+                rchUpdatedDateNic = LocalDate.parse(dateString, formatter);
+            }
+            LOGGER.debug("Exec Date is " + rchUpdatedDateNic);
+            LOGGER.debug("UpdatedNic is " + flw.getUpdatedDateNic());
+
+            //If updated_date_nic from rch is not null,then it's not a new record. Compare it with the record from database and update
+            if (rchUpdatedDateNic != null && ( rchUpdatedDateNic.isBefore(LocalDate.now()) || rchUpdatedDateNic.isEqual(LocalDate.now()) ) && (flw.getUpdatedDateNic() == null || rchUpdatedDateNic.isAfter(flw.getUpdatedDateNic()) || rchUpdatedDateNic.isEqual(flw.getUpdatedDateNic()))) {
+                FrontLineWorker flw2 = frontLineWorkerService.getByContactNumber(msisdn);
+                if (flw2 == null || flw2.getJobStatus().equals(FlwJobStatus.INACTIVE)) {
+                    // update msisdn of existing asha worker
+                    FrontLineWorker newFlw = createRchFlw(record, location);
+                    if (newFlw != null) {
+                        FrontLineWorker flwInstance = updateFlw(flw, record, location, SubscriptionOrigin.RCH_IMPORT);
+                        frontLineWorkerService.update(flwInstance);
+                    }
                 } else {
-                    LOGGER.debug("New flw but phone number(update) already in use");
-                    flwErrorDataService.create(new FlwError(flwId, (long) record.get(FlwConstants.STATE_ID), (long) record.get(FlwConstants.DISTRICT_ID), FlwErrorReason.PHONE_NUMBER_IN_USE));
+                    //we got here because an FLW exists with active job status and the same msisdn
+                    //check if both these records are the same or not
+                    if (flw.equals(flw2)) {
+                        FrontLineWorker flwInstance = updateFlw(flw, record, location, SubscriptionOrigin.RCH_IMPORT);
+                        frontLineWorkerService.update(flwInstance);
+                    } else {
+                        LOGGER.debug("New flw but phone number(update) already in use");
+                        flwErrorDataService.create(new FlwError(flwId, (long) record.get(FlwConstants.STATE_ID), (long) record.get(FlwConstants.DISTRICT_ID), FlwErrorReason.PHONE_NUMBER_IN_USE));
+                    }
                 }
             }
-        } else {
+            else{
+                LOGGER.debug("Updated record exists in the database");
+                throw new FlwExistingRecordException("Updated record exists in the database");
+            }
+        }
+         else {
             FrontLineWorker frontLineWorker = frontLineWorkerService.getByContactNumber(msisdn);
             if (frontLineWorker != null && FrontLineWorkerStatus.ACTIVE.equals(frontLineWorker.getStatus())) {
                 // check if anonymous FLW
@@ -365,7 +386,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                     // reject the record
                     LOGGER.debug("Existing FLW with provided msisdn");
                     flwErrorDataService.create(new FlwError(flwId, (long) record.get(FlwConstants.STATE_ID), (long) record.get(FlwConstants.DISTRICT_ID), FlwErrorReason.PHONE_NUMBER_IN_USE));
-                    throw new FlwExistingRecordException("Msisdn already in use.");
+                    throw new FlwExistingMobileNumberAlreadySubscribedException("Msisdn already in use.");
                 }
             } else if (frontLineWorker != null && FrontLineWorkerStatus.ANONYMOUS.equals(frontLineWorker.getStatus())) {
                 FrontLineWorker flwInstance = updateFlw(frontLineWorker, record, location, SubscriptionOrigin.RCH_IMPORT);

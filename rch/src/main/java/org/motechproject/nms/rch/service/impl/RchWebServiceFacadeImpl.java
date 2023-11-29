@@ -31,6 +31,7 @@ import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.flw.domain.FlwJobStatus;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
+import org.motechproject.nms.flw.exception.FlwExistingMobileNumberAlreadySubscribedException;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.GfStatusInactiveException;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
@@ -2606,7 +2607,11 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                             flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.INVALID_LOCATION.toString(), action));
                             rejected++;
                         } catch (FlwExistingRecordException e) {
-                            LOGGER.debug("Existing FLW with same MSISDN but different RCH ID", e);
+                            LOGGER.debug("Updated record already exits in system" );
+                            flwRejectionService.createUpdate(flwRejectionRch(record, false , RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS.toString() , action));
+                            rejected++;
+                        } catch (FlwExistingMobileNumberAlreadySubscribedException e){
+                            LOGGER.debug("Existing FLW with same MSISDN but different RCH ID");
                             flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
                             rejected++;
                         } catch (GfStatusInactiveException e) {
