@@ -185,7 +185,9 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                 }
                 String flwId = frontLineWorker.getGfId().toString();
                 FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
-                if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || !state.equals(flw.getState()))) && !FrontLineWorkerStatus.ANONYMOUS.equals(flw.getStatus())) {
+
+                if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || !state.equals(flw.getState()))) && !FrontLineWorkerStatus.ANONYMOUS.equals(flw.getStatus()) &&
+                         !frontLineWorker.getGfStatus().toString().equalsIgnoreCase((FrontLineWorkerStatus.INACTIVE).toString())  ) {
                     LOGGER.debug("Existing FLW with same MSISDN but different MCTS ID");
                     flwRejectionService.createUpdate(flwRejectionRch(frontLineWorker, false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
                     rejected++;
@@ -351,17 +353,14 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             //If updated_date_nic from rch is not null,then it's not a new record. Compare it with the record from database and update
             if (rchUpdatedDateNic != null && ( rchUpdatedDateNic.isBefore(LocalDate.now()) || rchUpdatedDateNic.isEqual(LocalDate.now()) ) && (flw.getUpdatedDateNic() == null || rchUpdatedDateNic.isAfter(flw.getUpdatedDateNic()) || rchUpdatedDateNic.isEqual(flw.getUpdatedDateNic()))) {
                 FrontLineWorker flw2 = frontLineWorkerService.getByContactNumber(msisdn);
-                if (flw2 == null || flw2.getJobStatus().equals(FlwJobStatus.INACTIVE)) {
+                if (flw2 == null || flw2.getJobStatus().equals(FlwJobStatus.INACTIVE) || record.get(FlwConstants.GF_STATUS).toString().equalsIgnoreCase((FrontLineWorkerStatus.INACTIVE).toString()) ) {
                     // update msisdn of existing asha worker
-                    FrontLineWorker newFlw = createRchFlw(record, location);
-                    if (newFlw != null) {
                         FrontLineWorker flwInstance = updateFlw(flw, record, location, SubscriptionOrigin.RCH_IMPORT);
                         frontLineWorkerService.update(flwInstance);
-                    }
                 } else {
                     //we got here because an FLW exists with active job status and the same msisdn
                     //check if both these records are the same or not
-                    if (flw.equals(flw2)) {
+                    if (flw.equals(flw2) || record.get(FlwConstants.GF_STATUS).toString().equalsIgnoreCase((FrontLineWorkerStatus.INACTIVE).toString()) ) {
                         FrontLineWorker flwInstance = updateFlw(flw, record, location, SubscriptionOrigin.RCH_IMPORT);
                         frontLineWorkerService.update(flwInstance);
                     } else {
@@ -383,10 +382,19 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                     FrontLineWorker flwInstance = updateFlw(frontLineWorker, record, location, SubscriptionOrigin.RCH_IMPORT);
                     frontLineWorkerService.update(flwInstance);
                 } else {
-                    // reject the record
-                    LOGGER.debug("Existing FLW with provided msisdn");
-                    flwErrorDataService.create(new FlwError(flwId, (long) record.get(FlwConstants.STATE_ID), (long) record.get(FlwConstants.DISTRICT_ID), FlwErrorReason.PHONE_NUMBER_IN_USE));
-                    throw new FlwExistingMobileNumberAlreadySubscribedException("Msisdn already in use.");
+                    //if request is to deactivate asha, mobile number already present with active status
+                    if(flw != null && record.get(FlwConstants.GF_STATUS).toString().equalsIgnoreCase((FlwJobStatus.INACTIVE).toString()) ){
+                        LOGGER.debug("Deactivating Asha for flwId " + flwId);
+                        FrontLineWorker flwInstance = updateFlw(frontLineWorker, record, location, SubscriptionOrigin.RCH_IMPORT);
+                        frontLineWorkerService.update(flwInstance);
+                    }
+                    else{
+                        // reject the record
+                        LOGGER.debug("Existing FLW with provided msisdn");
+                        flwErrorDataService.create(new FlwError(flwId, (long) record.get(FlwConstants.STATE_ID), (long) record.get(FlwConstants.DISTRICT_ID), FlwErrorReason.PHONE_NUMBER_IN_USE));
+                        throw new FlwExistingMobileNumberAlreadySubscribedException("Msisdn already in use.");
+                    }
+
                 }
             } else if (frontLineWorker != null && FrontLineWorkerStatus.ANONYMOUS.equals(frontLineWorker.getStatus())) {
                 FrontLineWorker flwInstance = updateFlw(frontLineWorker, record, location, SubscriptionOrigin.RCH_IMPORT);

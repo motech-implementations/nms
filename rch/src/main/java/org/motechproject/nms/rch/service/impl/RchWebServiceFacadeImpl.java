@@ -2587,10 +2587,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 Long msisdn = Long.parseLong(record.getMobileNo()==null? "0" : record.getMobileNo());
                 String flwId = record.getGfId().toString();
                 FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
-                if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || !state.equals(flw.getState()))) && !FrontLineWorkerStatus.ANONYMOUS.equals(flw.getStatus())) {
-                    LOGGER.debug("Existing FLW with same MSISDN but different MCTS ID");
-                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
-                    rejected++;
+
+                if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || !state.equals(flw.getState()))) && !FrontLineWorkerStatus.ANONYMOUS.equals(flw.getStatus()) &&
+                        !record.getGfStatus().equalsIgnoreCase((FlwJobStatus.INACTIVE).toString()) ) {
+                    //Check if request come to deactivate current active subscription
+                        LOGGER.debug("Existing FLW with same MSISDN but different MCTS ID");
+                        flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
+                        rejected++;
+
                 } else {
                     if (!(FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation))) {
                         flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.FLW_TYPE_NOT_ASHA.toString(), action));
