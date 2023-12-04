@@ -2588,9 +2588,11 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 String flwId = record.getGfId().toString();
                 FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
 
+                //Added Check if request come to deactivate current active subscription
+
                 if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || !state.equals(flw.getState()))) && !FrontLineWorkerStatus.ANONYMOUS.equals(flw.getStatus()) &&
                         !record.getGfStatus().equalsIgnoreCase((FlwJobStatus.INACTIVE).toString()) ) {
-                    //Check if request come to deactivate current active subscription
+
                         LOGGER.debug("Existing FLW with same MSISDN but different MCTS ID");
                         flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
                         rejected++;
