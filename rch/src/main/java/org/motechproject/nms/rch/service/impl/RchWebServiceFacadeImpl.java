@@ -193,6 +193,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String FILES_MISSING_ON_B = "No files saved b due to ";
     private static final String FILES_MISSING_ON_C = "No files saved c due to ";
     private static final String SCP_LOCAL_TO_REMOTE_REMOTELOCATION = "empty";
+    private static final String LOCATIONS_FILES_HAVING_ERROR_MESSAGE = "[{\"Message\"";
 
 
     @Autowired
@@ -812,7 +813,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
 
             ArrayList<Map<String, Object>> districtArrList = new ArrayList<>();
-            if (result!=null) {
+            if (result!=null && !result.startsWith(LOCATIONS_FILES_HAVING_ERROR_MESSAGE)) {
                 RchDistrictDataSet districtDataSet =new RchDistrictDataSet();
                 ObjectMapper mapper = new ObjectMapper();
                 List<RchDistrictRecord> records = Arrays.asList(mapper.readValue(result, RchDistrictRecord[].class));
@@ -906,7 +907,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
             ArrayList<Map<String, Object>> talukaArrList = new ArrayList<>();
 
-            if (result!=null) {
+            if (result!=null && !result.startsWith(LOCATIONS_FILES_HAVING_ERROR_MESSAGE)) {
                 RchTalukaDataSet talukaDataSet= new RchTalukaDataSet();
                 ObjectMapper mapper = new ObjectMapper();
                 List<RchTalukaRecord> records = Arrays.asList(mapper.readValue(result, RchTalukaRecord[].class));
@@ -1002,7 +1003,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
             ArrayList<Map<String, Object>> villageArrList = new ArrayList<>();
 
-            if (result!=null) {
+            if (result!=null && !result.startsWith(LOCATIONS_FILES_HAVING_ERROR_MESSAGE)) {
                 RchVillageDataSet villageDataSet=new RchVillageDataSet();
                 ObjectMapper mapper = new ObjectMapper();
                 List<RchVillageRecord> records = Arrays.asList(mapper.readValue(result, RchVillageRecord[].class));
@@ -1488,7 +1489,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
             ArrayList<Map<String, Object>> healthBlockArrList = new ArrayList<>();
 
-            if (result!=null) {
+            if (result!=null && !result.startsWith(LOCATIONS_FILES_HAVING_ERROR_MESSAGE)) {
                 RchHealthBlockDataSet healthBlockDataSet= new RchHealthBlockDataSet();
                 ObjectMapper mapper = new ObjectMapper();
                 List<RchHealthBlockRecord> records = Arrays.asList(mapper.readValue(result, RchHealthBlockRecord[].class));
@@ -1632,7 +1633,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
             ArrayList<Map<String, Object>> talukaHealthBlockArrList = new ArrayList<>();
 
-            if (result!=null) {
+            if (result!=null && !result.startsWith(LOCATIONS_FILES_HAVING_ERROR_MESSAGE)) {
                 RchTalukaHealthBlockDataSet talukaHealthBlockDataSet= new RchTalukaHealthBlockDataSet();
                 ObjectMapper mapper = new ObjectMapper();
                 List<RchTalukaHealthBlockRecord> records = Arrays.asList(mapper.readValue(result, RchTalukaHealthBlockRecord[].class));
@@ -1874,7 +1875,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
             ArrayList<Map<String, Object>> healthFacilityArrList = new ArrayList<>();
 
-            if (result!=null) {
+            if (result!=null && !result.startsWith(LOCATIONS_FILES_HAVING_ERROR_MESSAGE)) {
                 RchHealthFacilityDataSet healthFacilityDataSet=new RchHealthFacilityDataSet();
                 ObjectMapper mapper = new ObjectMapper();
                 List<RchHealthFacilityRecord> records = Arrays.asList(mapper.readValue(result, RchHealthFacilityRecord[].class));
@@ -1969,7 +1970,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
             ArrayList<Map<String, Object>> healthSubFacilityArrList = new ArrayList<>();
 
-            if (result!=null) {
+            if (result!=null && !result.startsWith(LOCATIONS_FILES_HAVING_ERROR_MESSAGE)) {
                 RchHealthSubFacilityDataSet healthSubFacilityDataSet=new RchHealthSubFacilityDataSet();
                 ObjectMapper mapper = new ObjectMapper();
                 List<RchHealthSubFacilityRecord> records = Arrays.asList(mapper.readValue(result, RchHealthSubFacilityRecord[].class));
@@ -2060,7 +2061,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
             ArrayList<Map<String, Object>> villageHealthSubFacilityArrList = new ArrayList<>();
 
-            if (result!=null) {
+            if (result!=null && !result.startsWith(LOCATIONS_FILES_HAVING_ERROR_MESSAGE)) {
                 RchVillageHealthSubFacilityDataSet villageHealthSubFacilityDataSet=new RchVillageHealthSubFacilityDataSet();
                 ObjectMapper mapper = new ObjectMapper();
                 List<RchVillageHealthSubFacilityRecord> records = Arrays.asList(mapper.readValue(result, RchVillageHealthSubFacilityRecord[].class));
