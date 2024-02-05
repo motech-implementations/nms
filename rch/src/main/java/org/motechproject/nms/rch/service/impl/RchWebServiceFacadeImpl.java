@@ -31,6 +31,7 @@ import org.motechproject.metrics.service.Timer;
 import org.motechproject.nms.flw.domain.FlwJobStatus;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
+import org.motechproject.nms.flw.exception.FlwExistingMobileNumberAlreadySubscribedException;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.GfStatusInactiveException;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
@@ -192,6 +193,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String FILES_MISSING_ON_B = "No files saved b due to ";
     private static final String FILES_MISSING_ON_C = "No files saved c due to ";
     private static final String SCP_LOCAL_TO_REMOTE_REMOTELOCATION = "empty";
+    private static final String LOCATIONS_FILES_HAVING_ERROR_MESSAGE = "[{\"Message\"";
 
 
     @Autowired
@@ -811,7 +813,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
 
             ArrayList<Map<String, Object>> districtArrList = new ArrayList<>();
-            if (result!=null) {
+            if (result!=null && !result.startsWith(LOCATIONS_FILES_HAVING_ERROR_MESSAGE)) {
                 RchDistrictDataSet districtDataSet =new RchDistrictDataSet();
                 ObjectMapper mapper = new ObjectMapper();
                 List<RchDistrictRecord> records = Arrays.asList(mapper.readValue(result, RchDistrictRecord[].class));
@@ -905,7 +907,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
             ArrayList<Map<String, Object>> talukaArrList = new ArrayList<>();
 
-            if (result!=null) {
+            if (result!=null && !result.startsWith(LOCATIONS_FILES_HAVING_ERROR_MESSAGE)) {
                 RchTalukaDataSet talukaDataSet= new RchTalukaDataSet();
                 ObjectMapper mapper = new ObjectMapper();
                 List<RchTalukaRecord> records = Arrays.asList(mapper.readValue(result, RchTalukaRecord[].class));
@@ -1001,7 +1003,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
             ArrayList<Map<String, Object>> villageArrList = new ArrayList<>();
 
-            if (result!=null) {
+            if (result!=null && !result.startsWith(LOCATIONS_FILES_HAVING_ERROR_MESSAGE)) {
                 RchVillageDataSet villageDataSet=new RchVillageDataSet();
                 ObjectMapper mapper = new ObjectMapper();
                 List<RchVillageRecord> records = Arrays.asList(mapper.readValue(result, RchVillageRecord[].class));
@@ -1487,7 +1489,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
             ArrayList<Map<String, Object>> healthBlockArrList = new ArrayList<>();
 
-            if (result!=null) {
+            if (result!=null && !result.startsWith(LOCATIONS_FILES_HAVING_ERROR_MESSAGE)) {
                 RchHealthBlockDataSet healthBlockDataSet= new RchHealthBlockDataSet();
                 ObjectMapper mapper = new ObjectMapper();
                 List<RchHealthBlockRecord> records = Arrays.asList(mapper.readValue(result, RchHealthBlockRecord[].class));
@@ -1631,7 +1633,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
             ArrayList<Map<String, Object>> talukaHealthBlockArrList = new ArrayList<>();
 
-            if (result!=null) {
+            if (result!=null && !result.startsWith(LOCATIONS_FILES_HAVING_ERROR_MESSAGE)) {
                 RchTalukaHealthBlockDataSet talukaHealthBlockDataSet= new RchTalukaHealthBlockDataSet();
                 ObjectMapper mapper = new ObjectMapper();
                 List<RchTalukaHealthBlockRecord> records = Arrays.asList(mapper.readValue(result, RchTalukaHealthBlockRecord[].class));
@@ -1873,7 +1875,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
             ArrayList<Map<String, Object>> healthFacilityArrList = new ArrayList<>();
 
-            if (result!=null) {
+            if (result!=null && !result.startsWith(LOCATIONS_FILES_HAVING_ERROR_MESSAGE)) {
                 RchHealthFacilityDataSet healthFacilityDataSet=new RchHealthFacilityDataSet();
                 ObjectMapper mapper = new ObjectMapper();
                 List<RchHealthFacilityRecord> records = Arrays.asList(mapper.readValue(result, RchHealthFacilityRecord[].class));
@@ -1968,7 +1970,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
             ArrayList<Map<String, Object>> healthSubFacilityArrList = new ArrayList<>();
 
-            if (result!=null) {
+            if (result!=null && !result.startsWith(LOCATIONS_FILES_HAVING_ERROR_MESSAGE)) {
                 RchHealthSubFacilityDataSet healthSubFacilityDataSet=new RchHealthSubFacilityDataSet();
                 ObjectMapper mapper = new ObjectMapper();
                 List<RchHealthSubFacilityRecord> records = Arrays.asList(mapper.readValue(result, RchHealthSubFacilityRecord[].class));
@@ -2059,7 +2061,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         try {
             ArrayList<Map<String, Object>> villageHealthSubFacilityArrList = new ArrayList<>();
 
-            if (result!=null) {
+            if (result!=null && !result.startsWith(LOCATIONS_FILES_HAVING_ERROR_MESSAGE)) {
                 RchVillageHealthSubFacilityDataSet villageHealthSubFacilityDataSet=new RchVillageHealthSubFacilityDataSet();
                 ObjectMapper mapper = new ObjectMapper();
                 List<RchVillageHealthSubFacilityRecord> records = Arrays.asList(mapper.readValue(result, RchVillageHealthSubFacilityRecord[].class));
@@ -2586,10 +2588,16 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 Long msisdn = Long.parseLong(record.getMobileNo()==null? "0" : record.getMobileNo());
                 String flwId = record.getGfId().toString();
                 FrontLineWorker flw = frontLineWorkerService.getByContactNumber(msisdn);
-                if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || !state.equals(flw.getState()))) && !FrontLineWorkerStatus.ANONYMOUS.equals(flw.getStatus())) {
-                    LOGGER.debug("Existing FLW with same MSISDN but different MCTS ID");
-                    flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
-                    rejected++;
+
+                //Added Check if request come to deactivate current active subscription
+
+                if ((flw != null && (!flwId.equals(flw.getMctsFlwId()) || !state.equals(flw.getState()))) && !FrontLineWorkerStatus.ANONYMOUS.equals(flw.getStatus()) &&
+                        !record.getGfStatus().equalsIgnoreCase((FlwJobStatus.INACTIVE).toString()) ) {
+
+                        LOGGER.debug("Existing FLW with same MSISDN but different MCTS ID");
+                        flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
+                        rejected++;
+
                 } else {
                     if (!(FlwConstants.ASHA_TYPE.equalsIgnoreCase(designation))) {
                         flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.FLW_TYPE_NOT_ASHA.toString(), action));
@@ -2606,7 +2614,11 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                             flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.INVALID_LOCATION.toString(), action));
                             rejected++;
                         } catch (FlwExistingRecordException e) {
-                            LOGGER.debug("Existing FLW with same MSISDN but different RCH ID", e);
+                            LOGGER.debug("Updated record already exits in system" );
+                            flwRejectionService.createUpdate(flwRejectionRch(record, false , RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS.toString() , action));
+                            rejected++;
+                        } catch (FlwExistingMobileNumberAlreadySubscribedException e){
+                            LOGGER.debug("Existing FLW with same MSISDN but different RCH ID");
                             flwRejectionService.createUpdate(flwRejectionRch(record, false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action));
                             rejected++;
                         } catch (GfStatusInactiveException e) {

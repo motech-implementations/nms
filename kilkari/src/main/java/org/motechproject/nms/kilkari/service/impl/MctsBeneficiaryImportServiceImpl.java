@@ -337,6 +337,13 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 subscriptionService.deactivateSubscription(subscription, DeactivationReason.MATERNAL_DEATH);
             }
             LOGGER.debug("MotherImportRejection::importMotherRecord Start synchronized block " + beneficiaryId);
+
+            //NOTE: getId is a way to see if this is a new user.
+
+            if(mother.getId() != null){
+                mctsMotherDataService.update(mother);
+            }
+
             createUpdateMotherRejections(flagForMcts, record, action, null, true);
             return null;
 
