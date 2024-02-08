@@ -152,6 +152,12 @@ public interface SubscriptionService {
 
     List<String> findJhSubscriptionIds();
 
+    List<Subscription> findActiveSubscriptionsForDayWP(DayOfTheWeek dayOfTheWeek, long offset, int rowCount);
+
+    List<Subscription> findWelcomeActiveSubscriptionsForDayWP(final DayOfTheWeek dow, final long offset,
+                                                                     final int rowCount);
+
+    public void UpdateWelcomeMessageOptIn( final List<Long> ids);
     /**
      * Get the list of pending subscriptions that starts after the specified date.
      * @param startDate The start date from which to find subscriptins

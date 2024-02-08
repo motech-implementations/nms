@@ -22,10 +22,6 @@ import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.PhoneNumberHelper;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.*;
-import org.motechproject.nms.region.repository.HealthBlockDataService;
-import org.motechproject.nms.region.repository.StateDataService;
-import org.motechproject.nms.region.service.DistrictService;
-import org.motechproject.nms.region.service.HealthBlockService;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,9 +44,6 @@ import java.util.Set;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static org.motechproject.nms.region.utils.LocationConstants.DISTRICT_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.STATE_ID;
 
 /**
  * Implementation of the {@link SubscriptionService} interface.
@@ -1027,6 +1020,142 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         List<Subscription> subscriptions = subscriptionDataService.executeSQLQuery(queryExecution);
         LOGGER.debug("findActiveSubscriptionsForDay(dow={}, offset={}, rowCount={}) {}", dow, offset, rowCount, queryTimer.time());
         return subscriptions;
+    }
+
+
+    @Override
+    public List<Subscription> findActiveSubscriptionsForDayWP(final DayOfTheWeek dow, final long offset,
+                                                            final int rowCount) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<Subscription>> queryExecution = new SqlQueryExecution<List<Subscription>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query =  "SELECT s.id as id, activationDate, deactivationReason, endDate, firstMessageDayOfWeek, " +
+                        "s.needsWelcomeMessageViaObd, s.origin, s.secondMessageDayOfWeek, s.startDate, " +
+                        "s.status, s.subscriber_id_OID, s.subscriptionId, s.subscriptionPack_id_OID, " +
+                        "s.creationDate, s.creator, s.modificationDate, s.modifiedBy, s.owner " +
+                        "FROM nms_subscriptions AS s " +
+                        "INNER JOIN nms_subscription_packs AS p ON s.subscriptionPack_id_OID = p.id " +
+                        "WHERE s.id > :offset AND " +
+                        "(firstMessageDayOfWeek = :dow OR " +
+                        "(secondMessageDayOfWeek = :dow AND p.messagesPerWeek = 2)) AND " +
+                        "status = 'ACTIVE' AND " +
+                        "s.serviceStatus IN ('WHATSAPP', 'IVR_AND_WHATSAPP') AND " +
+                        "s.needsWelcomeOptInForWP = false " +
+                        "ORDER BY s.id " +
+                        "LIMIT :max";
+                LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public List<Subscription> execute(Query query) {
+
+                query.setClass(Subscription.class);
+
+                Map params = new HashMap();
+                params.put("offset", offset);
+                params.put("dow", dow.toString());
+                params.put("max", rowCount);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.executeWithMap(params);
+
+                return (List<Subscription>) fqr;
+            }
+        };
+
+        List<Subscription> subscriptions = subscriptionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("test - findActiveSubscriptionsForDay(dow={}, offset={}, rowCount={}) {}", dow, offset, rowCount, queryTimer.time());
+        return subscriptions;
+    }
+
+
+    @Override
+    public List<Subscription> findWelcomeActiveSubscriptionsForDayWP(final DayOfTheWeek dow, final long offset,
+                                                              final int rowCount) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<Subscription>> queryExecution = new SqlQueryExecution<List<Subscription>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query =  "SELECT s.id as id, activationDate, deactivationReason, endDate, firstMessageDayOfWeek, " +
+                        "s.needsWelcomeMessageViaObd, s.origin, s.secondMessageDayOfWeek, s.startDate, " +
+                        "s.status, s.subscriber_id_OID, s.subscriptionId, s.subscriptionPack_id_OID, " +
+                        "s.creationDate, s.creator, s.modificationDate, s.modifiedBy, s.owner " +
+                        "FROM nms_subscriptions AS s " +
+                        "INNER JOIN nms_subscription_packs AS p ON s.subscriptionPack_id_OID = p.id " +
+                        "WHERE s.id > :offset AND " +
+                        "(firstMessageDayOfWeek = :dow OR " +
+                        "(secondMessageDayOfWeek = :dow AND p.messagesPerWeek = 2)) AND " +
+                        "status = 'ACTIVE' AND " +
+                        "s.serviceStatus IN ('WHATSAPP', 'IVR_AND_WHATSAPP') AND " +
+                        "s.needsWelcomeOptInForWP = true " +
+                        "ORDER BY s.id " +
+                        "LIMIT :max";
+                LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public List<Subscription> execute(Query query) {
+
+                query.setClass(Subscription.class);
+
+                Map params = new HashMap();
+                params.put("offset", offset);
+                params.put("dow", dow.toString());
+                params.put("max", rowCount);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.executeWithMap(params);
+
+                return (List<Subscription>) fqr;
+            }
+        };
+
+        List<Subscription> subscriptions = subscriptionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("findWelcomeActiveSubscriptionsForDayWP (dow={}, offset={}, rowCount={}) {}", dow, offset, rowCount, queryTimer.time());
+        return subscriptions;
+    }
+
+    @Override
+    public void UpdateWelcomeMessageOptIn( final List<Long> ids) {
+        Timer queryTimer = new Timer();
+
+        LOGGER.debug("test UpdateWelcomeMessageOptIn ");
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<Subscription>> queryExecution = new SqlQueryExecution<List<Subscription>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query = "update nms_subscriptions set needsWelcomeOptInForWP = false , modificationDate = now() where id in ( ";
+                for(int i=0;i<ids.size()-1;i++){
+                    query = query + ids.get(i) + " , ";
+                }
+                query += ids.get(ids.size()-1);
+                query += " ) ";
+                LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public List<Subscription> execute(Query query) {
+
+                query.setClass(Subscription.class);
+
+//                Map params = new HashMap();
+//                params.put("id", id);
+                query.execute();
+                LOGGER.debug("test query executed " + query);
+                return null;
+            }
+        };
+
+        subscriptionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("UpdateWelcomeMessageOptIn " );
     }
 
     @Override

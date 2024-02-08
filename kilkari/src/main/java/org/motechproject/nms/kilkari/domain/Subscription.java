@@ -81,6 +81,9 @@ public class Subscription extends MdsEntity {
     @Field
     private boolean needsWelcomeMessageViaObd;
 
+    @Field
+    private ServiceStatus serviceStatus;
+
     public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, SubscriptionOrigin origin) {
         this.subscriptionId = UUID.randomUUID().toString();
         this.subscriber = subscriber;
@@ -178,6 +181,14 @@ public class Subscription extends MdsEntity {
 
     public void setNeedsWelcomeMessageViaObd(boolean needsWelcomeMessageViaObd) {
         this.needsWelcomeMessageViaObd = needsWelcomeMessageViaObd;
+    }
+
+    public ServiceStatus getServiceStatus() {
+        return serviceStatus;
+    }
+
+    public void setServiceStatus(ServiceStatus serviceStatus) {
+        this.serviceStatus = serviceStatus;
     }
 
     public boolean needsWelcomeMessageViaInbox() {

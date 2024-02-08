@@ -40,6 +40,7 @@ import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.contract.CdrFileProcessedNotification;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
+import org.motechproject.nms.imi.web.contract.WhatsappCdrFileNotificationRequest;
 import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.exception.InvalidCallRecordDataException;
@@ -87,6 +88,8 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final Boolean DISTRIBUTED_CSR_PROCESSING_DEFAULT = false;
     private static final String CDR_FILE_NOTIFICATION_URL = "imi.cdr_file_notification_url";
     private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
+    private static final String LOCAL_CDR_DIR_WP = "imi.local_cdr_dir_whatsapp";
+//    private static final String REMOTE_CDR_DIR_WP = "imi.remote_cdr_dir_wp";
     private static final String CDR_CSR_RETENTION_DURATION = "imi.cdr_csr.retention.duration";
     private static final int MIN_CALL_DATA_RETENTION_DURATION_IN_DAYS = 5;
     private static final String CDR_CSR_CLEANUP_SUBJECT = "nms.imi.cdr_csr.cleanup";
