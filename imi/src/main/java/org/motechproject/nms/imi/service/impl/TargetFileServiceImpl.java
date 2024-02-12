@@ -44,10 +44,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 @Service("targetFileService")
 public class TargetFileServiceImpl implements TargetFileService {
@@ -59,7 +56,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final String TARGET_FILE_SEC_INTERVAL = "imi.target_file_sec_interval";
     private static final String TARGET_FILE_NOTIFICATION_URL = "imi.target_file_notification_url";
     private static final String TARGET_FILE_CALL_FLOW_URL = "imi.target_file_call_flow_url";
-    private static final String TARGET_FILE_CALL_FLOW_URL_WHATSAPP = "imi.target_file_call_flow_url_wp";
+    private static final String TARGET_FILE_CALL_FLOW_URL_WHATSAPP = "imi.target_file_call_flow_url_whatsApp";
     private static final String CONTENT_FILE_NAME_WHATSAPP_WELCOME_MESSAGE = "imi.content_file_name_whatsapp_welcome_message";
     private static final String NORMAL_PRIORITY = "0";
     private static final String HIGH_PRIORITY = "1";
@@ -269,7 +266,7 @@ public class TargetFileServiceImpl implements TargetFileService {
         return String.format("OBD_NMS_%s.csv", timestamp);
     }
 
-    private String wpTargetFileName(String timestamp) {
+    private String whatsAppTargetFileName(String timestamp) {
         return String.format("WP_OBD_NMS_%s.csv", timestamp);
     }
     // Helper method that makes the code a bit cleaner
@@ -732,13 +729,14 @@ public class TargetFileServiceImpl implements TargetFileService {
         int skippedrecords = 0;
 
         DayOfTheWeek dow = DayOfTheWeek.fromDateTime(timestamp);
+        Date date = timestamp.toDate();
         int recordCountWelcome = 0;
         Long offset = 0L;
 
         do {
 
             LOGGER.debug("offset is " + offset);
-            List<Subscription> subscriptions = subscriptionService.findWelcomeActiveSubscriptionsForDayWP(dow, offset, maxQueryBlock);
+            List<Subscription> subscriptions = subscriptionService.findWelcomeActiveSubscriptionsForDayWP(date, offset, maxQueryBlock);
             LOGGER.info("Subs_block_size "  + subscriptions.size());
             if(subscriptions.size()==0){
                 break;
@@ -747,7 +745,7 @@ public class TargetFileServiceImpl implements TargetFileService {
             for(Subscription subscription : subscriptions){
                 Subscriber subscriber = subscription.getSubscriber();
                 RequestId requestId = new RequestId(subscription.getSubscriptionId(), TIME_FORMATTER.print(timestamp));
-                LOGGER.debug("test - subscriber is " + subscriber.getId());
+//                LOGGER.debug("test - subscriber is " + subscriber.getId());
                 offset = subscription.getId();
                 try {
                     SubscriptionPack pack = subscription.getSubscriptionPack();
@@ -772,9 +770,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                     else{
                         stateCode = subscriber.getMother().getState().getCode().toString();
                     }
-                    LOGGER.debug("test - calling number " + subscriber.getCallingNumber().toString());
-                    LOGGER.debug("test - stateCode " + stateCode );
-                    LOGGER.debug("test - contentFileNameWhatsappWelcomeMessage " + contentFileNameWhatsappWelcomeMessage());
+
                     writeSubscriptionRowWP(
                             requestId.toString() ,
                             subscriber.getCallingNumber().toString(),
@@ -873,7 +869,7 @@ public class TargetFileServiceImpl implements TargetFileService {
         return new File(settingsFacade.getProperty(LOCAL_OBD_DIR));
     }
 
-    private File wpLocalObdDir() {
+    private File whatsAppLocalObdDir() {
         return new File(settingsFacade.getProperty(LOCAL_OBD_DIR_WHATSAPP));
     }
 
@@ -1154,8 +1150,8 @@ public class TargetFileServiceImpl implements TargetFileService {
     public TargetFileNotification generateTargetFileWhatsApp() {
         LOGGER.info("generateTargetFileWP()");
         DateTime today = DateTime.now();
-        String targetFileName = wpTargetFileName(TIME_FORMATTER.print(today));
-        File localTargetDir = wpLocalObdDir();
+        String targetFileName = whatsAppTargetFileName(TIME_FORMATTER.print(today));
+        File localTargetDir = whatsAppLocalObdDir();
         String checksum;
         File targetFile = new File(localTargetDir, targetFileName);
 

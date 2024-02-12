@@ -35,14 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.PostConstruct;
 import javax.jdo.Query;
 import javax.validation.ConstraintViolationException;
-import java.util.List;
-import java.util.Map;
-import java.util.Iterator;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -1073,8 +1066,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
 
     @Override
-    public List<Subscription> findWelcomeActiveSubscriptionsForDayWP(final DayOfTheWeek dow, final long offset,
-                                                              final int rowCount) {
+    public List<Subscription> findWelcomeActiveSubscriptionsForDayWP(final Date date, final long offset,
+                                                                     final int rowCount) {
         Timer queryTimer = new Timer();
 
         @SuppressWarnings("unchecked")
@@ -1089,8 +1082,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         "FROM nms_subscriptions AS s " +
                         "INNER JOIN nms_subscription_packs AS p ON s.subscriptionPack_id_OID = p.id " +
                         "WHERE s.id > :offset AND " +
-                        "(firstMessageDayOfWeek = :dow OR " +
-                        "(secondMessageDayOfWeek = :dow AND p.messagesPerWeek = 2)) AND " +
+                        "DATE(s.wpStartDate) = :date AND " +
                         "status = 'ACTIVE' AND " +
                         "s.serviceStatus IN ('WHATSAPP', 'IVR_AND_WHATSAPP') AND " +
                         "s.needsWelcomeOptInForWP = true " +
@@ -1107,7 +1099,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
                 Map params = new HashMap();
                 params.put("offset", offset);
-                params.put("dow", dow.toString());
+                params.put("date", date.toString());
                 params.put("max", rowCount);
                 ForwardQueryResult fqr = (ForwardQueryResult) query.executeWithMap(params);
 
@@ -1116,7 +1108,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         };
 
         List<Subscription> subscriptions = subscriptionDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug("findWelcomeActiveSubscriptionsForDayWP (dow={}, offset={}, rowCount={}) {}", dow, offset, rowCount, queryTimer.time());
+        LOGGER.debug("findWelcomeActiveSubscriptionsForDayWP (date={}, offset={}, rowCount={}) {}", date, offset, rowCount, queryTimer.time());
         return subscriptions;
     }
 

@@ -84,6 +84,9 @@ public class Subscription extends MdsEntity {
     @Field
     private ServiceStatus serviceStatus;
 
+    @Field
+    private DateTime wpStartDate;
+
     public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, SubscriptionOrigin origin) {
         this.subscriptionId = UUID.randomUUID().toString();
         this.subscriber = subscriber;
@@ -113,6 +116,14 @@ public class Subscription extends MdsEntity {
     }
 
     public SubscriptionStatus getStatus() { return status; }
+
+    public DateTime getWpStartDate() {
+        return wpStartDate;
+    }
+
+    public void setWpStartDate(DateTime wpStartDate) {
+        this.wpStartDate = wpStartDate;
+    }
 
     public void setStatus(SubscriptionStatus status) {
         if ((status == SubscriptionStatus.ACTIVE) && (this.status != SubscriptionStatus.ACTIVE)) {
