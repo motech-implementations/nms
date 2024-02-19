@@ -69,7 +69,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final String IMI_FRESH_NO_CHECK_DND = "imi.fresh_no_check_dnd";
     private static final String IMI_RETRY_CHECK_DND = "imi.retry_check_dnd";
     private static final String IMI_RETRY_NO_CHECK_DND = "imi.retry_no_check_dnd";
-    private static final String SPECIFIC_STATE_CODE = "imi.hungama.state";
+    private static final String SPECIFIC_STATE_ID = "imi.hungama.stateId";
     private static final String IMI_FRESH_CHECK_DND_JH = "imi.fresh_check_dnd_jh";
     private static final String IMI_FRESH_NO_CHECK_DND_JH = "imi.fresh_no_check_dnd_jh";
     private static final String IMI_RETRY_CHECK_DND_JH = "imi.retry_check_dnd_jh";
@@ -407,7 +407,7 @@ public class TargetFileServiceImpl implements TargetFileService {
         int recordsWrittenSpecific = 0;
         int recordsWrittenJh = 0;
         Long offset = 0L;
-
+        List<Long> specificStateList = getSpecificStateList();
         do {
             List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, offset, maxQueryBlock);
             LOGGER.info("Subs_block_size"  + subscriptions.size());
@@ -416,12 +416,12 @@ public class TargetFileServiceImpl implements TargetFileService {
             }
 
             for (Subscription subscription : subscriptions) {
-               // LOGGER.debug("Handling Subscription " + subscription.getId());
+                LOGGER.debug("Handling Subscription " + subscription.getId());
                 offset = subscription.getId();
 
                 Subscriber subscriber = subscription.getSubscriber();
-                Long stateCode = subscriber.getMother() == null ? subscriber.getChild().getState().getCode() : subscriber.getMother().getState().getCode();
-                List<Long> specificStateList = getSpecificStateList();
+                Long stateID = subscriber.getMother() == null ? subscriber.getChild().getState().getId() : subscriber.getMother().getState().getId();
+
                 RequestId requestId = new RequestId(subscription.getSubscriptionId(), TIME_FORMATTER.print(timestamp));
 
                 try {
@@ -456,7 +456,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                                     wr.get(Jh));
                             recordsWrittenJh++;
                         }
-                    else if(specificStateList.contains(stateCode)){
+                    else if(specificStateList.contains(stateID)){
                         recordsWrittenSpecific = getRecordsWritten(callFlowUrl, wr, recordsWrittenSpecific, subscription, subscriber, requestId, msg, specific_non_Jh);
                     }
                     else {
@@ -510,9 +510,87 @@ public class TargetFileServiceImpl implements TargetFileService {
         int countJh = 0;
         int countSpecific = 0;
         HashMap<String, Integer> retryCount = new HashMap<>();
-        Long offset = 0L;
-        List <Long> specificState = getSpecificStateList();
-        do {
+        List<Long> specificState = getSpecificStateList();
+
+        for (String writer : wr.keySet()) {
+            if (writer.equals(specific_non_Jh)) {
+                Long offset = 0L;
+                do {
+                    List<CallRetry> callRetries = callRetryService.retrieveAllIVR(offset, maxQueryBlock, specificState);
+
+                    LOGGER.info("Call_Retries" + callRetries.size());
+
+                    if (callRetries.size() == 0) {
+                        break;
+                    }
+                    for (CallRetry callRetry : callRetries) {
+                        offset = callRetry.getId();
+                        RequestId requestId = new RequestId(callRetry.getSubscriptionId(), TIME_FORMATTER.print(timestamp));
+                        writeSubscriptionRow(
+                                requestId.toString(),
+                                serviceIdFromOrigin(false, callRetry.getSubscriptionOrigin()),
+                                callRetry.getMsisdn().toString(),
+                                NORMAL_PRIORITY,
+                                callFlowUrl,
+                                callRetry.getContentFileName(),
+                                callRetry.getWeekId(),
+                                callRetry.getLanguageLocationCode(),
+                                callRetry.getCircle(),
+                                callRetry.getSubscriptionOrigin().getCode(),
+                                wr.get(specific_non_Jh));
+                        countSpecific++;
+                    }
+
+                } while (true);
+            } else {
+                Long offset = 0L;
+                do {
+                    // All calls are rescheduled for the next day which means that we should query for all CallRetry records
+                    List<CallRetry> callRetries = callRetryService.retrieveAllNonIVR(offset, maxQueryBlock,specificState);
+                    LOGGER.info("Call_Retries" + callRetries.size());
+
+                    if (callRetries.size() == 0) {
+                        break;
+                    }
+
+                    for (CallRetry callRetry : callRetries) {
+                        offset = callRetry.getId();
+                        RequestId requestId = new RequestId(callRetry.getSubscriptionId(), TIME_FORMATTER.print(timestamp));
+                        if (split && subscriptionIdsJh.contains(callRetry.getSubscriptionId())) {
+                            writeSubscriptionRow(
+                                    requestId.toString(),
+                                    serviceIdFromOriginJh(false, callRetry.getSubscriptionOrigin()),
+                                    callRetry.getMsisdn().toString(),
+                                    HIGH_PRIORITY,
+                                    callFlowUrl,
+                                    callRetry.getContentFileName(),
+                                    callRetry.getWeekId(),
+                                    callRetry.getLanguageLocationCode(),
+                                    callRetry.getCircle(),
+                                    callRetry.getSubscriptionOrigin().getCode(),
+                                    wr.get(Jh));
+                            countJh++;
+                        } else {
+                            writeSubscriptionRow(
+                                    requestId.toString(),
+                                    serviceIdFromOrigin(false, callRetry.getSubscriptionOrigin()),
+                                    callRetry.getMsisdn().toString(),
+                                    NORMAL_PRIORITY,
+                                    callFlowUrl,
+                                    callRetry.getContentFileName(),
+                                    callRetry.getWeekId(),
+                                    callRetry.getLanguageLocationCode(),
+                                    callRetry.getCircle(),
+                                    callRetry.getSubscriptionOrigin().getCode(),
+                                    wr.get(non_Jh));
+                            count++;
+                        }
+                    }
+
+                } while (true);
+            }
+        }
+       /* do {
             // All calls are rescheduled for the next day which means that we should query for all CallRetry records
             List<CallRetry> callRetries = callRetryService.retrieveAll(offset, maxQueryBlock);
             LOGGER.info("Call_Retries"+callRetries.size());
@@ -573,7 +651,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                     }
                 }
 
-        } while (true);
+        } while (true);*/
 
         LOGGER.info(WROTE+non_Jh+"Retry", count);
         retryCount.put(non_Jh, count);
@@ -591,9 +669,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
     private List<Long> getSpecificStateList(){
-        List<String> stateList = Collections.singletonList(settingsFacade.getProperty(SPECIFIC_STATE_CODE));
-
-        String locationProp = settingsFacade.getProperty(SPECIFIC_STATE_CODE);
+        String locationProp = settingsFacade.getProperty(SPECIFIC_STATE_ID);
         if (StringUtils.isBlank(locationProp)) {
 
             return Collections.emptyList();
@@ -615,7 +691,7 @@ public class TargetFileServiceImpl implements TargetFileService {
         LOGGER.info("generateTargetFile()"+split);
         DateTime today = DateTime.now();
         String targetFileName = targetFileName(TIME_FORMATTER.print(today));
-        String targetFileNameHungama = targetFileName(TIME_FORMATTER.print(today)+"Specific");
+        String targetFileNameHungama = targetFileName(TIME_FORMATTER.print(today)+"IVR");
         File localTargetDir = localObdDir();
         String checksum;
         String checksumHungama;
@@ -745,7 +821,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
     private void sendNotificationRequest(TargetFileNotification tfn) {
         String notificationUrl;
-        if(tfn.getFileName().contains("Specific")){
+        if(tfn.getFileName().contains("IVR")){
             notificationUrl = settingsFacade.getProperty(HUNGAMA_TARGET_FILE_NOTIFICATION_URL);
         }else{
             notificationUrl = settingsFacade.getProperty(TARGET_FILE_NOTIFICATION_URL);
