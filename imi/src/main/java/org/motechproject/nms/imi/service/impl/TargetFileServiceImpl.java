@@ -542,7 +542,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                     }
 
                 } while (true);
-            } else {
+            } else if(writer.equals(non_Jh)){
                 Long offset = 0L;
                 do {
                     // All calls are rescheduled for the next day which means that we should query for all CallRetry records
