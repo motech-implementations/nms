@@ -52,6 +52,8 @@ public class ImiController {
     public static final Pattern TARGET_FILENAME_PATTERN_JH = Pattern.compile("OBD_NMS_[0-9]{14}JH\\.csv");
     public static final Pattern TARGET_FILENAME_PATTERN_specific = Pattern.compile("OBD_NMS_[0-9]{14}IVR\\.csv");
     public static final String IVR_INTERACTION_LOG = "IVR INTERACTION: %s";
+    public static final Pattern WHATSAPP_SMS_TARGET_FILENAME_PATTERN = Pattern.compile("OBD_NMS_WASMS_[0-9]{14}\\.csv");
+    public static final Pattern WHATSAPP_TARGET_FILENAME_PATTERN = Pattern.compile("WP_OBD_NMS_[0-9]{14}\\.csv");
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImiController.class);
     public static final String LOG_RESPONSE_FORMAT = "RESPONSE: HTTP %d - %s";
@@ -176,6 +178,28 @@ public class ImiController {
 
     }
 
+    /**
+     * "manually" trigger the target file generation - used for ITs only
+     * *** NOTE: the scheduler will also trigger the file generation so some unexpected side effect is very likely
+     */
+    @RequestMapping(value = "/generateTargetFile/whatsapp" ,
+            method = RequestMethod.GET)
+    @ResponseBody
+    @Transactional
+    public String generateTargetFileWhatsApp() {
+
+        LOGGER.debug("/generateTargetFile/whatsapp (GET)");
+        try {
+            TargetFileNotification tfn = targetFileService.generateTargetFileWhatsApp();
+            LOGGER.debug("targetFileService.generateTargetFileWP() done");
+
+            return tfn == null ? "null" : tfn.toString();
+        }catch(Exception e){
+            LOGGER.error(e.getMessage(), e);
+            throw e;
+        }
+
+    }
 
     /**
      * 4.2.6
@@ -255,7 +279,7 @@ public class ImiController {
 
 
     /**
-     * 4.2.7
+     * 4.2.7.1
      * Notify File Processed Status
      *
      * IVR shall invoke this API to update about the status of file copy after initial checks on the file
@@ -288,6 +312,40 @@ public class ImiController {
         LOGGER.debug("RESPONSE: {}", HttpStatus.OK);
     }
 
+    /**
+     * 4.2.7.2
+     * Notify File Processed Status
+     *
+     * IVR shall invoke this API to update about the status of file copy after initial checks on the file
+     * are completed.
+     */
+
+    @RequestMapping(value = "obdFileProcessedStatusNotification/whatsapp",
+            method = RequestMethod.POST,
+            headers = { "Content-type=application/json" })
+    @ResponseStatus(HttpStatus.OK)
+    public void notifyFileProcessedStatusWhatsApp(@RequestBody FileProcessedStatusRequest request) {
+
+        log("REQUEST: /obdFileProcessedStatusNotification/whatsapp (POST)", request.toString());
+
+        StringBuilder failureReasons = new StringBuilder();
+
+        validateFieldPresent(failureReasons, "fileProcessedStatus",
+                request.getFileProcessedStatus());
+        validateFieldPresent(failureReasons, "fileName", request.getFileName());
+
+        if (failureReasons.length() > 0) {
+            throw new IllegalArgumentException(failureReasons.toString());
+        }
+
+        // Check the provided OBD file (aka: targetFile) exists in the FileAuditRecord table
+        verifyFileExistsInAuditRecord(request.getFileName());
+
+        //
+        targetFileService.handleFileProcessedStatusNotificationWhatsApp(request);
+
+        LOGGER.debug("RESPONSE: {}", HttpStatus.OK);
+    }
 
     @ExceptionHandler({ NotFoundException.class })
     @ResponseStatus(HttpStatus.NOT_FOUND)

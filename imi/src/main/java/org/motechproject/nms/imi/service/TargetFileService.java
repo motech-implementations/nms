@@ -15,6 +15,10 @@ public interface TargetFileService {
      * nms.obd.generate_target_file MOTECH event which triggers the daily generation of the targetFile.
      */
     HashMap<String, TargetFileNotification> generateTargetFile(boolean split);
+
+
+    TargetFileNotification generateTargetFileWhatsApp();
+
     /**
      * The IVR system invoked the obdFileProcessedStatusNotification http endpoint signalling the completion of the
      * processing of the targetFile we generated
@@ -22,6 +26,18 @@ public interface TargetFileService {
      * @param request
      */
     void handleFileProcessedStatusNotification(FileProcessedStatusRequest request);
+
+
+
+    /**
+     * The IVR system invoked the obdFileProcessedStatusNotification http endpoint signalling the completion of the
+     * processing of the targetFile for whatsapp we generated
+     *
+     * @param request
+     */
+    void handleFileProcessedStatusNotificationWhatsApp(FileProcessedStatusRequest request);
+
+    void handleWhatsAppSMSFileProcessedStatusNotification(FileProcessedStatusRequest request);
 
     /**
      * given a call type (fresh or retry) and subscription origin (MCTS or IVR), returns the IMI ServiceID
@@ -34,4 +50,9 @@ public interface TargetFileService {
     String serviceIdFromOrigin(boolean freshCall, SubscriptionOrigin origin);
 
     String serviceIdFromOriginJh(boolean freshCall, SubscriptionOrigin origin);
+
+    HashMap<String, TargetFileNotification> generateWhatsAppSMSTargetFile();
+
+    void copyWhatsAppTargetFiletoRemoteAndNotifyIVR(HashMap<String, TargetFileNotification> tfn);
+
 }

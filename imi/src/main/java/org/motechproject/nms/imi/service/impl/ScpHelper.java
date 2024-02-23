@@ -18,9 +18,20 @@ public class ScpHelper {
     private static final Long SCP_TIMEOUT_DEFAULT = 60000L;
 
     private static final String LOCAL_OBD_DIR = "imi.local_obd_dir";
+
+    private static final String LOCAL_WHATSAPP_SMS_OBD_DIR = "imi.local_whatsapp_sms_obd_dir";
     private static final String REMOTE_OBD_DIR = "imi.remote_obd_dir";
+    private static final String REMOTE_WHATSAPP_SMS_OBD_DIR = "imi.remote_whatsapp_sms_obd_dir";
+    private static final String LOCAL_OBD_DIR_WhatsApp = "imi.local_obd_dir_whatsapp";
+    private static final String REMOTE_OBD_DIR_WhatsApp = "imi.remote_obd_dir_whatsapp";
     private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
+    private static final String LOCAL_WHATSAPP_SMS_CDR_DIR = "imi.local_whatsapp_sms_cdr_dir";
+    private static final String LOCAL_WHATSAPP_CDR_DIR = "imi.local_whatsapp_cdr_dir";
     private static final String REMOTE_CDR_DIR = "imi.remote_cdr_dir";
+    private static final String LOCAL_CDR_DIR_WhatsApp = "imi.local_cdr_dir_whatsapp";
+    private static final String REMOTE_CDR_DIR_WhatsApp = "imi.remote_cdr_dir_whatsapp";
+    private static final String REMOTE_WHATSAPP_SMS_CDR_DIR = "imi.remote_whatsapp_sms_cdr_dir";
+    private static final String REMOTE_WHATSAPP_CDR_DIR = "imi.remote_whatsapp_cdr_dir";
 
     private SettingsFacade settingsFacade;
 
@@ -69,9 +80,30 @@ public class ScpHelper {
         return remoteFile;
     }
 
+    public String remoteWhatsAppSMSCdrFile(String file) {
+        String remoteFile = settingsFacade.getProperty(REMOTE_WHATSAPP_SMS_CDR_DIR);
+        remoteFile += remoteFile.endsWith("/") ? "" : "/";
+        remoteFile += file;
+        return remoteFile;
+    }
+
+    public String remoteWhatsAppCdrFile(String file) {
+        String remoteFile = settingsFacade.getProperty(REMOTE_WHATSAPP_CDR_DIR);
+        remoteFile += remoteFile.endsWith("/") ? "" : "/";
+        remoteFile += file;
+        return remoteFile;
+    }
+
 
     public String localCdrFile(String file) {
         String localFile = settingsFacade.getProperty(LOCAL_CDR_DIR);
+        localFile += localFile.endsWith("/") ? "" : "/";
+        localFile += file;
+        return localFile;
+    }
+
+    public String localWhatsAppSMSOBDFile(String file) {
+        String localFile = settingsFacade.getProperty(LOCAL_WHATSAPP_SMS_OBD_DIR);
         localFile += localFile.endsWith("/") ? "" : "/";
         localFile += file;
         return localFile;
@@ -87,6 +119,22 @@ public class ScpHelper {
         execHelper.exec(command, getScpTimeout());
     }
 
+    public void scpWhatsAppSMSCdrFromRemote(String file) throws ExecException {
+
+        String localDir = settingsFacade.getProperty(LOCAL_WHATSAPP_SMS_CDR_DIR);
+
+        String command = scpFromCommand(remoteWhatsAppSMSCdrFile(file), localDir);
+        ExecHelper execHelper = new ExecHelper();
+        execHelper.exec(command, getScpTimeout());
+    }
+
+    public void scpWhatsAppCdrFromRemote(String file) throws ExecException {
+
+        String localDir = settingsFacade.getProperty(LOCAL_WHATSAPP_CDR_DIR);
+        String command = scpFromCommand(remoteWhatsAppCdrFile(file), localDir);
+        ExecHelper execHelper = new ExecHelper();
+        execHelper.exec(command, getScpTimeout());
+    }
 
     public String localObdFile(String file) {
         String localFile = settingsFacade.getProperty(LOCAL_OBD_DIR);
@@ -95,6 +143,12 @@ public class ScpHelper {
         return localFile;
     }
 
+    public String localWhatsAppObdFile(String file) {
+        String localFile = settingsFacade.getProperty(LOCAL_OBD_DIR_WhatsApp);
+        localFile += localFile.endsWith("/") ? "" : "/";
+        localFile += file;
+        return localFile;
+    }
 
     public String remoteObdFile(String file) {
         String remoteFile = settingsFacade.getProperty(REMOTE_OBD_DIR);
@@ -109,6 +163,25 @@ public class ScpHelper {
         String remoteDir = settingsFacade.getProperty(REMOTE_OBD_DIR);
 
         String command = scpToCommand(localObdFile(file), remoteDir);
+        ExecHelper execHelper = new ExecHelper();
+        execHelper.exec(command, getScpTimeout());
+    }
+
+    public void scpWhatsAppObdToRemote(String file) throws ExecException {
+
+        String remoteDir = settingsFacade.getProperty(REMOTE_OBD_DIR_WhatsApp);
+
+        String command = scpToCommand(localWhatsAppObdFile(file), remoteDir);
+        ExecHelper execHelper = new ExecHelper();
+        execHelper.exec(command, getScpTimeout());
+    }
+
+
+    public void scpWhatsAppToRemote(String file) throws ExecException {
+
+        String remoteDir = settingsFacade.getProperty(REMOTE_WHATSAPP_SMS_OBD_DIR);
+
+        String command = scpToCommand(localWhatsAppSMSOBDFile(file), remoteDir);
         ExecHelper execHelper = new ExecHelper();
         execHelper.exec(command, getScpTimeout());
     }

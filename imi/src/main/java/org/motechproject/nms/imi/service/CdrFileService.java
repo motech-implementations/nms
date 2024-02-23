@@ -3,6 +3,8 @@ package org.motechproject.nms.imi.service;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
 import org.motechproject.nms.imi.web.contract.FileInfo;
+import org.motechproject.nms.imi.web.contract.WhatsAppCdrFileNotificationRequest;
+import org.motechproject.nms.imi.web.contract.WhatsAppFileNotificationRequest;
 
 import java.io.File;
 import java.util.List;
@@ -22,6 +24,8 @@ public interface CdrFileService {
      */
     List<String> verifyChecksumAndCountAndCsv(FileInfo fileInfo, Boolean isDetailFile);
 
+    List<String> verifyWhatsAppSMSChecksumAndCountAndCsv(FileInfo fileInfo);
+
 
     /**
      * Send aggregated detail records for processing as CallSummaryRecordDto in MOTECH events
@@ -32,6 +36,10 @@ public interface CdrFileService {
      * @return          a list of errors (failure) or an empty list (success)
      */
     void saveDetailRecords(File file);
+
+    void saveWhatsAppOptSmsCsr(File file);
+
+    void saveWhatsAppOptCsr(File file);
 
 
     /**
@@ -45,12 +53,20 @@ public interface CdrFileService {
      */
     void processCsrs(File file, int lineCount);
 
+    void processWhatsAppOptSMSCsrs(File file, int lineCount);
+
+    void processWhatsAppOptCsrs(File file, int lineCount);
+
 
     /**
      * Verify file exists, verify checksum & record count match. Then sends event to proceed to CDR processing
      * phase 2
      */
     void cdrProcessPhase1(CdrFileNotificationRequest request);
+
+    void whatsAppSMSCdrProcessPhase1(WhatsAppFileNotificationRequest request);
+
+    void whatsAppCdrProcessPhase1(WhatsAppCdrFileNotificationRequest request);
 
 
     /**
@@ -61,6 +77,10 @@ public interface CdrFileService {
      * NOTE: only exposed here for ITs. Normally called by the MOTECH event system (it's a @MotechListener)
      */
     List<String> cdrProcessPhase2(MotechEvent event);
+
+    List<String> whatsAppSMSCdrProcessPhase2(MotechEvent event);
+
+    List<String> whatsAppCdrProcessPhase2(MotechEvent event);
 
     /**
      * To be called during target file generation or triggered with Ops API. We expect ~3x the # of OBD requests/day of CDRs
