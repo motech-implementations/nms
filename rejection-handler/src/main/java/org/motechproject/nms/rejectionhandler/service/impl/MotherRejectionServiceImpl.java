@@ -599,13 +599,13 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
         stringBuilder.append(QUOTATION + mother.getTalukaId() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getTalukaName() + QUOTATION_COMMA);
         stringBuilder.append(mother.getHealthBlockId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getHealthBlockName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(mother.getHealthBlockName()) + QUOTATION_COMMA);
         stringBuilder.append(mother.getPhcId() + ", ");
         stringBuilder.append(QUOTATION + mother.getPhcName() + QUOTATION_COMMA);
         stringBuilder.append(mother.getSubcentreId() + ", ");
         stringBuilder.append(QUOTATION + mother.getSubcentreName() + QUOTATION_COMMA);
         stringBuilder.append(mother.getVillageId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getVillageName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(mother.getVillageName()) + QUOTATION_COMMA);
         return stringBuilder;
     }
 

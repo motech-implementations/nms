@@ -473,13 +473,13 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
         stringBuilder.append(child.getTalukaId() + ", ");
         stringBuilder.append(QUOTATION + child.getTalukaName() + QUOTATION_COMMA);
         stringBuilder.append(child.getHealthBlockId() + ", ");
-        stringBuilder.append(QUOTATION + child.getHealthBlockName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(child.getHealthBlockName()) + QUOTATION_COMMA);
         stringBuilder.append(child.getPhcId() + ", ");
         stringBuilder.append(QUOTATION + child.getPhcName() + QUOTATION_COMMA);
         stringBuilder.append(child.getSubcentreId() + ", ");
         stringBuilder.append(QUOTATION + child.getSubcentreName() + QUOTATION_COMMA);
         stringBuilder.append(child.getVillageId() + ", ");
-        stringBuilder.append(QUOTATION + child.getVillageName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(child.getVillageName()) + QUOTATION_COMMA);
         stringBuilder.append(child.getYr() + ", ");
         stringBuilder.append(QUOTATION + child.getCityMaholla() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getgPVillage() + QUOTATION_COMMA);
@@ -558,7 +558,7 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
         stringBuilder.append(child.getSubcentreId() + ", ");
         stringBuilder.append(QUOTATION + child.getSubcentreName() + QUOTATION_COMMA);
         stringBuilder.append(child.getVillageId() + ", ");
-        stringBuilder.append(QUOTATION + child.getVillageName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(child.getVillageName()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(child.getName()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getMobileNo() + QUOTATION_COMMA);
         stringBuilder.append(child.getStateId() + ", ");
@@ -567,7 +567,7 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
         stringBuilder.append(QUOTATION + child.getTalukaId() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getTalukaName() + QUOTATION_COMMA);
         stringBuilder.append(child.getHealthBlockId() + ", ");
-        stringBuilder.append(QUOTATION + child.getHealthBlockName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(child.getHealthBlockName()) + QUOTATION_COMMA);
         stringBuilder.append(child.getPhcId() + ", ");
         stringBuilder.append(QUOTATION + child.getPhcName() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getBirthDate() + QUOTATION_COMMA);
