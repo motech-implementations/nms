@@ -622,7 +622,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 Subscriber subscriberByRchMotherId = getSubscriberByBeneficiary(childUpdate.getMother());
                 if (subscriberByRchMotherId == null) { // no subscriber exists with RCH mother id either
                     //create subscriber, beneficiary, subscription and return
-                    Subscriber subscriber = new Subscriber(msisdn, language);
+                    Subscriber subscriber = new Subscriber(msisdn, language, circle);
                     subscriber.setDateOfBirth(dob);
                     subscriber.setMother(childUpdate.getMother());
                     subscriber.setChild(childUpdate);
@@ -653,7 +653,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                         if (subscriptionService.activeSubscriptionByMsisdnRch(subscribersByMsisdn,msisdn, SubscriptionPackType.CHILD, motherRchId, childUpdate.getRchId())) {
                             return childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action);
                         } else {
-                            Subscriber subscriber = new Subscriber(msisdn, language);
+                            Subscriber subscriber = new Subscriber(msisdn, language,circle);
                             subscriber.setDateOfBirth(dob);
                             subscriber.setMother(childUpdate.getMother());
                             subscriber.setChild(childUpdate);
@@ -663,7 +663,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     }
 
                 } else if (subscribersByMsisdn.size() == 0 && childUpdate.getMother() == null) {
-                    Subscriber subscriber = new Subscriber(msisdn, language);
+                    Subscriber subscriber = new Subscriber(msisdn, language, circle);
                     subscriber.setDateOfBirth(dob);
                     subscriber.setMother(childUpdate.getMother());
                     subscriber.setChild(childUpdate);
@@ -676,7 +676,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                         if(subscriptionService.activeSubscriptionByMsisdnRch(subscribersByMsisdn, msisdn , SubscriptionPackType.PREGNANCY , motherRchId , childUpdate.getRchId())){
                             return childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action);
                         }
-                        Subscriber subscriber = new Subscriber(msisdn, language);
+                        Subscriber subscriber = new Subscriber(msisdn, language , circle);
                         subscriber.setDateOfBirth(dob);
                         if (childUpdate.getMother() != null) {
                             subscriber.setMother(childUpdate.getMother());
@@ -756,7 +756,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     public Subscription createSubscriber(Long msisdn, MctsBeneficiary beneficiary, DateTime dateTime, SubscriptionPack pack, Language language, Circle circle) {
-        Subscriber subscriber = new Subscriber(msisdn, language);
+        Subscriber subscriber = new Subscriber(msisdn, language , circle);
         if (pack.getType() == SubscriptionPackType.PREGNANCY) {
             MctsMother mother = (MctsMother) beneficiary;
             mother.setLastMenstrualPeriod(dateTime);
