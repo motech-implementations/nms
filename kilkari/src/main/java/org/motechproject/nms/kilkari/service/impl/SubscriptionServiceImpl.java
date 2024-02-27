@@ -1044,10 +1044,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         "s.status, s.subscriber_id_OID, s.subscriptionId, s.subscriptionPack_id_OID, " +
                         "s.creationDate, s.creator, s.modificationDate, s.modifiedBy, s.owner " +
                         "FROM nms_subscriptions AS s " +
-                        "INNER JOIN nms_subscription_packs AS p ON s.subscriptionPack_id_OID = p.id " +
                         "WHERE s.id > :offset AND " +
-                        "(firstMessageDayOfWeek = :dow OR " +
-                        "(secondMessageDayOfWeek = :dow AND p.messagesPerWeek = 2)) AND " +
+                        "firstMessageDayOfWeek = :dow AND " +
                         "status = 'ACTIVE' AND " +
                         "s.serviceStatus IN ('WHATSAPP', 'IVR_AND_WHATSAPP') AND " +
                         "s.needsWelcomeOptInForWP = true AND " +
@@ -1098,11 +1096,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         "s.status, s.subscriber_id_OID, s.subscriptionId, s.subscriptionPack_id_OID, " +
                         "s.creationDate, s.creator, s.modificationDate, s.modifiedBy, s.owner " +
                         "FROM nms_subscriptions AS s " +
-                        "INNER JOIN nms_subscription_packs AS p ON s.subscriptionPack_id_OID = p.id " +
                         "WHERE s.id > :offset AND " +
-                        "DATE(s.wpStartDate) = DATE(:date) AND " +
-                        "(firstMessageDayOfWeek = :dow OR " +
-                        "(secondMessageDayOfWeek = :dow AND p.messagesPerWeek = 2)) AND " +
+                        "DATE(s.wpStartDate) = DATE(:date) AND "+
                         "status = 'ACTIVE' AND " +
                         "s.serviceStatus IN ('WHATSAPP', 'IVR_AND_WHATSAPP') AND " +
                         "s.needsWelcomeOptInForWP = true " +
@@ -1119,7 +1114,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
                 Map params = new HashMap();
                 params.put("offset", offset);
-                params.put("dow", dow.toString());
+
                 params.put("max", rowCount);
                 params.put("date", date);
 
@@ -1152,7 +1147,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         "s.status, s.subscriber_id_OID, s.subscriptionId, s.subscriptionPack_id_OID, " +
                         "s.creationDate, s.creator, s.modificationDate, s.modifiedBy, s.owner " +
                         "FROM nms_subscriptions AS s " +
-                        "INNER JOIN nms_subscription_packs AS p ON s.subscriptionPack_id_OID = p.id " +
                         "WHERE s.id > :offset AND " +
                         "DATE(s.wpEndDate) = DATE(:date) AND " +
                         "status = 'DEACTIVATED' AND " +
