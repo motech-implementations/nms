@@ -1394,10 +1394,10 @@ public class TargetFileServiceImpl implements TargetFileService {
                         else{
                             stateCode = subscriber.getMother().getState().getCode().toString();
                         }
-
+                        String mobileNo = "91" + subscriber.getCallingNumber().toString();
                         writeSubscriptionRowWP(
                                 requestId.toString() ,
-                                subscriber.getCallingNumber().toString(),
+                                mobileNo,
                                 msg.getWeekId(),
                                 msg.getMessageFileName(),
                                 subscriber.getLanguage().getIsoCode(),
@@ -1472,9 +1472,12 @@ public class TargetFileServiceImpl implements TargetFileService {
                     LOGGER.debug("test - calling number " + subscriber.getCallingNumber().toString());
                     LOGGER.debug("test - stateCode " + stateCode );
                     LOGGER.debug("test - contentFileNameWhatsappWelcomeMessage " + contentFileNameWhatsappWelcomeMessage());
+
+                    String mobileNo = "91" + subscriber.getCallingNumber().toString();
+
                     writeSubscriptionRowWP(
                             requestId.toString() ,
-                            subscriber.getCallingNumber().toString(),
+                            mobileNo,
                             "w1_1",
                             contentFileNameWhatsappWelcomeMessage(),
                             subscriber.getLanguage().getIsoCode(),
@@ -1553,9 +1556,11 @@ public class TargetFileServiceImpl implements TargetFileService {
                         stateCode = subscriber.getMother().getState().getCode().toString();
                     }
 
+                    String mobileNo = "91" + subscriber.getCallingNumber().toString();
+
                     writeSubscriptionRowWP(
                             requestId.toString() ,
-                            subscriber.getCallingNumber().toString(),
+                            mobileNo,
                             msg.getWeekId(),
                             contentFileNameWhatsappDeactivatedMessage(),
                             subscriber.getLanguage().getIsoCode(),
