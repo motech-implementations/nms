@@ -14,11 +14,7 @@ import org.motechproject.nms.imi.service.CdrFileService;
 import org.motechproject.nms.imi.service.TargetFileService;
 import org.motechproject.nms.imi.service.contract.TargetFileNotification;
 import org.motechproject.nms.imi.service.impl.ScpHelper;
-import org.motechproject.nms.imi.web.contract.AggregateBadRequest;
-import org.motechproject.nms.imi.web.contract.BadRequest;
-import org.motechproject.nms.imi.web.contract.CdrFileNotificationRequest;
-import org.motechproject.nms.imi.web.contract.FileInfo;
-import org.motechproject.nms.imi.web.contract.FileProcessedStatusRequest;
+import org.motechproject.nms.imi.web.contract.*;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,18 +103,39 @@ public class ImiController {
         return false;
     }
 
+    private static boolean validateWhatsAppTargetFileName(StringBuilder errors, String targetFileName) {
+        if (validateFieldPresent(errors, "targetFileName", targetFileName)) {
+            if (WHATSAPP_TARGET_FILENAME_PATTERN.matcher(targetFileName).matches()) {
+                return true;
+            } else {
+                errors.append(String.format(INVALID, "targetFileName"));
+                return false;
+            }
+        }
+        return false;
+    }
+
+    private static boolean validateWhatsAppSMSTargetFileName(StringBuilder errors, String targetFileName) {
+        if (validateFieldPresent(errors, "fileName", targetFileName)) {
+            if (WHATSAPP_SMS_TARGET_FILENAME_PATTERN.matcher(targetFileName).matches()) {
+                return true;
+            } else {
+                errors.append(String.format(INVALID, "fileName"));
+                return false;
+            }
+        }
+        return false;
+    }
+
 
     // verify the detail/summary file info is valid
     private static boolean validateCdrFileInfo(StringBuilder errors, FileInfo fileInfo,
-        String fieldName, String targetFileName) {
-
+                                               String fieldName, String targetFileName) {
         boolean valid = true;
-
         if (fileInfo == null) {
             errors.append(String.format(NOT_PRESENT, fieldName));
             return false;
         }
-
         String cdrCsrFName=fileInfo.getCdrFile();
         int nameLength=(targetFileName).length();
         boolean isObdNameInFile=cdrCsrFName.contains(targetFileName.substring(0,nameLength-4));
@@ -139,12 +156,46 @@ public class ImiController {
         if (!validateFieldPresent(errors, "checksum", fileInfo.getChecksum())) {
             valid = false;
         }
-
         if (fileInfo.getRecordsCount() < 0) {
             errors.append(String.format(INVALID, "recordsCount"));
             valid = false;
         }
+        return valid;
+    }
 
+
+    // verify the detail/summary file info is valid
+    private static boolean validateWhatsAppCdrFileInfo(StringBuilder errors, FileInfoWhatsApp fileInfo,
+                                               String fieldName, String targetFileName) {
+        boolean valid = true;
+        if (fileInfo == null) {
+            errors.append(String.format(NOT_PRESENT, fieldName));
+            return false;
+        }
+        String cdrCsrFName=fileInfo.getWpResFile();
+        int nameLength=(targetFileName).length();
+        boolean isObdNameInFile=cdrCsrFName.contains(targetFileName.substring(10,nameLength-4));
+        if (validateFieldPresent(errors, "wpResFile", fileInfo.getWpResFile())) {
+            if (!(isObdNameInFile) ) {
+                errors.append(String.format(INVALID, fieldName));
+                valid = false;
+            }
+        }
+
+//        if (validateFieldPresent(errors, "cdrFile", fileInfo.getCdrFile())) {
+//            if (!fileInfo.getCdrFile().equals(fieldName + "_" + targetFileName)) {
+//                errors.append(String.format(INVALID, fieldName));
+//                valid = false;
+//            }
+//        }
+
+        if (!validateFieldPresent(errors, "checksum", fileInfo.getChecksum())) {
+            valid = false;
+        }
+        if (fileInfo.getRecordsCount() < 0) {
+            errors.append(String.format(INVALID, "recordsCount"));
+            valid = false;
+        }
         return valid;
     }
 
@@ -278,6 +329,126 @@ public class ImiController {
     }
 
 
+    @RequestMapping(value = "/cdrFileNotification/whatsAppSMS",
+            method = RequestMethod.POST,
+            headers = { "Content-type=application/json" })
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void notifyNewWhatsAppCdrFile(@RequestBody WhatsAppFileNotificationRequest request) {
+
+        log("REQUEST: /cdrFileNotification/whatsAppSMS (POST)", request.toString());
+
+        StringBuilder failureReasons = new StringBuilder();
+
+        // Sanity check on the arguments passed in the json structure
+        LOGGER.debug("test - 1 validate name" );
+        validateWhatsAppSMSTargetFileName(failureReasons, request.getFileName());
+        LOGGER.debug("test - 2 validate details");
+        validateCdrFileInfo(failureReasons, request.getCdrSummary(), "cdrSummary", request.getFileName());
+
+        if (failureReasons.length() > 0) {
+            LOGGER.debug("test - 3 failureReasons " + failureReasons);
+            throw new IllegalArgumentException(failureReasons.toString());
+        }
+
+
+        // Check the provided OBD file (aka: targetFile) exists in the FileAuditRecord table
+        LOGGER.debug("test - 4 verifyFileExistsInAuditRecord ");
+        verifyFileExistsInAuditRecord(request.getFileName());
+
+
+        // Copy the summary file from the IMI share (imi.remote_whatsapp_dir) into local cdr dir (imi.local_whatsapp_dir)
+        LOGGER.debug("test - 5 Copying the whatsAppSMS cdr from remote to local ");
+        ScpHelper scpHelper = new ScpHelper(settingsFacade);
+        String fileName = request.getCdrSummary().getCdrFile();
+        try {
+            scpHelper.scpWhatsAppSMSCdrFromRemote(fileName);
+        } catch (ExecException e) {
+            String error = String.format("Error copying WhatsApp SMS CDR file %s: %s", fileName, e.getMessage());
+            LOGGER.error(error);
+            fileAuditRecordDataService.create(new FileAuditRecord(
+                    FileType.WHATSAPP_SMS_CDR_SUMMARY_FILE,
+                    fileName,
+                    false,
+                    error,
+                    null,
+                    null
+            ));
+            alertService.create(fileName, "scpWhatsAppSMSCdrFromRemote", error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            throw new IllegalArgumentException("Error copying CDR file", e);
+        }
+
+
+        // Checks the CSR/CDR checksum, record count & csv, then sends an event to proceed to phase 2 of the
+        // CDR processing task also handled by the IMI module: cdrProcessPhase234
+        LOGGER.debug("test 6 - whatsAppCdrProcessPhase1");
+        cdrFileService.whatsAppSMSCdrProcessPhase1(request);
+
+        LOGGER.debug("RESPONSE: HTTP {}", HttpStatus.ACCEPTED);
+    }
+
+    /**
+     * 4.2.6.2
+     * CDR File Notification
+     *
+     * IVR shall invoke this API to notify when a whatsapp CDR file is ready.
+     */
+    @RequestMapping(value = "/cdrFileNotification/whatsapp",
+            method = RequestMethod.POST,
+            headers = { "Content-type=application/json" })
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void notifyNewCdrFileWhatsApp(@RequestBody WhatsAppCdrFileNotificationRequest request) {
+
+        log("REQUEST: /cdrFileNotification/whatsapp (POST)", request.toString());
+
+        StringBuilder failureReasons = new StringBuilder();
+
+        // Sanity check on the arguments passed in the json structure
+        LOGGER.debug("test - 1 validate name" );
+        validateWhatsAppTargetFileName(failureReasons, request.getTargetFileName());
+        LOGGER.debug("failureReasons {}", failureReasons);
+
+        LOGGER.debug("test - 2 validate details");
+
+        validateWhatsAppCdrFileInfo(failureReasons, request.getWhatsappResSummary(), "whatsappResSummary", request.getTargetFileName());
+        LOGGER.debug("failureReasons {}", failureReasons);
+
+        if (failureReasons.length() > 0) {
+            LOGGER.debug("test - 3 failureReasons " + failureReasons);
+            throw new IllegalArgumentException(failureReasons.toString());
+        }
+
+        // Check the provided OBD file (aka: targetFile) exists in the FileAuditRecord table
+        LOGGER.debug("test - 4 verifyFileExistsInAuditRecord ");
+        verifyFileExistsInAuditRecord(request.getTargetFileName());
+
+
+        // Copy the detail file from the IMI share (imi.remote_cdr_dir) into local cdr dir (imi.local_cdr_dir)
+        LOGGER.debug("test - 5 Copying the whatsApp cdr from remote to local ");
+        ScpHelper scpHelper = new ScpHelper(settingsFacade);
+        String fileName = request.getWhatsappResSummary().getWpResFile();
+        try {
+            scpHelper.scpWhatsAppCdrFromRemote(fileName);
+        } catch (ExecException e) {
+            String error = String.format("Error copying CDR file %s: %s", fileName, e.getMessage());
+            LOGGER.error(error);
+            fileAuditRecordDataService.create(new FileAuditRecord(
+                    FileType.WHATSAPP_CDR_SUMMARY_FILE,
+                    fileName,
+                    false,
+                    error,
+                    null,
+                    null
+            ));
+            alertService.create(fileName, "scpCdrFromRemote", error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            throw new IllegalArgumentException("Error copying CDR file", e);
+        }
+
+        LOGGER.debug("test 6 - whatsAppCdrProcessPhase1");
+        cdrFileService.whatsAppCdrProcessPhase1(request);
+
+        LOGGER.debug("RESPONSE: HTTP {}", HttpStatus.ACCEPTED);
+    }
+
     /**
      * 4.2.7.1
      * Notify File Processed Status
@@ -316,7 +487,7 @@ public class ImiController {
      * 4.2.7.2
      * Notify File Processed Status
      *
-     * IVR shall invoke this API to update about the status of file copy after initial checks on the file
+     * IVR shall invoke this API to update about the status of whatsapp file copy after initial checks on the file
      * are completed.
      */
 
@@ -353,6 +524,33 @@ public class ImiController {
     public BadRequest handleException(NotFoundException e, HttpServletRequest request) {
         log(String.format(LOG_RESPONSE_FORMAT, HttpStatus.NOT_FOUND.value(), request.getRequestURI()), e.getMessage());
         return new BadRequest(e.getMessage());
+    }
+
+    @RequestMapping(value = "obdFileProcessedStatusNotification/whatsAppSMS",
+            method = RequestMethod.POST,
+            headers = { "Content-type=application/json" })
+    @ResponseStatus(HttpStatus.OK)
+    public void notifyWhatsAppSMSFileProcessedStatus(@RequestBody FileProcessedStatusRequest request) {
+
+        log("REQUEST: /obdFileProcessedStatusNotification/whatsAppSMS (POST)", request.toString());
+
+        StringBuilder failureReasons = new StringBuilder();
+
+        validateFieldPresent(failureReasons, "fileProcessedStatus",
+                request.getFileProcessedStatus());
+        validateFieldPresent(failureReasons, "fileName", request.getFileName());
+
+        if (failureReasons.length() > 0) {
+            throw new IllegalArgumentException(failureReasons.toString());
+        }
+
+        // Check the provided WhatsAppSMS file (aka: targetFile) exists in the FileAuditRecord table
+        verifyFileExistsInAuditRecord(request.getFileName());
+
+        //
+        targetFileService.handleWhatsAppSMSFileProcessedStatusNotification(request);
+
+        LOGGER.debug("RESPONSE: {}", HttpStatus.OK);
     }
 
 
@@ -412,5 +610,26 @@ public class ImiController {
     public BadRequest handleException(Exception e, HttpServletRequest request) {
         log(String.format(LOG_RESPONSE_FORMAT, HttpStatus.INTERNAL_SERVER_ERROR.value(), request.getRequestURI()), e.getMessage());
         return new BadRequest(e.getMessage());
+    }
+
+    @RequestMapping(value = "/generateTargetFile/whatsAppSMS", method = RequestMethod.GET)
+    @ResponseBody
+    @Transactional
+    public String generateWhatsAppSMSTargetFile() {
+
+        LOGGER.debug("/generateTargetFile/whatsAppSMS (GET)");
+        try {
+            LOGGER.debug("Test-1: Calling generateWhatsAppSMSTargetFile");
+            HashMap<String, TargetFileNotification> tfn = targetFileService.generateWhatsAppSMSTargetFile();
+            LOGGER.debug("Test-7: Calling copyWhatsAppTargetFiletoRemoteAndNotifyIVR");
+            targetFileService.copyWhatsAppTargetFiletoRemoteAndNotifyIVR(tfn);
+            LOGGER.debug("targetFileService.generateWhatsAppSMSTargetFile() done");
+
+            return tfn == null ? "null" : tfn.values().toString();
+        }catch(Exception e){
+            LOGGER.error(e.getMessage(), e);
+            throw e;
+        }
+
     }
 }

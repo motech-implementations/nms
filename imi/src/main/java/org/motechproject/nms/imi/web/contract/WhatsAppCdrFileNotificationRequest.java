@@ -8,13 +8,13 @@ package org.motechproject.nms.imi.web.contract;
  */
 public class WhatsAppCdrFileNotificationRequest {
     private String targetFileName;
-    private FileInfoWhatsApp whatsAppResSummary;
+    private FileInfoWhatsApp whatsappResSummary;
 
     public WhatsAppCdrFileNotificationRequest() { }
 
-    public WhatsAppCdrFileNotificationRequest(String targetFileName, FileInfoWhatsApp whatsAppResSummary) {
+    public WhatsAppCdrFileNotificationRequest(String targetFileName, FileInfoWhatsApp whatsappResSummary) {
         this.targetFileName = targetFileName;
-        this.whatsAppResSummary = whatsAppResSummary;
+        this.whatsappResSummary = whatsappResSummary;
     }
 
     public String getTargetFileName() {
@@ -25,19 +25,19 @@ public class WhatsAppCdrFileNotificationRequest {
         this.targetFileName = targetFileName;
     }
 
-    public FileInfoWhatsApp getWhatsAppResSummary() {
-        return whatsAppResSummary;
+    public FileInfoWhatsApp getWhatsappResSummary() {
+        return whatsappResSummary;
     }
 
-    public void setWhatsAppResSummary(FileInfoWhatsApp whatsAppResSummary) {
-        this.whatsAppResSummary = whatsAppResSummary;
+    public void setWhatsappResSummary(FileInfoWhatsApp whatsappResSummary) {
+        this.whatsappResSummary = whatsappResSummary;
     }
 
     @Override
     public String toString() {
         return "WhatsAppCdrFileNotificationRequest{" +
                 "targetFileName='" + targetFileName + '\'' +
-                ", whatsAppResSummary=" + whatsAppResSummary +
+                ", whatsappResSummary=" + whatsappResSummary +
                 '}';
     }
 }

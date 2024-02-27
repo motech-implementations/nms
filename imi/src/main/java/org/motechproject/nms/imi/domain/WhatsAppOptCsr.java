@@ -1,11 +1,9 @@
 package org.motechproject.nms.imi.domain;
 
-import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.nms.kilkari.domain.WhatsAppMessageStatus;
 import org.motechproject.nms.kilkari.dto.WhatsAppOptCsrDto;
-import org.motechproject.nms.kilkari.dto.WhatsAppOptSMSCsrDto;
 import org.motechproject.nms.kilkari.exception.InvalidCallRecordDataException;
 import org.motechproject.nms.props.domain.RequestId;
 
@@ -29,6 +27,11 @@ public class WhatsAppOptCsr {
     @Field
     private WhatsAppMessageStatus messageStatus;
 
+    @Field
+    private String preferedLanguage;
+
+    @Field
+    private long stateCode;
 
 
     public String getExternalId() {
@@ -82,6 +85,22 @@ public class WhatsAppOptCsr {
     public WhatsAppOptCsr() {
     }
 
+    public String getPreferedLanguage() {
+        return preferedLanguage;
+    }
+
+    public void setPreferedLanguage(String preferedLanguage) {
+        this.preferedLanguage = preferedLanguage;
+    }
+
+    public long getStateCode() {
+        return stateCode;
+    }
+
+    public void setStateCode(long stateCode) {
+        this.stateCode = stateCode;
+    }
+
     public WhatsAppOptCsr(String externalId, Long urn, String contentFileName, String weekId, String messageStatusTimestamp, WhatsAppMessageStatus messageStatus) {
         this.externalId = externalId;
         this.urn = urn;
@@ -106,6 +125,8 @@ public class WhatsAppOptCsr {
                 urn,
                 contentFileName,
                 weekId,
+                preferedLanguage,
+                stateCode,
                 messageStatusTimestamp,
                 messageStatus
         );

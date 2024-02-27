@@ -17,7 +17,6 @@ public enum WhatsAppOptInResponse {
         return value;
     }
 
-    @JsonCreator
     public static WhatsAppOptInResponse fromValue(int value) {
         for (WhatsAppOptInResponse response : WhatsAppOptInResponse.values()) {
             if (response.value == value) {

@@ -28,8 +28,6 @@ public class ScpHelper {
     private static final String LOCAL_WHATSAPP_SMS_CDR_DIR = "imi.local_whatsapp_sms_cdr_dir";
     private static final String LOCAL_WHATSAPP_CDR_DIR = "imi.local_whatsapp_cdr_dir";
     private static final String REMOTE_CDR_DIR = "imi.remote_cdr_dir";
-    private static final String LOCAL_CDR_DIR_WhatsApp = "imi.local_cdr_dir_whatsapp";
-    private static final String REMOTE_CDR_DIR_WhatsApp = "imi.remote_cdr_dir_whatsapp";
     private static final String REMOTE_WHATSAPP_SMS_CDR_DIR = "imi.remote_whatsapp_sms_cdr_dir";
     private static final String REMOTE_WHATSAPP_CDR_DIR = "imi.remote_whatsapp_cdr_dir";
 

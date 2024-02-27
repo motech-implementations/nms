@@ -10,7 +10,7 @@ import java.util.Map;
 
 //external_id	Urn	ContentFileName	Week_id	Message_status_timestamp	Message_Statu
 public class WhatAppCsrHelper {
-    public static final String WHATSAPP_CSR_HEADER = "ExternalId,Urn,ContentFileName,WeekId,MessageStatusTimestamp,MessageStatus";
+    public static final String WHATSAPP_CSR_HEADER = "external_id,urn,content_file_name,week_id,prefered_language,state_code,message_status_timestamp,message_status";
     private static final long MIN_URN = 1000000000L;
     private static final long MAX_URN = 9999999999L;
 
@@ -19,6 +19,8 @@ public class WhatAppCsrHelper {
         URN,
         CONTENT_FILE_NAME,
         WEEK_ID,
+        PREFERED_LANGUAGE,
+        STATE_CODE,
         MESSAGE_STATUS_TIMESTAMP,
         MESSAGE_STATUS,
         FIELD_COUNT
@@ -91,9 +93,11 @@ public class WhatAppCsrHelper {
 
         try {
             csr.setExternalId(fields[FieldName.EXTERNAL_ID.ordinal()]);
-            csr.setUrn(msisdnFromString(fields[FieldName.URN.ordinal()]));
+            csr.setUrn(msisdnFromString(fields[FieldName.URN.ordinal()].substring(2)));
             csr.setContentFileName(fields[FieldName.CONTENT_FILE_NAME.ordinal()]);
             csr.setWeekId(fields[FieldName.WEEK_ID.ordinal()]);
+            csr.setPreferedLanguage(fields[FieldName.PREFERED_LANGUAGE.ordinal()]);
+            csr.setStateCode(Long.parseLong(fields[FieldName.STATE_CODE.ordinal()]));
             csr.setMessageStatusTimestamp(fields[FieldName.MESSAGE_STATUS_TIMESTAMP.ordinal()]);
             csr.setMessageStatus(WhatsAppMessageStatus.valueOf(fields[FieldName.MESSAGE_STATUS.ordinal()]));
 

@@ -480,6 +480,7 @@ public class CsrServiceImpl implements CsrService {
         }
         else {
             subscription.setServiceStatus(ServiceStatus.IVR);
+            subscription.setWpEndDate(new DateTime());
         }
         subscriptions.add(subscription);
 //        subscriptionDataService.update(subscription);

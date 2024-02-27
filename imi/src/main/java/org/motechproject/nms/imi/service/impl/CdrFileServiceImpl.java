@@ -30,12 +30,10 @@ import org.motechproject.nms.imi.service.contract.CdrFileProcessedNotification;
 import org.motechproject.nms.imi.service.contract.WhatsAppCdrFileProcessedNotification;
 import org.motechproject.nms.imi.service.contract.WhatsAppSmsCdrFileProcessedNotification;
 import org.motechproject.nms.imi.web.contract.*;
-import org.motechproject.nms.imi.web.contract.WhatsappCdrFileNotificationRequest;
 import org.motechproject.nms.kilkari.domain.CallRetry;
 import org.motechproject.nms.kilkari.domain.JodaTimeModule;
 import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.WhatsAppOptSMS;
-import org.motechproject.nms.kilkari.dto.CallDetailRecordDto;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.dto.WhatsAppOptCsrDto;
 import org.motechproject.nms.kilkari.dto.WhatsAppOptSMSCsrDto;
@@ -91,7 +89,6 @@ public class CdrFileServiceImpl implements CdrFileService {
     private static final String LOCAL_CDR_DIR = "imi.local_cdr_dir";
     private static final String LOCAL_WHATSAPP_SMS_CDR_DIR = "imi.local_whatsapp_sms_cdr_dir";
     private static final String LOCAL_WHATSAPP_CDR_DIR = "imi.local_whatsapp_cdr_dir";
-    private static final String LOCAL_CDR_DIR_WP = "imi.local_cdr_dir_whatsapp";
 //    private static final String REMOTE_CDR_DIR_WP = "imi.remote_cdr_dir_wp";
     private static final String CDR_CSR_RETENTION_DURATION = "imi.cdr_csr.retention.duration";
     private static final int MIN_CALL_DATA_RETENTION_DURATION_IN_DAYS = 5;
@@ -817,7 +814,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
             @Override
             public String getSqlQuery() {
-                String query = "INSERT IGNORE INTO nms_imi_wp_csr (externalId,urn,contentFileName,weekId,messageStatusTimestamp,messageStatus)  " +
+                String query = "INSERT IGNORE INTO nms_imi_wp_csr (externalId,urn,contentFileName,weekId,preferedLanguage,stateCode,messageStatusTimestamp,messageStatus,creationDate,modificationDate)  " +
                         "values  " +
                         insertQuerySetForWhatsAppOptCsrs(updateObjects);
 
@@ -905,7 +902,7 @@ public class CdrFileServiceImpl implements CdrFileService {
             stringBuilder.append(QUOTATION + whatsAppOptSMSCsr.getRequestId()+ QUOTATION_COMMA);
             stringBuilder.append((whatsAppOptSMSCsr.getSmsSent() == true ? 1 : 0) + ", ");
             stringBuilder.append(QUOTATION + whatsAppOptSMSCsr.getResponse() + QUOTATION_COMMA);
-            stringBuilder.append(QUOTATION + whatsAppOptSMSCsr.getCreationDate().toString() + QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
             stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
             stringBuilder.append(MOTECH_STRING);
             stringBuilder.append(MOTECH_STRING);
@@ -931,11 +928,16 @@ public class CdrFileServiceImpl implements CdrFileService {
             }
             stringBuilder.append("(");
             stringBuilder.append(QUOTATION + whatsAppOptCsr.getExternalId()+ QUOTATION_COMMA);
-            stringBuilder.append(QUOTATION + whatsAppOptCsr.getUrn()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + (whatsAppOptCsr.getUrn()) + QUOTATION_COMMA);
             stringBuilder.append(QUOTATION + whatsAppOptCsr.getContentFileName()+ QUOTATION_COMMA);
             stringBuilder.append(QUOTATION + whatsAppOptCsr.getWeekId()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + whatsAppOptCsr.getPreferedLanguage() + QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + whatsAppOptCsr.getStateCode() + QUOTATION_COMMA);
+
             stringBuilder.append(QUOTATION + whatsAppOptCsr.getMessageStatusTimestamp()+ QUOTATION_COMMA);
-            stringBuilder.append(QUOTATION + whatsAppOptCsr.getMessageStatus()+ QUOTATION);
+            stringBuilder.append(QUOTATION + whatsAppOptCsr.getMessageStatus()+ QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
             stringBuilder.append(")");
             i++;
         }
@@ -1780,9 +1782,9 @@ public class CdrFileServiceImpl implements CdrFileService {
     private  Map<String, Object> paramsFromRequest(WhatsAppCdrFileNotificationRequest request) {
         Map<String, Object> params = new HashMap<>();
         params.put(OBD_FILE_PARAM_KEY, request.getTargetFileName());
-        params.put(CSR_FILE_PARAM_KEY, request.getWhatsAppResSummary().getWpResFile());
-        params.put(CSR_CHECKSUM_PARAM_KEY, request.getWhatsAppResSummary().getChecksum());
-        params.put(CSR_COUNT_PARAM_KEY, request.getWhatsAppResSummary().getRecordsCount());
+        params.put(CSR_FILE_PARAM_KEY, request.getWhatsappResSummary().getWpResFile());
+        params.put(CSR_CHECKSUM_PARAM_KEY, request.getWhatsappResSummary().getChecksum());
+        params.put(CSR_COUNT_PARAM_KEY, request.getWhatsappResSummary().getRecordsCount());
         return params;
     }
 
@@ -1940,10 +1942,10 @@ public class CdrFileServiceImpl implements CdrFileService {
 
         LOGGER.debug("test 7 - verifyWhatsAppChecksumAndCountAndCsv");
 
-        List<String> csrErrors = verifyWhatsAppChecksumAndCountAndCsv(request.getWhatsAppResSummary());
+        List<String> csrErrors = verifyWhatsAppChecksumAndCountAndCsv(request.getWhatsappResSummary());
 
         LOGGER.debug("test 9 - alertAndAudit");
-        alertAndAudit(request.getWhatsAppResSummary().getWpResFile(), csrErrors);
+        alertAndAudit(request.getWhatsappResSummary().getWpResFile(), csrErrors);
 
         if ( csrErrors.size() > 0) {
 
@@ -1956,17 +1958,17 @@ public class CdrFileServiceImpl implements CdrFileService {
             List<String> maxCsrErrors = csrErrors.subList(0, min(maxErrors, csrErrors.size()));
 
             if (csrErrors.size() > maxErrors) {
-                String error = String.format(DISPLAYING_THE_FIRST_N_ERRORS, request.getWhatsAppResSummary().getWpResFile(),
+                String error = String.format(DISPLAYING_THE_FIRST_N_ERRORS, request.getWhatsappResSummary().getWpResFile(),
                         csrErrors.size(), maxErrors);
                 LOGGER.error(error);
-                alertService.create(request.getWhatsAppResSummary().getWpResFile(), "Phase 1 - Too many errors in CSR", error,
+                alertService.create(request.getWhatsappResSummary().getWpResFile(), "Phase 1 - Too many errors in CSR", error,
                         AlertType.HIGH, AlertStatus.NEW, 0, null);
                 returnedErrors.add(error);
             }
 
             returnedErrors.addAll(maxCsrErrors);
             fileAuditRecordDataService.create(new FileAuditRecord(FileType.WHATSAPP_CDR_SUMMARY_FILE,
-                    request.getWhatsAppResSummary().getWpResFile(), false,
+                    request.getWhatsappResSummary().getWpResFile(), false,
                     String.format("%d invalid WhatsApp CSR rows, see tomcat log", csrErrors.size()), null, null));
 
 
@@ -2162,7 +2164,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         List<String> errors = new ArrayList<>();
         File file;
         LOGGER.debug("test 11 - Fetching file from local dir");
-        file = new File(localWhatsAppCdrDir(), request.getWhatsAppResSummary().getWpResFile());
+        file = new File(localWhatsAppCdrDir(), request.getWhatsappResSummary().getWpResFile());
 
         String fileName = file.getName();
 
@@ -2467,7 +2469,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         // Summary File
         //
         LOGGER.info("Phase 2 - copy summary File");
-        File csrFile = new File(localWhatsAppCdrDir(), request.getWhatsAppResSummary().getWpResFile());
+        File csrFile = new File(localWhatsAppCdrDir(), request.getWhatsappResSummary().getWpResFile());
         //Why do we need this line??
         try {
             copyWhatsAppCsrFile(csrFile);
@@ -2497,7 +2499,7 @@ public class CdrFileServiceImpl implements CdrFileService {
                 String error = String.format(DISPLAYING_THE_FIRST_N_ERRORS, csrFile.getName(), summaryErrors.size(),
                         maxErrors);
                 LOGGER.error(error);
-                alertService.create(request.getWhatsAppResSummary().getWpResFile(), "Too many errors in CSR", error,
+                alertService.create(request.getWhatsappResSummary().getWpResFile(), "Too many errors in CSR", error,
                         AlertType.HIGH, AlertStatus.NEW, 0, null);
                 returnedErrors.add(error);
             }
@@ -2505,14 +2507,14 @@ public class CdrFileServiceImpl implements CdrFileService {
 
             failure = StringUtils.join(returnedErrors, ",");
             fileAuditRecordDataService.create(new FileAuditRecord(FileType.WHATSAPP_CDR_SUMMARY_FILE,
-                    request.getWhatsAppResSummary().getWpResFile(), false,
+                    request.getWhatsappResSummary().getWpResFile(), false,
                     String.format("%d invalid WhatsApp CSR rows, see tomcat log", summaryErrors.size()), null, null));
 
         } else {
             // record successful verification of detail & summary files
             fileAuditRecordDataService.create(new FileAuditRecord(FileType.WHATSAPP_CDR_SUMMARY_FILE,
-                    request.getWhatsAppResSummary().getWpResFile(), true, "Successfully verified",
-                    request.getWhatsAppResSummary().getRecordsCount(), request.getWhatsAppResSummary().getChecksum()));
+                    request.getWhatsappResSummary().getWpResFile(), true, "Successfully verified",
+                    request.getWhatsappResSummary().getRecordsCount(), request.getWhatsappResSummary().getChecksum()));
         }
 
 
@@ -2525,8 +2527,8 @@ public class CdrFileServiceImpl implements CdrFileService {
                 notificationSuccess ? "Successfully sent" : "Error sending", success ? "success" : "failure");
         LOGGER.debug("test 14 - fileAuditRecordDataService.create");
         fileAuditRecordDataService.create(new FileAuditRecord(FileType.WHATSAPP_CDR_SUMMARY_FILE,
-                request.getWhatsAppResSummary().getWpResFile(), notificationSuccess, message,
-                request.getWhatsAppResSummary().getRecordsCount(), request.getWhatsAppResSummary().getChecksum()));
+                request.getWhatsappResSummary().getWpResFile(), notificationSuccess, message,
+                request.getWhatsappResSummary().getRecordsCount(), request.getWhatsappResSummary().getChecksum()));
 
 
         //
@@ -2634,7 +2636,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
         // Copy detail file, if needed
         LOGGER.info("Phase 3 - copying CDR");
-        File cdrFile = new File(localWhatsAppCdrDir(), request.getWhatsAppResSummary().getWpResFile());
+        File cdrFile = new File(localWhatsAppCdrDir(), request.getWhatsappResSummary().getWpResFile());
         String cdrFileName = cdrFile.getName();
         try {
             copyWhatsAppCsrFile(cdrFile);
@@ -2726,7 +2728,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
         WhatsAppCdrFileNotificationRequest request = requestWhatsAppCdrFileNotificationRequestFromParams(event.getParameters());
 
-        File csrFile = new File(localWhatsAppCdrDir(), request.getWhatsAppResSummary().getWpResFile());
+        File csrFile = new File(localWhatsAppCdrDir(), request.getWhatsappResSummary().getWpResFile());
         String csrFileName = csrFile.getName();
 
         // Copy summary file, if needed
@@ -2743,7 +2745,7 @@ public class CdrFileServiceImpl implements CdrFileService {
         eventRelay.broadcastEventMessage(new MotechEvent(CSR_VERIFIER_CACHE_EVICT_MESSAGE));
 
         LOGGER.info("Phase 4 - processCsrs");
-        processWhatsAppOptCsrs(csrFile, request.getWhatsAppResSummary().getRecordsCount());
+        processWhatsAppOptCsrs(csrFile, request.getWhatsappResSummary().getRecordsCount());
 
         LOGGER.info("Phase 4 - End {}", timer.time());
     }
