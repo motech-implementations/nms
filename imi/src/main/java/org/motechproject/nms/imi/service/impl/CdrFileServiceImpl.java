@@ -814,7 +814,7 @@ public class CdrFileServiceImpl implements CdrFileService {
 
             @Override
             public String getSqlQuery() {
-                String query = "INSERT IGNORE INTO nms_imi_wp_csr (externalId,urn,contentFileName,weekId,preferedLanguage,stateCode,messageStatusTimestamp,messageStatus,creationDate,modificationDate)  " +
+                String query = "INSERT IGNORE INTO nms_imi_wp_csr (externalId,urn,contentFileName,weekId,preferredLanguage,stateCode,messageStatusTimestamp,messageStatus,creationDate,modificationDate)  " +
                         "values  " +
                         insertQuerySetForWhatsAppOptCsrs(updateObjects);
 
@@ -931,7 +931,7 @@ public class CdrFileServiceImpl implements CdrFileService {
             stringBuilder.append(QUOTATION + (whatsAppOptCsr.getUrn()) + QUOTATION_COMMA);
             stringBuilder.append(QUOTATION + whatsAppOptCsr.getContentFileName()+ QUOTATION_COMMA);
             stringBuilder.append(QUOTATION + whatsAppOptCsr.getWeekId()+ QUOTATION_COMMA);
-            stringBuilder.append(QUOTATION + whatsAppOptCsr.getPreferedLanguage() + QUOTATION_COMMA);
+            stringBuilder.append(QUOTATION + whatsAppOptCsr.getPreferredLanguage() + QUOTATION_COMMA);
             stringBuilder.append(QUOTATION + whatsAppOptCsr.getStateCode() + QUOTATION_COMMA);
 
             stringBuilder.append(QUOTATION + whatsAppOptCsr.getMessageStatusTimestamp()+ QUOTATION_COMMA);

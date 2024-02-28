@@ -21,7 +21,7 @@ public class WhatsAppOptCsrDto implements Serializable {
 
     private String weekId;
 
-    private String preferedLanguage;
+    private String preferredLanguage;
 
     private long stateCode;
 
@@ -44,12 +44,12 @@ public class WhatsAppOptCsrDto implements Serializable {
 //        this.messageStatus = messageStatus;
 //    }
 
-    public WhatsAppOptCsrDto(String externalId, Long urn, String contentFileName, String weekId, String preferedLanguage, long stateCode, String messageStatusTimestamp, WhatsAppMessageStatus messageStatus) {
+    public WhatsAppOptCsrDto(String externalId, Long urn, String contentFileName, String weekId, String preferredLanguage, long stateCode, String messageStatusTimestamp, WhatsAppMessageStatus messageStatus) {
         this.externalId = externalId;
         this.urn = urn;
         this.contentFileName = contentFileName;
         this.weekId = weekId;
-        this.preferedLanguage = preferedLanguage;
+        this.preferredLanguage = preferredLanguage;
         this.stateCode = stateCode;
         this.messageStatusTimestamp = messageStatusTimestamp;
         this.messageStatus = messageStatus;
@@ -103,12 +103,12 @@ public class WhatsAppOptCsrDto implements Serializable {
         this.messageStatus = messageStatus;
     }
 
-    public String getPreferedLanguage() {
-        return preferedLanguage;
+    public String getpreferredLanguage() {
+        return preferredLanguage;
     }
 
-    public void setPreferedLanguage(String preferedLanguage) {
-        this.preferedLanguage = preferedLanguage;
+    public void setpreferredLanguage(String preferredLanguage) {
+        this.preferredLanguage = preferredLanguage;
     }
 
     public long getStateCode() {
@@ -125,7 +125,7 @@ public class WhatsAppOptCsrDto implements Serializable {
         params.put("urn", csr.getUrn());
         params.put("contentFileName", csr.getContentFileName());
         params.put("weekId", csr.getWeekId());
-        params.put("preferedLanguage", csr.getPreferedLanguage());
+        params.put("preferredLanguage", csr.getpreferredLanguage());
         params.put("stateCode" , csr.getStateCode());
         params.put("messageStatusTimestamp", csr.getMessageStatusTimestamp());
         params.put("messageStatus", csr.getMessageStatus());
@@ -139,7 +139,7 @@ public class WhatsAppOptCsrDto implements Serializable {
                 (Long) params.get("urn"),
                 (String) params.get("contentFileName"),
                 (String) params.get("weekId"),
-                (String) params.get("preferedLanguage"),
+                (String) params.get("preferredLanguage"),
                 (Long) params.get("stateCode"),
                 (String) params.get("messageStatusTimestamp"),
                 (WhatsAppMessageStatus) params.get("messageStatus")

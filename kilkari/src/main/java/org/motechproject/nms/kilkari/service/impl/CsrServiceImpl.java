@@ -181,14 +181,14 @@ public class CsrServiceImpl implements CsrService {
             }
             if (existingCallRetry != null && existingCallRetry.isOpt_in_call_eligibility()
                     && existingCallRetry.getCallStage() == CallStage.RETRY_LAST && existingCallRetry.getWeekId().equals("w1_1")) {
-                boolean optInCall = existingCallRetry.getContentFileName().equals("Opt in-call.wav");
+                boolean optInCall = existingCallRetry.getContentFileName().equals("opt_in.wav");
                 if(!optInCall) {
                     /*callRetryDataService.delete(existingCallRetry);
                     callRetryDataService.create(new CallRetry(
                                     subscription.getSubscriptionId(),
                                     subscription.getSubscriber().getCallingNumber(),
                                     CallStage.RETRY_LAST,
-                                    "Opt in-call.wav",
+                                    "opt_in.wav",
                                     csrDto.getWeekId(),
                                     csrDto.getLanguageCode(),
                                     csrDto.getCircleName(),
@@ -198,7 +198,7 @@ public class CsrServiceImpl implements CsrService {
                                     csrDto.isOpt_in_call_eligibility()
                             )
                     );*/
-                    existingCallRetry.setContentFileName("Opt in-call.wav");
+                    existingCallRetry.setContentFileName("opt_in.wav");
                     callRetryDataService.update(existingCallRetry);
                 } else {
                     callRetryDataService.delete(existingCallRetry);
@@ -271,7 +271,7 @@ public class CsrServiceImpl implements CsrService {
                             subscription.getSubscriptionId(),
                             subscription.getSubscriber().getCallingNumber(),
                             CallStage.RETRY_LAST,
-                            "Opt in-call.wav",
+                            "opt_in.wav",
                             callSummaryRecordDto.getWeekId(),
                             callSummaryRecordDto.getLanguageCode(),
                             callSummaryRecordDto.getCircleName(),
@@ -312,12 +312,12 @@ public class CsrServiceImpl implements CsrService {
                     completeSubscriptionIfNeeded(subscription, csrDto.getContentFileName());
                     LOGGER.info("INSIDE processCallSummaryRecord -INSIDE switch - SUCCESS");
                     if (callRetry != null) {
-                        if (!callRetry.getContentFileName().equals("Opt in-call.wav")) {
+                        if (!callRetry.getContentFileName().equals("opt_in.wav")) {
                             callRetryDataService.delete(callRetry);
                         }
                     }
                     if(csrDto.isOpt_in_call_eligibility() && (csrDto.getContentFileName().equals(SubscriptionPackMessage.getWelcomeMessage().getMessageFileName())
-                            || csrDto.getContentFileName().equals("Opt in-call.wav"))) {
+                            || csrDto.getContentFileName().equals("opt_in.wav"))) {
                         LOGGER.info("INSIDE processCallSummaryRecord -INSIDE switch - SUCCESS AND TEND TO switchIVRfromWhatsAppIfOpted");
                         switchIVRfromWhatsAppIfOpted(subscription, csrDto, callRetry);
                     }

@@ -28,7 +28,7 @@ public class WhatsAppOptCsr {
     private WhatsAppMessageStatus messageStatus;
 
     @Field
-    private String preferedLanguage;
+    private String preferredLanguage;
 
     @Field
     private long stateCode;
@@ -85,12 +85,12 @@ public class WhatsAppOptCsr {
     public WhatsAppOptCsr() {
     }
 
-    public String getPreferedLanguage() {
-        return preferedLanguage;
+    public String getPreferredLanguage() {
+        return preferredLanguage;
     }
 
-    public void setPreferedLanguage(String preferedLanguage) {
-        this.preferedLanguage = preferedLanguage;
+    public void setPreferredLanguage(String preferredLanguage) {
+        this.preferredLanguage = preferredLanguage;
     }
 
     public long getStateCode() {
@@ -125,7 +125,7 @@ public class WhatsAppOptCsr {
                 urn,
                 contentFileName,
                 weekId,
-                preferedLanguage,
+                preferredLanguage,
                 stateCode,
                 messageStatusTimestamp,
                 messageStatus
