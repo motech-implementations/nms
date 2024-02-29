@@ -28,10 +28,6 @@ import org.motechproject.nms.imi.web.contract.FileProcessedStatusRequest;
 import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.domain.WhatsAppOptSMS;
 import org.motechproject.nms.kilkari.repository.WhatsAppOptSMSDataService;
-import org.motechproject.nms.kilkari.domain.*;
-import org.motechproject.nms.kilkari.domain.WhatsAppOptSMS;
-import org.motechproject.nms.kilkari.repository.WhatsAppOptSMSDataService;
-import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.CallRetryService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -63,8 +59,8 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final String LOCAL_WHATSAPP_SMS_OBD_DIR = "imi.local_whatsapp_sms_obd_dir";
     private static final String LOCAL_OBD_DIR_WHATSAPP = "imi.local_obd_dir_whatsapp";
     private static final String TARGET_FILE_TIME = "imi.target_file_time";
-    private static final String WHATSAPP_TARGET_FILE_TIME = "imi.whatsApp_target_file_time";
-    private static final String TARGET_FILE_TIME_WHATSAPP = "imi.target_file_time_whatsapp";
+    private static final String WHATSAPP_SMS_TARGET_FILE_TIME = "imi.whatsapp_sms_target_file_time";
+    private static final String WHATSAPP_TARGET_FILE_TIME = "imi.whatsapp_target_file_time";
     private static final String MAX_QUERY_BLOCK = "imi.max_query_block";
     private static final String TARGET_FILE_SEC_INTERVAL = "imi.target_file_sec_interval";
     private static final String TARGET_FILE_NOTIFICATION_URL = "imi.target_file_notification_url";
@@ -96,9 +92,9 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final int PROGRESS_INTERVAL = 10000;
 
     private static final String GENERATE_TARGET_FILE_EVENT = "nms.obd.generate_target_file";
-    private static final String GENERATE_WHATSAPP_TARGET_FILE_EVENT = "nms.obd.generate_whatsApp_target_file";
+    private static final String GENERATE_WHATSAPP_SMS_TARGET_FILE_EVENT = "nms.obd.generate_whatsapp_sms_target_file";
 
-    private static final String GENERATE_TARGET_FILE_EVENT_WHATSAPP = "nms.obd.generate_target_file_WP";
+    private static final String GENERATE_TARGET_FILE_EVENT_WHATSAPP = "nms.obd.generate_whatsapp_target_file";
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
     private static final String DEFAULT_CIRCLE = "99";  // https://applab.atlassian.net/browse/NIP-64
     public static final String WROTE = "Wrote {}";
@@ -170,7 +166,7 @@ public class TargetFileServiceImpl implements TargetFileService {
         //Calculate today's fire time
         LOGGER.debug("test - scheduleTargetFileGenerationWA ");
         DateTimeFormatter fmt = DateTimeFormat.forPattern("H:m");
-        String timeProp = settingsFacade.getProperty(TARGET_FILE_TIME_WHATSAPP);
+        String timeProp = settingsFacade.getProperty(WHATSAPP_TARGET_FILE_TIME);
         DateTime time = fmt.parseDateTime(timeProp);
         DateTime today = DateTime.now()                     // This means today's date...
                 .withHourOfDay(time.getHourOfDay())         // ...at the hour...
@@ -288,7 +284,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     private void scheduleWhatsAppTargetFileGeneration() {
         //Calculate today's fire time
         DateTimeFormatter fmt = DateTimeFormat.forPattern("H:m");
-        String timeProp = settingsFacade.getProperty(WHATSAPP_TARGET_FILE_TIME);
+        String timeProp = settingsFacade.getProperty(WHATSAPP_SMS_TARGET_FILE_TIME);
         DateTime time = fmt.parseDateTime(timeProp);
         DateTime today = DateTime.now()                     // This means today's date...
                 .withHourOfDay(time.getHourOfDay())         // ...at the hour...
@@ -306,11 +302,11 @@ public class TargetFileServiceImpl implements TargetFileService {
             return;
         }
 
-        LOGGER.debug(String.format("The %s message will be sent every %ss starting %s", GENERATE_WHATSAPP_TARGET_FILE_EVENT,
+        LOGGER.debug(String.format("The %s message will be sent every %ss starting %s", GENERATE_WHATSAPP_SMS_TARGET_FILE_EVENT,
                 secInterval.toString(), today.toString()));
 
         //Schedule repeating job
-        MotechEvent event = new MotechEvent(GENERATE_WHATSAPP_TARGET_FILE_EVENT);
+        MotechEvent event = new MotechEvent(GENERATE_WHATSAPP_SMS_TARGET_FILE_EVENT);
         RepeatingSchedulableJob job = new RepeatingSchedulableJob(event,          //MOTECH event
                 null,           //repeatCount, null means infinity
                 secInterval,    //repeatIntervalInSeconds
@@ -1587,7 +1583,7 @@ public class TargetFileServiceImpl implements TargetFileService {
         return recordCountDeactivated;
     }
 
-    @MotechListener(subjects = { GENERATE_WHATSAPP_TARGET_FILE_EVENT })
+    @MotechListener(subjects = {GENERATE_WHATSAPP_SMS_TARGET_FILE_EVENT})
     @Transactional
     public void generateWhatsAppTargetFile(MotechEvent event) {
         LOGGER.debug(event.toString());
@@ -1717,25 +1713,6 @@ public class TargetFileServiceImpl implements TargetFileService {
         TargetFileNotification tfn = generateTargetFileWhatsApp();
         LOGGER.debug("test - target file generated ");
         if (tfn != null) {
-            // Copy the OBD file from the local imi.local_obd_dir to the remote imi.local_obd_dir network share
-            ScpHelper scpHelper = new ScpHelper(settingsFacade);
-                try {
-                    scpHelper.scpWhatsAppObdToRemote(tfn.getFileName());
-                } catch (ExecException e) {
-                    String error = String.format("Error copying target file %s: %s", tfn.getFileName(),
-                            e.getMessage());
-                    LOGGER.error(error,e);
-                    fileAuditRecordDataService.create(new FileAuditRecord(
-                            FileType.WHATSAPP_TARGET_FILE,
-                            tfn.getFileName(),
-                            false,
-                            error,
-                            null,
-                            null
-                    ));
-                    alert(tfn.getFileName(), "targetFileName", error);
-                    return;
-                }
                 //notify the IVR system the file is ready
             LOGGER.debug("notifying IVR system file is ready");
                 sendNotificationRequestWhatsApp(tfn);
@@ -1808,6 +1785,25 @@ public class TargetFileServiceImpl implements TargetFileService {
         fileAuditRecordDataService.create(new FileAuditRecord(FileType.WHATSAPP_TARGET_FILE, tfn.getFileName(), true,
                 null, tfn.getRecordsCount(), tfn.getChecksum()));
 
+        // Copy the OBD file from the local imi.local_obd_dir to the remote imi.local_obd_dir network share
+        ScpHelper scpHelper = new ScpHelper(settingsFacade);
+        try {
+            scpHelper.scpWhatsAppObdToRemote(tfn.getFileName());
+        } catch (ExecException e) {
+            String error = String.format("Error copying target file %s: %s", tfn.getFileName(),
+                    e.getMessage());
+            LOGGER.error(error,e);
+            fileAuditRecordDataService.create(new FileAuditRecord(
+                    FileType.WHATSAPP_TARGET_FILE,
+                    tfn.getFileName(),
+                    false,
+                    error,
+                    null,
+                    null
+            ));
+            alert(tfn.getFileName(), "targetFileName", error);
+            return null;
+        }
         return tfn;
     }
 
