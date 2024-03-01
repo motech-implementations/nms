@@ -1148,10 +1148,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         "s.creationDate, s.creator, s.modificationDate, s.modifiedBy, s.owner " +
                         "FROM nms_subscriptions AS s " +
                         "WHERE s.id > :offset AND " +
-                        "DATE(s.wpEndDate) = DATE(:date) AND " +
+                        "DATE(s.endDate) = DATE(:date) AND " +
                         "status = 'DEACTIVATED' AND " +
                         "s.serviceStatus IN ('WHATSAPP', 'IVR_AND_WHATSAPP') AND " +
-                        "s.deactivationReason IN ( 'CHILD_DEATH' , 'MATERNAL_DEATH' , 'MISCARRIAGE_OR_ABORTION' , 'STILL_BIRTH' ) " +
+                        "s.deactivationReason IN ( " + deactivationReasons + " ) " +
                         "ORDER BY s.id " +
                         "LIMIT :max";
                 LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
