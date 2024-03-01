@@ -1182,7 +1182,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                     e.getMessage()), e);
         }
         LOGGER.debug("test - httpPost object created");
-        sender.sendNotificationRequestWhatsApp(httpPost, HttpStatus.SC_ACCEPTED, tfn.getFileName(), "targetFile Notification Request");
+        sender.sendNotificationRequestWhatsApp(httpPost, HttpStatus.SC_ACCEPTED, HttpStatus.SC_OK, tfn.getFileName(), "targetFile Notification Request");
     }
 
     private void sendWhatsAppNotificationRequest(TargetFileNotification tfn) {

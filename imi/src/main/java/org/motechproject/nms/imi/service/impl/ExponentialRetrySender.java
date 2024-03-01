@@ -155,11 +155,11 @@ public class ExponentialRetrySender {
     /**
      * Request (POST) handler with exponential retry
      * @param httpPost http POST request
-     * @param expectedStatus expected status for the response
+     * @param expectedStatus_200 expected status for the response
      * @param id alert id to use for failure
      * @param name alert name to use for failure
      */
-    public boolean sendNotificationRequestWhatsApp(final HttpPost httpPost, final int expectedStatus, final String id, final String name) {
+    public boolean sendNotificationRequestWhatsApp(final HttpPost httpPost, final int expectedStatus_202, final  int expectedStatus_200 ,final String id, final String name) {
         LOGGER.debug("Sending {}", httpPost);
 
         int retryDelay;
@@ -208,13 +208,13 @@ public class ExponentialRetrySender {
                         @Override
                         public Boolean handleResponse(final HttpResponse response) throws IOException {
                             int responseCode = response.getStatusLine().getStatusCode();
-                            if (responseCode == expectedStatus) {
+                            if (responseCode == expectedStatus_202 || responseCode == expectedStatus_200) {
                                 String msg = String.format("SUCCESS Sending httpPost %s (response %d)", httpPost
                                         .toString(), responseCode);
                                 LOGGER.debug(msg);
                                 return true;
                             } else {
-                                String error = String.format("Expecting HTTP %d response but received HTTP %d: %s", expectedStatus,
+                                String error = String.format("Expecting HTTP %d response but received HTTP %d: %s", expectedStatus_200,
                                         responseCode, EntityUtils.toString(response.getEntity()));
                                 LOGGER.warn(error);
                                 alertService.create(id, name, error, AlertType.MEDIUM, AlertStatus.NEW, 0, null);
