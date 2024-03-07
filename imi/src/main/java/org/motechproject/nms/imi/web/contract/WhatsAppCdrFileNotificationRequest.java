@@ -37,7 +37,8 @@ public class WhatsAppCdrFileNotificationRequest {
     public String toString() {
         return "WhatsAppCdrFileNotificationRequest{" +
                 "targetFileName='" + targetFileName + '\'' +
-                ", whatsappResSummary=" + whatsappResSummary +
-                '}';
+                ", whatsappResSummary= '" + whatsappResSummary.getWpResFile() + "' , '" +
+        whatsappResSummary.getChecksum() + "' , '" + whatsappResSummary.getRecordsCount()+
+                "' }";
     }
 }

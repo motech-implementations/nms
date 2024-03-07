@@ -8,22 +8,22 @@ package org.motechproject.nms.imi.service.contract;
  * http://<IVROBDAPI:port>/obdmanager/notifytargetfile
  */
 public class WhatsAppCdrFileProcessedNotification {
-    private Integer whatsAppCdrFileProcessingStatus;
+    private Integer fileProcessedStatus;
     private String fileName;
     private String failureReason;
 
-    public WhatsAppCdrFileProcessedNotification(Integer whatsAppCdrFileProcessingStatus, String fileName, String failureReason) {
-        this.whatsAppCdrFileProcessingStatus = whatsAppCdrFileProcessingStatus;
+    public WhatsAppCdrFileProcessedNotification(Integer fileProcessedStatus, String fileName, String failureReason) {
+        this.fileProcessedStatus = fileProcessedStatus;
         this.fileName = fileName;
         this.failureReason = failureReason;
     }
 
-    public Integer getWhatsAppCdrFileProcessingStatus() {
-        return whatsAppCdrFileProcessingStatus;
+    public Integer getFileProcessedStatus() {
+        return fileProcessedStatus;
     }
 
-    public void setWhatsAppCdrFileProcessingStatus(Integer whatsAppCdrFileProcessingStatus) {
-        this.whatsAppCdrFileProcessingStatus = whatsAppCdrFileProcessingStatus;
+    public void setFileProcessedStatus(Integer fileProcessedStatus) {
+        this.fileProcessedStatus = fileProcessedStatus;
     }
 
     public String getFileName() {
@@ -45,7 +45,7 @@ public class WhatsAppCdrFileProcessedNotification {
     @Override
     public String toString() {
         return "WhatsAppCdrFileProcessedNotification{" +
-                "whatsAppCdrFileProcessingStatus=" + whatsAppCdrFileProcessingStatus +
+                "whatsAppCdrFileProcessingStatus=" + fileProcessedStatus +
                 ", fileName='" + fileName + '\'' +
                 ", failureReason='" + failureReason + '\'' +
                 '}';

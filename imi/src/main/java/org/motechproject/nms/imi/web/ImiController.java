@@ -174,7 +174,7 @@ public class ImiController {
         }
         String cdrCsrFName=fileInfo.getWpResFile();
         int nameLength=(targetFileName).length();
-        boolean isObdNameInFile=cdrCsrFName.contains(targetFileName.substring(nameLength-28,nameLength-4));
+        boolean isObdNameInFile=cdrCsrFName.contains(targetFileName.substring(nameLength-17,nameLength-4));
         if (validateFieldPresent(errors, "wpResFile", fileInfo.getWpResFile())) {
             if (!(isObdNameInFile) ) {
                 errors.append(String.format(INVALID, fieldName));

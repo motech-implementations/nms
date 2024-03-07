@@ -10,7 +10,7 @@ import java.util.Map;
 
 //external_id	Urn	ContentFileName	Week_id	Message_status_timestamp	Message_Statu
 public class WhatAppCsrHelper {
-    public static final String WHATSAPP_CSR_HEADER = "external_id,urn,content_file_name,week_id,PREFERRED_LANGUAGE,state_code,message_status_timestamp,message_status";
+    public static final String WHATSAPP_CSR_HEADER = "external_id,urn,content_file_name,week_id,preferred_language,state_code,message_status_timestamp,message_status";
     private static final long MIN_URN = 1000000000L;
     private static final long MAX_URN = 9999999999L;
 

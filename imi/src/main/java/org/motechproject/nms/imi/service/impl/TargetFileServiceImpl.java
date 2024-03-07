@@ -92,8 +92,9 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final int PROGRESS_INTERVAL = 10000;
 
     private static final String GENERATE_TARGET_FILE_EVENT = "nms.obd.generate_target_file";
+    private static final String GENERATE_WHATSAPP_SMS_TARGET_FILE_EVENT1 = "nms.obd.generate_whatsApp_target_file";
     private static final String GENERATE_WHATSAPP_SMS_TARGET_FILE_EVENT = "nms.obd.generate_whatsapp_sms_target_file";
-
+    private static final String GENERATE_TARGET_FILE_EVENT_WHATSAPP1 = "nms.obd.generate_target_file_WP";
     private static final String GENERATE_TARGET_FILE_EVENT_WHATSAPP = "nms.obd.generate_whatsapp_target_file";
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
     private static final String DEFAULT_CIRCLE = "99";  // https://applab.atlassian.net/browse/NIP-64
@@ -524,7 +525,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
         writer.write(",");
 
-        writer.write(needsWelcomeOptInForWP.toString());
+        writer.write((contentFileName.equals("w1_1.wav") ? needsWelcomeOptInForWP : Boolean.FALSE).toString());
 
         writer.write("\n");
     }
