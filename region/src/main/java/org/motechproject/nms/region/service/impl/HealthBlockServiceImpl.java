@@ -138,9 +138,9 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                 String query = "";
                 if(!healthBlockValues.isEmpty()) {
                     query = "INSERT into nms_health_blocks (`code`, `name`, `state_id_OID`, `district_id_OID`, `taluka_id_OID`, " +
-                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`, `mddsCode`) VALUES " +
                             healthBlockValues + " ON DUPLICATE KEY UPDATE " +
-                            "name = VALUES(name), district_id_OID = VALUES(district_id_OID), taluka_id_OID = VALUES(taluka_id_OID), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                            "name = VALUES(name), district_id_OID = VALUES(district_id_OID), taluka_id_OID = VALUES(taluka_id_OID), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy), mddsCode=VALUES(mddsCode)  ";
                 }
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
@@ -154,7 +154,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
         };
 
         Long createdHealthBlocks = 0L;
-        if (!districtHashMap.isEmpty() && !talukaHashMap.isEmpty() && !queryExecution.getSqlQuery().isEmpty()) {
+        if (!queryExecution.getSqlQuery().isEmpty() && !districtHashMap.isEmpty() && !talukaHashMap.isEmpty()) {
             createdHealthBlocks = healthBlockDataService.executeSQLQuery(queryExecution);
         }
 
@@ -239,6 +239,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> healthBlock : healthBlocks) {
             String rejectionReason="";
+            Long mdds_Code=(healthBlock.get(LocationConstants.MDDS_CODE) == null ? 0 : (Long) healthBlock.get(LocationConstants.MDDS_CODE));
             if (healthBlock.get(LocationConstants.CSV_STATE_ID) != null && healthBlock.get(LocationConstants.DISTRICT_ID) != null &&
                     healthBlock.get(LocationConstants.TALUKA_ID) != null && !healthBlock.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty() ) {
                 State state = stateHashMap.get(healthBlock.get(LocationConstants.CSV_STATE_ID).toString());
@@ -262,7 +263,8 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                     stringBuilder.append(MOTECH_STRING);
                     stringBuilder.append(MOTECH_STRING);
                     stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                    stringBuilder.append(QUOTATION + mdds_Code + QUOTATION);
                     stringBuilder.append(")");
 
                     i++;
@@ -317,7 +319,8 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                 rejectionStringBuilder.append(MOTECH_STRING);
                 rejectionStringBuilder.append(MOTECH_STRING);
                 rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-                rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                rejectionStringBuilder.append(QUOTATION + mdds_Code + QUOTATION);
                 rejectionStringBuilder.append(")");
 
                 k++;
@@ -339,7 +342,7 @@ public class HealthBlockServiceImpl implements HealthBlockService {
 
             @Override
             public String getSqlQuery() {
-                String query1 = "INSERT IGNORE into nms_taluka_healthblock (taluka_id, healthBlock_id, creationDate, modificationDate) ";
+                String query1 = "INSERT IGNORE into nms_taluka_healthblock (taluka_id, healthBlock_id, creationDate, modificationDate, talukaName, districtCode) ";
                 int count = recordList.size();
                 String query2 = "";
                 for (Map<String, Object> record : recordList) {
@@ -348,10 +351,11 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                         if (count != recordList.size()) {
                             query2 += " UNION ";
                         }
-                        query2 += " select t.id, h.id, now(), now() from nms_states s " +
+                        query2 += " select t.id, h.id, now(), now()" +", "+"'"+record.get(LocationConstants.TALUKA_NAME).toString()+"'"+", "+record.get(LocationConstants.DISTRICT_ID)+
+                                " from nms_states s " +
                                 " join nms_districts d on  d.state_id_OID = s.id " +
-                                " join nms_talukas t on t.district_id_OID = d.id and t.code = " +
-                                record.get(LocationConstants.TALUKA_ID).toString().trim() +
+                                " join nms_talukas t on t.district_id_OID = d.id and t.code = " + "'" +
+                                record.get(LocationConstants.TALUKA_ID).toString().trim() + "'" +
                                 " join nms_health_blocks h on h.district_id_OID = t.district_id_OID and h.code = " +
                                 record.get(LocationConstants.HEALTHBLOCK_ID).toString() +
                                 " where s.code = " + record.get(LocationConstants.CSV_STATE_ID).toString();
@@ -368,8 +372,11 @@ public class HealthBlockServiceImpl implements HealthBlockService {
                     return query2;
                 }
 
-                LOGGER.debug("Taluka_HEALTHBLOCK Query: {}", query1 + query2);
-                return query1 + query2;
+                String query3=" ON DUPLICATE KEY UPDATE " +
+                        "modificationDate = VALUES(modificationDate), talukaName = VALUES(talukaName), districtCode = VALUES(districtCode)";
+
+                LOGGER.debug("Taluka_HEALTHBLOCK Query: {}", query1 + query2+query3);
+                return query1 + query2+query3;
             }
 
             @Override

@@ -317,11 +317,18 @@ public class BaseController {
         return propertyService.isServiceDeployedInState(service, state);
     }
 
-    protected  boolean validateMAScores(Map<String, Integer> scores) {
+    protected  boolean validateMAScores(Map<String, Integer> scores, String bookmark) {
         if (scores != null) {
             for (Integer currentScore : scores.values()) {
                 if (currentScore < MA_MIN_SCORE || currentScore > MA_MAX_SCORE) {
                     throw new IllegalArgumentException(String.format(INVALID, "scoresByChapter"));
+                }
+            }
+            for (String key : scores.keySet()){
+                if(bookmark!= null && !bookmark.isEmpty()) {
+                    if(key.equals("0") && !bookmark.startsWith("Chapter01_")){
+                        throw new IllegalArgumentException(String.format(INVALID, "scoresByChapter"));
+                    }
                 }
             }
         }

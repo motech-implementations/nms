@@ -11,10 +11,12 @@ import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.util.Order;
 import org.motechproject.nms.rch.domain.RchImportAudit;
+import org.motechproject.nms.rch.domain.RchImportFacilitator;
 import org.motechproject.nms.rch.domain.RchImportFailRecord;
 import org.motechproject.nms.rch.domain.RchUserType;
 import org.motechproject.nms.rch.exception.RchWebServiceException;
 import org.motechproject.nms.rch.repository.RchImportAuditDataService;
+import org.motechproject.nms.rch.repository.RchImportFacilitatorDataService;
 import org.motechproject.nms.rch.repository.RchImportFailRecordDataService;
 import org.motechproject.nms.rch.service.RchWebServiceFacade;
 import org.motechproject.nms.rch.service.RchWsImportService;
@@ -28,9 +30,7 @@ import org.springframework.stereotype.Service;
 
 import javax.jdo.annotations.Transactional;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service("rchWsImportService")
 public class RchWsImportServiceImpl implements RchWsImportService {
@@ -54,6 +54,9 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
     @Autowired
     private RchImportFailRecordDataService rchImportFailRecordDataService;
+
+    @Autowired
+    private RchImportFacilitatorDataService rchImportFacilitatorDataService;
 
     /**
      * Event relay service to handle async notifications
@@ -624,6 +627,39 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         LOGGER.debug("Fetching all the failed imports in the last 7 days for stateId {} and UserType {}", stateId, userType);
         QueryParams queryParams = new QueryParams(new Order("importDate", Order.Direction.ASC));
+        // QueryParams queryParamsfinal = new QueryParams(new Order("importDate", Order.Direction.DESC));
+        //List<RchImportFailRecord> failedImports = rchImportFailRecordDataService.getByStateAndImportdateAndUsertype(stateId, referenceDate.minusDays(6), userType, queryParams);
+//        LOGGER.info("failedImports {}", failedImports);
+        //LocalDate startDate = failedImports.isEmpty() ? referenceDate : failedImports.get(0).getImportDate();
+        //LOGGER.info("fromDate {}", startDate);
+        List<RchImportFacilitator> failedRecords = rchImportFacilitatorDataService.getByStateIdAndImportDateAndUserType(stateId, LocalDate.now().minusDays(6), userType, queryParams);
+        LOGGER.debug("total file size = ", failedRecords.size());
+        Collections.reverse(failedRecords);
+        LocalDate startDateFinal = referenceDate;
+        int i = 0;
+        if (failedRecords.isEmpty()) {
+            startDateFinal = referenceDate.minusDays(6);
+        } else if (failedRecords.get(i).getFinalStatus()) {
+            startDateFinal = failedRecords.get(i).getImportDate();
+        } else {
+            startDateFinal = referenceDate.minusDays(1);
+            while (!failedRecords.get(i).getFinalStatus() && i < failedRecords.size() - 1) {
+                startDateFinal = failedRecords.get(i).getImportDate().minusDays(1);
+                i++;
+            }
+        }
+        LOGGER.info("fromDate {}", startDateFinal);
+        if (!startDateFinal.equals(LocalDate.now())) {
+            Map<String, Object> eventParams = new HashMap<>();
+            eventParams.put(Constants.START_DATE_PARAM, startDateFinal);
+            eventParams.put(Constants.END_DATE_PARAM, referenceDate);
+            eventParams.put(Constants.STATE_ID_PARAM, stateId);
+            eventParams.put(Constants.ENDPOINT_PARAM, endpoint);
+            LOGGER.debug("Sending import message for stateId {} and UserType {}", stateId, userType);
+            eventRelay.sendEventMessage(new MotechEvent(importSubject, eventParams));
+        }
+        /*LOGGER.debug("Fetching all the failed imports in the last 7 days for stateId {} and UserType {}", stateId, userType);
+        QueryParams queryParams = new QueryParams(new Order("importDate", Order.Direction.ASC));
         List<RchImportFailRecord> failedImports = rchImportFailRecordDataService.getByStateAndImportdateAndUsertype(stateId, referenceDate.minusDays(6), userType, queryParams);
         LOGGER.info("failedImports {}", failedImports);
         LocalDate startDate = failedImports.isEmpty() ? referenceDate : failedImports.get(0).getImportDate();
@@ -634,6 +670,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         eventParams.put(Constants.STATE_ID_PARAM, stateId);
         eventParams.put(Constants.ENDPOINT_PARAM, endpoint);
         LOGGER.debug("Sending import message for stateId {} and UserType {}", stateId, userType);
-        eventRelay.sendEventMessage(new MotechEvent(importSubject, eventParams));
+        eventRelay.sendEventMessage(new MotechEvent(importSubject, eventParams));*/
     }
 }

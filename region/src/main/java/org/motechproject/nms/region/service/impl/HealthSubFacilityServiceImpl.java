@@ -114,7 +114,7 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
         };
 
         Long createdHealthSubFacilities = 0L;
-        if (!healthFacilityHashMap.isEmpty() && !talukaHashMap.isEmpty() && !queryExecution.getSqlQuery().isEmpty()) {
+        if (!queryExecution.getSqlQuery().isEmpty() && !healthFacilityHashMap.isEmpty() && !talukaHashMap.isEmpty() ) {
             createdHealthSubFacilities = dataService.executeSQLQuery(queryExecution);
         }
 
@@ -143,14 +143,17 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
                         healthSubFacility.get(LocationConstants.HEALTHFACILITY_ID).toString());
                 Long healthSubFacilityCode = (Long) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_ID);
                 String healthSubFacilityName = (String) healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME);
+
+                    if(healthSubFacilityName!=null) {
+                        healthSubFacilityName = healthSubFacilityName.replaceAll("[?]", "");
+                    }
                 if (taluka != null && healthFacility != null && (healthSubFacilityName != null && !healthSubFacilityName.trim().isEmpty()) && healthSubFacilityCode != null && !((Long) (0L)).equals(healthSubFacilityCode)) {
                     if (i != 0) {
                         stringBuilder.append(", ");
                     }
                     stringBuilder.append("(");
                     stringBuilder.append(healthSubFacilityCode + ", ");
-                    stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME) == null ?
-                            "" : healthSubFacility.get(LocationConstants.HEALTHSUBFACILITY_NAME).toString()) + QUOTATION_COMMA);
+                    stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(healthSubFacilityName) + QUOTATION_COMMA);
                     stringBuilder.append(state.getId() + ", ");
                     stringBuilder.append(district.getId() + ", ");
                     stringBuilder.append(healthFacility.getId() + ", ");
@@ -237,7 +240,7 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
 
             @Override
             public String getSqlQuery() {
-                String query = "INSERT IGNORE into nms_village_healthsubfacility (village_id, healthSubFacility_id, creationDate, modificationDate) ";
+                String query = "INSERT IGNORE into nms_village_healthsubfacility (village_id, healthSubFacility_id, creationDate, modificationDate, districtCode, talukaCode, villageName, healthFacilityCode) ";
                 String query2 = "";
                 int count = recordList.size();
                 for (Map<String, Object> record : recordList) {
@@ -246,7 +249,11 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
                         if (count != recordList.size()) {
                             query2 += " UNION ";
                         }
-                        query2 += " select v.id as village_Id, hsf.id as healthSubFacility_Id, now(), now() from nms_states s " +
+                        String village_name=record.get(LocationConstants.VILLAGE_NAME).toString();
+                        village_name=village_name.replaceAll("\"","");
+                        village_name=village_name.replaceAll("'","");
+                        query2 += " select v.id as village_Id, hsf.id as healthSubFacility_Id, now(), now()" +", "+record.get(LocationConstants.DISTRICT_ID)+", "+"'"+record.get(LocationConstants.TALUKA_ID)+"'"+", '"+village_name+"', "+record.get(LocationConstants.HEALTHFACILITY_ID)+
+                                " from nms_states s " +
                                 " JOIN nms_districts d on s.id=d.state_id_oid " +
                                 " JOIN nms_talukas t on t.district_id_oid = d.id " +
                                 " JOIN nms_villages v on v.taluka_id_oid = t.id and v.vcode = " +
@@ -266,9 +273,10 @@ public class HealthSubFacilityServiceImpl implements HealthSubFacilityService {
                     LOGGER.debug("VILLAGE_HEALTHSUBFACILITY Query: {}", query2);
                     return query2;
                 }
-
+                String query3=" ON DUPLICATE KEY UPDATE " +
+                        "modificationDate = VALUES(modificationDate), districtCode = VALUES(districtCode), talukaCode = VALUES(talukaCode), villageName = VALUES(villageName), healthFacilityCode = VALUES(healthFacilityCode)";
                 LOGGER.debug("VILLAGE_HEALTHSUBFACILITY Query: {}", query + query2);
-                return query + query2;
+                return query + query2+query3;
             }
 
             @Override

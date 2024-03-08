@@ -100,6 +100,9 @@ public class ChildImportRejection {
     private String birthDate;
 
     @Field
+    private String registrationDate;
+
+    @Field
     private String placeOfDelivery;
 
     @Field
@@ -501,6 +504,14 @@ public class ChildImportRejection {
 
     public void setBirthDate(String birthDate) {
         this.birthDate = birthDate;
+    }
+
+    public String getRegistrationDate() {
+        return registrationDate;
+    }
+
+    public void setRegistrationDate(String registrationDate) {
+        this.registrationDate = registrationDate;
     }
 
     public String getPlaceOfDelivery() {

@@ -1,28 +1,30 @@
 package org.motechproject.nms.kilkari.contract;
 
-import org.joda.time.DateTime;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
-
-/**
- * Created by vishnu on 13/7/18.
+/**Created by vishnu on 27/6/18.
+ * update by rakesh on 20/08/20.
  */
-@XmlType
-@XmlAccessorType(XmlAccessType.NONE)
+
 public class RchDistrictRecord {
 
+    @JsonProperty("DistrictCode")
     private Long districtCode;
+
+    @JsonProperty("DistrictName")
     private String districtName;
-    private DateTime execDate;
+
+    @JsonProperty("MDDS_Code")
+    private Long MDDS_Code;
+
+    @JsonProperty("StateCode")
+    private Long StateCode;
+
 
     public Long getDistrictCode() {
         return districtCode;
     }
 
-    @XmlElement(name = "District_ID")
     public void setDistrictCode(Long districtCode) {
         this.districtCode = districtCode;
     }
@@ -31,17 +33,23 @@ public class RchDistrictRecord {
         return districtName;
     }
 
-    @XmlElement(name = "District_Name")
     public void setDistrictName(String districtName) {
         this.districtName = districtName;
     }
 
-    public DateTime getExecDate() {
-        return execDate;
+    public Long getMDDS_Code() {
+        return MDDS_Code;
     }
 
-    @XmlElement(name = "Exec_Date")
-    public void setExecDate(DateTime execDate) {
-        this.execDate = execDate;
+    public void setMDDS_Code(Long MDDS_Code) {
+        this.MDDS_Code = MDDS_Code;
+    }
+
+    public Long getStateCode() {
+        return StateCode;
+    }
+
+    public void setStateCode(Long stateCode) {
+        StateCode = stateCode;
     }
 }

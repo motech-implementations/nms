@@ -1,5 +1,6 @@
 package org.motechproject.nms.flwUpdate.service;
 
+import org.motechproject.nms.flw.exception.FlwExistingMobileNumberAlreadySubscribedException;
 import org.motechproject.nms.flw.exception.FlwExistingRecordException;
 import org.motechproject.nms.flw.exception.GfStatusInactiveException;
 import org.motechproject.nms.kilkari.contract.AnmAshaRecord;
@@ -18,7 +19,7 @@ public interface FrontLineWorkerImportService {
 
     void importMctsFrontLineWorker(Map<String, Object> record, State state) throws InvalidLocationException, FlwExistingRecordException;
 
-    void importRchFrontLineWorker(Map<String, Object> record, State state) throws InvalidLocationException, FlwExistingRecordException, GfStatusInactiveException;
+    void importRchFrontLineWorker(Map<String, Object> record, State state) throws InvalidLocationException, FlwExistingRecordException, GfStatusInactiveException , FlwExistingMobileNumberAlreadySubscribedException;
     /**
      * Used to create or update an FLW from mcts or other sync services
      * @param flwRecord key-value pair of properties for flw

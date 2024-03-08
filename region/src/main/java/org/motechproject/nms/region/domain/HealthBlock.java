@@ -64,7 +64,6 @@ public class HealthBlock extends MdsEntity {
     @Column
     private Long talukaIdOID;
 
-
     public Long getStateIdOID() {
         return stateIdOID;
     }
@@ -94,6 +93,9 @@ public class HealthBlock extends MdsEntity {
         //this.talukas = new HashSet<>();
         this.healthFacilities = new ArrayList<>();
     }
+
+    @Field
+    private Long mddsCode;
 
     public District getDistrict() {
         return district;
@@ -141,6 +143,14 @@ public class HealthBlock extends MdsEntity {
 
     public void setTalukaIdOID(Long talukaIdOID) {
         this.talukaIdOID = talukaIdOID;
+    }
+
+    public Long getMddsCode() {
+        return mddsCode;
+    }
+
+    public void setMddsCode(Long mddsCode) {
+        this.mddsCode = mddsCode;
     }
 
 //    public Set<Taluka> getTalukas() {

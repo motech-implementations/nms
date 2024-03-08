@@ -2,16 +2,13 @@ package org.motechproject.nms.kilkari.ut;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.domain.*;
+import org.motechproject.nms.kilkari.service.impl.SubscriptionServiceImpl;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -22,6 +19,10 @@ import static org.junit.Assert.assertTrue;
 
 
 public class SubscriptionUnitTest {
+
+    @Autowired
+    private SubscriptionServiceImpl subscriptionServiceImpl = new SubscriptionServiceImpl() ;
+
     @Test
     public void verifyHasCompleted() {
         Subscription subscription = new Subscription(
@@ -142,5 +143,29 @@ public class SubscriptionUnitTest {
 
         SubscriptionPackMessage msg = subscription.nextScheduledMessage(DateTime.now().plusDays(4));
         assertEquals("w1_2.wav", msg.getMessageFileName());
+    }
+
+    @Test
+    public void verifyRejectingMultipleActiveSubscriptionsForSameMobileNumber(){
+        Long msisdn = 1111111111L;
+        String motherRchID = "motherRchId";
+        String childRchId = "childRchId";
+        Subscription subscription1 = new Subscription(
+                new Subscriber(msisdn),
+                createSubscriptionPack("pack", SubscriptionPackType.PREGNANCY, 36, 2),
+                SubscriptionOrigin.RCH_IMPORT);
+        subscription1.setStatus(SubscriptionStatus.ACTIVE);
+        HashSet<Subscription> subscriptionHashSet = new HashSet<>();
+        subscriptionHashSet.add(subscription1);
+        subscription1.getSubscriber().setSubscriptions(subscriptionHashSet);
+        List<Subscriber> subscribers = new ArrayList<>();
+        subscribers.add(subscription1.getSubscriber());
+        subscription1.getSubscriber().setMother(new MctsMother(motherRchID));
+
+        boolean flag1 = subscriptionServiceImpl.activeSubscriptionByMsisdnRch(subscribers , msisdn , SubscriptionPackType.PREGNANCY , motherRchID , null);
+        assertEquals(flag1 , false);
+
+        boolean flag2 = subscriptionServiceImpl.activeSubscriptionByMsisdnRch(subscribers , msisdn , SubscriptionPackType.PREGNANCY , null , childRchId);
+        assertEquals(flag2 , true);
     }
 }

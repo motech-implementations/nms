@@ -62,5 +62,9 @@ public interface RchWebServiceFacade {
 
     String getBeneficiaryLocationUpdateDirectory();
 
+    void readAllDataFromXMLFile(String remoteLocation);
+
     String getLocationFilesDirectory();
+
+    void readBeneficiaryDataFromFile(String remoteLocation);
 }

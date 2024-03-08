@@ -29,13 +29,17 @@ public class RchImportFacilitator {
     @Field
     private LocalDate importDate;
 
-    public RchImportFacilitator(String fileName, LocalDate startDate, LocalDate endDate, Long stateId, RchUserType userType, LocalDate importDate) {
+    @Field
+    private Boolean finalStatus;
+
+    public RchImportFacilitator(String fileName, LocalDate startDate, LocalDate endDate, Long stateId, RchUserType userType, LocalDate importDate, Boolean finalStatus) {
         this.fileName = fileName;
         this.startDate = startDate;
         this.endDate = endDate;
         this.stateId = stateId;
         this.userType = userType;
         this.importDate = importDate;
+        this.finalStatus = finalStatus;
     }
 
     public String getFileName() {
@@ -70,6 +74,9 @@ public class RchImportFacilitator {
         this.stateId = stateId;
     }
 
+    public Boolean getFinalStatus() { return finalStatus; }
+
+    public void setFinalStatus(Boolean finalStatus) { this.finalStatus = finalStatus; }
 
     public RchUserType getUserType() {
         return userType;

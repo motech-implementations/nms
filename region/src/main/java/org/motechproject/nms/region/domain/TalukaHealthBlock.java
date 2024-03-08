@@ -29,6 +29,12 @@ public class TalukaHealthBlock extends MdsEntity{
     @Column
     private Long healthBlockIdOID;
 
+    @Column
+    private String talukaName;
+
+    @Column
+    private Long districtCode;
+
     public Long getTalukaIdOID() {
         return talukaIdOID;
     }
@@ -44,4 +50,21 @@ public class TalukaHealthBlock extends MdsEntity{
     public void setHealthBlockIdOID(Long healthBlockIdOID) {
         this.healthBlockIdOID = healthBlockIdOID;
     }
+
+    public String getTalukaName() {
+        return talukaName;
+    }
+
+    public void setTalukaName(String talukaName) {
+        this.talukaName = talukaName;
+    }
+
+    public Long getDistrictCode() {
+        return districtCode;
+    }
+
+    public void setDistrictCode(Long districtCode) {
+        this.districtCode = districtCode;
+    }
+
 }

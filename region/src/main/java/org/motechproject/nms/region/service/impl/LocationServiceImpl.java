@@ -64,30 +64,7 @@ import java.util.Set;
 import java.util.List;
 
 import static org.motechproject.nms.region.domain.LocationEnum.VILLAGEHEALTHSUBFACILITY;
-import static org.motechproject.nms.region.utils.LocationConstants.CODE_SQL_STRING;
-import static org.motechproject.nms.region.utils.LocationConstants.CSV_STATE_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.DISTRICT_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.DISTRICT_NAME;
-import static org.motechproject.nms.region.utils.LocationConstants.HEALTHBLOCK_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.HEALTHBLOCK_NAME;
-import static org.motechproject.nms.region.utils.LocationConstants.HEALTHFACILITY_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.HEALTHFACILITY_NAME;
-import static org.motechproject.nms.region.utils.LocationConstants.HEALTHSUBFACILITY_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.HEALTHSUBFACILITY_NAME;
-import static org.motechproject.nms.region.utils.LocationConstants.INVALID;
-import static org.motechproject.nms.region.utils.LocationConstants.LOCATION_PART_SIZE;
-import static org.motechproject.nms.region.utils.LocationConstants.NON_CENSUS_VILLAGE;
-import static org.motechproject.nms.region.utils.LocationConstants.OR_SQL_STRING;
-import static org.motechproject.nms.region.utils.LocationConstants.PHC_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.PHC_NAME;
-import static org.motechproject.nms.region.utils.LocationConstants.SMALL_LOCATION_PART_SIZE;
-import static org.motechproject.nms.region.utils.LocationConstants.STATE_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.SUBCENTRE_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.SUBCENTRE_NAME;
-import static org.motechproject.nms.region.utils.LocationConstants.TALUKA_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.TALUKA_NAME;
-import static org.motechproject.nms.region.utils.LocationConstants.VILLAGE_ID;
-import static org.motechproject.nms.region.utils.LocationConstants.VILLAGE_NAME;
+import static org.motechproject.nms.region.utils.LocationConstants.*;
 
 
 /**
@@ -212,7 +189,9 @@ public class LocationServiceImpl implements LocationService {
             district.getTalukas().add(taluka);
             LOGGER.debug(String.format("Created {} in {} with id {}", taluka, district, taluka.getId()));
         }
-        locations.put(TALUKA_ID, taluka);
+        if (taluka!=null) {
+            locations.put(TALUKA_ID, taluka);
+        }
 
 
         // set and/or create village
@@ -230,7 +209,9 @@ public class LocationServiceImpl implements LocationService {
                 taluka.getVillages().add(village);
                 LOGGER.debug(String.format("Created %s in %s with id %d", village, taluka, village.getId()));
             }
-            locations.put(VILLAGE_ID + NON_CENSUS_VILLAGE, village);
+            if (village!=null) {
+                locations.put(VILLAGE_ID + NON_CENSUS_VILLAGE, village);
+            }
         }
 
 
@@ -251,6 +232,9 @@ public class LocationServiceImpl implements LocationService {
             district.getHealthBlocks().add(healthBlock);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthBlock, taluka, healthBlock.getId()));
         }
+        if (healthBlock==null) {
+            return locations;
+        }
         locations.put(HEALTHBLOCK_ID, healthBlock);
 
 
@@ -266,6 +250,9 @@ public class LocationServiceImpl implements LocationService {
             healthFacility.setName((String) map.get(PHC_NAME));
             healthBlock.getHealthFacilities().add(healthFacility);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthFacility, healthBlock, healthFacility.getId()));
+        }
+        if (healthFacility==null) {
+            return locations;
         }
         locations.put(PHC_ID, healthFacility);
 
@@ -285,6 +272,9 @@ public class LocationServiceImpl implements LocationService {
             healthFacility.getHealthSubFacilities().add(healthSubFacility);
             //village.addHealthSubFacility(healthSubFacility);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthSubFacility, healthFacility, healthSubFacility.getId()));
+        }
+        if (healthSubFacility==null) {
+            return locations;
         }
         locations.put(SUBCENTRE_ID, healthSubFacility);
 
@@ -453,11 +443,13 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public HealthBlock getHealthBlock(Long stateId, Long districtId, String talukaId, Long healthBlockId) {
 
-        Taluka taluka = getTaluka(stateId, districtId, talukaId);
+//        Taluka taluka = getTaluka(stateId, districtId, talukaId);
+        //Previously we are getting healthblock from taluka now we are getting it from healthblock
+        District district = getDistrict(stateId , districtId);
 
-        if (taluka != null) {
+        if (district != null) {
 
-            return healthBlockService.findByTalukaAndCode(taluka, healthBlockId);
+            return healthBlockService.findByDistrictAndCode(district, healthBlockId);
         }
 
         return null;
@@ -522,7 +514,7 @@ public class LocationServiceImpl implements LocationService {
                             taluka.setCode(record.get(TALUKA_ID).toString().trim());
                             taluka.setName((String) record.get(TALUKA_NAME));
                             mapKey.append("_");
-                            mapKey.append(Long.parseLong(record.get(TALUKA_ID).toString().trim()));
+                            mapKey.append(record.get(TALUKA_ID).toString().trim());
                             talukaHashMap.put(mapKey.toString(), taluka);
 
                             Long svid = record.get(NON_CENSUS_VILLAGE) == null ? 0 : (Long) record.get(NON_CENSUS_VILLAGE);
@@ -535,7 +527,7 @@ public class LocationServiceImpl implements LocationService {
                                 villageHashMap.put(mapKey.toString() + "_" + vcode.toString() + "_" +
                                         svid.toString(), village);
                             }
-
+                        }
                             mapKey = new StringBuffer(record.get(STATE_ID).toString() + "_" +
                                     record.get(DISTRICT_ID).toString());
 
@@ -566,7 +558,7 @@ public class LocationServiceImpl implements LocationService {
                                 }
                             }
                         }
-                    }
+
                 }
             }
         } catch (ConstraintViolationException e) {
@@ -589,6 +581,7 @@ public class LocationServiceImpl implements LocationService {
                         fillVillages(villageHashMap, talukaHashMap);
                         locationFinder.setVillageHashMap(villageHashMap);
                     }
+                }
                     if (!healthBlockHashMap.isEmpty()) {
                         fillHealthBlocks(healthBlockHashMap, districtHashMap);
                         locationFinder.setHealthBlockHashMap(healthBlockHashMap);
@@ -603,7 +596,7 @@ public class LocationServiceImpl implements LocationService {
                             }
                         }
                     }
-                }
+
             }
         }
         LOGGER.debug("Locations processed. Records Processed : {}", count);
@@ -736,6 +729,8 @@ public class LocationServiceImpl implements LocationService {
         mapping.put(CSV_STATE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(DISTRICT_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
+        mapping.put(MDDS_CODE, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(STATE_CODE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
 
         return mapping;
     }
@@ -747,7 +742,8 @@ public class LocationServiceImpl implements LocationService {
         mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(TALUKA_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
-
+        mapping.put(MDDS_CODE, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(STATE_CODE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         return mapping;
     }
 
@@ -760,6 +756,8 @@ public class LocationServiceImpl implements LocationService {
         mapping.put(NON_CENSUS_VILLAGE, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(VILLAGE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(VILLAGE_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
+        mapping.put(MDDS_CODE, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(STATE_CODE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
 
         return mapping;
     }
@@ -772,7 +770,7 @@ public class LocationServiceImpl implements LocationService {
         mapping.put(HEALTHBLOCK_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
-
+        mapping.put(MDDS_CODE, new org.supercsv.cellprocessor.Optional(new GetLong()));
         return mapping;
     }
 
@@ -783,7 +781,7 @@ public class LocationServiceImpl implements LocationService {
         mapping.put(HEALTHBLOCK_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(TALUKA_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
-
+        mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         return mapping;
     }
 
@@ -796,7 +794,7 @@ public class LocationServiceImpl implements LocationService {
         mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(HEALTHBLOCK_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
-
+        mapping.put(HEALTH_FACILITY_TYPE, new org.supercsv.cellprocessor.Optional(new GetLong()));
         return mapping;
     }
 
@@ -820,6 +818,9 @@ public class LocationServiceImpl implements LocationService {
         mapping.put(HEALTHSUBFACILITY_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(VILLAGE_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
         mapping.put(DISTRICT_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(TALUKA_ID, new org.supercsv.cellprocessor.Optional(new GetString()));
+        mapping.put(HEALTHFACILITY_ID, new org.supercsv.cellprocessor.Optional(new GetLong()));
+        mapping.put(VILLAGE_NAME, new org.supercsv.cellprocessor.Optional(new GetString()));
 
         return mapping;
     }
@@ -1002,7 +1003,7 @@ public class LocationServiceImpl implements LocationService {
                     count--;
                     String[] ids = talukaString.split("_");
                     Long districtId = districtHashMap.get(ids[0] + "_" + ids[1]).getId();
-                    query += CODE_SQL_STRING + ids[2] + " and district_id_oid = " + districtId + ")";
+                    query += CODE_SQL_STRING +"'"+ids[2]+"'" + " and district_id_oid = " + districtId + ")";
                     if (count > 0) {
                         query += OR_SQL_STRING;
                     }
@@ -1030,7 +1031,7 @@ public class LocationServiceImpl implements LocationService {
         if(talukas != null && !talukas.isEmpty()) {
             for (Taluka taluka : talukas) {
                 String districtKey = districtIdMap.get(taluka.getDistrict().getId());
-                talukaHashMap.put(districtKey + "_" + Long.parseLong(taluka.getCode()), taluka);
+                talukaHashMap.put(districtKey + "_" + taluka.getCode(), taluka);
             }
         }
     }

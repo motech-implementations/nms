@@ -36,6 +36,9 @@ public class HealthFacilityImportRejection {
     @Field
     private String rejectionReason;
 
+    @Field
+    private Long healthfacilityType;
+
     public Long getStateId() {    return stateId;    }
 
     public void setStateId(Long stateId) {     this.stateId = stateId;    }
@@ -102,6 +105,14 @@ public class HealthFacilityImportRejection {
 
     public void setRejectionReason(String rejectionReason) {
         this.rejectionReason = rejectionReason;
+    }
+
+    public Long getHealthfacilityType() {
+        return healthfacilityType;
+    }
+
+    public void setHealthfacilityType(Long healthfacilityType) {
+        this.healthfacilityType = healthfacilityType;
     }
 
     public HealthFacilityImportRejection() {

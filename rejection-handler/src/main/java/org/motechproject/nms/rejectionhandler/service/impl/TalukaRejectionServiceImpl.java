@@ -28,9 +28,9 @@ public class TalukaRejectionServiceImpl implements TalukaRejectionService {
             @Override
             public String getSqlQuery() {
                 String query = "INSERT into nms_taluka_rejects (`stateId`, `districtCode`, `talukaCode`, `talukaName`," +
-                        " `accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                        " `accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`, `stateCode`, `mddsCode`) VALUES " +
                         talukarejectedValues + " ON DUPLICATE KEY UPDATE " +
-                        "districtCode = VALUES(districtCode), talukaName = VALUES(talukaName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                        "districtCode = VALUES(districtCode), talukaName = VALUES(talukaName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy), stateCode=VALUES(stateCode), mddsCode=VALUES(mddsCode) ";
                 LOGGER.info("Printing Query for rejected Taluka: "+ query);
                 return query;
 

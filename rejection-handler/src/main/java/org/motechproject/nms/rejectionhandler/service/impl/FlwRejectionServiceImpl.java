@@ -43,6 +43,8 @@ public class FlwRejectionServiceImpl implements FlwRejectionService {
             }
         } else if (flwImportRejection.getFlwId() != null && flwImportRejection.getStateId() == null) {
             flwImportRejectionDataService.create(flwImportRejection);
+        }else if (flwImportRejection.getFlwId() == null){
+            flwImportRejectionDataService.create(flwImportRejection);
         }
         LOGGER.info("Created rejection record.");
     }

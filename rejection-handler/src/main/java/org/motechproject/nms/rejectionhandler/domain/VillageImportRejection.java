@@ -36,6 +36,11 @@ public class VillageImportRejection {
     @Field
     private long svid;
 
+    @Field
+    private Long mddsCode;
+
+    @Field
+    private Long state_code;
 
     public Long getStateId() {    return stateId;    }
 
@@ -97,6 +102,14 @@ public class VillageImportRejection {
         this.rejectionReason = rejectionReason;
     }
 
+    public Long getMddsCode() {
+        return mddsCode;
+    }
+
+    public void setMddsCode(Long mddsCode) {
+        this.mddsCode = mddsCode;
+    }
+
     public VillageImportRejection() {
     }
 
@@ -106,6 +119,14 @@ public class VillageImportRejection {
 
     public void setSvid(long svid) {
         this.svid = svid;
+    }
+
+    public Long getState_code() {
+        return state_code;
+    }
+
+    public void setState_code(Long state_code) {
+        this.state_code = state_code;
     }
 
     public VillageImportRejection(Long stateId, Long districtCode, String talukaCode, Long villageCode, String villageName, Boolean accepted, String rejectionReason) {

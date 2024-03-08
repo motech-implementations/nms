@@ -9,6 +9,9 @@ import org.motechproject.nms.api.web.MobileAcademyController;
 import org.motechproject.nms.api.web.contract.mobileAcademy.SaveBookmarkRequest;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.mockito.MockitoAnnotations.initMocks;
 
 /**
@@ -74,6 +77,18 @@ public class MobileAcademyControllerUnitTest {
         SaveBookmarkRequest sb = new SaveBookmarkRequest();
         sb.setCallingNumber(BaseController.SMALLEST_10_DIGIT_NUMBER);
         sb.setCallId(VALID_CALL_ID.substring(1));
+        mobileAcademyController.saveBookmarkWithScore(sb);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testBookmarkScores(){
+        SaveBookmarkRequest sb = new SaveBookmarkRequest();
+        Map<String, Integer> scores  = new HashMap();
+        scores.put("0",0);
+        sb.setScoresByChapter(scores);
+        sb.setCallingNumber(BaseController.SMALLEST_10_DIGIT_NUMBER);
+        sb.setCallId(VALID_CALL_ID);
+        sb.setBookmark("Chapter02_Lesson02");
         mobileAcademyController.saveBookmarkWithScore(sb);
     }
 

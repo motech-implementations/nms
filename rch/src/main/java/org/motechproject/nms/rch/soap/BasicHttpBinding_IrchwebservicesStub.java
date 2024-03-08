@@ -175,9 +175,7 @@ public class BasicHttpBinding_IrchwebservicesStub extends org.apache.axis.client
             if (super.cachedEndpoint != null) {
                 _call.setTargetEndpointAddress(super.cachedEndpoint);
             }
-            if (super.cachedTimeout != null) {
-                _call.setTimeout(super.cachedTimeout);
-            }
+            _call.setTimeout(1800000);
             if (super.cachedPortName != null) {
                 _call.setPortName(super.cachedPortName);
             }
@@ -237,6 +235,7 @@ public class BasicHttpBinding_IrchwebservicesStub extends org.apache.axis.client
         _call.setProperty(org.apache.axis.client.Call.SEND_TYPE_ATTR, Boolean.FALSE);
         _call.setProperty(org.apache.axis.AxisEngine.PROP_DOMULTIREFS, Boolean.FALSE);
         _call.setSOAPVersion(org.apache.axis.soap.SOAPConstants.SOAP11_CONSTANTS);
+        _call.setTimeout(1800000);
         _call.setOperationName(new javax.xml.namespace.QName("http://tempuri.org/", "DS_Data"));
 
         setRequestHeaders(_call);

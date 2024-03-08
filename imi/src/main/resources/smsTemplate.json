@@ -13,6 +13,9 @@
       "callbackData": ""
     },
     "senderName": "",
-    "category": ""
+    "category": "",
+    "templateId": "<smsTemplateId>",
+    "entityId": "<smsEntityId>",
+    "telemarketerId": "<smsTelemarketerId>"
   }
 }

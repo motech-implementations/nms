@@ -27,9 +27,9 @@ public class HealthBlockRejectionServiceImpl implements HealthBlockRejectionServ
             @Override
             public String getSqlQuery() {
                 String query = "INSERT into nms_health_block_rejects (`stateId`, `districtCode`, `talukaCode`, `healthBlockCode`, `healthBlockName`, " +
-                        " `accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                        " `accepted`, `rejectionReason`, `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`, `mddsCode`) VALUES " +
                         rejectedHealthBlockValues + " ON DUPLICATE KEY UPDATE " +
-                        "districtCode = VALUES(districtCode), talukaCode = VALUES(talukaCode), healthBlockName = VALUES(healthBlockName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                        "districtCode = VALUES(districtCode), talukaCode = VALUES(talukaCode), healthBlockName = VALUES(healthBlockName), accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason),modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy), mddsCode=VALUES(mddsCode) ";
                 LOGGER.info("Printing Query for rejected HB: "+ query);
                 return query;
 

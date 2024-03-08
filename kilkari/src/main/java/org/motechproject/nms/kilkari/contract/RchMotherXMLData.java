@@ -1,46 +1,129 @@
 package org.motechproject.nms.kilkari.contract;
 
+import org.joda.time.LocalDate;
+import org.motechproject.mds.annotations.Entity;
+import org.motechproject.mds.annotations.Field;
+import org.motechproject.mds.annotations.InstanceLifecycleListeners;
+import org.motechproject.nms.tracking.annotation.TrackClass;
+import org.motechproject.nms.tracking.annotation.TrackFields;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.XmlElement;
-
-@XmlType
-@XmlAccessorType(XmlAccessType.NONE)
-public class RchMotherRecord {
-
+@Entity(tableName = "nms_mother_table_data_xml")
+@TrackClass
+@TrackFields
+@InstanceLifecycleListeners
+public class RchMotherXMLData {
+    @Field
     private Long stateId;
+    @Field
     private Long districtId;
+    @Field
     private String districtName;
+    @Field
     private String talukaId;
+    @Field
     private String talukaName;
+    @Field
     private Long healthBlockId;
+    @Field
     private String healthBlockName;
+
+    @Field
     private Long phcId;
+
+    @Field
     private String phcName;
+    @Field
     private Long subCentreId;
+
+    @Field
     private String subCentreName;
+
+    @Field
     private Long villageId;
+
+    @Field
     private String villageName;
+    @Field
     private String mctsIdNo;
+
+    @Field
     private String registrationNo;
+
+    @Field
     private Long caseNo;
+
+    @Field
     private String name;
+
+    @Field
     private String mobileNo;
+    @Field
     private String lmpDate;
-    private String registrationDate;
+
+    @Field
     private String birthDate;
+
+    @Field
+    private String registrationDate;
+
+    @Field
     private String abortionType;
+
+    @Field
     private String deliveryOutcomes;
+
+    @Field
     private Integer entryType;
+
+    @Field
     private String execDate;
+
+    @Field
+    private LocalDate xmlProcessingDate;
+
+    public RchMotherXMLData(Long stateId, Long districtId, String districtName, String talukaId, String talukaName, Long healthBlockId, String healthBlockName, Long phcId, String phcName, Long subCentreId, String subCentreName, Long villageId, String villageName, String mctsIdNo, String registrationNo, Long caseNo, String name, String mobileNo, String registrationDate, String lmpDate, String birthDate, String abortionType, String deliveryOutcomes, Integer entryType, String execDate, LocalDate xmlProcessingDate) {
+        this.stateId = stateId;
+        this.districtId = districtId;
+        this.districtName = districtName;
+        this.talukaId = talukaId;
+        this.talukaName = talukaName;
+        this.healthBlockId = healthBlockId;
+        this.healthBlockName = healthBlockName;
+        this.phcId = phcId;
+        this.phcName = phcName;
+        this.subCentreId = subCentreId;
+        this.subCentreName = subCentreName;
+        this.villageId = villageId;
+        this.villageName = villageName;
+        this.mctsIdNo = mctsIdNo;
+        this.registrationNo = registrationNo;
+        this.caseNo = caseNo;
+        this.name = name;
+        this.mobileNo = mobileNo;
+        this.registrationDate = registrationDate;
+        this.lmpDate = lmpDate;
+        this.birthDate = birthDate;
+        this.abortionType = abortionType;
+        this.deliveryOutcomes = deliveryOutcomes;
+        this.entryType = entryType;
+        this.execDate = execDate;
+        this.xmlProcessingDate = xmlProcessingDate;
+    }
+
+    public LocalDate getXmlProcessingDate() {
+        return xmlProcessingDate;
+    }
+
+    public void setXmlProcessingDate(LocalDate xmlProcessingDate) {
+        this.xmlProcessingDate = xmlProcessingDate;
+    }
+
+
 
     public Long getStateId() {
         return stateId;
     }
 
-    @XmlElement(name = "StateID")
     public void setStateId(Long stateId) {
         this.stateId = stateId;
     }
@@ -49,38 +132,14 @@ public class RchMotherRecord {
         return districtId;
     }
 
-    @XmlElement(name = "District_ID")
     public void setDistrictId(Long districtId) {
         this.districtId = districtId;
-    }
-
-    public Long getHealthBlockId() {
-        return healthBlockId;
-    }
-
-    @XmlElement(name = "HealthBlock_ID")
-    public void setHealthBlockId(Long healthBlockId) {
-        this.healthBlockId = healthBlockId;
-    }
-
-    public String getHealthBlockName() {
-        return healthBlockName;
-    }
-
-    @XmlElement(name = "HealthBlock_Name")
-    public void setHealthBlockName(String healthBlockName) {
-        this.healthBlockName = healthBlockName;
-    }
-
-    public Long getPhcId() {
-        return phcId;
     }
 
     public String getDistrictName() {
         return districtName;
     }
 
-    @XmlElement(name = "District_Name")
     public void setDistrictName(String districtName) {
         this.districtName = districtName;
     }
@@ -89,7 +148,6 @@ public class RchMotherRecord {
         return talukaId;
     }
 
-    @XmlElement(name = "Taluka_ID")
     public void setTalukaId(String talukaId) {
         this.talukaId = talukaId;
     }
@@ -98,12 +156,30 @@ public class RchMotherRecord {
         return talukaName;
     }
 
-    @XmlElement(name = "Taluka_Name")
     public void setTalukaName(String talukaName) {
         this.talukaName = talukaName;
     }
 
-    @XmlElement(name = "PHC_ID")
+    public Long getHealthBlockId() {
+        return healthBlockId;
+    }
+
+    public void setHealthBlockId(Long healthBlockId) {
+        this.healthBlockId = healthBlockId;
+    }
+
+    public String getHealthBlockName() {
+        return healthBlockName;
+    }
+
+    public void setHealthBlockName(String healthBlockName) {
+        this.healthBlockName = healthBlockName;
+    }
+
+    public Long getPhcId() {
+        return phcId;
+    }
+
     public void setPhcId(Long phcId) {
         this.phcId = phcId;
     }
@@ -112,7 +188,6 @@ public class RchMotherRecord {
         return phcName;
     }
 
-    @XmlElement(name = "PHC_Name")
     public void setPhcName(String phcName) {
         this.phcName = phcName;
     }
@@ -121,7 +196,6 @@ public class RchMotherRecord {
         return subCentreId;
     }
 
-    @XmlElement(name = "SubCentre_ID")
     public void setSubCentreId(Long subCentreId) {
         this.subCentreId = subCentreId;
     }
@@ -130,7 +204,6 @@ public class RchMotherRecord {
         return subCentreName;
     }
 
-    @XmlElement(name = "SubCentre_Name")
     public void setSubCentreName(String subCentreName) {
         this.subCentreName = subCentreName;
     }
@@ -139,7 +212,6 @@ public class RchMotherRecord {
         return villageId;
     }
 
-    @XmlElement(name = "Village_ID")
     public void setVillageId(Long villageId) {
         this.villageId = villageId;
     }
@@ -148,7 +220,6 @@ public class RchMotherRecord {
         return villageName;
     }
 
-    @XmlElement(name = "Village_Name")
     public void setVillageName(String villageName) {
         this.villageName = villageName;
     }
@@ -157,7 +228,6 @@ public class RchMotherRecord {
         return mctsIdNo;
     }
 
-    @XmlElement(name = "MCTS_ID_No")
     public void setMctsIdNo(String mctsIdNo) {
         this.mctsIdNo = mctsIdNo;
     }
@@ -166,7 +236,6 @@ public class RchMotherRecord {
         return registrationNo;
     }
 
-    @XmlElement(name = "Registration_no")
     public void setRegistrationNo(String registrationNo) {
         this.registrationNo = registrationNo;
     }
@@ -175,7 +244,6 @@ public class RchMotherRecord {
         return caseNo;
     }
 
-    @XmlElement(name = "Case_no")
     public void setCaseNo(Long caseNo) {
         this.caseNo = caseNo;
     }
@@ -184,7 +252,6 @@ public class RchMotherRecord {
         return name;
     }
 
-    @XmlElement(name = "Name")
     public void setName(String name) {
         this.name = name;
     }
@@ -193,7 +260,6 @@ public class RchMotherRecord {
         return mobileNo;
     }
 
-    @XmlElement(name = "Mobile_no")
     public void setMobileNo(String mobileNo) {
         this.mobileNo = mobileNo;
     }
@@ -202,21 +268,14 @@ public class RchMotherRecord {
         return lmpDate;
     }
 
-    @XmlElement(name = "LMP_Date")
     public void setLmpDate(String lmpDate) {
         this.lmpDate = lmpDate;
     }
-
-    public String getRegistrationDate(){ return registrationDate; }
-
-    @XmlElement(name = "Mother_Registration_Date")
-    public void setRegistrationDate(String registrationDate) { this.registrationDate = registrationDate;}
 
     public String getBirthDate() {
         return birthDate;
     }
 
-    @XmlElement(name = "Birthdate")
     public void setBirthDate(String birthDate) {
         this.birthDate = birthDate;
     }
@@ -225,7 +284,6 @@ public class RchMotherRecord {
         return abortionType;
     }
 
-    @XmlElement(name = "Abortion_Type")
     public void setAbortionType(String abortionType) {
         this.abortionType = abortionType;
     }
@@ -234,7 +292,6 @@ public class RchMotherRecord {
         return deliveryOutcomes;
     }
 
-    @XmlElement(name = "Delivery_Outcomes")
     public void setDeliveryOutcomes(String deliveryOutcomes) {
         this.deliveryOutcomes = deliveryOutcomes;
     }
@@ -243,7 +300,6 @@ public class RchMotherRecord {
         return entryType;
     }
 
-    @XmlElement(name = "Entry_Type")
     public void setEntryType(Integer entryType) {
         this.entryType = entryType;
     }
@@ -252,8 +308,12 @@ public class RchMotherRecord {
         return execDate;
     }
 
-    @XmlElement(name = "Exec_Date")
     public void setExecDate(String execDate) {
         this.execDate = execDate;
     }
+
+    public String getRegistrationDate() { return registrationDate; }
+
+    public void setRegistrationDate(String registrationDate) { this.registrationDate = registrationDate; }
+
 }

@@ -81,6 +81,12 @@ public class Taluka extends MdsEntity {
     @Column
     private Long stateIdOID;
 
+    @Field
+    private Long stateCode;
+
+    @Field
+    private Long mddsCode;
+
 //    @Field
 //    @Cascade(delete = true)
 //    @Persistent(mappedBy = "taluka", defaultFetchGroup = "false")
@@ -162,9 +168,23 @@ public class Taluka extends MdsEntity {
         this.villages = villages;
     }
 
+    public Long getStateCode() {
+        return stateCode;
+    }
 
+    public void setStateCode(Long stateCode) {
+        this.stateCode = stateCode;
+    }
 
-    //    public List<HealthFacility> getHealthFacilities() {
+    public Long getMddsCode() {
+        return mddsCode;
+    }
+
+    public void setMddsCode(Long mddsCode) {
+        this.mddsCode = mddsCode;
+    }
+
+//    public List<HealthFacility> getHealthFacilities() {
 //        return healthFacilities;
 //    }
 //

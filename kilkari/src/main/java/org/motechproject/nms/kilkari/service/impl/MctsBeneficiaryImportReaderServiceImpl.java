@@ -370,6 +370,12 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
 
     private void getChildMapping(Map<String, CellProcessor> mapping) {
         mapping.put(KilkariConstants.BENEFICIARY_NAME, new Optional(new GetString()));
+        mapping.put(KilkariConstants.CHILD_REGISTRATION_DATE, new Optional(new GetInstanceByString<DateTime>() {
+            @Override
+            public DateTime retrieve(String value) {
+                return mctsBeneficiaryValueProcessor.getDateByString(value);
+            }
+        }));
         mapping.put(KilkariConstants.DOB, new Optional(new GetInstanceByString<DateTime>() {
             @Override
             public DateTime retrieve(String value) {

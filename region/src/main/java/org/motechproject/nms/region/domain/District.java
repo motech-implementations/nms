@@ -47,6 +47,12 @@ public class District extends MdsEntity {
     private Long code;
 
     @Field
+    private Long stateCode;
+
+    @Field
+    private Long mddsCode;
+
+    @Field
     @Persistent(defaultFetchGroup = "false")
     @Column(allowsNull = "false")
     @NotNull
@@ -139,6 +145,22 @@ public class District extends MdsEntity {
 
     public void setLanguage(Language language) {
         this.language = language;
+    }
+
+    public Long getStateCode() {
+        return stateCode;
+    }
+
+    public void setStateCode(Long stateCode) {
+        this.stateCode = stateCode;
+    }
+
+    public Long getMddsCode() {
+        return mddsCode;
+    }
+
+    public void setMddsCode(Long mddsCode) {
+        this.mddsCode = mddsCode;
     }
 
     @Override

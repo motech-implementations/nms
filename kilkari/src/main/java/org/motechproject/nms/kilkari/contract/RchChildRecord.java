@@ -25,6 +25,7 @@ public class RchChildRecord {
     private String name;
     private String mobileNo;
     private String birthdate;
+    private String registrationDate;
     private String registrationNo;
     private String motherRegistrationNo;
     private String entryType;
@@ -175,6 +176,14 @@ public class RchChildRecord {
     @XmlElement(name = "Birthdate")
     public void setBirthdate(String birthdate) {
         this.birthdate = birthdate;
+    }
+
+    public String getRegistrationDate() {
+        return registrationDate;
+    }
+    @XmlElement(name = "Registration_Date")
+    public void setRegistrationDate(String registrationDate) {
+        this.registrationDate = registrationDate;
     }
 
     public String getRegistrationNo() {

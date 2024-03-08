@@ -97,10 +97,10 @@ public class TalukaServiceImpl implements TalukaService {
                 String query = "";
                 if (!talukaValues.isEmpty()) {
                     query = "INSERT into nms_talukas (`code`, `name`, `state_id_OID`, `district_id_OID`, " +
-                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`) VALUES " +
+                            " `creator`, `modifiedBy`, `owner`, `creationDate`, `modificationDate`, `stateCode`, `mddsCode`) VALUES " +
                             talukaValues +
                             " ON DUPLICATE KEY UPDATE " +
-                            "name = VALUES(name), district_id_OID=VALUES(district_id_OID), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy) ";
+                            "name = VALUES(name), district_id_OID=VALUES(district_id_OID), modificationDate = VALUES(modificationDate), modifiedBy = VALUES(modifiedBy), stateCode=VALUES(stateCode), mddsCode=VALUES(mddsCode) ";
                 }
                 LOGGER.debug(SQL_QUERY_LOG, query);
                 return query;
@@ -114,7 +114,7 @@ public class TalukaServiceImpl implements TalukaService {
         };
 
         Long createdTalukas = 0L;
-        if (!districtHashMap.isEmpty() && !queryExecution.getSqlQuery().isEmpty()) {
+        if (!queryExecution.getSqlQuery().isEmpty() && !districtHashMap.isEmpty()) {
             createdTalukas = dataService.executeSQLQuery(queryExecution);
         }
 
@@ -158,7 +158,7 @@ public class TalukaServiceImpl implements TalukaService {
                         if (count != talukaKeys.size()) {
                             query += LocationConstants.OR_SQL_STRING;
                         }
-                        query += LocationConstants.CODE_SQL_STRING + ids[2] + " and district_id_oid = " + district.getId() + ")";
+                        query += LocationConstants.CODE_SQL_STRING +"'"+ ids[2] +"'"+ " and district_id_oid = " + district.getId() + ")";
                         LOGGER.debug("Query is ::  " + query);
                         count--;
                     }
@@ -203,12 +203,15 @@ public class TalukaServiceImpl implements TalukaService {
         DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern(DATE_FORMAT_STRING);
         for (Map<String, Object> taluka : talukas) {
             String rejectionReason="";
+            Long stateCode=(Long) taluka.get(LocationConstants.STATE_CODE_ID);
+            Long mdds_Code= taluka.get(LocationConstants.MDDS_CODE) == null ? 0 : (long) taluka.get(LocationConstants.MDDS_CODE);
             if (taluka.get(LocationConstants.CSV_STATE_ID) != null && taluka.get(LocationConstants.DISTRICT_ID) != null) {
                 State state = stateHashMap.get(taluka.get(LocationConstants.CSV_STATE_ID).toString());
                 District district = districtHashMap.get(taluka.get(LocationConstants.CSV_STATE_ID).toString() + "_" + taluka.get(LocationConstants.DISTRICT_ID).toString());
-                String talukaName = taluka.get(LocationConstants.TALUKA_NAME).toString();
+                String talukaName = taluka.get(LocationConstants.TALUKA_NAME) == null ? "" : taluka.get(LocationConstants.TALUKA_NAME).toString();
+                String taluka_id = taluka.get(LocationConstants.TALUKA_ID).toString().trim();
                 if (district != null && taluka.get(LocationConstants.TALUKA_ID) != null && !taluka.get(LocationConstants.TALUKA_ID).toString().trim().isEmpty() && (talukaName != null && !talukaName.trim().isEmpty()) &&
-                        !(Integer.parseInt((taluka.get(LocationConstants.TALUKA_ID).toString().trim())) ==0)) {
+                        !(taluka_id.isEmpty() || ("0".equals(taluka_id)))) {
                     if (i != 0) {
                         stringBuilder.append(", ");
                     }
@@ -222,7 +225,9 @@ public class TalukaServiceImpl implements TalukaService {
                     stringBuilder.append(MOTECH_STRING);
                     stringBuilder.append(MOTECH_STRING);
                     stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                    stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                    stringBuilder.append(QUOTATION + stateCode + QUOTATION_COMMA);
+                    stringBuilder.append(QUOTATION + mdds_Code + QUOTATION);
                     stringBuilder.append(")");
 
                     i++;
@@ -237,13 +242,13 @@ public class TalukaServiceImpl implements TalukaService {
                         else if ((talukaName == null || talukaName.trim().isEmpty()) ) {
                             rejectionReason=LocationRejectionReasons.LOCATION_NAME_NOT_PRESENT_IN_FILE.toString();
                         }
-                        else if ((Integer.parseInt((taluka.get(LocationConstants.TALUKA_ID).toString().trim())) ==0) ) {
+                        else if (taluka_id.isEmpty() || ("0".equals(taluka_id))) {
                             rejectionReason=LocationRejectionReasons.LOCATION_CODE_ZERO_IN_FILE.toString();
                         }
                 }
 
             }
-            else if(rejectionChecks){
+            else {
                 rejectionReason=LocationRejectionReasons.PARENT_LOCATION_ID_NOT_PRESENT_IN_FILE.toString();
             }
 
@@ -265,7 +270,9 @@ public class TalukaServiceImpl implements TalukaService {
                 rejectionStringBuilder.append(MOTECH_STRING);
                 rejectionStringBuilder.append(MOTECH_STRING);
                 rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
-                rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION);
+                rejectionStringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
+                rejectionStringBuilder.append(QUOTATION + stateCode + QUOTATION_COMMA);
+                rejectionStringBuilder.append(QUOTATION + mdds_Code + QUOTATION);
                 rejectionStringBuilder.append(")");
 
                 k++;

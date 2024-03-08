@@ -54,6 +54,12 @@ public class RchwebservicesLocator extends org.apache.axis.client.Service implem
         try {
             org.motechproject.nms.rch.soap.BasicHttpBinding_IrchwebservicesStub _stub = new org.motechproject.nms.rch.soap.BasicHttpBinding_IrchwebservicesStub(portAddress, this);
             _stub.setPortName(getBasicHttpBinding_IrchwebservicesWSDDServiceName());
+            _stub.setTimeout(1800000);
+            _stub._setProperty("axis.connection.timeout", 1800000);
+            _stub._setProperty(org.apache.axis.client.Call.CONNECTION_TIMEOUT_PROPERTY, 1800000);
+            _stub._setProperty(org.apache.axis.components.net.DefaultCommonsHTTPClientProperties.CONNECTION_DEFAULT_CONNECTION_TIMEOUT_KEY, 1800000);
+            _stub._setProperty(org.apache.axis.components.net.DefaultCommonsHTTPClientProperties.CONNECTION_DEFAULT_SO_TIMEOUT_KEY, 1800000);
+            _stub._setProperty(org.apache.axis.components.net.DefaultSocketFactory.CONNECT_TIMEOUT, 1800000);
             return _stub;
         }
         catch (org.apache.axis.AxisFault e) {

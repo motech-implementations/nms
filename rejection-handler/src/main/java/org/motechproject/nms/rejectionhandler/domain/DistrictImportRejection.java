@@ -27,6 +27,12 @@ public class DistrictImportRejection {
     @Field
     private String rejectionReason;
 
+    @Field
+    private Long stateCode;
+
+    @Field
+    private Long mddsCode;
+
     public Long getStateId() {     return stateId;    }
 
     public void setStateId(Long stateId) {      this.stateId = stateId;    }
@@ -69,6 +75,22 @@ public class DistrictImportRejection {
 
     public void setRejectionReason(String rejectionReason) {
         this.rejectionReason = rejectionReason;
+    }
+
+    public Long getStateCode() {
+        return stateCode;
+    }
+
+    public void setStateCode(Long stateCode) {
+        this.stateCode = stateCode;
+    }
+
+    public Long getMddsCode() {
+        return mddsCode;
+    }
+
+    public void setMddsCode(Long mddsCode) {
+        this.mddsCode = mddsCode;
     }
 
     public DistrictImportRejection() {
