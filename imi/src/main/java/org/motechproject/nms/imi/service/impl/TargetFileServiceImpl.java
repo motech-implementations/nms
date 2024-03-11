@@ -525,7 +525,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
         writer.write(",");
 
-        writer.write((contentFileName.equals("w1_1.wav") ? needsWelcomeOptInForWP : Boolean.FALSE).toString());
+        writer.write(((contentFileName.equals("w1_1.wav") || contentFileName.equals("opt_in.wav")) ? needsWelcomeOptInForWP : Boolean.FALSE).toString());
 
         writer.write("\n");
     }
@@ -1183,10 +1183,10 @@ public class TargetFileServiceImpl implements TargetFileService {
                     e.getMessage()), e);
         }
         LOGGER.debug("test - httpPost object created");
-        sender.sendNotificationRequestWhatsApp(httpPost, HttpStatus.SC_ACCEPTED, HttpStatus.SC_OK, tfn.getFileName(), "targetFile Notification Request");
+        sender.sendNotificationRequestWhatsApp(httpPost, HttpStatus.SC_ACCEPTED, HttpStatus.SC_OK, tfn.getFileName(), "whatsapp targetFile Notification Request");
     }
 
-    private void sendWhatsAppNotificationRequest(TargetFileNotification tfn) {
+    private void sendNotificationRequestWhatsAppSMS(TargetFileNotification tfn) {
         String notificationUrl = settingsFacade.getProperty(WHATSAPP_SMS_TARGET_FILE_NOTIFICATION_URL);
         LOGGER.debug("Sending {} to {}", tfn, notificationUrl);
 
@@ -1589,10 +1589,10 @@ public class TargetFileServiceImpl implements TargetFileService {
     public void generateWhatsAppTargetFile(MotechEvent event) {
         LOGGER.debug(event.toString());
         HashMap<String, TargetFileNotification> tfn = generateWhatsAppSMSTargetFile();
-        copyWhatsAppTargetFiletoRemoteAndNotifyIVR(tfn);
+        copyWhatsappSMSTargetFiletoRemoteAndNotifyIVR(tfn);
     }
 
-    public void copyWhatsAppTargetFiletoRemoteAndNotifyIVR(HashMap<String, TargetFileNotification> tfn){
+    public void copyWhatsappSMSTargetFiletoRemoteAndNotifyIVR(HashMap<String, TargetFileNotification> tfn){
         if (tfn != null) {
             // Copy the OBD file from the local imi.local_obd_dir to the remote imi.local_obd_dir network share
             ScpHelper scpHelper = new ScpHelper(settingsFacade);
@@ -1617,7 +1617,13 @@ public class TargetFileServiceImpl implements TargetFileService {
 
                 //notify the IVR system the file is ready
                 LOGGER.debug("Test-8: Calling sendWhatsAppNotificationRequest");
-                sendWhatsAppNotificationRequest(t);
+                if(t.getRecordsCount() != 0){
+                    sendNotificationRequestWhatsAppSMS(t);
+                }
+                else{
+                    LOGGER.debug("Test-8: There is no records in the file to notify.");
+                }
+
                 LOGGER.debug("Test-9: Fetching the to update sms sent status");
                 List<WhatsAppOptSMS> listOfWhatAppOptSmsToBeSent = getWhatAppSMSData(String.valueOf(LocalDate.now().minusDays(1)));
                 LOGGER.debug("Test-10: Updating the smsSent status");
@@ -1716,7 +1722,14 @@ public class TargetFileServiceImpl implements TargetFileService {
         if (tfn != null) {
                 //notify the IVR system the file is ready
             LOGGER.debug("notifying IVR system file is ready");
+            if(tfn.getRecordsCount() != 0){
                 sendNotificationRequestWhatsApp(tfn);
+            }
+            else{
+                LOGGER.debug("There is no records in the file to notify.");
+            }
+
+
         }
     }
 

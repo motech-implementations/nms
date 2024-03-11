@@ -53,6 +53,6 @@ public interface TargetFileService {
 
     HashMap<String, TargetFileNotification> generateWhatsAppSMSTargetFile();
 
-    void copyWhatsAppTargetFiletoRemoteAndNotifyIVR(HashMap<String, TargetFileNotification> tfn);
+    void copyWhatsappSMSTargetFiletoRemoteAndNotifyIVR(HashMap<String, TargetFileNotification> tfn);
 
 }

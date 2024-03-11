@@ -622,7 +622,7 @@ public class ImiController {
             LOGGER.debug("Test-1: Calling generateWhatsAppSMSTargetFile");
             HashMap<String, TargetFileNotification> tfn = targetFileService.generateWhatsAppSMSTargetFile();
             LOGGER.debug("Test-7: Calling copyWhatsAppTargetFiletoRemoteAndNotifyIVR");
-            targetFileService.copyWhatsAppTargetFiletoRemoteAndNotifyIVR(tfn);
+            targetFileService.copyWhatsappSMSTargetFiletoRemoteAndNotifyIVR(tfn);
             LOGGER.debug("targetFileService.generateWhatsAppSMSTargetFile() done");
 
             return tfn == null ? "null" : tfn.values().toString();
