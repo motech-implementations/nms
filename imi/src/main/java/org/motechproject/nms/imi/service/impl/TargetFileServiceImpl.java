@@ -1722,14 +1722,10 @@ public class TargetFileServiceImpl implements TargetFileService {
         if (tfn != null) {
                 //notify the IVR system the file is ready
             LOGGER.debug("notifying IVR system file is ready");
-            if(tfn.getRecordsCount() != 0){
-                sendNotificationRequestWhatsApp(tfn);
+            if(tfn.getRecordsCount() == 0){
+                LOGGER.debug("There is no records in the file");
             }
-            else{
-                LOGGER.debug("There is no records in the file to notify.");
-            }
-
-
+            sendNotificationRequestWhatsApp(tfn);
         }
     }
 
