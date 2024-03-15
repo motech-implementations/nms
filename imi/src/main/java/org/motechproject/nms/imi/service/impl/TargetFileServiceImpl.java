@@ -28,13 +28,11 @@ import org.motechproject.nms.imi.web.contract.FileProcessedStatusRequest;
 import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.domain.WhatsAppOptSMS;
 import org.motechproject.nms.kilkari.repository.WhatsAppOptSMSDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
 import org.motechproject.nms.kilkari.service.CallRetryService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.props.domain.RequestId;
-import org.motechproject.nms.region.repository.LanguageDataService;
 import org.motechproject.scheduler.contract.RepeatingSchedulableJob;
 import org.motechproject.scheduler.service.MotechSchedulerService;
 import org.motechproject.server.config.SettingsFacade;
@@ -92,9 +90,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     private static final int PROGRESS_INTERVAL = 10000;
 
     private static final String GENERATE_TARGET_FILE_EVENT = "nms.obd.generate_target_file";
-    private static final String GENERATE_WHATSAPP_SMS_TARGET_FILE_EVENT1 = "nms.obd.generate_whatsApp_target_file";
     private static final String GENERATE_WHATSAPP_SMS_TARGET_FILE_EVENT = "nms.obd.generate_whatsapp_sms_target_file";
-    private static final String GENERATE_TARGET_FILE_EVENT_WHATSAPP1 = "nms.obd.generate_target_file_WP";
     private static final String GENERATE_TARGET_FILE_EVENT_WHATSAPP = "nms.obd.generate_whatsapp_target_file";
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyyMMddHHmmss");
     private static final String DEFAULT_CIRCLE = "99";  // https://applab.atlassian.net/browse/NIP-64
@@ -108,8 +104,6 @@ public class TargetFileServiceImpl implements TargetFileService {
     private CallRetryService callRetryService;
     private FileAuditRecordDataService fileAuditRecordDataService;
     private WhatsAppOptSMSDataService whatsAppOptSMSDataService;
-    private LanguageDataService languageDataService;
-    private SubscriptionDataService subscriptionDataService;
     private static String freshCheckDND;
     private static String freshNoCheckDND;
     private static String retryCheckDND;
