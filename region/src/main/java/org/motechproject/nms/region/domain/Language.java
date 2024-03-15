@@ -32,6 +32,8 @@ public class Language extends MdsEntity {
     @Column(allowsNull = "false")
     private String name;
 
+    @Field
+    private String isoCode;
     public Language() {
     }
 
@@ -54,6 +56,14 @@ public class Language extends MdsEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getIsoCode() {
+        return isoCode;
+    }
+
+    public void setIsoCode(String isoCode) {
+        this.isoCode = isoCode;
     }
 
     @Override

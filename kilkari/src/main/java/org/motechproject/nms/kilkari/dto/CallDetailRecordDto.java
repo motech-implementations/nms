@@ -4,6 +4,7 @@ import org.joda.time.DateTime;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.props.domain.StatusCode;
+import org.motechproject.nms.props.domain.WhatsAppOptInStatusCode;
 
 import java.io.Serializable;
 
@@ -20,6 +21,8 @@ public class CallDetailRecordDto implements Serializable {
     private String operatorId;
     private CallDisconnectReason callDisconnectReason;
     private String weekId;
+    private String optInEligibility;
+    private WhatsAppOptInStatusCode optInStatusCode;
 
     public CallDetailRecordDto() { }
 
@@ -110,6 +113,14 @@ public class CallDetailRecordDto implements Serializable {
     public void setWeekId(String weekId) {
         this.weekId = weekId;
     }
+
+    public String getOptInEligibility() {return optInEligibility;}
+
+    public void setOptInEligibility(String optInEligibility) {this.optInEligibility = optInEligibility;}
+
+    public WhatsAppOptInStatusCode getOptInStatusCode() { return optInStatusCode;}
+
+    public void setOptInStatusCode(WhatsAppOptInStatusCode optInStatusCode) {this.optInStatusCode = optInStatusCode;}
 
     @Override //NO CHECKSTYLE Cyclomatic Complexity
     public boolean equals(Object o) {

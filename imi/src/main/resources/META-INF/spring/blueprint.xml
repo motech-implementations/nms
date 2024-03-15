@@ -23,6 +23,18 @@
     <osgi:reference id="fileAuditRecordDataService"
                     interface="org.motechproject.nms.imi.repository.FileAuditRecordDataService" />
 
+    <osgi:reference id="subscriptionDataService"
+                    interface="org.motechproject.nms.kilkari.repository.SubscriptionDataService" />
+
+    <osgi:reference id="whatsAppOptSMSDataService"
+                    interface="org.motechproject.nms.kilkari.repository.WhatsAppOptSMSDataService" />
+
+    <osgi:reference id="whatsAppOptCsrDataService"
+                    interface="org.motechproject.nms.imi.repository.WhatsAppOptCsrDataService" />
+
+    <osgi:reference id="whatsAppOptSMSCsrDataService"
+                  interface="org.motechproject.nms.imi.repository.WhatsAppOptSMSCsrDataService" />
+
     <osgi:reference id="callDetailRecordDataService"
                     interface="org.motechproject.nms.imi.repository.CallDetailRecordDataService" />
 

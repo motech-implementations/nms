@@ -255,6 +255,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         for (Map<String, Object> record : rejectedMotherRecords) {
             action = (String) record.get(KilkariConstants.ACTION);
             LOGGER.debug("Existing Mother Record with same MSISDN in the data set");
+            LOGGER.info("5 checking error for DUPLICATE_MOBILE_NUMBER_IN_DATASET : convertMapToMother(record).getAshaPhone() is "+ convertMapToMother(record).getAshaPhone() + " convertMapToMother(record).getName()" + convertMapToMother(record).getName());
             motherImportRejection = motherRejectionMcts(convertMapToMother(record), false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action);
             rejectedMothers.put(motherImportRejection.getIdNo(), motherImportRejection);
             rejectionStatus.put(motherImportRejection.getIdNo(), motherImportRejection.getAccepted());
@@ -864,6 +865,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         map.put(KilkariConstants.BENEFICIARY_NAME, motherRecord.getName());
         map.put(KilkariConstants.MSISDN, mctsBeneficiaryValueProcessor.getMsisdnByString(motherRecord.getWhomPhoneNo()));
         map.put(KilkariConstants.LMP, mctsBeneficiaryValueProcessor.getDateByString(motherRecord.getLmpDate()));
+        map.put(KilkariConstants.MOTHER_REGISTRATION_DATE , mctsBeneficiaryValueProcessor.getDateByString(motherRecord.getMotherRegistrationDate()));
         map.put(KilkariConstants.MOTHER_DOB, "".equals(motherRecord.getBirthdate()) ? null : mctsBeneficiaryValueProcessor.getDateByString(motherRecord.getBirthdate()));
         map.put(KilkariConstants.ABORTION, mctsBeneficiaryValueProcessor.getAbortionDataFromString(motherRecord.getAbortion()));
         map.put(KilkariConstants.STILLBIRTH, mctsBeneficiaryValueProcessor.getStillBirthFromString(String.valueOf(motherRecord.getOutcomeNos())));

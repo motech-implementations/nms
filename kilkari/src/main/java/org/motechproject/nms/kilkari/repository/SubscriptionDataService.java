@@ -14,6 +14,8 @@ import java.util.List;
 public interface SubscriptionDataService extends MotechDataService<Subscription> {
     @Lookup
     Subscription findBySubscriptionId(@LookupField(name = "subscriptionId") String subscriptionId);
+    @Lookup
+    Subscription findBySubscriptionIdAndStatus(@LookupField(name = "subscriptionId") String subscriptionId,@LookupField(name = "status")SubscriptionStatus status);
 
     @Lookup
     List<Subscription> findByStatus(@LookupField(name = "status")SubscriptionStatus status);

@@ -6,4 +6,8 @@ public interface CsrService {
 
     void processCallSummaryRecord(MotechEvent event);
 
+    void processWhatsAppSMSCsr(MotechEvent event);
+
+    void processWhatsAppCsr(MotechEvent event);
+
 }

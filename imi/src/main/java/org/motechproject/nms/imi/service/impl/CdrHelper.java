@@ -7,6 +7,7 @@ import org.motechproject.nms.kilkari.exception.InvalidCallRecordDataException;
 import org.motechproject.nms.props.domain.CallDisconnectReason;
 import org.motechproject.nms.props.domain.RequestId;
 import org.motechproject.nms.props.domain.StatusCode;
+import org.motechproject.nms.props.domain.WhatsAppOptInStatusCode;
 
 /**
  * Helper class to parse a CDR CSV line to a CallDetailRecordDTO or a CallDetailRecord
@@ -15,7 +16,7 @@ public final class CdrHelper {
 
     public static final String CDR_HEADER = "RequestId,Msisdn,CallId,AttemptNo,CallStartTime,CallAnswerTime," +
             "CallEndTime,CallDurationInPulse,CallStatus,LanguageLocationId,ContentFile,MsgPlayStartTime," +
-            "MsgPlayEndTime,CircleId,OperatorId,Priority,CallDisconnectReason,WeekId";
+            "MsgPlayEndTime,CircleId,OperatorId,Priority,CallDisconnectReason,WeekId,opt_in_call_eligibility,opt_in_input";
 
     private static final long MIN_MSISDN = 1000000000L;
     private static final long MAX_MSISDN = 9999999999L;
@@ -39,6 +40,8 @@ public final class CdrHelper {
         PRIORITY,
         CALL_DISCONNECT_REASON,
         WEEK_ID,
+        OPT_IN_CALL_ELIGIBILITY,
+        OPT_IN_INPUT,
         FIELD_COUNT;
     }
 
@@ -80,6 +83,18 @@ public final class CdrHelper {
             return Integer.parseInt(s);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(String.format("%s must be an integer", which), e);
+        }
+    }
+
+    private static int whatsAppStatusvalueFromString(String which, String s) {
+        try {
+            if (s.equalsIgnoreCase("NULL") || s.isEmpty() || s.equals(" ")){
+                return 5;
+            }else {
+                return Integer.parseInt(s);
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(String.format("%s must be an integer or NULL", which), e);
         }
     }
 
@@ -181,6 +196,11 @@ public final class CdrHelper {
                     fields[FieldName.CALL_DISCONNECT_REASON.ordinal()])));
 
             cdr.setWeekId(fields[FieldName.WEEK_ID.ordinal()]);
+
+            cdr.setOptInEligibility(fields[FieldName.OPT_IN_CALL_ELIGIBILITY.ordinal()]);
+
+            cdr.setOptInStatusCode(WhatsAppOptInStatusCode.fromValue(whatsAppStatusvalueFromString("opt_in_input",fields[FieldName.OPT_IN_INPUT.ordinal()])));
+
         } catch (IllegalArgumentException e) {
             throw new InvalidCallRecordDataException(e.getMessage(), e);
         }
@@ -228,6 +248,8 @@ public final class CdrHelper {
         cdr.setPriority(fields[FieldName.PRIORITY.ordinal()]);
         cdr.setCallDisconnectReason(fields[FieldName.CALL_DISCONNECT_REASON.ordinal()]);
         cdr.setWeekId(fields[FieldName.WEEK_ID.ordinal()]);
+        cdr.setOpt_in_call_eligibility(Boolean.parseBoolean(fields[FieldName.OPT_IN_CALL_ELIGIBILITY.ordinal()]));
+        cdr.setOpt_in_input(WhatsAppOptInStatusCode.fromValue(whatsAppStatusvalueFromString("opt_in_input",fields[FieldName.OPT_IN_INPUT.ordinal()])).toString());
 
         return cdr;
     }

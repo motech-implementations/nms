@@ -33,6 +33,10 @@ public class CallSummaryRecordDto implements Serializable {
 
     private String targetFileTimeStamp;
 
+    private boolean opt_in_call_eligibility;
+
+    private String opt_in_input;
+
     public CallSummaryRecordDto() { }
 
     //CHECKSTYLE:OFF
@@ -46,6 +50,20 @@ public class CallSummaryRecordDto implements Serializable {
         this.languageCode = languageCode;
         this.circleName = circleName;
         this.targetFileTimeStamp = targetFileTimeStamp;
+    }
+
+    public CallSummaryRecordDto(String subscriptionId, int statusCode, int finalStatus, String contentFileName,
+                                String weekId, String languageCode, String circleName, String targetFileTimeStamp, Boolean opt_in_call_eligibility, String opt_in_input) {
+        this.subscriptionId = subscriptionId;
+        this.statusCode = statusCode;
+        this.finalStatus = finalStatus;
+        this.contentFileName = contentFileName;
+        this.weekId = weekId;
+        this.languageCode = languageCode;
+        this.circleName = circleName;
+        this.targetFileTimeStamp = targetFileTimeStamp;
+        this.opt_in_call_eligibility = opt_in_call_eligibility;
+        this.opt_in_input = opt_in_input;
     }
 
     // Helper constructor for ITs
@@ -84,6 +102,14 @@ public class CallSummaryRecordDto implements Serializable {
     public int getFinalStatus() {
         return finalStatus;
     }
+
+    public boolean isOpt_in_call_eligibility() {return opt_in_call_eligibility;}
+
+    public void setOpt_in_call_eligibility(boolean opt_in_call_eligibility) {this.opt_in_call_eligibility = opt_in_call_eligibility;}
+
+    public String getOpt_in_input() {return opt_in_input;}
+
+    public void setOpt_in_input(String opt_in_input) {this.opt_in_input = opt_in_input;}
 
     public void setFinalStatus(int finalStatus) {
         this.finalStatus = finalStatus;
@@ -140,7 +166,9 @@ public class CallSummaryRecordDto implements Serializable {
                 (String) params.get("weekId"),
                 (String) params.get("languageCode"),
                 (String) params.get("circleName"),
-                (String) params.get("targetFileTimeStamp")
+                (String) params.get("targetFileTimeStamp"),
+                (Boolean) params.get("opt_in_call_eligibility"),
+                (String) params.get("opt_in_input")
         );
         return csr;
     }
@@ -156,6 +184,8 @@ public class CallSummaryRecordDto implements Serializable {
         params.put("languageCode", csr.languageCode);
         params.put("circleName", csr.circleName);
         params.put("targetFileTimeStamp", csr.targetFileTimeStamp);
+        params.put("opt_in_call_eligibility", csr.opt_in_call_eligibility);
+        params.put("opt_in_input", csr.opt_in_input);
         return params;
     }
 }

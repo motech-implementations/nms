@@ -79,6 +79,9 @@
     <osgi:reference id="callRetryDataService"
                     interface="org.motechproject.nms.kilkari.repository.CallRetryDataService" />
 
+    <osgi:reference id="WhatsAppOptSMSDataService"
+                    interface="org.motechproject.nms.kilkari.repository.WhatsAppOptSMSDataService" />
+
     <osgi:reference id="mctsChildDataService"
                     interface="org.motechproject.nms.kilkari.repository.MctsChildDataService" />
 

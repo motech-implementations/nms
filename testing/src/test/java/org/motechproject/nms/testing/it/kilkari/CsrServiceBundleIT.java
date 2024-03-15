@@ -276,7 +276,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 "20151119124330",
-                0
+                0,
+                false
         ));
 
         CallSummaryRecordDto record = new CallSummaryRecordDto(
@@ -436,7 +437,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 "20151119124330",
-                0
+                0,
+                false
         ));
 
         CallSummaryRecordDto record = new CallSummaryRecordDto(
@@ -486,7 +488,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 "20151119124330",
-                0
+                0,
+                false
         ));
 
         CallSummaryRecordDto record = new CallSummaryRecordDto(
@@ -530,7 +533,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 "20151119124330",
-                0
+                0,
+                false
         ));
 
 
@@ -573,7 +577,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 "20151119124330",
-                0
+                0,
+                false
         ));
 
 
@@ -717,7 +722,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 "20151119124330",
-                0
+                0,
+                false
         ));
 
 
@@ -768,7 +774,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 "20151119124330",
-                0
+                0,
+                false
         ));
 
         processCsr(new CallSummaryRecordDto(
@@ -919,7 +926,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 "20151119124330",
-                0
+                0,
+                false
         ));
 
 
@@ -961,7 +969,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 "20151119124330",
-                0
+                0,
+                false
         ));
 
         processCsr(new CallSummaryRecordDto(
@@ -1141,7 +1150,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 "20151119124330",
-                0
+                0,
+                false
         ));
 
         processCsr(new CallSummaryRecordDto(
@@ -1185,7 +1195,8 @@ public class CsrServiceBundleIT extends BasePaxIT {
                 rh.delhiCircle().getName(),
                 SubscriptionOrigin.MCTS_IMPORT,
                 "20151119124330",
-                0
+                0,
+                false
         ));
 
         processCsr(new CallSummaryRecordDto(

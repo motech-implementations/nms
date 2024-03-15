@@ -4,6 +4,9 @@ import org.motechproject.nms.imi.domain.CallSummaryRecord;
 import org.motechproject.nms.kilkari.exception.InvalidCallRecordDataException;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.StatusCode;
+import org.motechproject.nms.props.domain.WhatsAppOptInStatusCode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helper class to parse a CSR CSV line to a CallSummaryRecord
@@ -11,9 +14,9 @@ import org.motechproject.nms.props.domain.StatusCode;
 public final class CsrHelper {
 
     public static final String CSR_HEADER = "RequestId,ServiceId,Msisdn,Cli,Priority,CallFlowURL," +
-            "ContentFileName,WeekId,LanguageLocationCode,Circle,FinalStatus,StatusCode,Attempts";
+            "ContentFileName,WeekId,LanguageLocationCode,Circle,FinalStatus,StatusCode,Attempts,opt_in_call_eligibility,opt_in_input";
 
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(CsrHelper.class);
     private static final long MIN_MSISDN = 1000000000L;
     private static final long MAX_MSISDN = 9999999999L;
 
@@ -32,7 +35,9 @@ public final class CsrHelper {
         FINAL_STATUS,
         STATUS_CODE,
         ATTEMPTS,
-        FIELD_COUNT;
+        OPT_IN_CALL_ELIGIBILITY,
+        OPT_IN_INPUT,
+        FIELD_COUNT,;
     }
 
 
@@ -60,7 +65,16 @@ public final class CsrHelper {
         }
     }
 
-
+    private static int optInFromString(String which, String s) {
+        try {
+            if (s.equalsIgnoreCase("NULL") || s.trim().isEmpty()){
+                return 5;
+            }
+            return Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(String.format("%s must be an integer or null", which), e);
+        }
+    }
     /**
      * Validate a line from a CSR file coming from IMI could fit in into a CallSummaryRecord
      *
@@ -88,6 +102,7 @@ public final class CsrHelper {
      * @return a CallSummaryRecord
      */
     public static CallSummaryRecord csvLineToCsr(String line) {
+        LOGGER.info("INSIDE csvLineToCsr");
         CallSummaryRecord csr = new CallSummaryRecord();
         String[] fields = line.split(",");
 
@@ -127,6 +142,12 @@ public final class CsrHelper {
             csr.setStatusCode(StatusCode.fromInt(integerFromString("StatusCode", fields[FieldName.STATUS_CODE.ordinal()])).getValue());
 
             csr.setAttempts(integerFromString("Attempts", fields[FieldName.ATTEMPTS.ordinal()]));
+            LOGGER.info("INSIDE csvLineToCsr -- SETTING OPT_IN_CALL_ELIGIBILITY");
+            csr.setOpt_in_call_eligibility(Boolean.parseBoolean(fields[FieldName.OPT_IN_CALL_ELIGIBILITY.ordinal()]));
+            LOGGER.info("INSIDE csvLineToCsr -- SETTING OPT_IN_INPUT");
+            csr.setOpt_in_input(WhatsAppOptInStatusCode.fromValue(optInFromString("opt_in_input", fields[FieldName.OPT_IN_INPUT.ordinal()])).toString());
+            LOGGER.debug("CSR object after csvLineToCsr : {}", csr.toString());
+
         } catch (IllegalArgumentException e) {
             throw new InvalidCallRecordDataException(e.getMessage(), e);
         }
