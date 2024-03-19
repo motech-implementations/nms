@@ -255,7 +255,6 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         for (Map<String, Object> record : rejectedMotherRecords) {
             action = (String) record.get(KilkariConstants.ACTION);
             LOGGER.debug("Existing Mother Record with same MSISDN in the data set");
-            LOGGER.info("5 checking error for DUPLICATE_MOBILE_NUMBER_IN_DATASET : convertMapToMother(record).getAshaPhone() is "+ convertMapToMother(record).getAshaPhone() + " convertMapToMother(record).getName()" + convertMapToMother(record).getName());
             motherImportRejection = motherRejectionMcts(convertMapToMother(record), false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action);
             rejectedMothers.put(motherImportRejection.getIdNo(), motherImportRejection);
             rejectionStatus.put(motherImportRejection.getIdNo(), motherImportRejection.getAccepted());

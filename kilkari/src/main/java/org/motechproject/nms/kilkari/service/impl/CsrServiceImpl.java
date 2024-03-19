@@ -293,10 +293,8 @@ public class CsrServiceImpl implements CsrService {
         String whatHappened = "##";
 
         String subscriptionId = "###INVALID###";
-        LOGGER.info("INSIDE processCallSummaryRecord ");
         try {
             CallSummaryRecordDto csrDto = CallSummaryRecordDto.fromParams(event.getParameters());
-            LOGGER.info("INSIDE processCallSummaryRecord after making csrDto = {} ", csrDto.toString());
             subscriptionId = csrDto.getSubscriptionId();
             csrVerifierService.verify(csrDto);
 
@@ -306,11 +304,9 @@ public class CsrServiceImpl implements CsrService {
             }
 
             CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
-            LOGGER.info("INSIDE processCallSummaryRecord -before entering switch");
             switch (FinalCallStatus.fromInt(csrDto.getFinalStatus())) {
                 case SUCCESS:
                     completeSubscriptionIfNeeded(subscription, csrDto.getContentFileName());
-                    LOGGER.info("INSIDE processCallSummaryRecord -INSIDE switch - SUCCESS");
                     if (callRetry != null) {
                         if (!callRetry.getContentFileName().equals("opt_in.wav")) {
                             callRetryDataService.delete(callRetry);
@@ -318,7 +314,6 @@ public class CsrServiceImpl implements CsrService {
                     }
                     if(csrDto.isOpt_in_call_eligibility() && (csrDto.getContentFileName().equals(SubscriptionPackMessage.getWelcomeMessage().getMessageFileName())
                             || csrDto.getContentFileName().equals("opt_in.wav"))) {
-                        LOGGER.info("INSIDE processCallSummaryRecord -INSIDE switch - SUCCESS AND TEND TO switchIVRfromWhatsAppIfOpted");
                         switchIVRfromWhatsAppIfOpted(subscription, csrDto, callRetry);
                     }
                     whatHappened = "SU";
@@ -329,7 +324,6 @@ public class CsrServiceImpl implements CsrService {
                     //If there was a DOB/LMP update during RCH import, number of weeks into subscription would have changed.
                     //No need to reschedule this call. Exception for w1, because regardless of which week the subscription starts in, user
                     //always gets w1 message initially
-                    LOGGER.info("INSIDE processCallSummaryRecord -INSIDE switch - FAILED AND TEND TO RESCHEDULE");
                     if(!csrDto.getWeekId().equals("w1_1")&&!weekId.equals(csrDto.getWeekId())){
                         if(callRetry!=null){
                             callRetryDataService.delete(callRetry);

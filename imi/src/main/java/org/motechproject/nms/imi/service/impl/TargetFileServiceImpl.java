@@ -519,7 +519,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
         writer.write(",");
 
-        writer.write(((contentFileName.equals("w1_1.wav") || contentFileName.equals("opt_in.wav")) ? needsWelcomeOptInForWP : Boolean.FALSE).toString());
+        writer.write((((contentFileName.equals("w1_1.wav") || contentFileName.equals("opt_in.wav"))  && needsWelcomeOptInForWP != null) ? needsWelcomeOptInForWP : Boolean.FALSE).toString());
 
         writer.write("\n");
     }

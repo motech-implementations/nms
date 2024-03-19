@@ -1354,7 +1354,6 @@ public class CdrFileServiceImpl implements CdrFileService {
             String line;
             try {
                 line = reader.readLine();
-                LOGGER.debug("INSIDE else OF cdrFileServiceImpl-processCsrs after readLine");
                 CsrHelper.validateHeader(line);
             } catch (IllegalArgumentException e) {
                 //errors here should have been reported in Phase 2, let's just ignore them
@@ -1366,16 +1365,12 @@ public class CdrFileServiceImpl implements CdrFileService {
             Timer chunkTimer = new Timer("chunk", "chunks");
             while ((line = reader.readLine()) != null) {
                 try {
-                    LOGGER.debug("INSIDE OF cdrFileServiceImpl-processCsrs calling csvLineToCsr");
                     CallSummaryRecord csr = CsrHelper.csvLineToCsr(line);
-                    LOGGER.debug("INSIDE cdrFileServiceImpl-processCsrs csvLineToCsr PROCESSED");
                     callSummaryRecords.add(csr);
 
                     if (chunkSize > 1) {
-                        LOGGER.debug("INSIDE OF cdrFileServiceImpl-processCsrs chunkSize > 1 CONFIRMED");
                         chunk.add(csr.toDto());
                         if (chunk.size() >= chunkSize || lineNumber >= lineCount) {
-                            LOGGER.debug("INSIDE OF cdrFileServiceImpl-processCsrs EITHER chunk.size() >= chunkSize || lineNumber >= lineCount CONFIRMED");
                             String chunkName = String.format("Chunk%d/%d", chunkNumber, chunkCount);
                             dispatchChunk(fileName, chunkName, chunk, chunkCount, lineCount);
                             upsertChunkAuditRecord(fileName, chunkName, chunk.size());
