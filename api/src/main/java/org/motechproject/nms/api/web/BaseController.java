@@ -119,7 +119,7 @@ public class BaseController {
             return false;
         }
         DeactivationReason reason = DeactivationReason.valueOf(value);
-        if (reason.equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED) || reason.equals(DeactivationReason.LOW_LISTENERSHIP)) {
+        if (reason.equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED) || reason.equals(DeactivationReason.LOW_LISTENERSHIP) || reason.equals(DeactivationReason.mMITRA)) {
             return true;
         }
         errors.append(String.format(INVALID, fieldName));

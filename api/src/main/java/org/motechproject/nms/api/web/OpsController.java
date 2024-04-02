@@ -224,7 +224,7 @@ public class OpsController extends BaseController {
     }
 
     @RequestMapping(value = "/deactivationRequest",
-            method = RequestMethod.POST)
+            method = RequestMethod.DELETE)
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public void deactivationRequest(@RequestParam(value = "msisdn") Long msisdn, @RequestParam(value = "deactivationReason") String deactivationReason) {

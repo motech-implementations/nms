@@ -14,5 +14,6 @@ public enum DeactivationReason {
     DO_NOT_DISTURB,
     MCTS_UPDATE,
     WEEKLY_CALLS_NOT_ANSWERED,
-    LOW_LISTENERSHIP
+    LOW_LISTENERSHIP,
+    mMITRA
 }

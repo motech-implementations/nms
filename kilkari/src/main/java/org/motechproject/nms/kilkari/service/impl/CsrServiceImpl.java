@@ -201,6 +201,7 @@ public class CsrServiceImpl implements CsrService {
                     existingCallRetry.setContentFileName("opt_in.wav");
                     callRetryDataService.update(existingCallRetry);
                 } else {
+                    completeSubscriptionIfNeeded(subscription, csrDto.getContentFileName());
                     callRetryDataService.delete(existingCallRetry);
                     LOGGER.info("subscription is : {}", subscription);
                     LOGGER.info("csrDto is : {}", csrDto);
