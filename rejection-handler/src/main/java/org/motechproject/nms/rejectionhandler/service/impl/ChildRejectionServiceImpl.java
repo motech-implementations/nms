@@ -556,20 +556,20 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
 
     private StringBuilder rchQueryHelper(StringBuilder stringBuilder, ChildImportRejection child) {
         stringBuilder.append(child.getSubcentreId() + ", ");
-        stringBuilder.append(QUOTATION + child.getSubcentreName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(child.getSubcentreName()) + QUOTATION_COMMA);
         stringBuilder.append(child.getVillageId() + ", ");
-        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(child.getVillageName()) + QUOTATION_COMMA);
-        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(child.getName()) + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(child.getVillageName()) + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(child.getName()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getMobileNo() + QUOTATION_COMMA);
         stringBuilder.append(child.getStateId() + ", ");
         stringBuilder.append(child.getDistrictId() + ", ");
-        stringBuilder.append(QUOTATION + child.getDistrictName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(child.getDistrictName()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getTalukaId() + QUOTATION_COMMA);
-        stringBuilder.append(QUOTATION + child.getTalukaName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(child.getTalukaName()) + QUOTATION_COMMA);
         stringBuilder.append(child.getHealthBlockId() + ", ");
-        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(child.getHealthBlockName()) + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(child.getHealthBlockName()) + QUOTATION_COMMA);
         stringBuilder.append(child.getPhcId() + ", ");
-        stringBuilder.append(QUOTATION + child.getPhcName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(child.getPhcName()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getBirthDate() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getRegistrationDate() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getRegistrationNo() + QUOTATION_COMMA);
@@ -584,6 +584,12 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
         stringBuilder.append(QUOTATION + child.getAction() + QUOTATION_COMMA);
         stringBuilder.append(MOTECH_STRING);
         return stringBuilder;
+    }
+
+    private static String validateName (String name){
+        if(name == null) return null;
+        name = name.replace("?" , "\\?").replace("\\" , "\\\\");
+        return StringEscapeUtils.escapeSql(name);
     }
 
     private static ChildImportRejection setNewData1(ChildImportRejection childImportRejection, ChildImportRejection childImportRejection1) {
