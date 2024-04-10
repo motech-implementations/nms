@@ -98,6 +98,8 @@ public class Subscription extends MdsEntity {
     @Field
     private DateTime wpEndDate;
 
+    @Field
+    private WhatsAppDeactivationReason wpDeactivationReason;
 
     public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, SubscriptionOrigin origin) {
         this.subscriptionId = UUID.randomUUID().toString();
@@ -107,6 +109,14 @@ public class Subscription extends MdsEntity {
         if (origin == SubscriptionOrigin.MCTS_IMPORT) {
             needsWelcomeMessageViaObd = true;
         }
+    }
+
+    public WhatsAppDeactivationReason getWpDeactivationReason() {
+        return wpDeactivationReason;
+    }
+
+    public void setWpDeactivationReason(WhatsAppDeactivationReason wpDeactivationReason) {
+        this.wpDeactivationReason = wpDeactivationReason;
     }
 
     public String getSubscriptionId() { return subscriptionId; }

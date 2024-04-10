@@ -467,6 +467,7 @@ public class CsrServiceImpl implements CsrService {
         if( status == WhatsAppMessageStatus.SENT ){
             return;
         }
+        //What if beneficiary phone no. got changed before updating the status.
         else if( status == WhatsAppMessageStatus.READ || status == WhatsAppMessageStatus.DELIVERED ){
             if(!subscription.isWhatsAppCdrStatus() && subscription.isWhatsAppSelfOptIn()){
                 subscription.setWhatsAppCdrStatus(true);
@@ -474,6 +475,12 @@ public class CsrServiceImpl implements CsrService {
             }
         }
         else {
+            if(status == WhatsAppMessageStatus.UNDELIVERED){
+                subscription.setWpDeactivationReason(WhatsAppDeactivationReason.MESSAGE_DELIVERY_FAILURE);
+            }
+            else{
+                subscription.setWpDeactivationReason(WhatsAppDeactivationReason.UNSUBSCRIBED_BY_USER);
+            }
             subscription.setServiceStatus(ServiceStatus.IVR);
             subscription.setWpEndDate(new DateTime());
         }
