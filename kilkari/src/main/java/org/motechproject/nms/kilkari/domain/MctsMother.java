@@ -19,6 +19,9 @@ public class MctsMother extends MctsBeneficiary {
     @Field
     private Long maxCaseNo;
 
+    @Field
+    private DateTime registrationDate;
+
     public MctsMother(String beneficiaryId) {
         super(beneficiaryId);
     }
@@ -43,6 +46,14 @@ public class MctsMother extends MctsBeneficiary {
         this.maxCaseNo = maxCaseNo;
     }
 
+    public DateTime getRegistrationDate() {
+        return registrationDate;
+    }
+
+    public void setRegistrationDate(DateTime registrationDate) {
+        this.registrationDate = registrationDate;
+    }
+
     public void deepCopyFrom(MctsMother other) {
         setName(other.getName());
         setDateOfBirth(other.getDateOfBirth());
@@ -56,5 +67,6 @@ public class MctsMother extends MctsBeneficiary {
         setVillage(other.getVillage());
         setUpdatedDateNic(other.getUpdatedDateNic());
         setMaxCaseNo(other.getMaxCaseNo());
+        setRegistrationDate(other.getRegistrationDate());
     }
 }

@@ -45,12 +45,15 @@ public class CallRetry extends MdsEntity {
     @Field
     private Integer invalidNumberCount;
 
+    @Field
+    private boolean opt_in_call_eligibility;
+
     public CallRetry() { }
 
     public CallRetry(String subscriptionId, Long msisdn, //NO CHECKSTYLE More than 7 parameters
                      CallStage callStage, String contentFileName, String weekId, String languageLocationCode,
                      String circle, SubscriptionOrigin subscriptionOrigin, String targetFiletimestamp,
-                     Integer invalidNumberCount) {
+                     Integer invalidNumberCount, boolean opt_in_call_eligibility) {
         this.subscriptionId = subscriptionId;
         this.msisdn = msisdn;
         this.callStage = callStage;
@@ -61,6 +64,7 @@ public class CallRetry extends MdsEntity {
         this.subscriptionOrigin = subscriptionOrigin;
         this.targetFiletimestamp = targetFiletimestamp;
         this.invalidNumberCount = invalidNumberCount;
+        this.opt_in_call_eligibility = opt_in_call_eligibility;
     }
 
     public String getSubscriptionId() {
@@ -142,4 +146,8 @@ public class CallRetry extends MdsEntity {
     public void setInvalidNumberCount(Integer invalidNumberCount) {
         this.invalidNumberCount = invalidNumberCount;
     }
+
+    public boolean isOpt_in_call_eligibility() { return opt_in_call_eligibility; }
+
+    public void setOpt_in_call_eligibility(boolean opt_in_call_eligibility) { this.opt_in_call_eligibility = opt_in_call_eligibility; }
 }

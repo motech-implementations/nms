@@ -1,6 +1,7 @@
 package org.motechproject.nms.kilkari.domain;
 
 
+import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.InstanceLifecycleListeners;
@@ -16,6 +17,9 @@ public class MctsChild extends MctsBeneficiary {
 
     @Field
     private MctsMother mother;
+
+    @Field
+    private DateTime registrationDate;
 
     public MctsChild(String beneficiaryId) {
         super(beneficiaryId);
@@ -38,6 +42,14 @@ public class MctsChild extends MctsBeneficiary {
         this.mother = mother;
     }
 
+    public DateTime getRegistrationDate() {
+        return registrationDate;
+    }
+
+    public void setRegistrationDate(DateTime registrationDate) {
+        this.registrationDate = registrationDate;
+    }
+
     public void deepCopyFrom(MctsChild other) {
         setName(other.getName());
         setMother(other.getMother());
@@ -50,5 +62,6 @@ public class MctsChild extends MctsBeneficiary {
         setHealthSubFacility(other.getHealthSubFacility());
         setVillage(other.getVillage());
         setUpdatedDateNic(other.getUpdatedDateNic());
+        setRegistrationDate(other.getRegistrationDate());
     }
 }

@@ -9,9 +9,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
 /**
- * Created by beehyv on 18/7/18.
+ * Created by vishnu on 13/7/18.
+ * Updated by rakesh on 20/08/20
  */
-@XmlRootElement(name = "NewDataSet")
+
 @XmlAccessorType(XmlAccessType.NONE)
 public class RchHealthSubFacilityDataSet {
 
@@ -21,7 +22,6 @@ public class RchHealthSubFacilityDataSet {
         return records;
     }
 
-    @XmlElement(name = "Records")
     public void setRecords(List<RchHealthSubFacilityRecord> records) {
         this.records = records;
     }

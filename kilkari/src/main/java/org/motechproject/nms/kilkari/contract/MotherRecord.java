@@ -99,6 +99,8 @@ public class MotherRecord {
     private String eIdTime;
     private Integer entryType;
 
+    private String motherRegistrationDate;
+
     @XmlElement(name = "HealthBlock_Name")
     public void setHealthBlockName(String healthBlockName) {
         this.healthBlockName = healthBlockName;
@@ -898,6 +900,15 @@ public class MotherRecord {
     @XmlElement(name = "Entry_Type")
     public void setEntryType(Integer entryType) {
         this.entryType = entryType;
+    }
+
+    public String getMotherRegistrationDate() {
+        return motherRegistrationDate;
+    }
+
+    @XmlElement(name = "Mother_Registration_Date")
+    public void setMotherRegistrationDate(String motherRegistrationDate) {
+        this.motherRegistrationDate = motherRegistrationDate;
     }
 }
 

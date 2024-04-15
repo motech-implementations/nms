@@ -86,6 +86,8 @@ public class ChildRecord {
     private String birthCertificateNumber;
     private String entryType;
 
+    private String registrationDate;
+
     public Long getStateID() {
         return stateID;
     }
@@ -769,5 +771,14 @@ public class ChildRecord {
     @XmlElement(name = "Entry_Type")
     public void setEntryType(String entryType) {
         this.entryType = entryType;
+    }
+
+    public String getRegistrationDate() {
+        return registrationDate;
+    }
+
+    @XmlElement(name = "Registration_Date")
+    public void setRegistrationDate(String registrationDate) {
+        this.registrationDate = registrationDate;
     }
 }

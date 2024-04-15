@@ -293,7 +293,7 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
             public String getSqlQuery() {
                 String query = "INSERT INTO nms_mother_rejects (stateId, districtId, districtName, talukaId, talukaName," +
                         " healthBlockId, healthBlockName, phcId, phcName, subcentreId, subcentreName, villageId," +
-                        " villageName, idNo, registrationNo, caseNo, name, mobileNo, lmpDate, birthDate, abortionType," +
+                        " villageName, idNo, registrationNo, caseNo, name, mobileNo, registrationDate, lmpDate, birthDate, abortionType," +
                         " deliveryOutcomes, entryType, execDate, source, accepted, rejectionReason, action, creator," +
                         " modifiedBy, creationDate, modificationDate) " +
                         "values  " +
@@ -331,7 +331,7 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
             public String getSqlQuery() {
                 String query = "INSERT INTO nms_mother_rejects (id, stateId, districtId, districtName, talukaId," +
                         " talukaName, healthBlockId, healthBlockName, phcId, phcName, subcentreId, subcentreName," +
-                        " villageId, villageName, idNo, registrationNo, caseNo, name, mobileNo, lmpDate, birthDate," +
+                        " villageId, villageName, idNo, registrationNo, caseNo, name, mobileNo, registrationDate, lmpDate, birthDate," +
                         " abortionType, deliveryOutcomes, entryType, execDate, source, accepted, rejectionReason, action," +
                         " creator, modifiedBy, creationDate, modificationDate)  " +
                         "values  " +
@@ -343,7 +343,7 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
                         " phcName = VALUES(phcName), subcentreId = VALUES(subcentreId), subcentreName = VALUES(subcentreName)," +
                         " villageId = VALUES(villageId), villageName = VALUES(villageName), idNo = VALUES(idNo)," +
                         " registrationNo = VALUES(registrationNo), caseNo = VALUES(caseNo), name = VALUES(name)," +
-                        " mobileNo = VALUES(mobileNo), lmpDate = VALUES(lmpDate), birthDate = VALUES(birthDate)," +
+                        " mobileNo = VALUES(mobileNo), registrationDate = VALUES(registrationDate) ,lmpDate = VALUES(lmpDate), birthDate = VALUES(birthDate)," +
                         " abortionType = VALUES(abortionType), deliveryOutcomes = VALUES(deliveryOutcomes)," +
                         " entryType = VALUES(entryType), execDate = VALUES(execDate), source = VALUES(source)," +
                         " accepted = VALUES(accepted), rejectionReason = VALUES(rejectionReason), action = VALUES(action)," +
@@ -575,8 +575,14 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
         stringBuilder.append(QUOTATION + mother.getIdNo() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getRegistrationNo() + QUOTATION_COMMA);
         stringBuilder.append(mother.getCaseNo() + ", ");
-        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(mother.getName()) + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(mother.getName()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getMobileNo() + QUOTATION_COMMA);
+        if(mother.getRegistrationDate() == null){
+            stringBuilder.append(mother.getRegistrationDate() + " , ");
+        }
+        else{
+            stringBuilder.append(QUOTATION + mother.getRegistrationDate() + QUOTATION_COMMA);
+        }
         stringBuilder.append(QUOTATION + mother.getLmpDate() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getBirthDate() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getAbortionType() + QUOTATION_COMMA);
@@ -591,20 +597,26 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
         return stringBuilder;
     }
 
+    private static String validateName (String name){
+        if(name == null) return null;
+        name = name.replace("?" , "").replace("\\" , "\\\\");
+        return StringEscapeUtils.escapeSql(name);
+    }
+
     private StringBuilder addLocations(StringBuilder stringBuilder, MotherImportRejection mother) {
         stringBuilder.append(mother.getStateId() + ", ");
         stringBuilder.append(mother.getDistrictId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getDistrictName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(mother.getDistrictName()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getTalukaId() + QUOTATION_COMMA);
-        stringBuilder.append(QUOTATION + mother.getTalukaName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(mother.getTalukaName()) + QUOTATION_COMMA);
         stringBuilder.append(mother.getHealthBlockId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getHealthBlockName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(mother.getHealthBlockName()) + QUOTATION_COMMA);
         stringBuilder.append(mother.getPhcId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getPhcName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(mother.getPhcName()) + QUOTATION_COMMA);
         stringBuilder.append(mother.getSubcentreId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getSubcentreName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(mother.getSubcentreName()) + QUOTATION_COMMA);
         stringBuilder.append(mother.getVillageId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getVillageName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(mother.getVillageName()) + QUOTATION_COMMA);
         return stringBuilder;
     }
 

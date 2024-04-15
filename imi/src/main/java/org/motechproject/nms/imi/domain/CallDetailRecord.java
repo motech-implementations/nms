@@ -68,6 +68,12 @@ public class CallDetailRecord {
     @Field
     private String weekId;
 
+    @Field
+    private boolean opt_in_call_eligibility;
+
+    @Field
+    private String opt_in_input;
+
     public String getRequestId() {
         return requestId;
     }
@@ -211,4 +217,12 @@ public class CallDetailRecord {
     public void setWeekId(String weekId) {
         this.weekId = weekId;
     }
+
+    public boolean isOpt_in_call_eligibility() {return opt_in_call_eligibility;}
+
+    public void setOpt_in_call_eligibility(boolean opt_in_call_eligibility) {this.opt_in_call_eligibility = opt_in_call_eligibility;}
+
+    public String getOpt_in_input() {return opt_in_input;}
+
+    public void setOpt_in_input(String opt_in_input) {this.opt_in_input = opt_in_input;}
 }

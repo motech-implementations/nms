@@ -166,7 +166,8 @@ public class FullLocationValidatorUnitTest {
     }
 
     //  Test all but taluka with health block
-    @Test
+    // Taluka doesnt require to checked for health block......2023-07-06
+   /* @Test
     public void testBrokenChainNoTalukaWithHealthBlock() {
         TestLocation testLocation = new TestLocation();
 
@@ -178,7 +179,7 @@ public class FullLocationValidatorUnitTest {
 
         assertEquals(1, constraintViolations.size());
         assertEquals("Taluka must be set if block is provided", constraintViolations.iterator().next().getMessage());
-    }
+    }*/
 
     // Test child not in parent
     //   Test district not in state

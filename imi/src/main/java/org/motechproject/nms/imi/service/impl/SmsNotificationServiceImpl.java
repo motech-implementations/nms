@@ -34,6 +34,12 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
 
     private static final String SMS_MESSAGE_CONTENT = "imi.sms.course.completion.message";
 
+    private static final String SMS_ENTITY_ID = "imi.sms.entityId";
+
+    private static final String SMS_TELEMARKETER_ID = "imi.sms.telemarketerId";
+
+    private static final String SMS_TEMPLATE_ID = "imi.sms.templateId";
+
     private static final String CALLBACK_URL = "imi.sms.status.callback.url";
 
     private static final String SMS_SENDER_ID = "imi.sms.sender.id";
@@ -60,12 +66,12 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
      * Used to initiate sms workflow with IMI
      *
      * @param callingNumber phone number to send sms to
-     * @param content sms content to send
+     * @param smsParams sms parameters to send
      */
     @Override
-    public boolean sendSms(Long callingNumber, String content) {
+    public boolean sendSms(Long callingNumber, Map<String, String> smsParams) {
 
-        HttpPost httpPost = prepareSmsRequest(callingNumber, content);
+        HttpPost httpPost = prepareSmsRequest(callingNumber, smsParams);
 
         if (httpPost == null) {
             LOGGER.error("Unable to build POST request for SMS notification");
@@ -78,18 +84,26 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
         return sender.sendNotificationRequest(httpPost, HttpStatus.SC_CREATED, ALERT_ID, ALERT_NAME);
     }
 
-    private HttpPost prepareSmsRequest(Long callingNumber, String content) {
+    private HttpPost prepareSmsRequest(Long callingNumber, Map<String, String> smsParams) {
 
         String senderId = settingsFacade.getProperty(SMS_SENDER_ID);
         String endpoint = settingsFacade.getProperty(SMS_NOTIFICATION_URL);
         String callbackEndpoint = settingsFacade.getProperty(CALLBACK_URL);
+        String smsContent = smsParams.get("smsContent");
+        String smsEntityId = smsParams.get("smsEntityId");
+        String smsTelemarketerId = smsParams.get("smsTelemarketerId");
+        String smsTemplateId = smsParams.get("smsTemplateId");
 
-        if (senderId == null || endpoint == null || content == null || callbackEndpoint == null) {
+
+        if (senderId == null || endpoint == null || smsContent == null || smsEntityId == null || smsTelemarketerId == null || smsTemplateId == null || callbackEndpoint == null) {
 
             Map<String, String> alertData = new HashMap<>();
             alertData.put(SMS_SENDER_ID, senderId);
             alertData.put(SMS_NOTIFICATION_URL, endpoint);
-            alertData.put(SMS_MESSAGE_CONTENT, content);
+            alertData.put(SMS_MESSAGE_CONTENT, smsContent);
+            alertData.put(SMS_ENTITY_ID, smsEntityId);
+            alertData.put(SMS_TELEMARKETER_ID, smsTelemarketerId);
+            alertData.put(SMS_TEMPLATE_ID, smsTemplateId);
             alertData.put(CALLBACK_URL, callbackEndpoint);
 
             LOGGER.error("Unable to find sms settings. Check IMI sms gateway settings");
@@ -118,7 +132,10 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
         }
         template = template.replace("<phoneNumber>", String.valueOf(callingNumber));
         template = template.replace("<senderId>", senderId);
-        template = template.replace("<messageContent>", content);
+        template = template.replace("<messageContent>", smsContent);
+        template = template.replace("<smsTemplateId>", smsTemplateId);
+        template = template.replace("<smsEntityId>", smsEntityId);
+        template = template.replace("<smsTelemarketerId>", smsTelemarketerId);
         template = template.replace("<notificationUrl>", callbackEndpoint);
         template = template.replace("<correlationId>", DateTime.now().toString());
 

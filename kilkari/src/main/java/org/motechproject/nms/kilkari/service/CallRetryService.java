@@ -14,7 +14,9 @@ public interface CallRetryService {
      */
     List<CallRetry> retrieveAll(long offset, int max);
 
+    List<CallRetry> retrieveAllIVR(long offset, int max, List <Long> specificState);
 
+    List<CallRetry> retrieveAllNonIVR(long offset, int max, List <Long> specificState);
     /**
      * Deletes all call retry records older than the given number of days
      *

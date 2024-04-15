@@ -35,6 +35,11 @@ public final class LocationConstants {
     public static final Long SMALL_LOCATION_PART_SIZE = 2000L;
     public static final String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
 
+    //newly added field of locations
+    public static final String MDDS_CODE = "MDDS_Code";
+    public static final String STATE_CODE_ID = "StateCode";
+    public static final String HEALTH_FACILITY_TYPE = "HealthfacilityType";
+
     private LocationConstants() {
     }
 }

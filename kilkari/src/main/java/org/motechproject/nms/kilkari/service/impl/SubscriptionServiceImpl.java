@@ -1,5 +1,6 @@
 package org.motechproject.nms.kilkari.service.impl;
 
+import org.apache.commons.lang.StringUtils;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.DateTime;
 import org.joda.time.Weeks;
@@ -14,36 +15,14 @@ import org.motechproject.mds.query.QueryParams;
 import org.motechproject.mds.query.SqlQueryExecution;
 import org.motechproject.mds.util.InstanceSecurityRestriction;
 import org.motechproject.metrics.service.Timer;
-import org.motechproject.nms.kilkari.domain.MctsMother;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.SubscriberMsisdnTracker;
-import org.motechproject.nms.kilkari.domain.BlockedMsisdnRecord;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.CallRetry;
-import org.motechproject.nms.kilkari.domain.DeactivatedBeneficiary;
-import org.motechproject.nms.kilkari.domain.MctsChild;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionError;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
-import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
-import org.motechproject.nms.kilkari.repository.BlockedMsisdnRecordDataService;
-import org.motechproject.nms.kilkari.repository.DeactivatedBeneficiaryDataService;
-import org.motechproject.nms.kilkari.repository.SubscriberDataService;
-import org.motechproject.nms.kilkari.repository.SubscriberMsisdnTrackerDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionErrorDataService;
-import org.motechproject.nms.kilkari.repository.CallRetryDataService;
-import org.motechproject.nms.kilkari.repository.SubscriptionPackDataService;
+import org.motechproject.nms.kilkari.domain.*;
+import org.motechproject.nms.kilkari.repository.*;
 import org.motechproject.nms.kilkari.service.CsrVerifierService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.PhoneNumberHelper;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
-import org.motechproject.nms.region.domain.Circle;
-import org.motechproject.nms.region.domain.Language;
+import org.motechproject.nms.region.domain.*;
 import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,14 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.PostConstruct;
 import javax.jdo.Query;
 import javax.validation.ConstraintViolationException;
-import java.util.List;
-import java.util.Map;
-import java.util.Iterator;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -101,6 +73,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                    CsrVerifierService csrVerifierService,
                                    BlockedMsisdnRecordDataService blockedMsisdnRecordDataService,
                                    DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService,
+                                  //  ReactivatedBeneficiaryAuditDataService reactivatedBeneficiaryAuditDataService,
                                    SubscriberMsisdnTrackerDataService subscriberMsisdnTrackerDataService) {
         this.subscriberDataService = subscriberDataService;
         this.subscriptionPackDataService = subscriptionPackDataService;
@@ -113,9 +86,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         this.allowMctsSubscriptions = true;
         this.blockedMsisdnRecordDataService = blockedMsisdnRecordDataService;
         this.deactivatedBeneficiaryDataService = deactivatedBeneficiaryDataService;
+   //     this.reactivatedBeneficiaryAuditDataService = reactivatedBeneficiaryAuditDataService;
         this.subscriberMsisdnTrackerDataService = subscriberMsisdnTrackerDataService;
     }
 
+    public SubscriptionServiceImpl() {}
 
     @PostConstruct
     public Boolean acceptNewSubscriptionForBlockedMsisdn() {
@@ -327,6 +302,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                             if (SubscriptionPackType.CHILD.equals(subscriptions.get(0).getSubscriptionPack().getType())) {
                                 return true;
                             } else {
+                                if(motherRchId == null){
+                                    return (subscriber.getMother() != null);
+                                }
                                 return (subscriber.getMother() != null && subscriber.getMother().getRchId() != null && !motherRchId.equals(subscriber.getMother().getRchId()));
                             }
                         } else {
@@ -458,6 +436,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         Subscription subscription = new Subscription(subscriber, pack, SubscriptionOrigin.IVR);
         subscription.setStartDate(DateTime.now().plusDays(1));
         subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
+        subscription.setWhatsAppCdrStatus(false);
+        subscription.setNeedsWelcomeOptInForWP(false);
+        subscription.setServiceStatus(ServiceStatus.IVR);
+        subscription.setWhatsAppSelfOptIn(false);
 
         return subscriptionDataService.create(subscription);
     }
@@ -485,13 +467,20 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             LOGGER.info("PreCondition test passed");
             return null;
         }
-
+        boolean WPstate = false;
+        if (subscriber != null) {
+            WPstate = getWhatsAppStateFilter().contains(subscriber.getMother() == null ? subscriber.getChild().getState().getCode() : subscriber.getMother().getState().getCode());
+        }
         DateTime startDate = (pack.getType() == SubscriptionPackType.CHILD) ?
                 subscriber.getDateOfBirth() : subscriber.getLastMenstrualPeriod().plusDays(KilkariConstants.THREE_MONTHS);
 
         Subscription subscription = new Subscription(subscriber, pack, importOrigin);
         subscription.setStartDate(startDate);
         subscription.setNeedsWelcomeMessageViaObd(true);
+        subscription.setNeedsWelcomeOptInForWP(WPstate);
+        subscription.setServiceStatus(ServiceStatus.IVR);
+        subscription.setWhatsAppSelfOptIn(false);
+        subscription.setWhatsAppCdrStatus(false);
         LOGGER.info("capacity"+isCapacityAvailable.get());
             if (isCapacityAvailable.get()) {
                 subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
@@ -879,7 +868,24 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             // This query looks a little complex but it is basically structured that way to sort users by most messages left
             @Override
             public String getSqlQuery() {
-                String query =  "SELECT res.id as id, res.activationDate, res.deactivationReason, res.endDate, res.firstMessageDayOfWeek, res.needsWelcomeMessageViaObd, " +
+                String query ="SELECT res1.id as id, res1.activationDate, res1.deactivationReason, res1.endDate, res1.firstMessageDayOfWeek, res1.needsWelcomeMessageViaObd, " +
+                        "res1.origin, res1.secondMessageDayOfWeek, res1.startDate, res1.status, res1.subscriber_id_OID, res1.subscriptionId, res1.subscriptionPack_id_OID, " +
+                        "res1.creationDate, res1.creator, res1.modificationDate, res1.modifiedBy, res1.owner, " +
+                        "CASE " +
+                        "WHEN res1.type = 'PREGNANCY' THEN DATE_ADD(res1.lastMenstrualPeriod, INTERVAL :pday DAY) " +
+                        "ELSE DATE_ADD(res1.dateOfBirth, INTERVAL :cday DAY) " +
+                        "END AS referenceDate, " +
+                        "res1.type " +
+                        "FROM " +
+                        "(SELECT ss.id as id, ss.activationDate, ss.deactivationReason, ss.endDate, ss.firstMessageDayOfWeek, ss.needsWelcomeMessageViaObd, " +
+                        "ss.origin, ss.secondMessageDayOfWeek, ss.startDate, ss.status, ss.subscriber_id_OID, ss.subscriptionId, ss.subscriptionPack_id_OID, " +
+                        "ss.creationDate, ss.creator, ss.modificationDate, ss.modifiedBy, ss.owner, s.dateOfBirth, s.lastMenstrualPeriod, sp.type FROM nms_subscriptions AS ss " +
+                        "JOIN nms_subscription_packs AS sp ON ss.subscriptionPack_id_OID = sp.id " +
+                        "JOIN nms_subscribers AS s ON ss.subscriber_id_OID = s.id " +
+                        "JOIN nms_mcts_mothers m ON s.mother_id_OID = m.id " +
+                        "WHERE ss.status = 'HOLD' AND m.healthBlock_id_OID IN (3122, 3139, 3144, 1669, 3027, 3240, 3251, 3252, 3266, 3322, 3331, 3340) AND origin in ('MCTS_IMPORT', 'RCH_IMPORT')) AS res1 " +
+                        "UNION " +
+                         "SELECT res.id as id, res.activationDate, res.deactivationReason, res.endDate, res.firstMessageDayOfWeek, res.needsWelcomeMessageViaObd, " +
                                 "res.origin, res.secondMessageDayOfWeek, res.startDate, res.status, res.subscriber_id_OID, res.subscriptionId, res.subscriptionPack_id_OID, " +
                                 "res.creationDate, res.creator, res.modificationDate, res.modifiedBy, res.owner, " +
                                 "CASE " +
@@ -887,15 +893,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                     "ELSE DATE_ADD(res.dateOfBirth, INTERVAL :cdays DAY) " +
                                 "END AS referenceDate, " +
                                 "res.type " +
-                                "FROM" +
+                                "FROM " +
                                     "(SELECT ss.id as id, ss.activationDate, ss.deactivationReason, ss.endDate, ss.firstMessageDayOfWeek, ss.needsWelcomeMessageViaObd, " +
                                     "ss.origin, ss.secondMessageDayOfWeek, ss.startDate, ss.status, ss.subscriber_id_OID, ss.subscriptionId, ss.subscriptionPack_id_OID, " +
                                     "ss.creationDate, ss.creator, ss.modificationDate, ss.modifiedBy, ss.owner, s.dateOfBirth, s.lastMenstrualPeriod, sp.type FROM nms_subscriptions AS ss " +
                                     "JOIN nms_subscription_packs AS sp ON ss.subscriptionPack_id_OID = sp.id " +
                                     "JOIN nms_subscribers AS s ON ss.subscriber_id_OID = s.id " +
                                     "WHERE ss.status = 'HOLD' AND origin in ('MCTS_IMPORT', 'RCH_IMPORT')) AS res " + // Origin is superfluous here since IVR doesn't go on hold
-                                "ORDER BY referenceDate DESC " +
-                                "LIMIT :limit";
+                                     "LIMIT :limit";
                 LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
                 return query;
             }
@@ -905,7 +910,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
                 query.setClass(Subscription.class);
 
-                Map params = new HashMap();
+                Map<String, Object> params = new HashMap<>();
+                params.put("pday", KilkariConstants.THREE_MONTHS + KilkariConstants.PREGNANCY_PACK_LENGTH_DAYS);
+                params.put("cday", KilkariConstants.CHILD_PACK_LENGTH_DAYS);
                 params.put("pdays", KilkariConstants.THREE_MONTHS + KilkariConstants.PREGNANCY_PACK_LENGTH_DAYS);
                 params.put("cdays", KilkariConstants.CHILD_PACK_LENGTH_DAYS);
                 params.put("limit", resultSize);
@@ -986,13 +993,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 String query =  "SELECT s.id as id, activationDate, deactivationReason, endDate, firstMessageDayOfWeek, " +
                                 "s.needsWelcomeMessageViaObd, s.origin, s.secondMessageDayOfWeek, s.startDate, " +
                                 "s.status, s.subscriber_id_OID, s.subscriptionId, s.subscriptionPack_id_OID, " +
-                                "s.creationDate, s.creator, s.modificationDate, s.modifiedBy, s.owner " +
+                                "s.creationDate, s.creator, s.modificationDate, s.modifiedBy, s.owner, s.needsWelcomeOptInForWP " +
                                 "FROM nms_subscriptions AS s " +
                                 "INNER JOIN nms_subscription_packs AS p ON s.subscriptionPack_id_OID = p.id " +
                                 "WHERE s.id > :offset AND " +
                                 "(firstMessageDayOfWeek = :dow OR " +
                                 "(secondMessageDayOfWeek = :dow AND p.messagesPerWeek = 2)) AND " +
-                                "status = 'ACTIVE' " +
+                                "status = 'ACTIVE' AND " +
+                                "IVR_SERVICE IS TRUE "+
+                                "AND (serviceStatus IN ('IVR', 'IVR_AND_WHATSAPP') OR serviceStatus IS NULL) "+
                                 "ORDER BY s.id " +
                                 "LIMIT :max";
                 LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
@@ -1019,6 +1028,160 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return subscriptions;
     }
 
+
+    @Override
+    public List<Subscription> findActiveSubscriptionsForDayWP(final DayOfTheWeek dow, final long offset,
+                                                              final int rowCount, final Date date) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<Subscription>> queryExecution = new SqlQueryExecution<List<Subscription>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query =  "SELECT s.id as id, activationDate, deactivationReason, endDate, firstMessageDayOfWeek, " +
+                        "s.needsWelcomeMessageViaObd, s.origin, s.secondMessageDayOfWeek, s.startDate, " +
+                        "s.status, s.subscriber_id_OID, s.subscriptionId, s.subscriptionPack_id_OID, " +
+                        "s.creationDate, s.creator, s.modificationDate, s.modifiedBy, s.owner " +
+                        "FROM nms_subscriptions AS s " +
+                        "WHERE s.id > :offset AND " +
+                        "firstMessageDayOfWeek = :dow AND " +
+                        "status = 'ACTIVE' AND " +
+                        "s.serviceStatus IN ('WHATSAPP', 'IVR_AND_WHATSAPP') AND " +
+                        "s.needsWelcomeOptInForWP = true AND " +
+                        "DATE(s.wpStartDate) != DATE(:date) " +
+                        "ORDER BY s.id " +
+                        "LIMIT :max";
+                LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public List<Subscription> execute(Query query) {
+
+                query.setClass(Subscription.class);
+
+                Map params = new HashMap();
+                params.put("offset", offset);
+                params.put("dow", dow.toString());
+                params.put("max", rowCount);
+                params.put("date", date);
+
+                LOGGER.debug("Executing SQL Query: {}", query.toString());
+                LOGGER.debug("Parameters: {}", params);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.executeWithMap(params);
+
+                return (List<Subscription>) fqr;
+            }
+        };
+
+        List<Subscription> subscriptions = subscriptionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("test - findActiveSubscriptionsForDay(dow={}, offset={}, rowCount={}) {}", dow, offset, rowCount, queryTimer.time());
+        return subscriptions;
+    }
+
+
+    @Override
+    public List<Subscription> findWelcomeActiveSubscriptionsForDayWP(final Date date, final DayOfTheWeek dow, final long offset,
+                                                              final int rowCount) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<Subscription>> queryExecution = new SqlQueryExecution<List<Subscription>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query =  "SELECT s.id as id, activationDate, deactivationReason, endDate, firstMessageDayOfWeek, " +
+                        "s.needsWelcomeMessageViaObd, s.origin, s.secondMessageDayOfWeek, s.startDate, " +
+                        "s.status, s.subscriber_id_OID, s.subscriptionId, s.subscriptionPack_id_OID, " +
+                        "s.creationDate, s.creator, s.modificationDate, s.modifiedBy, s.owner " +
+                        "FROM nms_subscriptions AS s " +
+                        "WHERE s.id > :offset AND " +
+                        "DATE(s.wpStartDate) = DATE(:date) AND "+
+                        "status = 'ACTIVE' AND " +
+                        "s.serviceStatus IN ('WHATSAPP', 'IVR_AND_WHATSAPP') AND " +
+                        "s.needsWelcomeOptInForWP = true " +
+                        "ORDER BY s.id " +
+                        "LIMIT :max";
+                LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public List<Subscription> execute(Query query) {
+
+                query.setClass(Subscription.class);
+
+                Map params = new HashMap();
+                params.put("offset", offset);
+
+                params.put("max", rowCount);
+                params.put("date", date);
+
+                LOGGER.debug("Executing SQL Query: {}", query.toString());
+                LOGGER.debug("Parameters: {}", params);
+
+                ForwardQueryResult fqr = (ForwardQueryResult) query.executeWithMap(params);
+
+                return (List<Subscription>) fqr;
+            }
+        };
+
+        List<Subscription> subscriptions = subscriptionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("findWelcomeActiveSubscriptionsForDayWP (dow={}, offset={}, rowCount={}) {}", dow, offset, rowCount, queryTimer.time());
+        return subscriptions;
+    }
+
+    @Override
+    public List<Subscription> findDeactivatedSubscriptionsForDayWP(final Date date, final long offset,
+                                                                     final int rowCount , final  String deactivationReasons) {
+        Timer queryTimer = new Timer();
+
+        @SuppressWarnings("unchecked")
+        SqlQueryExecution<List<Subscription>> queryExecution = new SqlQueryExecution<List<Subscription>>() {
+
+            @Override
+            public String getSqlQuery() {
+                String query =  "SELECT s.id as id, activationDate, deactivationReason, endDate, firstMessageDayOfWeek, " +
+                        "s.needsWelcomeMessageViaObd, s.origin, s.secondMessageDayOfWeek, s.startDate, " +
+                        "s.status, s.subscriber_id_OID, s.subscriptionId, s.subscriptionPack_id_OID, " +
+                        "s.creationDate, s.creator, s.modificationDate, s.modifiedBy, s.owner " +
+                        "FROM nms_subscriptions AS s " +
+                        "WHERE s.id > :offset AND " +
+                        "DATE(s.endDate) = DATE(:date) AND " +
+                        "status = 'DEACTIVATED' AND " +
+                        "s.serviceStatus IN ('WHATSAPP', 'IVR_AND_WHATSAPP') AND " +
+                        "s.deactivationReason IN ( " + deactivationReasons + " ) " +
+                        "ORDER BY s.id " +
+                        "LIMIT :max";
+                LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
+                return query;
+            }
+
+            @Override
+            public List<Subscription> execute(Query query) {
+
+                query.setClass(Subscription.class);
+
+                Map params = new HashMap();
+                params.put("offset", offset);
+                params.put("date", date);
+                params.put("max", rowCount);
+//                params.put("deactivationReasons" , deactivationReasons);
+                LOGGER.debug("test - parameters {} " , params);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.executeWithMap(params);
+
+                return (List<Subscription>) fqr;
+            }
+        };
+
+        List<Subscription> subscriptions = subscriptionDataService.executeSQLQuery(queryExecution);
+        LOGGER.debug("findDeactivatedSubscriptionsForDayWP (date={}, offset={}, rowCount={}) {}", date, offset, rowCount, queryTimer.time());
+
+        return subscriptions;
+
+    }
+
     @Override
     public List<String> findJhSubscriptionIds() {
         SqlQueryExecution<List<String>> queryExecution = new SqlQueryExecution<List<String>>() {
@@ -1026,9 +1189,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             public String getSqlQuery() {
                 String query = "select subscriptionId from (select subscriptionId from nms_mcts_mothers a LEFT JOIN " +
                         "nms_subscribers b on b.mother_id_oid=a.id LEFT JOIN nms_subscriptions c on c.subscriber_id_oid = b.id where rchId like 'JH%' " +
-                        "and subscriptionPack_id_OID = 1 UNION ALL select subscriptionId from nms_mcts_children a LEFT JOIN " +
+                        "and subscriptionPack_id_OID = 1 and IVR_SERVICE IS TRUE UNION ALL select subscriptionId from nms_mcts_children a LEFT JOIN " +
                         "nms_subscribers b on b.child_id_oid=a.id LEFT JOIN nms_subscriptions c on c.subscriber_id_oid = b.id " +
-                        "where rchId like 'JH%' and subscriptionPack_id_OID = 2) as  a;";
+                        "where rchId like 'JH%' and subscriptionPack_id_OID = 2 and IVR_SERVICE IS TRUE AND (serviceStatus IN ('IVR', 'IVR_AND_WHATSAPP') OR serviceStatus IS NULL)) as  a;";
                 LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
                 return query;
             }
@@ -1140,5 +1303,18 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     }
 
+    private Set<Long> getWhatsAppStateFilter(){
+        Set<Long> states = new HashSet<>();
+        String locationProp = settingsFacade.getProperty(KilkariConstants.WP_STATES);
+        if (StringUtils.isBlank(locationProp)) {
+            return states;
+        }
+        String[] locationParts = StringUtils.split(locationProp, ',');
+        for (String locationPart : locationParts) {
+            Long stateId = Long.valueOf(locationPart);
+            states.add(stateId);
+        }
+        return states;
+    }
 
 }

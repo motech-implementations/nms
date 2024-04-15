@@ -99,9 +99,7 @@ public final class FlwMapper {
             flw.setJobStatus(jobStatus);
         }
 
-        if (FlwJobStatus.ACTIVE.toString().equalsIgnoreCase(gfStatus)) {
-            setFrontLineWorkerLocation(flw, location);
-        }
+        setFrontLineWorkerLocation(flw, location);
 
         if (flw.getLanguage() == null) {
             flw.setLanguage(flw.getDistrict().getLanguage());

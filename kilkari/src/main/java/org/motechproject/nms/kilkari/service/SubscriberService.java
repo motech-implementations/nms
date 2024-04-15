@@ -74,7 +74,7 @@ public interface SubscriberService {
      * @param deactivate boolean to check if subscription needs to be deactivated due to abortion, stillbirth or death
      * @return New or updated subscription, null if the creation/update fails
      */
-    Subscription updateRchMotherSubscriber(Long msisdn, MctsMother mother, DateTime lmp, Long caseNo, Boolean deactivate, Map<String, Object> record, String action,String name,DateTime motherDOB,LocalDate lastUpdatedDateNic);
+    Subscription updateRchMotherSubscriber(Long msisdn, MctsMother mother, DateTime lmp, Long caseNo, Boolean deactivate, Map<String, Object> record, String action,String name,DateTime motherDOB,LocalDate lastUpdatedDateNic , DateTime motherRegistrationDate);
 
     /**
      * Update the child subscriber with the msisdn and child object

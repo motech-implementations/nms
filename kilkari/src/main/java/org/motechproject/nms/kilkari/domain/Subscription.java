@@ -81,6 +81,26 @@ public class Subscription extends MdsEntity {
     @Field
     private boolean needsWelcomeMessageViaObd;
 
+    @Field
+    private boolean needsWelcomeOptInForWP;
+
+    @Field
+    private ServiceStatus serviceStatus;
+
+    @Field
+    private boolean whatsAppSelfOptIn;
+
+    @Field
+    private boolean whatsAppCdrStatus;
+    @Field
+    private DateTime wpStartDate;
+
+    @Field
+    private DateTime wpEndDate;
+
+    @Field
+    private WhatsAppDeactivationReason wpDeactivationReason;
+
     public Subscription(Subscriber subscriber, SubscriptionPack subscriptionPack, SubscriptionOrigin origin) {
         this.subscriptionId = UUID.randomUUID().toString();
         this.subscriber = subscriber;
@@ -89,6 +109,14 @@ public class Subscription extends MdsEntity {
         if (origin == SubscriptionOrigin.MCTS_IMPORT) {
             needsWelcomeMessageViaObd = true;
         }
+    }
+
+    public WhatsAppDeactivationReason getWpDeactivationReason() {
+        return wpDeactivationReason;
+    }
+
+    public void setWpDeactivationReason(WhatsAppDeactivationReason wpDeactivationReason) {
+        this.wpDeactivationReason = wpDeactivationReason;
     }
 
     public String getSubscriptionId() { return subscriptionId; }
@@ -110,6 +138,14 @@ public class Subscription extends MdsEntity {
     }
 
     public SubscriptionStatus getStatus() { return status; }
+
+    public DateTime getWpEndDate() {
+        return wpEndDate;
+    }
+
+    public void setWpEndDate(DateTime wpEndDate) {
+        this.wpEndDate = wpEndDate;
+    }
 
     public void setStatus(SubscriptionStatus status) {
         if ((status == SubscriptionStatus.ACTIVE) && (this.status != SubscriptionStatus.ACTIVE)) {
@@ -179,6 +215,40 @@ public class Subscription extends MdsEntity {
     public void setNeedsWelcomeMessageViaObd(boolean needsWelcomeMessageViaObd) {
         this.needsWelcomeMessageViaObd = needsWelcomeMessageViaObd;
     }
+    public ServiceStatus getServiceStatus() {
+        return serviceStatus;
+    }
+
+    public void setServiceStatus(ServiceStatus serviceStatus) {
+        this.serviceStatus = serviceStatus;
+    }
+
+    public boolean isWhatsAppSelfOptIn() {
+        return whatsAppSelfOptIn;
+    }
+
+    public void setWhatsAppSelfOptIn(boolean whatsAppSelfOptIn) {
+        this.whatsAppSelfOptIn = whatsAppSelfOptIn;
+    }
+
+    public boolean isWhatsAppCdrStatus() {
+        return whatsAppCdrStatus;
+    }
+    public void setWhatsAppCdrStatus(boolean whatsAppCdrStatus) {
+        this.whatsAppCdrStatus = whatsAppCdrStatus;
+    }
+
+    public boolean isNeedsWelcomeOptInForWP() {
+        return needsWelcomeOptInForWP;
+    }
+
+    public void setNeedsWelcomeOptInForWP(boolean needsWelcomeOptInForWP) {
+        this.needsWelcomeOptInForWP = needsWelcomeOptInForWP;
+    }
+    public DateTime getWpStartDate() {return wpStartDate;}
+
+    public void setWpStartDate(DateTime wpStartDate) {this.wpStartDate = wpStartDate;}
+
 
     public boolean needsWelcomeMessageViaInbox() {
         int daysSinceStart = Days.daysBetween(startDate, activationDate).getDays();

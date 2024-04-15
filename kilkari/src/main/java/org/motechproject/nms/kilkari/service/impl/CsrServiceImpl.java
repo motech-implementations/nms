@@ -3,35 +3,37 @@ package org.motechproject.nms.kilkari.service.impl;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
+import org.joda.time.LocalDate;
 import org.motechproject.alerts.contract.AlertService;
 import org.motechproject.alerts.domain.AlertStatus;
 import org.motechproject.alerts.domain.AlertType;
 import org.motechproject.event.MotechEvent;
 import org.motechproject.event.listener.annotations.MotechListener;
 import org.motechproject.metrics.service.Timer;
-import org.motechproject.nms.kilkari.domain.CallRetry;
-import org.motechproject.nms.kilkari.domain.CallStage;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
+import org.motechproject.nms.kilkari.dto.WhatsAppOptCsrDto;
+import org.motechproject.nms.kilkari.dto.WhatsAppOptSMSCsrDto;
 import org.motechproject.nms.kilkari.exception.InvalidCallRecordDataException;
 import org.motechproject.nms.kilkari.exception.NoSuchSubscriptionException;
 import org.motechproject.nms.kilkari.repository.CallRetryDataService;
 import org.motechproject.nms.kilkari.repository.DeactivatedBeneficiaryDataService;
 import org.motechproject.nms.kilkari.repository.SubscriptionDataService;
+import org.motechproject.nms.kilkari.repository.WhatsAppOptSMSDataService;
 import org.motechproject.nms.kilkari.service.CsrService;
 import org.motechproject.nms.kilkari.service.CsrVerifierService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.StatusCode;
+import org.motechproject.nms.props.domain.WhatsAppOptInStatusCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 import static java.lang.Math.min;
 
@@ -44,6 +46,7 @@ public class CsrServiceImpl implements CsrService {
     private SubscriptionDataService subscriptionDataService;
     private SubscriptionService subscriptionService;
     private CallRetryDataService callRetryDataService;
+    private WhatsAppOptSMSDataService whatsAppOptSMSDataService;
     private AlertService alertService;
     private CsrVerifierService csrVerifierService;
     private DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService;
@@ -52,13 +55,15 @@ public class CsrServiceImpl implements CsrService {
     public CsrServiceImpl(SubscriptionDataService subscriptionDataService, SubscriptionService subscriptionService,
                           CallRetryDataService callRetryDataService, AlertService alertService,
                           CsrVerifierService csrVerifierService,
-                          DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService) {
+                          DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService,
+                          WhatsAppOptSMSDataService whatsAppOptSMSDataService) {
         this.subscriptionDataService = subscriptionDataService;
         this.subscriptionService = subscriptionService;
         this.callRetryDataService = callRetryDataService;
         this.alertService = alertService;
         this.csrVerifierService = csrVerifierService;
         this.deactivatedBeneficiaryDataService = deactivatedBeneficiaryDataService;
+        this.whatsAppOptSMSDataService = whatsAppOptSMSDataService;
     }
 
 
@@ -77,6 +82,49 @@ public class CsrServiceImpl implements CsrService {
         SubscriptionServiceImpl.createDeactivatedUser(deactivatedBeneficiaryDataService, subscription, null, true);
     }
 
+    private void updateSubscriptionServiceStatus(Subscription subscription, String contentFileName) {
+
+        resetWelcomeFlagInSubscription(subscription);
+
+        if (subscription.getStatus() == SubscriptionStatus.DEACTIVATED || !subscription.isLastPackMessage(contentFileName)) {
+            // if subscription is deactivated or content was not the last message, do nothing
+            return;
+        }
+
+        // Mark the subscription completed
+        subscription.setStatus(SubscriptionStatus.COMPLETED);
+        subscriptionDataService.update(subscription);
+        SubscriptionServiceImpl.createDeactivatedUser(deactivatedBeneficiaryDataService, subscription, null, true);
+    }
+
+    private void switchIVRfromWhatsAppIfOpted(Subscription subscription, CallSummaryRecordDto callSummaryRecordDto, CallRetry callRetry){
+        if (subscription.isNeedsWelcomeOptInForWP() && SubscriptionStatus.ACTIVE.equals(subscription.getStatus())){
+            LOGGER.info("INSIDE processCallSummaryRecord -INSIDE switchIVRfromWhatsAppIfOpted TEND TO change status");
+            switch (WhatsAppOptInStatusCode.valueOf(callSummaryRecordDto.getOpt_in_input())){
+                case OPTED_FOR_WHATSAPP:
+                    switchToWhatsApp(subscription);
+                    if (callRetry != null) {
+                            callRetryDataService.delete(callRetry);
+                        }
+                    break;
+                case OPTED_FOR_IVR:
+                    if (callRetry != null) {
+                        callRetryDataService.delete(callRetry);
+                    }
+                    break;
+                default:
+                    doRescheduleOptIn(subscription, callSummaryRecordDto, callRetry);
+            }
+        }
+    }
+
+    private void switchToWhatsApp(Subscription subscription){
+        LOGGER.info("INSIDE processCallSummaryRecord -INSIDE switchToWhatsApp TEND TO change status to IVR_AND_WHATSAPP");
+        subscription.setWhatsAppSelfOptIn(true);
+        subscription.setServiceStatus(ServiceStatus.IVR_AND_WHATSAPP);
+        subscription.setWpStartDate(LocalDate.now().plusDays(1).toDateTimeAtStartOfDay());
+        subscriptionDataService.update(subscription);
+    }
 
     private void handleDndForSubscription(Subscription subscription) {
 
@@ -110,7 +158,9 @@ public class CsrServiceImpl implements CsrService {
                     csrDto.getCircleName(),
                     subscription.getOrigin(),
                     csrDto.getTargetFileTimeStamp(),
-                    invalidNr ? 1 : 0)
+                    invalidNr ? 1 : 0,
+                    csrDto.isOpt_in_call_eligibility()
+                    )
             );
             return;
         }
@@ -129,7 +179,48 @@ public class CsrServiceImpl implements CsrService {
                 subscriptionDataService.update(subscription);
                 SubscriptionServiceImpl.createDeactivatedUser(deactivatedBeneficiaryDataService, subscription, DeactivationReason.INVALID_NUMBER, false);
             }
-
+            if (existingCallRetry != null && existingCallRetry.isOpt_in_call_eligibility()
+                    && existingCallRetry.getCallStage() == CallStage.RETRY_LAST && existingCallRetry.getWeekId().equals("w1_1")) {
+                boolean optInCall = existingCallRetry.getContentFileName().equals("opt_in.wav");
+                if(!optInCall) {
+                    /*callRetryDataService.delete(existingCallRetry);
+                    callRetryDataService.create(new CallRetry(
+                                    subscription.getSubscriptionId(),
+                                    subscription.getSubscriber().getCallingNumber(),
+                                    CallStage.RETRY_LAST,
+                                    "opt_in.wav",
+                                    csrDto.getWeekId(),
+                                    csrDto.getLanguageCode(),
+                                    csrDto.getCircleName(),
+                                    subscription.getOrigin(),
+                                    csrDto.getTargetFileTimeStamp(),
+                                    0,
+                                    csrDto.isOpt_in_call_eligibility()
+                            )
+                    );*/
+                    existingCallRetry.setContentFileName("opt_in.wav");
+                    callRetryDataService.update(existingCallRetry);
+                } else {
+                    completeSubscriptionIfNeeded(subscription, csrDto.getContentFileName());
+                    callRetryDataService.delete(existingCallRetry);
+                    LOGGER.info("subscription is : {}", subscription);
+                    LOGGER.info("csrDto is : {}", csrDto);
+                    LOGGER.info("whatsAppOptSMSDataService is  : {}", whatsAppOptSMSDataService);
+                    // write message table logic here
+                    whatsAppOptSMSDataService.create(new WhatsAppOptSMS(csrDto.getCircleName(),
+                            "SMS_CONTENT",
+                            csrDto.getLanguageCode(),
+                            subscription.getSubscriber().getCallingNumber(),
+                            "",
+                            subscription.getSubscriptionId(),
+                            false,
+                            WhatsAppOptInResponse.NO_RESPONSE,
+                            DateTime.now(),
+                            DateTime.now()
+                            ));
+                }
+                return;
+            }
             if (existingCallRetry != null) {
                 callRetryDataService.delete(existingCallRetry);
             }
@@ -151,6 +242,49 @@ public class CsrServiceImpl implements CsrService {
 
     }
 
+    private void doRescheduleOptIn(Subscription subscription,CallSummaryRecordDto callSummaryRecordDto, CallRetry callRetry){
+        LOGGER.info("INSIDE doRescheduleOptIn -before resheduling");
+        boolean invalidNr = StatusCode.fromInt(callSummaryRecordDto.getStatusCode()).equals(StatusCode.OBD_FAILED_INVALIDNUMBER);
+        CallRetry callRetry1 = callRetryDataService.findBySubscriptionId(subscription.getSubscriptionId());
+        if ((callRetry1 !=null && callRetry.getCallStage() == CallStage.RETRY_LAST)) {
+            // Only way flow reach here when opt-in call has no response
+            callRetryDataService.delete(callRetry);
+            // write insertion of message table logic here
+            LOGGER.info("subscription is : {}", subscription);
+            LOGGER.info("csrDto is : {}", callSummaryRecordDto);
+            LOGGER.info("whatsAppOptSMSDataService is  : {}", whatsAppOptSMSDataService);
+             whatsAppOptSMSDataService.create(new WhatsAppOptSMS(callSummaryRecordDto.getCircleName(),
+                    "SMS_CONTENT",
+                    callSummaryRecordDto.getLanguageCode(),
+                    subscription.getSubscriber().getCallingNumber(),
+                    "",
+                    subscription.getSubscriptionId(),
+                    false,
+                    WhatsAppOptInResponse.NO_RESPONSE,
+                    DateTime.now(),
+                    DateTime.now()
+            ));
+            return;
+        }
+        if (callRetry1 == null && SubscriptionStatus.ACTIVE.equals(subscription.getStatus()) && subscription.isNeedsWelcomeOptInForWP()) {
+            // A seperate OPT-IN needs to be sent in case of no response
+            callRetryDataService.create(new CallRetry(
+                            subscription.getSubscriptionId(),
+                            subscription.getSubscriber().getCallingNumber(),
+                            CallStage.RETRY_LAST,
+                            "opt_in.wav",
+                            callSummaryRecordDto.getWeekId(),
+                            callSummaryRecordDto.getLanguageCode(),
+                            callSummaryRecordDto.getCircleName(),
+                            subscription.getOrigin(),
+                            callSummaryRecordDto.getTargetFileTimeStamp(),
+                            0,
+                            callSummaryRecordDto.isOpt_in_call_eligibility()
+                    )
+            );
+        }
+    };
+
 
     @MotechListener(subjects = {KilkariConstants.NMS_IMI_KK_PROCESS_CSR_SUBJECT}) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
@@ -171,12 +305,17 @@ public class CsrServiceImpl implements CsrService {
             }
 
             CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
-
             switch (FinalCallStatus.fromInt(csrDto.getFinalStatus())) {
                 case SUCCESS:
                     completeSubscriptionIfNeeded(subscription, csrDto.getContentFileName());
                     if (callRetry != null) {
-                        callRetryDataService.delete(callRetry);
+                        if (!callRetry.getContentFileName().equals("opt_in.wav")) {
+                            callRetryDataService.delete(callRetry);
+                        }
+                    }
+                    if(csrDto.isOpt_in_call_eligibility() && (csrDto.getContentFileName().equals(SubscriptionPackMessage.getWelcomeMessage().getMessageFileName())
+                            || csrDto.getContentFileName().equals("opt_in.wav"))) {
+                        switchIVRfromWhatsAppIfOpted(subscription, csrDto, callRetry);
                     }
                     whatHappened = "SU";
                     break;
@@ -232,6 +371,124 @@ public class CsrServiceImpl implements CsrService {
 
         LOGGER.debug(String.format("processCallSummaryRecord %s %s %s", subscriptionId, whatHappened, timer.time()));
     }
+
+    @MotechListener(subjects = {KilkariConstants.NMS_IMI_KK_WHATSAPP_SMS_PROCESS_CSR_SUBJECT}) //NO CHECKSTYLE Cyclomatic Complexity
+    @Transactional
+    public void processWhatsAppSMSCsr(MotechEvent event) { //NOPMD NcssMethodCount
+
+        Timer timer = new Timer();
+        String whatHappened = "##";
+
+        String subscriptionId = "###INVALID###";
+        try {
+            LOGGER.debug("test 20 - WhatsAppOptSMSCsrDto.fromParams");
+            WhatsAppOptSMSCsrDto csrDto = WhatsAppOptSMSCsrDto.fromParams(event.getParameters());
+            subscriptionId = csrDto.getRequestId();
+//            csrVerifierService.verify(csrDto);
+            LOGGER.debug("test 21 - subscriptionDataService.findBySubscriptionIdAndStatus");
+            Subscription subscription = subscriptionDataService.findBySubscriptionIdAndStatus(subscriptionId, SubscriptionStatus.ACTIVE);
+            if (subscription == null) {
+                throw new NoSuchSubscriptionException(subscriptionId);
+            }
+            LOGGER.debug("test 22 - updateSubscriptionServiceStatusForWhatsAppSMS");
+            updateSubscriptionServiceStatusForWhatsAppSMS(subscription, csrDto.getResponse(), (List<Subscription>) event.getParameters().get("subscriptions"));
+
+        } catch (NoSuchSubscriptionException e) {
+            String msg = String.format("No such subscription %s", e.getMessage());
+            LOGGER.error(msg);
+            alertService.create(subscriptionId, "Invalid CSR Data", msg, AlertType.HIGH, AlertStatus.NEW, 0, null);
+            whatHappened = "ES";
+        } catch (Exception e) {
+            String msg = String.format("MOTECH BUG *** Unexpected exception in processCallSummaryRecord() for " +
+                    "subscription %s: %s", subscriptionId, ExceptionUtils.getFullStackTrace(e));
+            LOGGER.error(msg);
+            alertService.create(subscriptionId, KilkariConstants.NMS_IMI_KK_PROCESS_CSR_SUBJECT,
+                    msg.substring(0, min(msg.length(), KilkariConstants.MAX_CHAR_ALERT)), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            whatHappened = "E!";
+        }
+
+        LOGGER.debug(String.format("processWhatsAppSMSCsr %s %s %s", subscriptionId, whatHappened, timer.time()));
+    }
+
+    @MotechListener(subjects = {KilkariConstants.NMS_IMI_KK_WHATSAPP_PROCESS_CSR_SUBJECT}) //NO CHECKSTYLE Cyclomatic Complexity
+    @Transactional
+    public void processWhatsAppCsr(MotechEvent event) { //NOPMD NcssMethodCount
+
+        Timer timer = new Timer();
+        String whatHappened = "##";
+
+        String subscriptionId = "###INVALID###";
+        try {
+            LOGGER.debug("test 20 - WhatsAppOptCsrDto.fromParams");
+            WhatsAppOptCsrDto csrDto = WhatsAppOptCsrDto.fromParams(event.getParameters());
+            LOGGER.debug("csrDto: {}", csrDto);
+            subscriptionId = csrDto.getExternalId();
+//            csrVerifierService.verify(csrDto);
+            LOGGER.debug("test 21 - subscriptionDataService.findBySubscriptionIdAndStatus");
+            Subscription subscription = subscriptionDataService.findBySubscriptionIdAndStatus(subscriptionId, SubscriptionStatus.ACTIVE);
+            LOGGER.debug("subscription: {}", subscription);
+            if (subscription == null) {
+                throw new NoSuchSubscriptionException(subscriptionId);
+            }
+            LOGGER.debug("test 22 - updateSubscriptionServiceStatusForWhatsApp");
+            updateSubscriptionServiceStatusForWhatsApp(subscription, csrDto.getMessageStatus(), (List<Subscription>) event.getParameters().get("subscriptions"));
+            LOGGER.debug("subscription: {}", subscription);
+        } catch (NoSuchSubscriptionException e) {
+            String msg = String.format("No such subscription %s", e.getMessage());
+            LOGGER.error(msg);
+            alertService.create(subscriptionId, "Invalid CSR Data", msg, AlertType.HIGH, AlertStatus.NEW, 0, null);
+            whatHappened = "ES";
+        } catch (Exception e) {
+            String msg = String.format("MOTECH BUG *** Unexpected exception in processCallSummaryRecord() for " +
+                    "subscription %s: %s", subscriptionId, ExceptionUtils.getFullStackTrace(e));
+            LOGGER.error(msg);
+            alertService.create(subscriptionId, KilkariConstants.NMS_IMI_KK_PROCESS_CSR_SUBJECT,
+                    msg.substring(0, min(msg.length(), KilkariConstants.MAX_CHAR_ALERT)), AlertType.CRITICAL, AlertStatus.NEW, 0, null);
+            whatHappened = "E!";
+        }
+
+        LOGGER.debug(String.format("processWhatsAppSMSCsr %s %s %s", subscriptionId, whatHappened, timer.time()));
+    }
+
+    private void updateSubscriptionServiceStatusForWhatsAppSMS(Subscription subscription, WhatsAppOptInResponse response, List<Subscription> subscriptions) {
+        if(response == WhatsAppOptInResponse.OPTED){
+            subscription.setServiceStatus(ServiceStatus.IVR_AND_WHATSAPP);
+            subscription.setWhatsAppSelfOptIn(true);
+            subscription.setWpStartDate(new DateTime().plusDays(1));
+        }
+        else if (response == WhatsAppOptInResponse.NOT_OPTED){
+            subscription.setServiceStatus(ServiceStatus.IVR);
+            subscription.setWhatsAppSelfOptIn(false);
+        }
+        subscriptions.add(subscription);
+    }
+
+    private void updateSubscriptionServiceStatusForWhatsApp(Subscription subscription, WhatsAppMessageStatus status, List<Subscription> subscriptions) {
+        if( status == WhatsAppMessageStatus.SENT ){
+            return;
+        }
+        //What if beneficiary phone no. got changed before updating the status.
+        else if( status == WhatsAppMessageStatus.READ || status == WhatsAppMessageStatus.DELIVERED ){
+            if(!subscription.isWhatsAppCdrStatus() && subscription.isWhatsAppSelfOptIn()){
+                subscription.setWhatsAppCdrStatus(true);
+                subscription.setServiceStatus(ServiceStatus.WHATSAPP);
+            }
+        }
+        else {
+            if(status == WhatsAppMessageStatus.UNDELIVERED){
+                subscription.setWpDeactivationReason(WhatsAppDeactivationReason.MESSAGE_DELIVERY_FAILURE);
+            }
+            else{
+                subscription.setWpDeactivationReason(WhatsAppDeactivationReason.UNSUBSCRIBED_BY_USER);
+            }
+            subscription.setServiceStatus(ServiceStatus.IVR);
+            subscription.setWpEndDate(new DateTime());
+        }
+        subscriptions.add(subscription);
+//        subscriptionDataService.update(subscription);
+    }
+
+
 
 
     private void resetWelcomeFlagInSubscription(Subscription subscription) {
