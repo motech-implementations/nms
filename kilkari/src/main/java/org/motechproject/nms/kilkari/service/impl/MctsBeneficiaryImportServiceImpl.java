@@ -593,7 +593,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 return false;
             } else {
                 Long motherId = mctsMother.getId();
-                Subscriber subscriber = subscriberService.getSubscriberByMother(motherId);
+                Subscriber subscriber = subscriberService.getSubscriberListByMother(motherId);
                 if (subscriber == null) {
                     return false;
                 } else {

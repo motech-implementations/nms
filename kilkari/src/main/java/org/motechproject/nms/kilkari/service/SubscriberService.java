@@ -106,7 +106,7 @@ public interface SubscriberService {
      * @param motherId Mother id oid of the subscriber to retrieve
      * @return The subscriber.
      */
-    Subscriber getSubscriberByMother(long motherId);
+    Subscriber getSubscriberListByMother(final long motherId);
 
     /**
      * Update the RCH child subscriber with msisdn and child object
