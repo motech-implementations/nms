@@ -174,7 +174,8 @@ public class TargetFileServiceBundleIT extends BasePaxIT {
                     sh.getCircleName(sub),
                     SubscriptionOrigin.MCTS_IMPORT,
                     "20151119124330",
-                    0
+                    0,
+                    false
             ));
         }
 

@@ -14,6 +14,7 @@ import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -151,6 +152,14 @@ public interface SubscriptionService {
     List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, long offset, int rowCount);
 
     List<String> findJhSubscriptionIds();
+
+    List<Subscription> findActiveSubscriptionsForDayWP(DayOfTheWeek dayOfTheWeek, long offset, int rowCount , final Date date);
+
+    List<Subscription> findWelcomeActiveSubscriptionsForDayWP(final Date date, final DayOfTheWeek dow, final long offset,
+                                                                     final int rowCount);
+
+    List<Subscription> findDeactivatedSubscriptionsForDayWP(final Date date, final long offset,
+                                                              final int rowCount , final String deactivationReasons);
 
     /**
      * Get the list of pending subscriptions that starts after the specified date.

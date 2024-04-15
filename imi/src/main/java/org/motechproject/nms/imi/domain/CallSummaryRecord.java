@@ -2,9 +2,13 @@ package org.motechproject.nms.imi.domain;
 
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
+import org.motechproject.nms.imi.service.impl.CsrHelper;
 import org.motechproject.nms.kilkari.dto.CallSummaryRecordDto;
 import org.motechproject.nms.kilkari.exception.InvalidCallRecordDataException;
 import org.motechproject.nms.props.domain.RequestId;
+import org.motechproject.nms.props.domain.WhatsAppOptInStatusCode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Unique;
@@ -55,6 +59,14 @@ public class CallSummaryRecord {
 
     @Field
     private Integer attempts;
+
+    @Field
+    private boolean opt_in_call_eligibility;
+
+    @Field
+    private String opt_in_input;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CallSummaryRecord.class);
 
     public String getRequestId() {
         return requestId;
@@ -160,13 +172,24 @@ public class CallSummaryRecord {
         this.attempts = attempts;
     }
 
+    public boolean isOpt_in_call_eligibility() {return opt_in_call_eligibility;}
+
+    public void setOpt_in_call_eligibility(boolean opt_in_call_eligibility) {this.opt_in_call_eligibility = opt_in_call_eligibility;}
+
+    public String getOpt_in_input() {return opt_in_input;}
+
+    public void setOpt_in_input(String opt_in_input) {this.opt_in_input = opt_in_input;}
+
     public CallSummaryRecordDto toDto() {
+        LOGGER.info("Inside DTO");
         String subscriptionId;
         String timestamp;
+        LOGGER.info("OptInInputValue");
         try {
             RequestId r = RequestId.fromString(requestId);
             subscriptionId = r.getSubscriptionId();
             timestamp = r.getTimestamp();
+            LOGGER.info("Before OptInInputValue ");
         } catch (IllegalArgumentException e) {
             throw new InvalidCallRecordDataException(e);
         }
@@ -178,7 +201,9 @@ public class CallSummaryRecord {
                 weekId,
                 languageLocationCode,
                 circle,
-                timestamp
+                timestamp,
+                opt_in_call_eligibility,
+                opt_in_input
         );
     }
 }

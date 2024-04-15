@@ -575,7 +575,7 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
         stringBuilder.append(QUOTATION + mother.getIdNo() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getRegistrationNo() + QUOTATION_COMMA);
         stringBuilder.append(mother.getCaseNo() + ", ");
-        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(mother.getName()) + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(mother.getName()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getMobileNo() + QUOTATION_COMMA);
         if(mother.getRegistrationDate() == null){
             stringBuilder.append(mother.getRegistrationDate() + " , ");
@@ -597,20 +597,26 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
         return stringBuilder;
     }
 
+    private static String validateName (String name){
+        if(name == null) return null;
+        name = name.replace("?" , "").replace("\\" , "\\\\");
+        return StringEscapeUtils.escapeSql(name);
+    }
+
     private StringBuilder addLocations(StringBuilder stringBuilder, MotherImportRejection mother) {
         stringBuilder.append(mother.getStateId() + ", ");
         stringBuilder.append(mother.getDistrictId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getDistrictName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(mother.getDistrictName()) + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getTalukaId() + QUOTATION_COMMA);
-        stringBuilder.append(QUOTATION + mother.getTalukaName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(mother.getTalukaName()) + QUOTATION_COMMA);
         stringBuilder.append(mother.getHealthBlockId() + ", ");
-        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(mother.getHealthBlockName()) + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(mother.getHealthBlockName()) + QUOTATION_COMMA);
         stringBuilder.append(mother.getPhcId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getPhcName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(mother.getPhcName()) + QUOTATION_COMMA);
         stringBuilder.append(mother.getSubcentreId() + ", ");
-        stringBuilder.append(QUOTATION + mother.getSubcentreName() + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(mother.getSubcentreName()) + QUOTATION_COMMA);
         stringBuilder.append(mother.getVillageId() + ", ");
-        stringBuilder.append(QUOTATION + StringEscapeUtils.escapeSql(mother.getVillageName()) + QUOTATION_COMMA);
+        stringBuilder.append(QUOTATION + validateName(mother.getVillageName()) + QUOTATION_COMMA);
         return stringBuilder;
     }
 
