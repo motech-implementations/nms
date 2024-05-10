@@ -24,6 +24,7 @@ public class RchChildRecord {
     private String villageName;
     private String name;
     private String mobileNo;
+    private String ashaId;
     private String birthdate;
     private String registrationDate;
     private String registrationNo;
@@ -168,6 +169,11 @@ public class RchChildRecord {
     public void setMobileNo(String mobileNo) {
         this.mobileNo = mobileNo;
     }
+
+    public String getAshaId(){return ashaId; }
+
+    @XmlElement(name = "Asha_ID")
+    public void setAshaId(String ashaId){ this.ashaId = ashaId; }
 
     public String getBirthdate() {
         return birthdate;

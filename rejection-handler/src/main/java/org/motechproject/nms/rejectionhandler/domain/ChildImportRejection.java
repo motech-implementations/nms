@@ -67,6 +67,10 @@ public class ChildImportRejection {
     private String mobileNo;
 
     @Field
+    private String rchAshaId;
+
+
+    @Field
     private String motherName;
 
     @Field
@@ -417,6 +421,10 @@ public class ChildImportRejection {
     public void setMobileNo(String mobileNo) {
         this.mobileNo = mobileNo;
     }
+
+    public String getRchAshaId() {return rchAshaId;}
+
+    public void setRchAshaId(String rchAshaId) {this.rchAshaId = rchAshaId;}
 
     public String getMotherName() {
         return motherName;

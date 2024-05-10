@@ -594,9 +594,11 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private void processByUserType(String name, String result, Long stateId, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate, RchUserType rchUserType) {
         switch (rchUserType) {
             case MOTHER:
+                System.out.println("Test - step 1 ");
                 motherFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
                 break;
             case CHILD:
+                System.out.println("Test - step 1 ");
                 childFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
                 break;
             case ASHA:
@@ -2276,6 +2278,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private RchImportAudit saveImportedMothersData(RchMothersDataSet mothersDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) { //NOPMD NcssMethodCount
         LOGGER.info("Starting RCH mother import for state {}", stateName);
+        LOGGER.debug("test - step 2");
         List<RchMotherRecord> motherRecords = mothersDataSet.getRecords();
         List<Map<String, Object>> validMotherRecords = new ArrayList<>();
         validMotherRecords = getLMPValidRecords(motherRecords);
@@ -2287,11 +2290,13 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
         Map<String, Object> rejectedMothers = new HashMap<>();
         Map<String, Object> rejectionStatus = new HashMap<>();
+        LOGGER.debug("test - step 3 ");
         MotherImportRejection motherImportRejection;
 
         for (Map<String, Object> record : rejectedRchMothers) {
             action = (String) record.get(KilkariConstants.ACTION);
             LOGGER.debug("Existing Mother Record with same MSISDN in the data set");
+            LOGGER.debug("test- step4 ");
             motherImportRejection = motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action);
             rejectedMothers.put(motherImportRejection.getRegistrationNo(), motherImportRejection);
             rejectionStatus.put(motherImportRejection.getRegistrationNo(), motherImportRejection.getAccepted());

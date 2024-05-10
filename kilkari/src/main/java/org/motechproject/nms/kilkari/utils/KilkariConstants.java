@@ -142,6 +142,7 @@ public final class KilkariConstants {
     public static final String HEALTH_FACILITY_TYPE = "HealthfacilityType";
 
     public static final String MOTHER_REGISTRATION_DATE = "MotherRegistrationDate";
+    public static final String KILKARI_ASHA_ID = "AshaId";
 
     public static final String CHILD_REGISTRATION_DATE = "ChildRegistrationDate";
     public  static final String WP_STATES = "rch.wp.states";

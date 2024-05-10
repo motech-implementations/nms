@@ -154,6 +154,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         DateTime motherRegistrationDate = null;
         String action = "";
         Boolean flagForMcts = true;
+        String ashaId ;
         if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
             action = actionFinderService.motherActionFinder(convertMapToMother(record));
             beneficiaryId = (String) record.get(KilkariConstants.BENEFICIARY_ID);
@@ -162,6 +163,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             abortion = (Boolean) record.get(KilkariConstants.ABORTION);
             stillBirth = (Boolean) record.get(KilkariConstants.STILLBIRTH);
             lastUpdatedDateNic = (LocalDate) record.get(KilkariConstants.LAST_UPDATE_DATE);
+            ashaId = (String) record.get(KilkariConstants.KILKARI_ASHA_ID);
         } else {
             flagForMcts = false;
             action = actionFinderService.rchMotherActionFinder((convertMapToRchMother(record)));
@@ -172,6 +174,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             abortion = (Boolean) record.get(KilkariConstants.ABORTION_TYPE);
             stillBirth = (Boolean) record.get(KilkariConstants.DELIVERY_OUTCOMES);
             lastUpdatedDateNic = (LocalDate) record.get(KilkariConstants.EXECUTION_DATE);
+            ashaId = (String) record.get(KilkariConstants.KILKARI_ASHA_ID);
         }
 
         LOGGER.trace("MotherImportRejection::importMotherRecord Start " + beneficiaryId) ;
@@ -200,8 +203,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         if (mother == null) {
             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.DATA_INTEGRITY_ERROR, false);
         }
+        LOGGER.debug("test - step 7 ");
         mother.setRegistrationDate(motherRegistrationDate);
-
+        mother.setAshaId(ashaId);
         boolean isInvalidLMP = !validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, importOrigin);
 
         if (isInvalidLMP) {
@@ -363,12 +367,13 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         String childId;
         String action = "";
         Boolean flagForMcts = true;
-
+        String ashaId;
         if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
             action = actionFinderService.childActionFinder(convertMapToChild(record));
             childId = (String) record.get(KilkariConstants.BENEFICIARY_ID);
             child = mctsBeneficiaryValueProcessor.getOrCreateChildInstance(childId);
             msisdn = (Long) record.get(KilkariConstants.MSISDN);
+            ashaId = (String) record.get(KilkariConstants.KILKARI_ASHA_ID);
             if (record.get(KilkariConstants.MOTHER_ID) != null) {
                 Object motherRecord = record.get(KilkariConstants.MOTHER_ID);
 
@@ -401,6 +406,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             child = (MctsChild) record.get(KilkariConstants.RCH_CHILD);
             msisdn = (Long) record.get(KilkariConstants.MOBILE_NO);
             lastUpdateDateNic = (LocalDate) record.get(KilkariConstants.EXECUTION_DATE);
+            ashaId = (String) record.get(KilkariConstants.KILKARI_ASHA_ID);
             if (record.get(KilkariConstants.RCH_MOTHER_ID) != null || record.get(KilkariConstants.MCTS_MOTHER_ID) != null) {
                 String motherRchId = record.get(KilkariConstants.RCH_MOTHER_ID) == null || "".equals(record.get(KilkariConstants.RCH_MOTHER_ID)) || "0".equalsIgnoreCase(record.get(KilkariConstants.RCH_MOTHER_ID).toString()) ? null : record.get(KilkariConstants.RCH_MOTHER_ID).toString();
                 String motherMctsId = record.get(KilkariConstants.MCTS_MOTHER_ID) == null || "".equals(record.get(KilkariConstants.MCTS_MOTHER_ID)) || "0".equalsIgnoreCase(record.get(KilkariConstants.MCTS_MOTHER_ID).toString()) ? null : record.get(KilkariConstants.MCTS_MOTHER_ID).toString();
@@ -424,8 +430,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         if ((child == null)) {
             return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.DATA_INTEGRITY_ERROR, false);
         }
+        LOGGER.debug("test - step 7");
         child.setRegistrationDate(regDate);
-
+        child.setAshaId(ashaId);
         boolean isInValidDOB = !validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, importOrigin);
         if (isInValidDOB) {
             return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.INVALID_DOB, false);

@@ -124,6 +124,7 @@ public final class RejectedObjectConverter {
         childImportRejection.setPhcName(record.getPhcName());
         childImportRejection.setBirthDate(record.getBirthdate());
         childImportRejection.setRegistrationDate(record.getRegistrationDate());
+        childImportRejection.setRchAshaId(record.getAshaId());
         childImportRejection.setRegistrationNo(record.getRegistrationNo());
         childImportRejection.setEntryType(record.getEntryType());
         childImportRejection.setIdNo(record.getMctsId());
@@ -246,6 +247,7 @@ public final class RejectedObjectConverter {
         motherImportRejection.setCaseNo(record.getCaseNo());
         motherImportRejection.setName(record.getName());
         motherImportRejection.setMobileNo(record.getMobileNo());
+        motherImportRejection.setRchAshaId(record.getAshaId());
         motherImportRejection.setRegistrationDate(record.getRegistrationDate());
         motherImportRejection.setLmpDate(record.getLmpDate());
         motherImportRejection.setBirthDate(record.getBirthDate());
@@ -491,6 +493,7 @@ public final class RejectedObjectConverter {
         rchMotherRecord.setName(record.get(KilkariConstants.BENEFICIARY_NAME) == null ? null : record.get(KilkariConstants.BENEFICIARY_NAME).toString());
         rchMotherRecord.setMobileNo(record.get(KilkariConstants.MOBILE_NO) == null ? null : record.get(KilkariConstants.MOBILE_NO).toString());
         rchMotherRecord.setRegistrationDate(record.get(KilkariConstants.MOTHER_REGISTRATION_DATE) == null ? null : record.get(KilkariConstants.MOTHER_REGISTRATION_DATE).toString());
+        rchMotherRecord.setAshaId(record.get(KilkariConstants.KILKARI_ASHA_ID)==null ? null : record.get(KilkariConstants.KILKARI_ASHA_ID).toString());
         rchMotherRecord.setLmpDate(record.get(KilkariConstants.LMP) == null ? null : record.get(KilkariConstants.LMP).toString());
         rchMotherRecord.setBirthDate(record.get(KilkariConstants.MOTHER_DOB) == null ? null : record.get(KilkariConstants.MOTHER_DOB).toString());
         rchMotherRecord.setAbortionType(record.get(KilkariConstants.ABORTION_TYPE) == null ? null : record.get(KilkariConstants.ABORTION_TYPE).toString());
@@ -629,6 +632,7 @@ public final class RejectedObjectConverter {
         rchChildRecord.setName(record.get(KilkariConstants.BENEFICIARY_NAME) == null ? null : record.get(KilkariConstants.BENEFICIARY_NAME).toString());
 
         rchChildRecord.setMobileNo(record.get(KilkariConstants.MOBILE_NO) == null ? null : record.get(KilkariConstants.MOBILE_NO).toString());
+        rchChildRecord.setAshaId(record.get(KilkariConstants.KILKARI_ASHA_ID) == null ? null : record.get(KilkariConstants.KILKARI_ASHA_ID).toString());
         rchChildRecord.setBirthdate(record.get(KilkariConstants.DOB) == null ? null : record.get(KilkariConstants.DOB).toString());
         rchChildRecord.setRegistrationDate(record.get(KilkariConstants.CHILD_REGISTRATION_DATE) == null ? null : record.get(KilkariConstants.CHILD_REGISTRATION_DATE).toString());
         rchChildRecord.setMctsId(record.get(KilkariConstants.MCTS_ID) == null ? null : record.get(KilkariConstants.MCTS_ID).toString());

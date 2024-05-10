@@ -28,6 +28,7 @@ public class RchMotherRecord {
     private Long caseNo;
     private String name;
     private String mobileNo;
+    private String ashaId;
     private String lmpDate;
     private String registrationDate;
     private String birthDate;
@@ -197,6 +198,11 @@ public class RchMotherRecord {
     public void setMobileNo(String mobileNo) {
         this.mobileNo = mobileNo;
     }
+
+    public String getAshaId(){return ashaId; }
+
+    @XmlElement(name = "Asha_ID")
+    public void setAshaId(String ashaId){ this.ashaId = ashaId; }
 
     public String getLmpDate() {
         return lmpDate;
