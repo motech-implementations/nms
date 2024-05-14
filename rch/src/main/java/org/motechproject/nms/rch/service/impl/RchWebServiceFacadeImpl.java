@@ -2381,12 +2381,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
     private List<Map<String, Object>> getLMPValidRecords(List<RchMotherRecord> motherRecords) {
+        LOGGER.debug("test - getLMPValidRecords 1 ");
         List<Map<String, Object>> validMotherRecords = new ArrayList<>();
         Map<String, Object> rejectedMothers = new HashMap<>();
         Map<String, Object> rejectionStatus = new HashMap<>();
         MotherImportRejection motherImportRejection;
-
+        LOGGER.debug("test - getLMPValidRecords 2 ");
         for (RchMotherRecord record : motherRecords) {
+            LOGGER.debug("test - getLMPValidRecords 3 ");
             Map<String, Object> recordMap = toMap(record);
             MctsMother mother;
             Long msisdn;
@@ -2396,33 +2398,45 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             String mctsId = (String) recordMap.get(KilkariConstants.MCTS_ID);
             msisdn = (Long) recordMap.get(KilkariConstants.MOBILE_NO);
             DateTime lmp = (DateTime) recordMap.get(KilkariConstants.LMP);
+            LOGGER.debug("test - getLMPValidRecords 4 ");
+            mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance(beneficiaryId, mctsId);
+            LOGGER.debug("test - getLMPValidRecords 4.1 ");
             mother = mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance(beneficiaryId, mctsId);
+            LOGGER.debug("test - getLMPValidRecords 5 ");
             recordMap.put(KilkariConstants.RCH_MOTHER, mother);
-
+            LOGGER.debug("test - getLMPValidRecords 6 ");
             if (mother == null) {
+                LOGGER.debug("test - getLMPValidRecords 7 ");
                 motherImportRejection = motherRejectionRch(convertMapToRchMother(recordMap), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), action);
                 rejectedMothers.put(motherImportRejection.getRegistrationNo(), motherImportRejection);
                 rejectionStatus.put(motherImportRejection.getRegistrationNo(), motherImportRejection.getAccepted());
             } else {
+                LOGGER.debug("test - getLMPValidRecords 8 ");
                 if (!mctsBeneficiaryImportService.validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, SubscriptionOrigin.MCTS_IMPORT)) {
+                    LOGGER.debug("test - getLMPValidRecords 9 ");
                     motherImportRejection = motherRejectionRch(convertMapToRchMother(recordMap), false, RejectionReasons.INVALID_LMP_DATE.toString(), action);
                     rejectedMothers.put(motherImportRejection.getRegistrationNo(), motherImportRejection);
                     rejectionStatus.put(motherImportRejection.getRegistrationNo(), motherImportRejection.getAccepted());
+                    LOGGER.debug("test - getLMPValidRecords 10 ");
                 } else {
+                    LOGGER.debug("test - getLMPValidRecords 11 ");
                     action = mother.getId() == null ? KilkariConstants.CREATE : KilkariConstants.UPDATE;
                     recordMap.put(KilkariConstants.ACTION, action);
                     validMotherRecords.add(recordMap);
+                    LOGGER.debug("test - getLMPValidRecords 12 ");
                 }
             }
         }
 
         try {
+            LOGGER.debug("test - getLMPValidRecords 13 ");
             mctsBeneficiaryImportService.createOrUpdateRchMotherRejections(rejectedMothers, rejectionStatus);
         } catch (RuntimeException e) {
+            LOGGER.debug("test - getLMPValidRecords 14 ");
             LOGGER.error(BULK_REJECTION_ERROR_MESSAGE, e);
 
         }
-
+        LOGGER.debug("test - getLMPValidRecords 15 ");
         return validMotherRecords;
     }
 

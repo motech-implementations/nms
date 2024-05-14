@@ -206,6 +206,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         LOGGER.debug("test - step 7 ");
         mother.setRegistrationDate(motherRegistrationDate);
         mother.setAshaId(ashaId);
+        LOGGER.debug("test - step 8 ");
         boolean isInvalidLMP = !validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, importOrigin);
 
         if (isInvalidLMP) {
@@ -432,7 +433,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
         LOGGER.debug("test - step 7");
         child.setRegistrationDate(regDate);
-        child.setAshaId(ashaId);
+//        child.setAshaId(ashaId);
         boolean isInValidDOB = !validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, importOrigin);
         if (isInValidDOB) {
             return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.INVALID_DOB, false);

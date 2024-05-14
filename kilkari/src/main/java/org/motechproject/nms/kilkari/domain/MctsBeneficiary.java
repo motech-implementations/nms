@@ -68,8 +68,6 @@ public abstract class MctsBeneficiary extends MdsEntity implements FullLocation 
     @Field
     private LocalDate updatedDateNic;
 
-    @Field
-    private String ashaId;
 
     public MctsBeneficiary() {
     }
@@ -198,9 +196,7 @@ public abstract class MctsBeneficiary extends MdsEntity implements FullLocation 
         this.village = village;
     }
 
-    public String getAshaId(){ return ashaId; }
 
-    public void setAshaId(String ashaId) { this.ashaId = ashaId; }
 
     @Override
     public boolean equals(Object o) {
