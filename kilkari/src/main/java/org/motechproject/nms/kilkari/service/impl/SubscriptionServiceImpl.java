@@ -172,7 +172,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         "UPDATE motech_data_services.nms_subscriptions AS s " +
                         "JOIN motech_data_services.nms_subscription_packs AS sp " +
                         "ON s.subscriptionPack_id_OID = sp.id " +
-                        "SET s.status = 'COMPLETED', s.endDate = :currentTime, s.modificationDate = :currentTime " +
+                        "SET s.status = " +
+                        "(Case when s.status = 'HOLD' and s.activationDate is null THEN 'PACK_NOT_INITIATED_DUE_TO_ON_HOLD_DATA' " +
+                        "ELSE 'COMPLETED' " +
+                        "END), s.endDate = :currentTime, s.modificationDate = :currentTime " +
                         "WHERE " +
                         "(s.status = 'ACTIVE' OR s.status = 'PENDING_ACTIVATION' OR s.status = 'HOLD') AND " +
                         "((sp.type = 'PREGNANCY' AND s.startDate < :oldestPregnancyStart) " +
