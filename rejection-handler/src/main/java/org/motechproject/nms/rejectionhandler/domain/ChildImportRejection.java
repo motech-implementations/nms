@@ -66,8 +66,8 @@ public class ChildImportRejection {
     @Field
     private String mobileNo;
 
-    @Field
-    private String rchAshaId;
+//    @Field
+//    private String rchAshaId;
 
 
     @Field
@@ -422,9 +422,9 @@ public class ChildImportRejection {
         this.mobileNo = mobileNo;
     }
 
-    public String getRchAshaId() {return rchAshaId;}
-
-    public void setRchAshaId(String rchAshaId) {this.rchAshaId = rchAshaId;}
+//    public String getRchAshaId() {return rchAshaId;}
+//
+//    public void setRchAshaId(String rchAshaId) {this.rchAshaId = rchAshaId;}
 
     public String getMotherName() {
         return motherName;

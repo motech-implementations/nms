@@ -124,7 +124,7 @@ public final class RejectedObjectConverter {
         childImportRejection.setPhcName(record.getPhcName());
         childImportRejection.setBirthDate(record.getBirthdate());
         childImportRejection.setRegistrationDate(record.getRegistrationDate());
-        childImportRejection.setRchAshaId(record.getAshaId());
+//        childImportRejection.setRchAshaId(record.getAshaId());
         childImportRejection.setRegistrationNo(record.getRegistrationNo());
         childImportRejection.setEntryType(record.getEntryType());
         childImportRejection.setIdNo(record.getMctsId());
@@ -360,7 +360,7 @@ public final class RejectedObjectConverter {
         motherImportRejection.setRejectionReason(rejectionReason);
         motherImportRejection.setAction(action);
         motherImportRejection.setRegistrationDate(record.getMotherRegistrationDate());
-
+        motherImportRejection.setRchAshaId(record.getAsha_Id());
 
         return motherImportRejection;
     }
@@ -389,6 +389,7 @@ public final class RejectedObjectConverter {
         motherRecord.setWhomPhoneNo(record.get(KilkariConstants.MSISDN) == null ? null : record.get(KilkariConstants.MSISDN).toString());
         motherRecord.setLmpDate(record.get(KilkariConstants.LMP) == null ? null : record.get(KilkariConstants.LMP).toString());
         motherRecord.setMotherRegistrationDate(record.get(KilkariConstants.MOTHER_REGISTRATION_DATE) == null ? null : record.get(KilkariConstants.MOTHER_REGISTRATION_DATE).toString());
+        motherRecord.setAsha_Id(record.get(KilkariConstants.KILKARI_ASHA_ID)==null ? null : record.get(KilkariConstants.KILKARI_ASHA_ID).toString());
         motherRecord.setBirthdate(record.get(KilkariConstants.MOTHER_DOB) == null ? null : record.get(KilkariConstants.MOTHER_DOB).toString());
         motherRecord.setAbortion(record.get(KilkariConstants.ABORTION) == null ? null : record.get(KilkariConstants.ABORTION).toString());
         motherRecord.setOutcomeNos(record.get(KilkariConstants.STILLBIRTH) == null ? null : ((Boolean) record.get(KilkariConstants.STILLBIRTH) ? 1 : 0));

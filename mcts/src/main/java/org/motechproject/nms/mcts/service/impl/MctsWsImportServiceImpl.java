@@ -856,6 +856,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
     }
 
     private Map<String, Object> toMap(MotherRecord motherRecord) {
+        LOGGER.debug("test - toMap - mcts 1 ");
         Map<String, Object> map = new HashMap<>();
         mctsWebServiceFacade.toMapLocMother(map, motherRecord);
         map.put(KilkariConstants.LAST_UPDATE_DATE, "".equals(motherRecord.getLastUpdateDate()) ? null : LocalDate.parse(motherRecord.getLastUpdateDate(), DateTimeFormat.forPattern("dd-MM-yyyy")));
@@ -865,6 +866,7 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         map.put(KilkariConstants.MSISDN, mctsBeneficiaryValueProcessor.getMsisdnByString(motherRecord.getWhomPhoneNo()));
         map.put(KilkariConstants.LMP, mctsBeneficiaryValueProcessor.getDateByString(motherRecord.getLmpDate()));
         map.put(KilkariConstants.MOTHER_REGISTRATION_DATE , mctsBeneficiaryValueProcessor.getDateByString(motherRecord.getMotherRegistrationDate()));
+        map.put(KilkariConstants.KILKARI_ASHA_ID, motherRecord.getAsha_Id());
         map.put(KilkariConstants.MOTHER_DOB, "".equals(motherRecord.getBirthdate()) ? null : mctsBeneficiaryValueProcessor.getDateByString(motherRecord.getBirthdate()));
         map.put(KilkariConstants.ABORTION, mctsBeneficiaryValueProcessor.getAbortionDataFromString(motherRecord.getAbortion()));
         map.put(KilkariConstants.STILLBIRTH, mctsBeneficiaryValueProcessor.getStillBirthFromString(String.valueOf(motherRecord.getOutcomeNos())));
