@@ -140,7 +140,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     return subscriberList.get(0);
                 }
                 else {
-                    LOGGER.error("More than one row returned for beneficiary mother-id/child-id :  {}" , beneficiary.getId());
+                    LOGGER.debug("More than one row returned for beneficiary mother-id/child-id :  {}" , beneficiary.getId());
                     return subscriberList.get(0);
                 }
             }
@@ -914,7 +914,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         } else if(subscriberList.size()==1){
             return subscriberList.get(0);
         } else {
-            LOGGER.error("More than one subscriber returned for motherID : {} , found {} subscribers ", motherId , subscriberList.size()) ;
+            LOGGER.debug("More than one subscriber returned for motherID : {} , found {} subscribers ", motherId , subscriberList.size()); ;
             return subscriberList.get(0);
         }
     }
