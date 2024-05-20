@@ -5,6 +5,7 @@ import org.joda.time.DateTime;
 import org.motechproject.mds.annotations.Entity;
 import org.motechproject.mds.annotations.Field;
 import org.motechproject.mds.annotations.InstanceLifecycleListeners;
+import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.tracking.annotation.TrackClass;
 import org.motechproject.nms.tracking.annotation.TrackFields;
 
@@ -23,6 +24,10 @@ public class MctsChild extends MctsBeneficiary {
 
     @Field
     private String ashaId;
+
+    @Field
+    private FrontLineWorker frontLineWorker ;
+
 
     public MctsChild(String beneficiaryId) {
         super(beneficiaryId);
@@ -57,6 +62,15 @@ public class MctsChild extends MctsBeneficiary {
 
     public void setAshaId(String ashaId) { this.ashaId = ashaId; }
 
+    public FrontLineWorker getFrontLineWorker() {
+        return frontLineWorker;
+    }
+
+    public void setFrontLineWorker(FrontLineWorker frontLineWorker) {
+        this.frontLineWorker = frontLineWorker;
+    }
+
+
     public void deepCopyFrom(MctsChild other) {
         setName(other.getName());
         setMother(other.getMother());
@@ -71,5 +85,6 @@ public class MctsChild extends MctsBeneficiary {
         setUpdatedDateNic(other.getUpdatedDateNic());
         setRegistrationDate(other.getRegistrationDate());
         setAshaId(other.getAshaId());
+        setFrontLineWorker(other.getFrontLineWorker());
     }
 }

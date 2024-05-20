@@ -142,6 +142,9 @@
     <osgi:reference id="childRejectionService"
                     interface="org.motechproject.nms.rejectionhandler.service.ChildRejectionService"/>
 
+        <osgi:reference id="frontLineWorkerService"
+                      interface="org.motechproject.nms.flw.service.FrontLineWorkerService"/>
+
     <!-- CSV Audit Service -->
     <osgi:reference id="csvAuditService" interface="org.motechproject.nms.csv.service.CsvAuditService" />
 

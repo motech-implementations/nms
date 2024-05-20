@@ -156,35 +156,49 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
     @Override
     public MctsChild getOrCreateRchChildInstance(String rchId, String mctsId) {
+        LOGGER.debug("test - getOrCreateRchChildInstance 1 ");
         if (rchId == null || "".equals(rchId.trim())) {
             return null;
         }
+        LOGGER.debug("test - getOrCreateRchChildInstance 2 ");
         MctsChild childByRchId = mctsChildDataService.findByRchId(rchId);
         MctsChild childByMctsId;
+        LOGGER.debug("test - getOrCreateRchChildInstance 3 ");
         if (childByRchId == null) {
+            LOGGER.debug("test - getOrCreateRchChildInstance 4 ");
             if (mctsId == null || mctsId.isEmpty() || "NULL".equalsIgnoreCase(mctsId) || "".equals(mctsId.trim())) {
                 childByRchId = new MctsChild(rchId, null);
+                LOGGER.debug("test - getOrCreateRchChildInstance 5 ");
                 return childByRchId;
             } else {
+                LOGGER.debug("test - getOrCreateRchChildInstance 6 ");
                 childByMctsId = mctsChildDataService.findByBeneficiaryId(mctsId);
                 if (childByMctsId == null) {
+                    LOGGER.debug("test - getOrCreateRchChildInstance 7 ");
                     childByRchId = new MctsChild(rchId, mctsId);
                     return childByRchId;
                 } else {
+                    LOGGER.debug("test - getOrCreateRchChildInstance 8 ");
                     childByMctsId.setRchId(rchId);
                     return childByMctsId;
                 }
             }
         } else {
+            LOGGER.debug("test - getOrCreateRchChildInstance 9 ");
             if (mctsId == null || "NULL".equalsIgnoreCase(mctsId) || "".equals(mctsId.trim()) ) {
+                LOGGER.debug("test - getOrCreateRchChildInstance 10 ");
                 return childByRchId;
             } else {
+                LOGGER.debug("test - getOrCreateRchChildInstance 11 ");
                 childByMctsId = mctsChildDataService.findByBeneficiaryId(mctsId);
                 if (childByMctsId == null) {
+                    LOGGER.debug("test - getOrCreateRchChildInstance 12 ");
                     childByRchId.setBeneficiaryId(mctsId);
                     return childByRchId;
                 } else {
+                    LOGGER.debug("test - getOrCreateRchChildInstance 13 ");
                     if (childByRchId.getId().equals(childByMctsId.getId())) {
+                        LOGGER.debug("test - getOrCreateRchChildInstance 14 ");
                         return childByRchId;
                     } else {
                                 return null;

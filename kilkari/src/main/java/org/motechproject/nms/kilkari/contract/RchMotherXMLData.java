@@ -67,6 +67,9 @@ public class RchMotherXMLData {
     private String registrationDate;
 
     @Field
+    private String rchAshaId;
+
+    @Field
     private String abortionType;
 
     @Field
@@ -81,7 +84,7 @@ public class RchMotherXMLData {
     @Field
     private LocalDate xmlProcessingDate;
 
-    public RchMotherXMLData(Long stateId, Long districtId, String districtName, String talukaId, String talukaName, Long healthBlockId, String healthBlockName, Long phcId, String phcName, Long subCentreId, String subCentreName, Long villageId, String villageName, String mctsIdNo, String registrationNo, Long caseNo, String name, String mobileNo, String registrationDate, String lmpDate, String birthDate, String abortionType, String deliveryOutcomes, Integer entryType, String execDate, LocalDate xmlProcessingDate) {
+    public RchMotherXMLData(Long stateId, Long districtId, String districtName, String talukaId, String talukaName, Long healthBlockId, String healthBlockName, Long phcId, String phcName, Long subCentreId, String subCentreName, Long villageId, String villageName, String mctsIdNo, String registrationNo, Long caseNo, String name, String mobileNo, String registrationDate, String rchAshaId, String lmpDate, String birthDate, String abortionType, String deliveryOutcomes, Integer entryType, String execDate, LocalDate xmlProcessingDate) {
         this.stateId = stateId;
         this.districtId = districtId;
         this.districtName = districtName;
@@ -101,6 +104,7 @@ public class RchMotherXMLData {
         this.name = name;
         this.mobileNo = mobileNo;
         this.registrationDate = registrationDate;
+        this.rchAshaId = rchAshaId;
         this.lmpDate = lmpDate;
         this.birthDate = birthDate;
         this.abortionType = abortionType;
@@ -316,4 +320,11 @@ public class RchMotherXMLData {
 
     public void setRegistrationDate(String registrationDate) { this.registrationDate = registrationDate; }
 
+    public String getRchAshaId() {
+        return rchAshaId;
+    }
+
+    public void setRchAshaId(String rchAshaId) {
+        this.rchAshaId = rchAshaId;
+    }
 }

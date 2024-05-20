@@ -7,6 +7,8 @@ import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
+import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.kilkari.domain.DeactivatedBeneficiary;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.MctsChild;
@@ -130,6 +132,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private ChildRejectionService childRejectionService;
 
     @Autowired
+    private FrontLineWorkerService frontLineWorkerService;
+
+    @Autowired
     private ActionFinderService actionFinderService;
 
     @Override
@@ -206,6 +211,22 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         LOGGER.debug("test - step 7 ");
         mother.setRegistrationDate(motherRegistrationDate);
         mother.setAshaId(ashaId);
+        LOGGER.debug("test - step 8 ");
+        FrontLineWorker frontLineWorker;
+        if(ashaId==null || ashaId.isEmpty() || ashaId.trim().isEmpty() || ashaId=="0"){
+            LOGGER.debug("test - Asha id is null ");
+            frontLineWorker = null;
+        }
+        else{
+            frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(ashaId , mother.getState());
+            if(frontLineWorker==null){
+                LOGGER.debug("test - No Asha present with mctsFlwID {} and state {} " , ashaId , mother.getState().getName());
+            }
+        }
+        LOGGER.debug("test - step 9 ");
+        mother.setFrontLineWorker(frontLineWorker);
+
+        LOGGER.debug("test - step 10 ");
         LOGGER.debug("test - step 8 ");
         boolean isInvalidLMP = !validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, importOrigin);
 
@@ -433,7 +454,27 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
         LOGGER.debug("test - step 7");
         child.setRegistrationDate(regDate);
-//        child.setAshaId(ashaId);
+        child.setAshaId(ashaId);
+        LOGGER.debug("test step = 7.1 ");
+        FrontLineWorker frontLineWorker;
+        if(ashaId==null || ashaId.isEmpty() || ashaId.trim().isEmpty() || ashaId=="0"){
+            LOGGER.debug("test - 10 Asha id is null ");
+            frontLineWorker = null;
+        }
+        else{
+            frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(ashaId , child.getState());
+            if(frontLineWorker==null){
+                LOGGER.debug("test - 11 No Asha present with mctsFlwID {} and state {} " , ashaId , child.getState().getName());
+            }
+            else{
+                LOGGER.debug("test - 12 Asha id is not null " + frontLineWorker.getMctsFlwId());
+            }
+
+        }
+
+        child.setRegistrationDate(regDate);
+        child.setFrontLineWorker(frontLineWorker);
+
         boolean isInValidDOB = !validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, importOrigin);
         if (isInValidDOB) {
             return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.INVALID_DOB, false);
@@ -498,6 +539,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
 
         List<DeactivatedBeneficiary> deactivatedUsers = null;
+        LOGGER.debug("test 9 ");
+
+
         synchronized(this) {
             childRecords.addAndGet(1);
             Long chunkSize = Long.parseLong(settingsFacade.getProperty(CHUNK_SIZE));
@@ -634,13 +678,17 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     @Override
     public boolean validateReferenceDate(DateTime referenceDate, SubscriptionPackType packType, Long msisdn, String beneficiaryId, SubscriptionOrigin importOrigin) {
+        LOGGER.debug("test validateReferenceDate 1 ");
         if (pregnancyPack == null) {
             pregnancyPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.PREGNANCY);
         }
+        LOGGER.debug("test validateReferenceDate 2 ");
         if (childPack == null) {
             childPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.CHILD);
         }
+        LOGGER.debug("test validateReferenceDate 3 ");
         if (referenceDate == null) {
+            LOGGER.debug("test validateReferenceDate 4 ");
             subscriptionErrorDataService.create(
                     new SubscriptionError(msisdn, beneficiaryId,
                             (packType == SubscriptionPackType.PREGNANCY) ?
@@ -649,15 +697,19 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                             packType, "", importOrigin));
             return false;
         }
-
+        LOGGER.debug("test validateReferenceDate 5 ");
         if (packType == SubscriptionPackType.PREGNANCY) {
+            LOGGER.debug("test validateReferenceDate 6 ");
             String referenceDateValidationError = pregnancyPack.isReferenceDateValidForPack(referenceDate);
             if (!referenceDateValidationError.isEmpty()) {
+                LOGGER.debug("test validateReferenceDate 7 ");
                 return false;
             }
         } else { // childPack
+            LOGGER.debug("test validateReferenceDate 8 ");
             String referenceDateValidationError = childPack.isReferenceDateValidForPack(referenceDate);
             if (!referenceDateValidationError.isEmpty()) {
+                LOGGER.debug("test validateReferenceDate 9 ");
                 return false;
             }
         }
@@ -702,12 +754,15 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Set<String> rchIds = rejectedRecords.keySet();
         List<ChildImportRejection> updateObjects = new ArrayList<>();
         List<ChildImportRejection> createObjects = new ArrayList<>();
+        LOGGER.debug("test createOrUpdateRchChildRejections ");
 
         if (!rchIds.isEmpty()) {
             Map<String, Object> childRejects = childRejectionService.findChildRejectionByRchId(rchIds);
             ChildImportRejection child;
             for (String rchId : rchIds) {
                 child = (ChildImportRejection) rejectedRecords.get(rchId);
+                LOGGER.debug("test - asha id is " + child.getRchAshaId());
+                LOGGER.debug("test - " + ((ChildImportRejection) rejectedRecords.get(rchId)).getRchAshaId());
                 if (childRejects != null && childRejects.get(rchId) != null) {
                     updateChildRejectionRecord(childRejects, rchId, child, updateObjects);
                     continue;
@@ -1075,6 +1130,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 return mctsBeneficiaryValueProcessor.getCaseNoByString(value);
             }
         }));
+        mapping.put(KilkariConstants.KILKARI_ASHA_ID, new Optional(new GetString()));
         return mapping;
     }
 
