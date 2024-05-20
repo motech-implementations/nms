@@ -7,14 +7,7 @@ import org.motechproject.nms.api.web.contract.kilkari.InboxSubscriptionDetailRes
 import org.motechproject.nms.api.web.contract.kilkari.SubscriptionRequest;
 import org.motechproject.nms.api.web.exception.NotDeployedException;
 import org.motechproject.nms.api.web.exception.NotFoundException;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.InboxCallData;
-import org.motechproject.nms.kilkari.domain.InboxCallDetailRecord;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackMessage;
+import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.exception.NoInboxForSubscriptionException;
 import org.motechproject.nms.kilkari.service.InboxService;
 import org.motechproject.nms.kilkari.service.SubscriberService;
@@ -40,10 +33,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * KilkariController
@@ -107,11 +97,17 @@ public class KilkariController extends BaseController {
         SubscriptionPackMessage inboxMessage;
         String weekId;
         String fileName;
+        List<Subscription> holdToActiveSubscription = new ArrayList<>();
+        boolean holdToActive = false;
 
         for (Subscriber subscriber : subscribers) {
             for (Subscription subscription : subscriber.getAllSubscriptions()) {
-
                 try {
+                    if (subscription.getStatus()== SubscriptionStatus.HOLD) {
+                        holdToActive = true;
+                        subscription.setStatus(SubscriptionStatus.ACTIVE);
+                        holdToActiveSubscription.add(subscription);
+                    }
                     inboxMessage = inboxService.getInboxMessage(subscription);
                     weekId = (inboxMessage == null) ? null : inboxMessage.getWeekId();
                     fileName = (inboxMessage == null) ? null : inboxMessage.getMessageFileName();
@@ -126,6 +122,9 @@ public class KilkariController extends BaseController {
                     LOGGER.debug(String.format("Found no inbox for subscription: %s", subscription.getSubscriptionId()));
                 }
             }
+        }
+        if (holdToActive){
+            subscriptionService.activateSubscription(holdToActiveSubscription.get(0));
         }
 
         InboxResponse ret = new InboxResponse(subscriptionDetails);
