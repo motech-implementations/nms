@@ -141,23 +141,6 @@ public class SubscriberServiceImpl implements SubscriberService {
                 }
                 else {
                     LOGGER.error("More than one row returned for beneficiary mother-id/child-id :  {}" , beneficiary.getId());
-                    //We have multiple subscriber same mother_id_OID
-                    //If we have any single active subscription for any subscriber we will continue with that
-                    // subscription pack else we will continue with first subscriber created
-                    Subscriber subscriber = new Subscriber();
-                    int count = 0;
-                    for(Subscriber subscriber1 : subscriberList){
-                        if(!subscriber1.getActiveAndPendingSubscriptions().isEmpty()){
-                            subscriber = subscriber1;
-                            count++;
-                            if(count==2){
-                                break;
-                            }
-                        }
-                    }
-                    if(count==1){
-                        return subscriber;
-                    }
                     return subscriberList.get(0);
                 }
             }
