@@ -37,6 +37,7 @@ import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.region.domain.LocationFinder;
+import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
@@ -214,13 +215,24 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         LOGGER.debug("test - step 8 ");
         FrontLineWorker frontLineWorker;
         if(ashaId==null || ashaId.isEmpty() || ashaId.trim().isEmpty() || ashaId=="0"){
-            LOGGER.debug("test - Asha id is null ");
+            LOGGER.debug("test - 8.0 Asha id is null ");
             frontLineWorker = null;
         }
         else{
-            frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(ashaId , mother.getState());
+            LOGGER.debug("test - 8.1 " + ashaId +  " ");
+            LOGGER.debug("test - 8.2 " + locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID) );
+            LOGGER.debug("test - 8.3 " + mother.getState());
+            LOGGER.debug("test - 8.4 " + locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID) + " "  );
+            State state;
+            if(mother.getState()!=null){
+                state = mother.getState();
+            }
+            else{
+                state = (State) locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID);
+            }
+            frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(ashaId , state );
             if(frontLineWorker==null){
-                LOGGER.debug("test - No Asha present with mctsFlwID {} and state {} " , ashaId , mother.getState().getName());
+                LOGGER.debug("test - No Asha present with mctsFlwID {} and state {} " , ashaId , state );
             }
         }
         LOGGER.debug("test - step 9 ");
@@ -462,14 +474,25 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             frontLineWorker = null;
         }
         else{
-            frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(ashaId , child.getState());
+
+            LOGGER.debug("test - 8.1 " + ashaId +  " ");
+            LOGGER.debug("test - 8.2 " + locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID) );
+            LOGGER.debug("test - 8.3 " + child.getState());
+            LOGGER.debug("test - 8.4 " + locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID) + " "  );
+            State state;
+            if(child.getState()!=null){
+                state = child.getState();
+            }
+            else{
+                state = (State) locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID);
+            }
+            frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(ashaId , state );
             if(frontLineWorker==null){
-                LOGGER.debug("test - 11 No Asha present with mctsFlwID {} and state {} " , ashaId , child.getState().getName());
+                LOGGER.debug("test - No Asha present with mctsFlwID {} and state {} " , ashaId , state );
             }
             else{
                 LOGGER.debug("test - 12 Asha id is not null " + frontLineWorker.getMctsFlwId());
             }
-
         }
 
         child.setRegistrationDate(regDate);
