@@ -211,35 +211,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
         LOGGER.debug("test - step 7 ");
         mother.setRegistrationDate(motherRegistrationDate);
-        mother.setAshaId(ashaId);
-        LOGGER.debug("test - step 8 ");
-        FrontLineWorker frontLineWorker;
-        if(ashaId==null || ashaId.isEmpty() || ashaId.trim().isEmpty() || ashaId=="0"){
-            LOGGER.debug("test - 8.0 Asha id is null ");
-            frontLineWorker = null;
-        }
-        else{
-            LOGGER.debug("test - 8.1 " + ashaId +  " ");
-            LOGGER.debug("test - 8.2 " + locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID) );
-            LOGGER.debug("test - 8.3 " + mother.getState());
-            LOGGER.debug("test - 8.4 " + locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID) + " "  );
-            State state;
-            if(mother.getState()!=null){
-                state = mother.getState();
-            }
-            else{
-                state = (State) locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID);
-            }
-            frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(ashaId , state );
-            if(frontLineWorker==null){
-                LOGGER.debug("test - No Asha present with mctsFlwID {} and state {} " , ashaId , state );
-            }
-        }
-        LOGGER.debug("test - step 9 ");
-        mother.setFrontLineWorker(frontLineWorker);
 
-        LOGGER.debug("test - step 10 ");
         LOGGER.debug("test - step 8 ");
+
         boolean isInvalidLMP = !validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, importOrigin);
 
         if (isInvalidLMP) {
@@ -370,6 +344,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 //            if ((stillBirth != null) && stillBirth) {
 //                subscriptionService.deactivateSubscription(subscription, DeactivationReason.STILL_BIRTH);
 //            }
+            LOGGER.debug("test - 8.01 ");
+            mother.setAshaId(ashaId);
 
             if ((death != null) && death) {
                 subscriptionService.deactivateSubscription(subscription, DeactivationReason.MATERNAL_DEATH);
@@ -377,6 +353,31 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             LOGGER.debug("MotherImportRejection::importMotherRecord Start synchronized block " + beneficiaryId);
 
             //NOTE: getId is a way to see if this is a new user.
+
+            FrontLineWorker frontLineWorker;
+            if(ashaId==null || ashaId.isEmpty() || ashaId.trim().isEmpty() || ashaId=="0"){
+                LOGGER.debug("test - 8.0 Asha id is null ");
+                frontLineWorker = null;
+            }
+            else{
+                LOGGER.debug("test - 8.1 " + ashaId +  " ");
+                LOGGER.debug("test - 8.2 " + locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID) );
+                LOGGER.debug("test - 8.3 " + mother.getState());
+                LOGGER.debug("test - 8.4 " + locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID) + " "  );
+                State state;
+                if(mother.getState()!=null){
+                    state = mother.getState();
+                }
+                else{
+                    state = (State) locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID);
+                }
+                frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(ashaId , state );
+                if(frontLineWorker==null){
+                    LOGGER.debug("test - No Asha present with mctsFlwID {} and state {} " , ashaId , state );
+                }
+            }
+            LOGGER.debug("test - step 9 ");
+            mother.setFrontLineWorker(frontLineWorker);
 
             if(mother.getId() != null){
                 mctsMotherDataService.update(mother);
@@ -466,37 +467,10 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
         LOGGER.debug("test - step 7");
         child.setRegistrationDate(regDate);
-        child.setAshaId(ashaId);
-        LOGGER.debug("test step = 7.1 ");
-        FrontLineWorker frontLineWorker;
-        if(ashaId==null || ashaId.isEmpty() || ashaId.trim().isEmpty() || ashaId=="0"){
-            LOGGER.debug("test - 10 Asha id is null ");
-            frontLineWorker = null;
-        }
-        else{
 
-            LOGGER.debug("test - 8.1 " + ashaId +  " ");
-            LOGGER.debug("test - 8.2 " + locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID) );
-            LOGGER.debug("test - 8.3 " + child.getState());
-            LOGGER.debug("test - 8.4 " + locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID) + " "  );
-            State state;
-            if(child.getState()!=null){
-                state = child.getState();
-            }
-            else{
-                state = (State) locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID);
-            }
-            frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(ashaId , state );
-            if(frontLineWorker==null){
-                LOGGER.debug("test - No Asha present with mctsFlwID {} and state {} " , ashaId , state );
-            }
-            else{
-                LOGGER.debug("test - 12 Asha id is not null " + frontLineWorker.getMctsFlwId());
-            }
-        }
+
 
         child.setRegistrationDate(regDate);
-        child.setFrontLineWorker(frontLineWorker);
 
         boolean isInValidDOB = !validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, importOrigin);
         if (isInValidDOB) {
@@ -563,6 +537,39 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         List<DeactivatedBeneficiary> deactivatedUsers = null;
         LOGGER.debug("test 9 ");
+
+        child.setAshaId(ashaId);
+        LOGGER.debug("test step = 7.1 ");
+
+
+        FrontLineWorker frontLineWorker;
+        if(ashaId==null || ashaId.isEmpty() || ashaId.trim().isEmpty() || ashaId=="0"){
+            LOGGER.debug("test - 10 Asha id is null ");
+            frontLineWorker = null;
+        }
+        else{
+
+            LOGGER.debug("test - 8.1 " + ashaId +  " ");
+            LOGGER.debug("test - 8.2 " + locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID) );
+            LOGGER.debug("test - 8.3 " + child.getState());
+            LOGGER.debug("test - 8.4 " + locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID) + " "  );
+            State state;
+            if(child.getState()!=null){
+                state = child.getState();
+            }
+            else{
+                state = (State) locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID);
+            }
+            frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(ashaId , state );
+            if(frontLineWorker==null){
+                LOGGER.debug("test - No Asha present with mctsFlwID {} and state {} " , ashaId , state );
+            }
+            else{
+                LOGGER.debug("test - 12 Asha id is not null " + frontLineWorker.getMctsFlwId());
+            }
+        }
+
+        child.setFrontLineWorker(frontLineWorker);
 
 
         synchronized(this) {
