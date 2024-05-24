@@ -580,11 +580,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private void processByUserType(String name, String result, Long stateId, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate, RchUserType rchUserType) {
         switch (rchUserType) {
             case MOTHER:
-                System.out.println("Test - step 1 ");
                 motherFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
                 break;
             case CHILD:
-                System.out.println("Test - step 1 ");
                 childFileProcess(result, stateId, stateName, stateCode, startReferenceDate, endReferenceDate);
                 break;
             case ASHA:
@@ -2264,29 +2262,20 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private RchImportAudit saveImportedMothersData(RchMothersDataSet mothersDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) { //NOPMD NcssMethodCount
         LOGGER.info("Starting RCH mother import for state {}", stateName);
-        LOGGER.debug("test - step 2");
         List<RchMotherRecord> motherRecords = mothersDataSet.getRecords();
-        LOGGER.debug("test - step 3");
         List<Map<String, Object>> validMotherRecords = new ArrayList<>();
-        LOGGER.debug("test - step 4");
         validMotherRecords = getLMPValidRecords(motherRecords);
-        LOGGER.debug("test - step 5");
         List<List<Map<String, Object>>> rchMotherRecordsSet = cleanRchMotherRecords(validMotherRecords);
-        LOGGER.debug("test - step 6");
         List<Map<String, Object>> rejectedRchMothers = rchMotherRecordsSet.get(0);
         String action = "";
         int saved = 0;
         int rejected = motherRecords.size() - validMotherRecords.size();
-        LOGGER.debug("test - step 7");
         Map<String, Object> rejectedMothers = new HashMap<>();
         Map<String, Object> rejectionStatus = new HashMap<>();
-        LOGGER.debug("test - step 8 ");
         MotherImportRejection motherImportRejection;
-        LOGGER.debug("test - step 9");
         for (Map<String, Object> record : rejectedRchMothers) {
             action = (String) record.get(KilkariConstants.ACTION);
             LOGGER.debug("Existing Mother Record with same MSISDN in the data set");
-            LOGGER.debug("test- step4 ");
             motherImportRejection = motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.DUPLICATE_MOBILE_NUMBER_IN_DATASET.toString(), action);
             rejectedMothers.put(motherImportRejection.getRegistrationNo(), motherImportRejection);
             rejectionStatus.put(motherImportRejection.getRegistrationNo(), motherImportRejection.getAccepted());
@@ -2365,14 +2354,11 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
     private List<Map<String, Object>> getLMPValidRecords(List<RchMotherRecord> motherRecords) {
-        LOGGER.debug("test - getLMPValidRecords 1 ");
         List<Map<String, Object>> validMotherRecords = new ArrayList<>();
         Map<String, Object> rejectedMothers = new HashMap<>();
         Map<String, Object> rejectionStatus = new HashMap<>();
         MotherImportRejection motherImportRejection;
-        LOGGER.debug("test - getLMPValidRecords 2 ");
         for (RchMotherRecord record : motherRecords) {
-            LOGGER.debug("test - getLMPValidRecords 3 ");
             Map<String, Object> recordMap = toMap(record);
             MctsMother mother;
             Long msisdn;
@@ -2382,45 +2368,31 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             String mctsId = (String) recordMap.get(KilkariConstants.MCTS_ID);
             msisdn = (Long) recordMap.get(KilkariConstants.MOBILE_NO);
             DateTime lmp = (DateTime) recordMap.get(KilkariConstants.LMP);
-            LOGGER.debug("test - getLMPValidRecords 4 ");
             mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance(beneficiaryId, mctsId);
-            LOGGER.debug("test - getLMPValidRecords 4.1 ");
             mother = mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance(beneficiaryId, mctsId);
-            LOGGER.debug("test - getLMPValidRecords 5 ");
             recordMap.put(KilkariConstants.RCH_MOTHER, mother);
-            LOGGER.debug("test - getLMPValidRecords 6 ");
             if (mother == null) {
-                LOGGER.debug("test - getLMPValidRecords 7 ");
                 motherImportRejection = motherRejectionRch(convertMapToRchMother(recordMap), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), action);
                 rejectedMothers.put(motherImportRejection.getRegistrationNo(), motherImportRejection);
                 rejectionStatus.put(motherImportRejection.getRegistrationNo(), motherImportRejection.getAccepted());
             } else {
-                LOGGER.debug("test - getLMPValidRecords 8 ");
                 if (!mctsBeneficiaryImportService.validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, SubscriptionOrigin.MCTS_IMPORT)) {
-                    LOGGER.debug("test - getLMPValidRecords 9 ");
                     motherImportRejection = motherRejectionRch(convertMapToRchMother(recordMap), false, RejectionReasons.INVALID_LMP_DATE.toString(), action);
                     rejectedMothers.put(motherImportRejection.getRegistrationNo(), motherImportRejection);
                     rejectionStatus.put(motherImportRejection.getRegistrationNo(), motherImportRejection.getAccepted());
-                    LOGGER.debug("test - getLMPValidRecords 10 ");
                 } else {
-                    LOGGER.debug("test - getLMPValidRecords 11 ");
                     action = mother.getId() == null ? KilkariConstants.CREATE : KilkariConstants.UPDATE;
                     recordMap.put(KilkariConstants.ACTION, action);
                     validMotherRecords.add(recordMap);
-                    LOGGER.debug("test - getLMPValidRecords 12 ");
                 }
             }
         }
 
         try {
-            LOGGER.debug("test - getLMPValidRecords 13 ");
             mctsBeneficiaryImportService.createOrUpdateRchMotherRejections(rejectedMothers, rejectionStatus);
         } catch (RuntimeException e) {
-            LOGGER.debug("test - getLMPValidRecords 14 ");
             LOGGER.error(BULK_REJECTION_ERROR_MESSAGE, e);
-
         }
-        LOGGER.debug("test - getLMPValidRecords 15 ");
         return validMotherRecords;
     }
 
@@ -2868,7 +2840,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 mctsBeneficiaryValueProcessor.getDeathFromString(String.valueOf(childRecord.getEntryType())));
         map.put(KilkariConstants.EXECUTION_DATE, "".equals(childRecord.getExecDate()) ? null : mctsBeneficiaryValueProcessor.getLocalDateByString(childRecord.getExecDate()));
 
-        LOGGER.debug("test - childRecord.getRchAshaId() " + childRecord.getRchAshaId());
         map.put(KilkariConstants.KILKARI_ASHA_ID, childRecord.getRchAshaId());
         return map;
     }

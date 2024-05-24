@@ -177,29 +177,21 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
         LOGGER.debug("test read from csv here ");
         int rejectedWithException = 0;
         mctsBeneficiaryImportService.setRecords(0);
-        LOGGER.debug("test - 1 ");
         BufferedReader bufferedReader = new BufferedReader(reader);
         Map<String, CellProcessor> cellProcessorMapper;
         String contactNumber;
-        LOGGER.debug("test - 2 ");
         final Boolean mctsImport = importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT);
-        LOGGER.debug("test - 3 ");
         if (mctsImport) {
-            LOGGER.debug("test - 4 ");
             cellProcessorMapper = mctsBeneficiaryImportService.getMotherProcessorMapping();
             contactNumber = KilkariConstants.MSISDN;
         } else {
-            LOGGER.debug("test - 5 ");
             cellProcessorMapper = mctsBeneficiaryImportService.getRchMotherProcessorMapping();
             contactNumber = KilkariConstants.MOBILE_NO;
         }
-        LOGGER.debug("test - 6 ");
         List<Map<String, Object>> recordList = this.readCsv(bufferedReader, cellProcessorMapper);
 
-        LOGGER.debug("test - 7 ");
         LocationFinder locationFinder = locationService.updateLocations(recordList);
 
-        LOGGER.debug("test - 8 ");
         recordList = this.sortByMobileNumber(recordList, mctsImport);
 
         try {

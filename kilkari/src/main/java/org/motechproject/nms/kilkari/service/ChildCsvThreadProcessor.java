@@ -91,7 +91,6 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
             MctsBeneficiaryUtils.idCleanup(listOfIds,record);
 
             MctsChild child = mctsImport ? mctsBeneficiaryValueProcessor.getOrCreateChildInstance((String) record.get(id)) : mctsBeneficiaryValueProcessor.getOrCreateRchChildInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
-            LOGGER.debug("test - 1 - child " + child);
             if (child == null) {
                 ChildImportRejection childImportRejection1 = childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), KilkariConstants.CREATE);
                 rejectedChilds.put(childImportRejection1.getIdNo(), childImportRejection1);
@@ -102,8 +101,6 @@ import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.conver
 
             String action = (child.getId() == null) ? KilkariConstants.CREATE : KilkariConstants.UPDATE;
             record.put(KilkariConstants.ACTION, action);
-            LOGGER.debug("test - 2 action " + action);
-            LOGGER.debug("test - 3 ashaId " + child.getAshaId());
             record.put(childInstance, child);
 
             try {

@@ -633,7 +633,6 @@ public final class RejectedObjectConverter {
         rchChildRecord.setName(record.get(KilkariConstants.BENEFICIARY_NAME) == null ? null : record.get(KilkariConstants.BENEFICIARY_NAME).toString());
 
         rchChildRecord.setMobileNo(record.get(KilkariConstants.MOBILE_NO) == null ? null : record.get(KilkariConstants.MOBILE_NO).toString());
-        System.out.println("test - RejectedObjectConverter asha id is " + record.get(KilkariConstants.KILKARI_ASHA_ID) );
         rchChildRecord.setRchAshaId(record.get(KilkariConstants.KILKARI_ASHA_ID) == null ? null : record.get(KilkariConstants.KILKARI_ASHA_ID).toString());
         rchChildRecord.setBirthdate(record.get(KilkariConstants.DOB) == null ? null : record.get(KilkariConstants.DOB).toString());
         rchChildRecord.setRegistrationDate(record.get(KilkariConstants.CHILD_REGISTRATION_DATE) == null ? null : record.get(KilkariConstants.CHILD_REGISTRATION_DATE).toString());

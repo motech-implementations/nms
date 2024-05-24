@@ -855,7 +855,6 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
     }
 
     private Map<String, Object> toMap(MotherRecord motherRecord) {
-        LOGGER.debug("test - toMap - mcts 1 ");
         Map<String, Object> map = new HashMap<>();
         mctsWebServiceFacade.toMapLocMother(map, motherRecord);
         map.put(KilkariConstants.LAST_UPDATE_DATE, "".equals(motherRecord.getLastUpdateDate()) ? null : LocalDate.parse(motherRecord.getLastUpdateDate(), DateTimeFormat.forPattern("dd-MM-yyyy")));

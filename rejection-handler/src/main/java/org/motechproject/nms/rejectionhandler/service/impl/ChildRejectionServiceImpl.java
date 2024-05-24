@@ -456,7 +456,6 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
             stringBuilder.append("(");
             stringBuilder.append(id + ", ");
             stringBuilder = rchQueryHelper(stringBuilder, child);
-            LOGGER.debug("test - asha id in child is " + child.getRchAshaId());
             stringBuilder.append(QUOTATION + creationTime + QUOTATION_COMMA);
             stringBuilder.append(QUOTATION + dateTimeFormatter.print(dateTimeNow) + QUOTATION_COMMA);
             stringBuilder.append("'motech'");
