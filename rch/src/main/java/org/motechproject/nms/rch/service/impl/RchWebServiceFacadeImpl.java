@@ -373,7 +373,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     }
 
     public void readBeneficiaryDataFromFile(String remoteLocation){
-        LOGGER.debug("test - readBeneficiaryDataFromFile 1 ");
         File [] files = new File(remoteLocation).listFiles();
         assert files != null;
 
@@ -401,7 +400,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
                     processByUserType(name, result, stateId, stateName, stateCode, startDate, startDate, userType);
                 } else {
-                    LOGGER.debug("test - readBeneficiaryDataFromFile 2 ");
                     for (RchImportFacilitator rchImportFacilitatorType : rchImportFacilitatorTypes
                     ) {
                         if (name == null || rchImportFacilitatorType.getFileName() != null) {

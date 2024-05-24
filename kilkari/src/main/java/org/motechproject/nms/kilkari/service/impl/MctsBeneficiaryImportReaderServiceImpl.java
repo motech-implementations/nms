@@ -176,10 +176,12 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
          */
         int rejectedWithException = 0;
         mctsBeneficiaryImportService.setRecords(0);
+
         BufferedReader bufferedReader = new BufferedReader(reader);
         Map<String, CellProcessor> cellProcessorMapper;
         String contactNumber;
         final Boolean mctsImport = importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT);
+
         if (mctsImport) {
             cellProcessorMapper = mctsBeneficiaryImportService.getMotherProcessorMapping();
             contactNumber = KilkariConstants.MSISDN;
@@ -187,6 +189,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
             cellProcessorMapper = mctsBeneficiaryImportService.getRchMotherProcessorMapping();
             contactNumber = KilkariConstants.MOBILE_NO;
         }
+
         List<Map<String, Object>> recordList = this.readCsv(bufferedReader, cellProcessorMapper);
 
         LocationFinder locationFinder = locationService.updateLocations(recordList);
