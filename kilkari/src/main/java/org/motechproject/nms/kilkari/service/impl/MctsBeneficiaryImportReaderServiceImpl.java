@@ -174,7 +174,6 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
          * Count of all the records rejected for unknown exceptions. So, doesn't include the ones saved in nms_subscription_errors.
          * This is used just for debugging purpose.
          */
-        LOGGER.debug("test read from csv here ");
         int rejectedWithException = 0;
         mctsBeneficiaryImportService.setRecords(0);
         BufferedReader bufferedReader = new BufferedReader(reader);

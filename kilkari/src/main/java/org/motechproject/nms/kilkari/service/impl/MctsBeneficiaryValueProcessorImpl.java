@@ -59,52 +59,37 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
     public MctsMother getOrCreateRchMotherInstance(String rchId, String mctsId) {
-        LOGGER.debug("test getOrCreateRchMotherInstance 1 ");
         if (rchId == null || "".equals(rchId.trim())) {
             return null;
         }
-        LOGGER.debug("test getOrCreateRchMotherInstance 2 ");
         MctsMother motherByRchId = mctsMotherDataService.findByRchId(rchId);
-        LOGGER.debug("test getOrCreateRchMotherInstance 3 ");
         MctsMother motherByMctsId;
         if (motherByRchId == null) {
-            LOGGER.debug("test getOrCreateRchMotherInstance 4 ");
             if (mctsId == null || ("NULL").equalsIgnoreCase(mctsId) || mctsId.isEmpty() || "".equals(mctsId.trim())) {
-                LOGGER.debug("test getOrCreateRchMotherInstance 5 ");
                 motherByRchId = new MctsMother(rchId, null);
                 return motherByRchId;
             } else {
-                LOGGER.debug("test getOrCreateRchMotherInstance 6 ");
                 motherByMctsId = mctsMotherDataService.findByBeneficiaryId(mctsId);
                 if (motherByMctsId == null) {
-                    LOGGER.debug("test getOrCreateRchMotherInstance 7 ");
                     motherByRchId = new MctsMother(rchId, mctsId);
                     return motherByRchId;
                 } else {
-                    LOGGER.debug("test getOrCreateRchMotherInstance 8 ");
                     motherByMctsId.setRchId(rchId);
                     return motherByMctsId;
                 }
             }
         } else {
-            LOGGER.debug("test getOrCreateRchMotherInstance 9 ");
             if (mctsId == null || ("NULL").equalsIgnoreCase(mctsId) || "".equals(mctsId.trim())) {
-                LOGGER.debug("test getOrCreateRchMotherInstance 10 ");
                 return motherByRchId;
             } else {
-                LOGGER.debug("test getOrCreateRchMotherInstance 11 ");
                 motherByMctsId = mctsMotherDataService.findByBeneficiaryId(mctsId);
                 if (motherByMctsId == null) {// removed the condition motherByRchId.getBeneficiaryId() != null to fix "null mcts field update" issue
-                    LOGGER.debug("test getOrCreateRchMotherInstance 12 ");
                     motherByRchId.setBeneficiaryId(mctsId);
                     return motherByRchId;
                 } else {
-                    LOGGER.debug("test getOrCreateRchMotherInstance 13 ");
                     if (motherByMctsId != null && motherByRchId.getId().equals(motherByMctsId.getId())) {
-                        LOGGER.debug("test getOrCreateRchMotherInstance 14 ");
                         return motherByRchId;
                     } else {
-                        LOGGER.debug("test getOrCreateRchMotherInstance 15 ");
                        return null;
                     }
                 }

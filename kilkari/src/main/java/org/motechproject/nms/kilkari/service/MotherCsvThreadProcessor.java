@@ -82,7 +82,6 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
             }
             MctsBeneficiaryUtils.idCleanup(listOfIds,record);
 
-            LOGGER.debug("test- step5 ");
             MctsMother mother = mctsImport ? mctsBeneficiaryValueProcessor.getOrCreateMotherInstance((String) record.get(id)) : mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance((String) record.get(id), (String) record.get(KilkariConstants.MCTS_ID));
             if (mother == null) {
                 MotherImportRejection motherImportRejection1 = motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), KilkariConstants.CREATE);
@@ -98,7 +97,6 @@ public class MotherCsvThreadProcessor implements Callable<ThreadProcessorObject>
 
             try {
                 LOGGER.debug("Calling Import Mother Record for"  + count );
-                LOGGER.debug("test- step6 ");
                 motherImportRejection = mctsBeneficiaryImportService.importMotherRecord(record, importOrigin, locationFinder);
                 LOGGER.debug("Completed  Import Mother Record for" +  count);
                 if (motherImportRejection != null) {

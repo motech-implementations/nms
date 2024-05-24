@@ -159,6 +159,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
     private void scheduleTargetFileGenerationWhatsApp() {
         //Calculate today's fire time
+        LOGGER.debug("test - scheduleTargetFileGenerationWA ");
         DateTimeFormatter fmt = DateTimeFormat.forPattern("H:m");
         String timeProp = settingsFacade.getProperty(WHATSAPP_TARGET_FILE_TIME);
         DateTime time = fmt.parseDateTime(timeProp);

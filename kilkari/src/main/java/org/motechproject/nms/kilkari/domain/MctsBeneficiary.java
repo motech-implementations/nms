@@ -68,7 +68,6 @@ public abstract class MctsBeneficiary extends MdsEntity implements FullLocation 
     @Field
     private LocalDate updatedDateNic;
 
-
     public MctsBeneficiary() {
     }
 
@@ -195,8 +194,6 @@ public abstract class MctsBeneficiary extends MdsEntity implements FullLocation 
     public void setVillage(Village village) {
         this.village = village;
     }
-
-
 
     @Override
     public boolean equals(Object o) {

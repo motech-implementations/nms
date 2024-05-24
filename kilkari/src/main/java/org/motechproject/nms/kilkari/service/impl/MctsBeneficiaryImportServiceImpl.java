@@ -682,17 +682,13 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
     @Override
     public boolean validateReferenceDate(DateTime referenceDate, SubscriptionPackType packType, Long msisdn, String beneficiaryId, SubscriptionOrigin importOrigin) {
-        LOGGER.debug("test validateReferenceDate 1 ");
         if (pregnancyPack == null) {
             pregnancyPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.PREGNANCY);
         }
-        LOGGER.debug("test validateReferenceDate 2 ");
         if (childPack == null) {
             childPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.CHILD);
         }
-        LOGGER.debug("test validateReferenceDate 3 ");
         if (referenceDate == null) {
-            LOGGER.debug("test validateReferenceDate 4 ");
             subscriptionErrorDataService.create(
                     new SubscriptionError(msisdn, beneficiaryId,
                             (packType == SubscriptionPackType.PREGNANCY) ?
@@ -701,19 +697,14 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                             packType, "", importOrigin));
             return false;
         }
-        LOGGER.debug("test validateReferenceDate 5 ");
         if (packType == SubscriptionPackType.PREGNANCY) {
-            LOGGER.debug("test validateReferenceDate 6 ");
             String referenceDateValidationError = pregnancyPack.isReferenceDateValidForPack(referenceDate);
             if (!referenceDateValidationError.isEmpty()) {
-                LOGGER.debug("test validateReferenceDate 7 ");
                 return false;
             }
         } else { // childPack
-            LOGGER.debug("test validateReferenceDate 8 ");
             String referenceDateValidationError = childPack.isReferenceDateValidForPack(referenceDate);
             if (!referenceDateValidationError.isEmpty()) {
-                LOGGER.debug("test validateReferenceDate 9 ");
                 return false;
             }
         }
@@ -758,7 +749,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         Set<String> rchIds = rejectedRecords.keySet();
         List<ChildImportRejection> updateObjects = new ArrayList<>();
         List<ChildImportRejection> createObjects = new ArrayList<>();
-        LOGGER.debug("test createOrUpdateRchChildRejections ");
 
         if (!rchIds.isEmpty()) {
             Map<String, Object> childRejects = childRejectionService.findChildRejectionByRchId(rchIds);

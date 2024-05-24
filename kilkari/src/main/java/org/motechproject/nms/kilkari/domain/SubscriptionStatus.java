@@ -8,6 +8,5 @@ public enum SubscriptionStatus {
     PENDING_ACTIVATION,
     DEACTIVATED,
     COMPLETED,
-    HOLD,
-    PACK_NOT_INITIATED_DUE_TO_ON_HOLD_DATA
+    HOLD
 }
