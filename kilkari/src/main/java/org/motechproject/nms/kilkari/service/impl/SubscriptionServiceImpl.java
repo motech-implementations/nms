@@ -1079,7 +1079,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         };
 
         List<Subscription> subscriptions = subscriptionDataService.executeSQLQuery(queryExecution);
-        LOGGER.debug("test - findActiveSubscriptionsForDay(dow={}, offset={}, rowCount={}) {}", dow, offset, rowCount, queryTimer.time());
+        LOGGER.debug("findActiveSubscriptionsForDay(dow={}, offset={}, rowCount={}) {}", dow, offset, rowCount, queryTimer.time());
         return subscriptions;
     }
 

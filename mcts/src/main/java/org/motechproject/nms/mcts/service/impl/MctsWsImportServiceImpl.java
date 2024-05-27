@@ -839,7 +839,6 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         map.put(KilkariConstants.REMARKS, childRecord.getRemarks());
         map.put("VitA_Dose6_Dt", childRecord.getVitADose6Dt());
         map.put(KilkariConstants.ANM_ID, childRecord.getAnmID());
-        map.put(KilkariConstants.ASHA_ID, childRecord.getAshaID());
         map.put("VitA_Dose7_Dt", childRecord.getVitADose7Dt());
         map.put("VitA_Dose8_Dt", childRecord.getVitADose8Dt());
         map.put(KilkariConstants.CREATED_BY, childRecord.getCreatedBy());
@@ -935,7 +934,6 @@ public class MctsWsImportServiceImpl implements MctsWsImportService {
         map.put("MTHR_REG_DATE", motherRecord.getMthrRegDate());
         map.put(KilkariConstants.REMARKS, motherRecord.getRemarks());
         map.put(KilkariConstants.ANM_ID, motherRecord.getAnmID());
-        map.put(KilkariConstants.ASHA_ID, motherRecord.getAshaID());
         map.put("Call_Ans", motherRecord.getCallAns());
         map.put("NoCall_Reason", motherRecord.getNoCallReason());
         map.put("NoPhone_Reason", motherRecord.getNoPhoneReason());

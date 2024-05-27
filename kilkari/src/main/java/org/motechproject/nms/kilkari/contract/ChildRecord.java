@@ -74,7 +74,7 @@ public class ChildRecord {
     private String lastUpdateDate;
     private String remarks;
     private Integer anmID;
-    private Integer ashaID;
+    private String rchAshaID;
     private Integer createdBy;
     private Integer updatedBy;
     private String measles2Dt;
@@ -660,13 +660,13 @@ public class ChildRecord {
         this.anmID = anmID;
     }
 
-    public Integer getAshaID() {
-        return ashaID;
+    public String getRchAshaID() {
+        return rchAshaID;
     }
 
     @XmlElement(name = "ASHA_ID")
-    public void setAshaID(Integer ashaID) {
-        this.ashaID = ashaID;
+    public void setRchAshaID(String rchAshaID) {
+        this.rchAshaID = rchAshaID;
     }
 
     @XmlElement(name = "VitA_Dose7_Dt")

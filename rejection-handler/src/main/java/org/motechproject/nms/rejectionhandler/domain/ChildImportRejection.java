@@ -103,6 +103,9 @@ public class ChildImportRejection {
     private String registrationDate;
 
     @Field
+    private String rchAshaId;
+
+    @Field
     private String placeOfDelivery;
 
     @Field
@@ -512,6 +515,14 @@ public class ChildImportRejection {
 
     public void setRegistrationDate(String registrationDate) {
         this.registrationDate = registrationDate;
+    }
+
+    public String getRchAshaId() {
+        return rchAshaId;
+    }
+
+    public void setRchAshaId(String rchAshaId) {
+        this.rchAshaId = rchAshaId;
     }
 
     public String getPlaceOfDelivery() {

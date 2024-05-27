@@ -7,6 +7,8 @@ import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.nms.csv.utils.GetInstanceByString;
 import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
+import org.motechproject.nms.flw.domain.FrontLineWorker;
+import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.kilkari.domain.DeactivatedBeneficiary;
 import org.motechproject.nms.kilkari.domain.DeactivationReason;
 import org.motechproject.nms.kilkari.domain.MctsChild;
@@ -35,6 +37,7 @@ import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
 import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.region.domain.LocationFinder;
+import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
@@ -130,6 +133,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     private ChildRejectionService childRejectionService;
 
     @Autowired
+    private FrontLineWorkerService frontLineWorkerService;
+
+    @Autowired
     private ActionFinderService actionFinderService;
 
     @Override
@@ -154,6 +160,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         DateTime motherRegistrationDate = null;
         String action = "";
         Boolean flagForMcts = true;
+        String ashaId ;
         if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
             action = actionFinderService.motherActionFinder(convertMapToMother(record));
             beneficiaryId = (String) record.get(KilkariConstants.BENEFICIARY_ID);
@@ -162,6 +169,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             abortion = (Boolean) record.get(KilkariConstants.ABORTION);
             stillBirth = (Boolean) record.get(KilkariConstants.STILLBIRTH);
             lastUpdatedDateNic = (LocalDate) record.get(KilkariConstants.LAST_UPDATE_DATE);
+            ashaId = (String) record.get(KilkariConstants.KILKARI_ASHA_ID);
         } else {
             flagForMcts = false;
             action = actionFinderService.rchMotherActionFinder((convertMapToRchMother(record)));
@@ -172,6 +180,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             abortion = (Boolean) record.get(KilkariConstants.ABORTION_TYPE);
             stillBirth = (Boolean) record.get(KilkariConstants.DELIVERY_OUTCOMES);
             lastUpdatedDateNic = (LocalDate) record.get(KilkariConstants.EXECUTION_DATE);
+            ashaId = (String) record.get(KilkariConstants.KILKARI_ASHA_ID);
         }
 
         LOGGER.trace("MotherImportRejection::importMotherRecord Start " + beneficiaryId) ;
@@ -332,6 +341,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 //            if ((stillBirth != null) && stillBirth) {
 //                subscriptionService.deactivateSubscription(subscription, DeactivationReason.STILL_BIRTH);
 //            }
+            mother.setAshaId(ashaId);
 
             if ((death != null) && death) {
                 subscriptionService.deactivateSubscription(subscription, DeactivationReason.MATERNAL_DEATH);
@@ -339,6 +349,26 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             LOGGER.debug("MotherImportRejection::importMotherRecord Start synchronized block " + beneficiaryId);
 
             //NOTE: getId is a way to see if this is a new user.
+
+            FrontLineWorker frontLineWorker;
+            if(ashaId==null || ashaId.isEmpty() || ashaId.trim().isEmpty() || ashaId=="0"){
+                LOGGER.info("Asha id is null ");
+                frontLineWorker = null;
+            }
+            else{
+                State state;
+                if(mother.getState()!=null){
+                    state = mother.getState();
+                }
+                else{
+                    state = (State) locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID);
+                }
+                frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(ashaId , state );
+                if(frontLineWorker==null){
+                    LOGGER.info("No Asha present with mctsFlwID {} and state {} " , ashaId , state );
+                }
+            }
+            mother.setFrontLineWorker(frontLineWorker);
 
             if(mother.getId() != null){
                 mctsMotherDataService.update(mother);
@@ -363,12 +393,13 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         String childId;
         String action = "";
         Boolean flagForMcts = true;
-
+        String ashaId;
         if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
             action = actionFinderService.childActionFinder(convertMapToChild(record));
             childId = (String) record.get(KilkariConstants.BENEFICIARY_ID);
             child = mctsBeneficiaryValueProcessor.getOrCreateChildInstance(childId);
             msisdn = (Long) record.get(KilkariConstants.MSISDN);
+            ashaId = (String) record.get(KilkariConstants.KILKARI_ASHA_ID);
             if (record.get(KilkariConstants.MOTHER_ID) != null) {
                 Object motherRecord = record.get(KilkariConstants.MOTHER_ID);
 
@@ -401,6 +432,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             child = (MctsChild) record.get(KilkariConstants.RCH_CHILD);
             msisdn = (Long) record.get(KilkariConstants.MOBILE_NO);
             lastUpdateDateNic = (LocalDate) record.get(KilkariConstants.EXECUTION_DATE);
+            ashaId = (String) record.get(KilkariConstants.KILKARI_ASHA_ID);
             if (record.get(KilkariConstants.RCH_MOTHER_ID) != null || record.get(KilkariConstants.MCTS_MOTHER_ID) != null) {
                 String motherRchId = record.get(KilkariConstants.RCH_MOTHER_ID) == null || "".equals(record.get(KilkariConstants.RCH_MOTHER_ID)) || "0".equalsIgnoreCase(record.get(KilkariConstants.RCH_MOTHER_ID).toString()) ? null : record.get(KilkariConstants.RCH_MOTHER_ID).toString();
                 String motherMctsId = record.get(KilkariConstants.MCTS_MOTHER_ID) == null || "".equals(record.get(KilkariConstants.MCTS_MOTHER_ID)) || "0".equalsIgnoreCase(record.get(KilkariConstants.MCTS_MOTHER_ID).toString()) ? null : record.get(KilkariConstants.MCTS_MOTHER_ID).toString();
@@ -424,6 +456,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         if ((child == null)) {
             return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.DATA_INTEGRITY_ERROR, false);
         }
+
         child.setRegistrationDate(regDate);
 
         boolean isInValidDOB = !validateReferenceDate(dob, SubscriptionPackType.CHILD, msisdn, childId, importOrigin);
@@ -490,6 +523,29 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
 
         List<DeactivatedBeneficiary> deactivatedUsers = null;
+
+        child.setAshaId(ashaId);
+
+        FrontLineWorker frontLineWorker;
+        if(ashaId==null || ashaId.isEmpty() || ashaId.trim().isEmpty() || ashaId=="0"){
+            LOGGER.debug("Asha id is null ");
+            frontLineWorker = null;
+        }
+        else{
+            State state;
+            if(child.getState()!=null){
+                state = child.getState();
+            }
+            else{
+                state = (State) locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID);
+            }
+            frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(ashaId , state );
+            if(frontLineWorker==null){
+                LOGGER.debug("No Asha present with mctsFlwID {} and state {} " , ashaId , state );
+            }
+        }
+        child.setFrontLineWorker(frontLineWorker);
+
         synchronized(this) {
             childRecords.addAndGet(1);
             Long chunkSize = Long.parseLong(settingsFacade.getProperty(CHUNK_SIZE));
@@ -641,7 +697,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                             packType, "", importOrigin));
             return false;
         }
-
         if (packType == SubscriptionPackType.PREGNANCY) {
             String referenceDateValidationError = pregnancyPack.isReferenceDateValidForPack(referenceDate);
             if (!referenceDateValidationError.isEmpty()) {
@@ -1067,6 +1122,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 return mctsBeneficiaryValueProcessor.getCaseNoByString(value);
             }
         }));
+        mapping.put(KilkariConstants.KILKARI_ASHA_ID, new Optional(new GetString()));
         return mapping;
     }
 

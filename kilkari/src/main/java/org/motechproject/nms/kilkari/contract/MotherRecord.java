@@ -100,7 +100,7 @@ public class MotherRecord {
     private Integer entryType;
 
     private String motherRegistrationDate;
-
+    private String RchAshaId;
     @XmlElement(name = "HealthBlock_Name")
     public void setHealthBlockName(String healthBlockName) {
         this.healthBlockName = healthBlockName;
@@ -909,6 +909,15 @@ public class MotherRecord {
     @XmlElement(name = "Mother_Registration_Date")
     public void setMotherRegistrationDate(String motherRegistrationDate) {
         this.motherRegistrationDate = motherRegistrationDate;
+    }
+
+    public String getRchAshaId() {
+        return RchAshaId;
+    }
+
+    @XmlElement(name = "Asha_ID")
+    public void setRchAshaId(String rchAshaId) {
+        this.RchAshaId = rchAshaId;
     }
 }
 

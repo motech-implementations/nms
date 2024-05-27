@@ -164,7 +164,7 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
             @Override
             public String getSqlQuery() {
                 String query = "Insert into nms_child_rejects (subcentreId, subcentreName, villageId, villageName, name, mobileNo, stateId, districtId, districtName, talukaId," +
-                        " talukaName, healthBlockId, healthBlockName, phcId, phcName, birthDate, registrationDate , registrationNo, entryType, idNo, mCTSMotherIDNo, rCHMotherIDNo, execDate, source," +
+                        " talukaName, healthBlockId, healthBlockName, phcId, phcName, birthDate, registrationDate , rchAshaId, registrationNo, entryType, idNo, mCTSMotherIDNo, rCHMotherIDNo, execDate, source," +
                         " accepted, rejectionReason, action, creator, modifiedBy, creationDate, modificationDate) " +
                         "values  " +
                         rchChildToQuerySet(createObjects);
@@ -287,14 +287,14 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
             @Override
             public String getSqlQuery() {
                 String query = "Insert into nms_child_rejects (id, subcentreId, subcentreName, villageId, villageName, name, mobileNo, stateId, districtId, districtName, talukaId," +
-                        " talukaName, healthBlockId, healthBlockName, phcId, phcName, birthDate, registrationDate, registrationNo, entryType, idNo, mCTSMotherIDNo, rCHMotherIDNo, execDate, source," +
+                        " talukaName, healthBlockId, healthBlockName, phcId, phcName, birthDate, registrationDate, rchAshaId, registrationNo, entryType, idNo, mCTSMotherIDNo, rCHMotherIDNo, execDate, source," +
                         " accepted, rejectionReason, action, modifiedBy, creationDate, modificationDate, creator) " +
                         "values  " +
                         rchChildUpdateQuerySet(updateObjects) +
                         " ON DUPLICATE KEY UPDATE " +
                         "subcentreId = VALUES(subcentreId),  subcentreName = VALUES(subcentreName),  villageId = VALUES(villageId),  villageName = VALUES(villageName),  " +
                         "name = VALUES(name),  mobileNo = VALUES(mobileNo),  stateId = VALUES(stateId),  districtId = VALUES(districtId),  districtName = VALUES(districtName),  talukaId = VALUES(talukaId),  talukaName = VALUES(talukaName),  " +
-                        "healthBlockId = VALUES(healthBlockId),  healthBlockName = VALUES(healthBlockName),  phcId = VALUES(phcId),  phcName = VALUES(phcName),  birthDate = VALUES(birthDate), registrationDate = VALUES(registrationDate), registrationNo = VALUES(registrationNo), entryType = VALUES(entryType),  " +
+                        "healthBlockId = VALUES(healthBlockId),  healthBlockName = VALUES(healthBlockName),  phcId = VALUES(phcId),  phcName = VALUES(phcName),  birthDate = VALUES(birthDate), registrationDate = VALUES(registrationDate), rchAshaId = VALUES(rchAshaId), registrationNo = VALUES(registrationNo), entryType = VALUES(entryType),  " +
                         "idNo = VALUES(idNo),  mCTSMotherIDNo = VALUES(mCTSMotherIDNo),  rCHMotherIDNo = VALUES(rCHMotherIDNo),  execDate = VALUES(execDate),  source = VALUES(source),  " +
                         "accepted = VALUES(accepted),  rejectionReason = VALUES(rejectionReason),  action = VALUES(action),  modifiedBy = VALUES(modifiedBy), creationDate = VALUES(creationDate), modificationDate = VALUES(modificationDate), creator = VALUES(creator)";
 
@@ -577,6 +577,7 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
         else{
             stringBuilder.append(QUOTATION + child.getRegistrationDate() + QUOTATION_COMMA);
         }
+        stringBuilder.append(QUOTATION + child.getRchAshaId() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + child.getRegistrationNo() + QUOTATION_COMMA);
         stringBuilder.append(child.getEntryType() + ", ");
         stringBuilder.append(QUOTATION + child.getIdNo() + QUOTATION_COMMA);

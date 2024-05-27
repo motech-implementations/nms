@@ -364,6 +364,7 @@ public class MctsBeneficiaryImportReaderServiceImpl implements MctsBeneficiaryIm
                 return (LocalDate) mctsBeneficiaryValueProcessor.getDateByString(value).toLocalDate();
             }
         }));
+        mapping.put(KilkariConstants.KILKARI_ASHA_ID, new Optional(new GetString()));
 
         return mapping;
     }

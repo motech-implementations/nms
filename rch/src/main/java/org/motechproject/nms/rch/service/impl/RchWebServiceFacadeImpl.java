@@ -37,10 +37,7 @@ import org.motechproject.nms.flw.exception.GfStatusInactiveException;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.contract.*;
-import org.motechproject.nms.kilkari.domain.*;
-import org.motechproject.nms.kilkari.service.*;
 import org.motechproject.nms.kilkari.utils.FlwConstants;
-import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.contract.RchAnmAshaRecord;
 import org.motechproject.nms.kilkari.contract.RchChildRecord;
 import org.motechproject.nms.kilkari.contract.RchDistrictRecord;
@@ -63,12 +60,6 @@ import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportReaderService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryImportService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.service.MotherCsvThreadProcessor;
-import org.motechproject.nms.kilkari.utils.FlwConstants;
-import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
-import org.motechproject.nms.kilkari.contract.*;
-import org.motechproject.nms.kilkari.domain.*;
-import org.motechproject.nms.kilkari.service.*;
-import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.rch.contract.*;
 import org.motechproject.nms.rch.domain.RchImportAudit;
@@ -120,7 +111,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
-import java.io.*;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -128,11 +118,6 @@ import java.rmi.RemoteException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.*;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.*;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -150,10 +135,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.*;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.*;
-import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.*;
-import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.*;
+
 import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanRchChildRecords;
 import static org.motechproject.nms.kilkari.utils.ObjectListCleaner.cleanRchMotherRecords;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionRch;
@@ -529,6 +511,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     rchMotherRecord.getName(),
                     rchMotherRecord.getMobileNo(),
                     rchMotherRecord.getRegistrationDate(),
+                    rchMotherRecord.getRchAshaId(),
                     rchMotherRecord.getLmpDate(),
                     rchMotherRecord.getBirthDate(),
                     rchMotherRecord.getAbortionType(),
@@ -566,6 +549,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     rchChildRecord.getMobileNo(),
                     rchChildRecord.getBirthdate(),
                     rchChildRecord.getRegistrationDate(),
+                    rchChildRecord.getRchAshaId(),
                     rchChildRecord.getRegistrationNo(),
                     rchChildRecord.getMotherRegistrationNo(),
                     rchChildRecord.getEntryType(),
@@ -2284,11 +2268,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         String action = "";
         int saved = 0;
         int rejected = motherRecords.size() - validMotherRecords.size();
-
         Map<String, Object> rejectedMothers = new HashMap<>();
         Map<String, Object> rejectionStatus = new HashMap<>();
         MotherImportRejection motherImportRejection;
-
         for (Map<String, Object> record : rejectedRchMothers) {
             action = (String) record.get(KilkariConstants.ACTION);
             LOGGER.debug("Existing Mother Record with same MSISDN in the data set");
@@ -2374,7 +2356,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         Map<String, Object> rejectedMothers = new HashMap<>();
         Map<String, Object> rejectionStatus = new HashMap<>();
         MotherImportRejection motherImportRejection;
-
         for (RchMotherRecord record : motherRecords) {
             Map<String, Object> recordMap = toMap(record);
             MctsMother mother;
@@ -2385,9 +2366,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             String mctsId = (String) recordMap.get(KilkariConstants.MCTS_ID);
             msisdn = (Long) recordMap.get(KilkariConstants.MOBILE_NO);
             DateTime lmp = (DateTime) recordMap.get(KilkariConstants.LMP);
+            mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance(beneficiaryId, mctsId);
             mother = mctsBeneficiaryValueProcessor.getOrCreateRchMotherInstance(beneficiaryId, mctsId);
             recordMap.put(KilkariConstants.RCH_MOTHER, mother);
-
             if (mother == null) {
                 motherImportRejection = motherRejectionRch(convertMapToRchMother(recordMap), false, RejectionReasons.DATA_INTEGRITY_ERROR.toString(), action);
                 rejectedMothers.put(motherImportRejection.getRegistrationNo(), motherImportRejection);
@@ -2409,9 +2390,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             mctsBeneficiaryImportService.createOrUpdateRchMotherRejections(rejectedMothers, rejectionStatus);
         } catch (RuntimeException e) {
             LOGGER.error(BULK_REJECTION_ERROR_MESSAGE, e);
-
         }
-
         return validMotherRecords;
     }
 
@@ -2747,7 +2726,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         map.put(KilkariConstants.DEATH, mctsBeneficiaryValueProcessor.getDeathFromString(String.valueOf(motherRecord.getEntryType())));
         map.put(KilkariConstants.EXECUTION_DATE, "".equals(motherRecord.getExecDate()) ? null : mctsBeneficiaryValueProcessor.getLocalDateByString(motherRecord.getExecDate()));
         map.put(KilkariConstants.CASE_NO, mctsBeneficiaryValueProcessor.getCaseNoByString(motherRecord.getCaseNo().toString()));
-
+        map.put(KilkariConstants.KILKARI_ASHA_ID, motherRecord.getRchAshaId());
         return map;
     }
 
@@ -2859,6 +2838,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 mctsBeneficiaryValueProcessor.getDeathFromString(String.valueOf(childRecord.getEntryType())));
         map.put(KilkariConstants.EXECUTION_DATE, "".equals(childRecord.getExecDate()) ? null : mctsBeneficiaryValueProcessor.getLocalDateByString(childRecord.getExecDate()));
 
+        map.put(KilkariConstants.KILKARI_ASHA_ID, childRecord.getRchAshaId());
         return map;
     }
 

@@ -100,6 +100,9 @@ public class MotherImportRejection {
     private String lmpDate;
 
     @Field
+    private String rchAshaId;
+
+    @Field
     private String registrationDate;
 
     @Field
@@ -550,6 +553,10 @@ public class MotherImportRejection {
     public void setLmpDate(String lmpDate) {
         this.lmpDate = lmpDate;
     }
+
+    public String getRchAshaId() { return rchAshaId;}
+
+    public void setRchAshaId(String rchAshaId) { this.rchAshaId = rchAshaId;}
 
     public String getRegistrationDate() {
         return registrationDate;
