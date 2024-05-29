@@ -8,7 +8,8 @@ import org.motechproject.nms.csv.exception.CsvImportException;
 import org.motechproject.nms.csv.service.CsvAuditService;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerUpdateImportService;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+//import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.flw.domain.SubscriptionOriginFlw;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,7 +92,7 @@ public class FrontLineWorkerImportController {
 
         try {
             try (InputStream in = csvFile.getInputStream()) {
-                frontLineWorkerImportService.importData(new InputStreamReader(in), SubscriptionOrigin.MCTS_IMPORT);
+                frontLineWorkerImportService.importData(new InputStreamReader(in), SubscriptionOriginFlw.MCTS_IMPORT);
                 csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/flwUpdate/import");
             }
         } catch (CsvImportDataException e) {
@@ -112,7 +113,7 @@ public class FrontLineWorkerImportController {
 
         try {
             try (InputStream in = csvFile.getInputStream()) {
-                frontLineWorkerImportService.importData(new InputStreamReader(in), SubscriptionOrigin.RCH_IMPORT);
+                frontLineWorkerImportService.importData(new InputStreamReader(in), SubscriptionOriginFlw.RCH_IMPORT);
                 csvAuditService.auditSuccess(csvFile.getOriginalFilename(), "/flwUpdate/import");
             }
         } catch (CsvImportDataException e) {

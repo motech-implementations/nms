@@ -31,7 +31,8 @@ import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.contract.AnmAshaRecord;
 import org.motechproject.nms.kilkari.contract.RchAnmAshaRecord;
 import org.motechproject.nms.kilkari.domain.RejectionReasons;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+//import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.flw.domain.SubscriptionOriginFlw;
 import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.kilkari.utils.RejectedObjectConverter;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
@@ -102,13 +103,13 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     // CHECKSTYLE:OFF
     @Override
     @Transactional
-    public void importData(Reader reader, SubscriptionOrigin importOrigin) throws IOException, GfStatusInactiveException {
+    public void importData(Reader reader, SubscriptionOriginFlw importOrigin) throws IOException, GfStatusInactiveException {
         BufferedReader bufferedReader = new BufferedReader(reader);
 
         CsvMapImporter csvImporter;
         String designation;
 
-        if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+        if (importOrigin.equals(SubscriptionOriginFlw.MCTS_IMPORT)) {
             csvImporter = new CsvImporterBuilder()
                     .setProcessorMapping(getMctsProcessorMapping())
                     .setPreferences(CsvPreference.TAB_PREFERENCE)
@@ -124,7 +125,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                     }
                 }
                 reOrderRecords(records);
-                saveCsvAshaData(records, SubscriptionOrigin.MCTS_IMPORT);
+                saveCsvAshaData(records, SubscriptionOriginFlw.MCTS_IMPORT);
             } catch (ConstraintViolationException e) {
                 throw new CsvImportDataException(createErrorMessage(e.getConstraintViolations(), csvImporter.getRowNumber()), e);
             } catch (FlwImportException | JDODataStoreException e) {
@@ -146,7 +147,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                     }
                 }
                 reOrderRecords(records);
-                saveCsvAshaData(records, SubscriptionOrigin.RCH_IMPORT);
+                saveCsvAshaData(records, SubscriptionOriginFlw.RCH_IMPORT);
             } catch (ConstraintViolationException e) {
                 throw new CsvImportDataException(createErrorMessage(e.getConstraintViolations(), csvImporter.getRowNumber()), e);
             } catch (FlwImportException | JDODataStoreException e) {
@@ -155,7 +156,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         }
     }
 
-    private void saveCsvAshaData(List<Map<String, Object>> records, SubscriptionOrigin mctsImport) {
+    private void saveCsvAshaData(List<Map<String, Object>> records, SubscriptionOriginFlw mctsImport) {
         String action = "";
         int saved = 0;
         int rejected = 0;
@@ -198,9 +199,9 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                     } else {
                         try {
                             Map<String, Object> recordMap = frontLineWorker.toFlwRecordMap();
-                            if (mctsImport.equals(SubscriptionOrigin.RCH_IMPORT)) {
+                            if (mctsImport.equals(SubscriptionOriginFlw.RCH_IMPORT)) {
                                 frontLineWorkerImportService.importRchFrontLineWorker(recordMap, state);
-                            } else if (mctsImport.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+                            } else if (mctsImport.equals(SubscriptionOriginFlw.MCTS_IMPORT)) {
                                 frontLineWorkerImportService.importMctsFrontLineWorker(recordMap, state);
                             }
                             flwRejectionService.createUpdate(flwRejectionRch(frontLineWorker, true, null, action));
@@ -313,7 +314,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             //It updated_date_nic from mcts is not null,then it's not a new record. Compare it with the record from database and update
             if (mctsUpdatedDateNic != null && (flw.getUpdatedDateNic() == null || mctsUpdatedDateNic.isAfter(flw.getUpdatedDateNic()) || mctsUpdatedDateNic.isEqual(flw.getUpdatedDateNic()))) {
                 Long oldMsisdn = flw.getContactNumber();
-                FrontLineWorker flwInstance = updateFlw(flw, record, location, SubscriptionOrigin.MCTS_IMPORT);
+                FrontLineWorker flwInstance = updateFlw(flw, record, location, SubscriptionOriginFlw.MCTS_IMPORT);
                 frontLineWorkerService.update(flwInstance);
                 Long newMsisdn = (Long) record.get(FlwConstants.CONTACT_NO);
                 if (!oldMsisdn.equals(newMsisdn)) {
@@ -355,13 +356,13 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                 FrontLineWorker flw2 = frontLineWorkerService.getByContactNumber(msisdn);
                 if (flw2 == null || flw2.getJobStatus().equals(FlwJobStatus.INACTIVE) || record.get(FlwConstants.GF_STATUS).toString().equalsIgnoreCase((FrontLineWorkerStatus.INACTIVE).toString()) ) {
                     // update msisdn of existing asha worker
-                        FrontLineWorker flwInstance = updateFlw(flw, record, location, SubscriptionOrigin.RCH_IMPORT);
+                        FrontLineWorker flwInstance = updateFlw(flw, record, location, SubscriptionOriginFlw.RCH_IMPORT);
                         frontLineWorkerService.update(flwInstance);
                 } else {
                     //we got here because an FLW exists with active job status and the same msisdn
                     //check if both these records are the same or not
                     if (flw.equals(flw2) || record.get(FlwConstants.GF_STATUS).toString().equalsIgnoreCase((FrontLineWorkerStatus.INACTIVE).toString()) ) {
-                        FrontLineWorker flwInstance = updateFlw(flw, record, location, SubscriptionOrigin.RCH_IMPORT);
+                        FrontLineWorker flwInstance = updateFlw(flw, record, location, SubscriptionOriginFlw.RCH_IMPORT);
                         frontLineWorkerService.update(flwInstance);
                     } else {
                         LOGGER.debug("New flw but phone number(update) already in use");
@@ -379,13 +380,13 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
             if (frontLineWorker != null && FrontLineWorkerStatus.ACTIVE.equals(frontLineWorker.getStatus())) {
                 // check if anonymous FLW
                 if (frontLineWorker.getMctsFlwId() == null) {
-                    FrontLineWorker flwInstance = updateFlw(frontLineWorker, record, location, SubscriptionOrigin.RCH_IMPORT);
+                    FrontLineWorker flwInstance = updateFlw(frontLineWorker, record, location, SubscriptionOriginFlw.RCH_IMPORT);
                     frontLineWorkerService.update(flwInstance);
                 } else {
                     //if request is to deactivate asha, mobile number already present with active status
                     if(flw != null && record.get(FlwConstants.GF_STATUS).toString().equalsIgnoreCase((FlwJobStatus.INACTIVE).toString()) ){
                         LOGGER.debug("Deactivating Asha for flwId " + flwId);
-                        FrontLineWorker flwInstance = updateFlw(frontLineWorker, record, location, SubscriptionOrigin.RCH_IMPORT);
+                        FrontLineWorker flwInstance = updateFlw(frontLineWorker, record, location, SubscriptionOriginFlw.RCH_IMPORT);
                         frontLineWorkerService.update(flwInstance);
                     }
                     else{
@@ -397,7 +398,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
 
                 }
             } else if (frontLineWorker != null && FrontLineWorkerStatus.ANONYMOUS.equals(frontLineWorker.getStatus())) {
-                FrontLineWorker flwInstance = updateFlw(frontLineWorker, record, location, SubscriptionOrigin.RCH_IMPORT);
+                FrontLineWorker flwInstance = updateFlw(frontLineWorker, record, location, SubscriptionOriginFlw.RCH_IMPORT);
                 frontLineWorkerService.update(flwInstance);
             } else {
                 // create new FLW record with provided flwId and msisdn
@@ -413,18 +414,18 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    public boolean createUpdate(Map<String, Object> flw, SubscriptionOrigin importOrigin) { //NOPMD NcssMethodCount
+    public boolean createUpdate(Map<String, Object> flw, SubscriptionOriginFlw importOrigin) { //NOPMD NcssMethodCount
 
         long stateId = (long) flw.get(FlwConstants.STATE_ID);
         long districtId = (long) flw.get(FlwConstants.DISTRICT_ID);
-        String flwId = importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT) ? flw.get(FlwConstants.ID).toString() : flw.get(FlwConstants.GF_ID).toString();
-        long contactNumber = importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT) ? (long) flw.get(FlwConstants.CONTACT_NO) : (long) flw.get(FlwConstants.MOBILE_NO);
+        String flwId = importOrigin.equals(SubscriptionOriginFlw.MCTS_IMPORT) ? flw.get(FlwConstants.ID).toString() : flw.get(FlwConstants.GF_ID).toString();
+        long contactNumber = importOrigin.equals(SubscriptionOriginFlw.MCTS_IMPORT) ? (long) flw.get(FlwConstants.CONTACT_NO) : (long) flw.get(FlwConstants.MOBILE_NO);
         String action = "";
 
         State state = locationService.getState(stateId);
         if (state == null) {
             flwErrorDataService.create(new FlwError(flwId, stateId, districtId, FlwErrorReason.INVALID_LOCATION_STATE));
-            if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+            if (importOrigin.equals(SubscriptionOriginFlw.MCTS_IMPORT)) {
                 action = this.flwActionFinder(convertMapToAsha(flw));
                 flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), false, RejectionReasons.INVALID_LOCATION.toString(), action));
             } else {
@@ -436,7 +437,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         District district = locationService.getDistrict(stateId, districtId);
         if (district == null) {
             flwErrorDataService.create(new FlwError(flwId, stateId, districtId, FlwErrorReason.INVALID_LOCATION_DISTRICT));
-            if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+            if (importOrigin.equals(SubscriptionOriginFlw.MCTS_IMPORT)) {
                 action = this.flwActionFinder(convertMapToAsha(flw));
                 flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), false, RejectionReasons.INVALID_LOCATION.toString(), action));
             } else {
@@ -452,7 +453,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
         try {
             location = locationService.getLocations(flw, false);
 
-            if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+            if (importOrigin.equals(SubscriptionOriginFlw.MCTS_IMPORT)) {
                 action = this.flwActionFinder(convertMapToAsha(flw));
                 if (existingFlwByFlwId != null && existingFlwByNumber != null) {
 
@@ -460,14 +461,14 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                             existingFlwByFlwId.getState().equals(existingFlwByNumber.getState())) {
                         // we are trying to update the same existing flw. set fields and update
                         LOGGER.debug("Updating existing user with the same phone number");
-                        frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOrigin.MCTS_IMPORT));
+                        frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOriginFlw.MCTS_IMPORT));
                         flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), true, null, action));
                         return true;
                     } else if ((!existingFlwByFlwId.getMctsFlwId().equalsIgnoreCase(existingFlwByNumber.getMctsFlwId()) ||
                             !existingFlwByFlwId.getState().equals(existingFlwByNumber.getState())) &&
                             FlwJobStatus.INACTIVE.equals(existingFlwByNumber.getJobStatus())) {
                         LOGGER.debug("Updating existing user with same phone number");
-                        frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOrigin.MCTS_IMPORT));
+                        frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOriginFlw.MCTS_IMPORT));
                         flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), true, null, action));
                         return true;
                     } else {
@@ -483,7 +484,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                     // worth the effort & we don't really know that its the same flw
                     LOGGER.debug("Updating phone number for flw");
                     long existingContactNumber = existingFlwByFlwId.getContactNumber();
-                    FrontLineWorker flwInstance = FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOrigin.MCTS_IMPORT);
+                    FrontLineWorker flwInstance = FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOriginFlw.MCTS_IMPORT);
                     updateFlwMaMsisdn(flwInstance, existingContactNumber, contactNumber);
                     flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), true, null, action));
                     return true;
@@ -493,7 +494,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                         // we just got data from mcts for a previous anonymous user that subscribed by phone number
                         // merging those records
                         LOGGER.debug("Merging mcts data with previously anonymous user");
-                        frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByNumber, flw, location, SubscriptionOrigin.MCTS_IMPORT));
+                        frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByNumber, flw, location, SubscriptionOriginFlw.MCTS_IMPORT));
                         flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), true, null, action));
                         return true;
                     } else if (existingFlwByNumber.getJobStatus().equals(FlwJobStatus.INACTIVE)) {
@@ -535,14 +536,14 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                             existingFlwByFlwId.getState().equals(existingFlwByNumber.getState())) {
                         // we are trying to update the same existing flw. set fields and update
                         LOGGER.debug("Updating existing user with same phone number");
-                        frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOrigin.RCH_IMPORT));
+                        frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOriginFlw.RCH_IMPORT));
                         flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), true, null, action));
                         return true;
                     } else if ((!existingFlwByFlwId.getMctsFlwId().equalsIgnoreCase(existingFlwByNumber.getMctsFlwId()) ||
                             !existingFlwByFlwId.getState().equals(existingFlwByNumber.getState())) &&
                             FlwJobStatus.INACTIVE.equals(existingFlwByNumber.getJobStatus())) {
                         LOGGER.debug("Updating existing user with same phone number");
-                        frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOrigin.RCH_IMPORT));
+                        frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOriginFlw.RCH_IMPORT));
                         flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), true, null, action));
                         return true;
                     } else {
@@ -558,7 +559,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                     // worth the effort & we don't really know that its the same flw
                     LOGGER.debug("Updating phone number for flw");
                     long existingContactNumber = existingFlwByFlwId.getContactNumber();
-                    FrontLineWorker flwInstance = FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOrigin.RCH_IMPORT);
+                    FrontLineWorker flwInstance = FlwMapper.updateFlw(existingFlwByFlwId, flw, location, SubscriptionOriginFlw.RCH_IMPORT);
                     updateFlwMaMsisdn(flwInstance, existingContactNumber, contactNumber);
                     flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), true, null, action));
                     return true;
@@ -568,7 +569,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
                         // we just got data from rch for a previous anonymous user that subscribed by phone number
                         // merging those records
                         LOGGER.debug("Merging rch data with previously anonymous user");
-                        frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByNumber, flw, location, SubscriptionOrigin.RCH_IMPORT));
+                        frontLineWorkerService.update(FlwMapper.updateFlw(existingFlwByNumber, flw, location, SubscriptionOriginFlw.RCH_IMPORT));
                         flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionRch(convertMapToRchAsha(flw), true, null, action));
                         return true;
                     } else if (FlwJobStatus.INACTIVE.equals(existingFlwByNumber.getJobStatus())) {
@@ -607,7 +608,7 @@ public class FrontLineWorkerImportServiceImpl implements FrontLineWorkerImportSe
 
         } catch (InvalidLocationException ile) {
             LOGGER.debug(ile.toString());
-            if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+            if (importOrigin.equals(SubscriptionOriginFlw.MCTS_IMPORT)) {
                 action = this.flwActionFinder(convertMapToAsha(flw));
                 flwRejectionService.createUpdate(RejectedObjectConverter.flwRejectionMcts(convertMapToAsha(flw), false, RejectionReasons.INVALID_LOCATION.toString(), action));
             } else {

@@ -46,11 +46,6 @@
             <version>${project.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.motechproject.nms</groupId>
-            <artifactId>kilkari</artifactId>
-            <version>${project.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>org.motechproject</groupId>

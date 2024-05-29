@@ -7,8 +7,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.motechproject.nms.flw.domain.FlwJobStatus;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.domain.FrontLineWorkerStatus;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.utils.FlwConstants;
+import org.motechproject.nms.flw.domain.SubscriptionOriginFlw;
 import org.motechproject.nms.region.domain.District;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
@@ -39,7 +38,7 @@ public final class FlwMapper {
             FrontLineWorker flw = new FrontLineWorker(contactNumber);
             flw.setStatus(FrontLineWorkerStatus.INACTIVE);
 
-            return updateFlw(flw, record, location, SubscriptionOrigin.MCTS_IMPORT);
+            return updateFlw(flw, record, location, SubscriptionOriginFlw.MCTS_IMPORT);
         } else {
             return null;
         }
@@ -54,21 +53,21 @@ public final class FlwMapper {
             FrontLineWorker flw = new FrontLineWorker(contactNumber);
             flw.setStatus(FrontLineWorkerStatus.INACTIVE);
 
-            return updateFlw(flw, record, location, SubscriptionOrigin.RCH_IMPORT);
+            return updateFlw(flw, record, location, SubscriptionOriginFlw.RCH_IMPORT);
         } else {
             return null;
         }
     }
 
     // CHECKSTYLE:OFF
-    public static FrontLineWorker updateFlw(FrontLineWorker flw, Map<String, Object> record, Map<String, Object> location, SubscriptionOrigin importOrigin)
+    public static FrontLineWorker updateFlw(FrontLineWorker flw, Map<String, Object> record, Map<String, Object> location, SubscriptionOriginFlw importOrigin)
             throws InvalidLocationException {
 
         String flwId;
         Long contactNumber;
         String name;
         String type;
-        if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+        if (importOrigin.equals(SubscriptionOriginFlw.MCTS_IMPORT)) {
             flwId = (String) record.get(FlwConstants.ID);
             contactNumber = (Long) record.get(FlwConstants.CONTACT_NO);
             name = (String) record.get(FlwConstants.NAME);
@@ -114,7 +113,7 @@ public final class FlwMapper {
         String datePattern = "\\d{4}-\\d{2}-\\d{2}";
         DateTimeFormatter dtf1 = DateTimeFormat.forPattern("yyyy-MM-dd");
         DateTimeFormatter dtf2 = DateTimeFormat.forPattern("dd-MM-yyyy");
-        if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+        if (importOrigin.equals(SubscriptionOriginFlw.MCTS_IMPORT)) {
             date = record.get(FlwConstants.UPDATED_ON) == null || record.get(FlwConstants.UPDATED_ON).toString().trim().isEmpty() ? null :
                     (record.get(FlwConstants.UPDATED_ON).toString().matches(datePattern) ?
                             LocalDate.parse(record.get(FlwConstants.UPDATED_ON).toString(), dtf1) :
