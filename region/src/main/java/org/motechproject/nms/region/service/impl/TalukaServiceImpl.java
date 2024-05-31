@@ -76,6 +76,34 @@ public class TalukaServiceImpl implements TalukaService {
     }
 
     @Override
+    public Taluka findByStateAndCode(final State state, final String code) {
+        if (state == null) { return null; }
+
+        SqlQueryExecution<Taluka> queryExecution = new SqlQueryExecution<Taluka>() {
+
+            @Override
+            public String getSqlQuery() {
+                return "select * from nms_talukas where state_id_OID = ? and code = ?";
+            }
+
+            @Override
+            public Taluka execute(Query query) {
+                query.setClass(Taluka.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute(state.getId(), code);
+                if (fqr.isEmpty()) {
+                    return null;
+                }
+                if (fqr.size() == 1) {
+                    return (Taluka) fqr.get(0);
+                }
+                throw new IllegalStateException("More than one row returned!");
+            }
+        };
+
+        return dataService.executeSQLQuery(queryExecution);
+    }
+
+    @Override
     public Taluka create(Taluka taluka) {
         return dataService.create(taluka);
     }

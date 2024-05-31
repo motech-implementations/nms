@@ -74,6 +74,34 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
     }
 
     @Override
+    public HealthFacility findByStateAndCode(State state, Long code) {
+        if (state == null) { return null; }
+
+        SqlQueryExecution<HealthFacility> queryExecution = new SqlQueryExecution<HealthFacility>() {
+
+            @Override
+            public String getSqlQuery() {
+                return "select *  from nms_health_facilities where state_id_OID = ? and code = ?";
+            }
+
+            @Override
+            public HealthFacility execute(Query query) {
+                query.setClass(HealthFacility.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute(state.getId(), code);
+                if (fqr.isEmpty()) {
+                    return null;
+                }
+                if (fqr.size() == 1) {
+                    return (HealthFacility) fqr.get(0);
+                }
+                throw new IllegalStateException("More than one row returned!");
+            }
+        };
+
+        return dataService.executeSQLQuery(queryExecution);
+    }
+
+    @Override
     public HealthFacility create(HealthFacility healthFacility) {
         return dataService.create(healthFacility);
     }
