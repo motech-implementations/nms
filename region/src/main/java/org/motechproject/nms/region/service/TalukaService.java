@@ -11,6 +11,7 @@ public interface TalukaService {
     Taluka findByDistrictAndCode(District district, String code);
     Taluka create(Taluka taluka);
     Taluka update(Taluka taluka);
+    Taluka findByStateAndCode(final State state, final String code);
 
     Map<String, Taluka> fillTalukaIds(List<Map<String, Object>> recordList, Map<String, District> districtHashMap);
 

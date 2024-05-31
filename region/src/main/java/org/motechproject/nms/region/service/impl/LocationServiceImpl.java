@@ -54,7 +54,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -164,11 +163,6 @@ public class LocationServiceImpl implements LocationService {
         }
         locations.put(STATE_ID, state);
 
-
-        // set district
-        if (!isValidID(map, DISTRICT_ID)) {
-            return locations;
-        }
         District district = districtService.findByStateAndCode(state, (Long) map.get(DISTRICT_ID));
         if (district == null) {
             throw new InvalidLocationException(String.format(INVALID, DISTRICT_ID, map.get(DISTRICT_ID)));
@@ -177,10 +171,7 @@ public class LocationServiceImpl implements LocationService {
 
 
         // set and/or create taluka
-        if (!isValidID(map, TALUKA_ID)) {
-            return locations;
-        }
-        Taluka taluka = talukaService.findByDistrictAndCode(district, (String) map.get(TALUKA_ID));
+        Taluka taluka = talukaService.findByStateAndCode(state, (String) map.get(TALUKA_ID));
         if (taluka == null && createIfNotExists) {
             taluka = new Taluka();
             taluka.setCode((String) map.get(TALUKA_ID));
@@ -199,7 +190,7 @@ public class LocationServiceImpl implements LocationService {
         Long vcode = map.get(VILLAGE_ID) == null ? 0 : (Long) map.get(VILLAGE_ID);
         Village village = new Village();
         if (vcode != 0 || svid != 0) {
-            village = villageService.findByTalukaAndVcodeAndSvid(taluka, vcode, svid);
+            village = villageService.findByStateAndVcodeAndSvid(state, vcode, svid);
             if (village == null && createIfNotExists) {
                 village = new Village();
                 village.setSvid(svid);
@@ -216,10 +207,7 @@ public class LocationServiceImpl implements LocationService {
 
 
         // set and/or create health block
-        if (!isValidID(map, HEALTHBLOCK_ID)) {
-            return locations;
-        }
-        HealthBlock healthBlock = healthBlockService.findByDistrictAndCode(district, (Long) map.get(HEALTHBLOCK_ID));
+        HealthBlock healthBlock = healthBlockService.findByStateAndCode(state, (Long) map.get(HEALTHBLOCK_ID));
         if (healthBlock == null && createIfNotExists) {
             healthBlock = new HealthBlock();
             //TODO HARITHA removing talukas commenting 2 lines
@@ -232,17 +220,13 @@ public class LocationServiceImpl implements LocationService {
             district.getHealthBlocks().add(healthBlock);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthBlock, taluka, healthBlock.getId()));
         }
-        if (healthBlock==null) {
-            return locations;
+        if ((healthBlock !=null)) {
+            locations.put(HEALTHBLOCK_ID, healthBlock);
         }
-        locations.put(HEALTHBLOCK_ID, healthBlock);
 
 
         // set and/or create health facility
-        if (!isValidID(map, PHC_ID)) {
-            return locations;
-        }
-        HealthFacility healthFacility = healthFacilityService.findByHealthBlockAndCode(healthBlock, (Long) map.get(PHC_ID));
+        HealthFacility healthFacility = healthFacilityService.findByStateAndCode(state, (Long) map.get(PHC_ID));
         if (healthFacility == null && createIfNotExists) {
             healthFacility = new HealthFacility();
             healthFacility.setHealthBlock(healthBlock);
@@ -251,17 +235,16 @@ public class LocationServiceImpl implements LocationService {
             healthBlock.getHealthFacilities().add(healthFacility);
             LOGGER.debug(String.format("Created %s in %s with id %d", healthFacility, healthBlock, healthFacility.getId()));
         }
-        if (healthFacility==null) {
-            return locations;
+        if (healthFacility!=null) {
+            locations.put(PHC_ID, healthFacility);
         }
-        locations.put(PHC_ID, healthFacility);
 
 
         // set and/or create health sub-facility
         if (!isValidID(map, SUBCENTRE_ID)) {
             return locations;
         }
-        HealthSubFacility healthSubFacility = healthSubFacilityService.findByHealthFacilityAndCode(healthFacility, (Long) map.get(SUBCENTRE_ID));
+        HealthSubFacility healthSubFacility = healthSubFacilityService.findByStateAndCode(state, (Long) map.get(SUBCENTRE_ID));
         if (healthSubFacility == null && createIfNotExists) {
             //TODO HARITHA commented 2 lines m-n taluka hb
             healthSubFacility = new HealthSubFacility();
@@ -508,15 +491,16 @@ public class LocationServiceImpl implements LocationService {
                     mapKey.append(record.get(DISTRICT_ID).toString());
                     if (isValidID(record, DISTRICT_ID)) {
                         districtHashMap.put(mapKey.toString(), null);
+                    }
+                        String mapMainKey = new String(record.get(STATE_ID).toString());
 
                         if (isValidID(record, TALUKA_ID)) {
                             Taluka taluka = new Taluka();
                             taluka.setCode(record.get(TALUKA_ID).toString().trim());
                             taluka.setName((String) record.get(TALUKA_NAME));
-                            mapKey.append("_");
-                            mapKey.append(record.get(TALUKA_ID).toString().trim());
-                            talukaHashMap.put(mapKey.toString(), taluka);
-
+                            String talukaMapKey = mapMainKey + "_" + record.get(TALUKA_ID).toString();
+                            talukaHashMap.put(talukaMapKey, taluka);
+                        }
                             Long svid = record.get(NON_CENSUS_VILLAGE) == null ? 0 : (Long) record.get(NON_CENSUS_VILLAGE);
                             Long vcode = record.get(VILLAGE_ID) == null ? 0 : (Long) record.get(VILLAGE_ID);
                             if (vcode != 0 || svid != 0) {
@@ -524,40 +508,31 @@ public class LocationServiceImpl implements LocationService {
                                 village.setSvid(svid);
                                 village.setVcode(vcode);
                                 village.setName((String) record.get(VILLAGE_NAME));
-                                villageHashMap.put(mapKey.toString() + "_" + vcode.toString() + "_" +
+                                villageHashMap.put(mapMainKey + "_" + vcode.toString() + "_" +
                                         svid.toString(), village);
-                            }
                         }
-                            mapKey = new StringBuffer(record.get(STATE_ID).toString() + "_" +
-                                    record.get(DISTRICT_ID).toString());
 
                             if (isValidID(record, HEALTHBLOCK_ID)) {
                                 HealthBlock healthBlock = new HealthBlock();
                                 healthBlock.setCode((Long) record.get(HEALTHBLOCK_ID));
                                 healthBlock.setName((String) record.get(HEALTHBLOCK_NAME));
-                                mapKey.append("_");
-                                mapKey.append((Long) record.get(HEALTHBLOCK_ID));
-                                healthBlockHashMap.put(mapKey.toString(), healthBlock);
-
-                                if (isValidID(record, PHC_ID)) {
-                                    HealthFacility healthFacility = new HealthFacility();
-                                    healthFacility.setCode((Long) record.get(PHC_ID));
-                                    healthFacility.setName((String) record.get(PHC_NAME));
-                                    mapKey.append("_");
-                                    mapKey.append((Long) record.get(PHC_ID));
-                                    healthFacilityHashMap.put(mapKey.toString(), healthFacility);
-
-                                    if (isValidID(record, SUBCENTRE_ID)) {
-                                        HealthSubFacility healthSubFacility = new HealthSubFacility();
-                                        healthSubFacility.setCode((Long) record.get(SUBCENTRE_ID));
-                                        healthSubFacility.setName((String) record.get(SUBCENTRE_NAME));
-                                        mapKey.append("_");
-                                        mapKey.append((Long) record.get(SUBCENTRE_ID));
-                                        healthSubFacilityHashMap.put(mapKey.toString(), healthSubFacility);
-                                    }
-                                }
+                                String blockMapKey = mapMainKey + "_" + record.get(HEALTHBLOCK_ID).toString();
+                                healthBlockHashMap.put(blockMapKey, healthBlock);
                             }
-                        }
+                            if (isValidID(record, PHC_ID)) {
+                                HealthFacility healthFacility = new HealthFacility();
+                                healthFacility.setCode((Long) record.get(PHC_ID));
+                                healthFacility.setName((String) record.get(PHC_NAME));
+                                String facilityMapKey = mapMainKey + "_" + record.get(PHC_ID).toString();
+                                healthFacilityHashMap.put(facilityMapKey, healthFacility);
+                            }
+                            if (isValidID(record, SUBCENTRE_ID)) {
+                                HealthSubFacility healthSubFacility = new HealthSubFacility();
+                                healthSubFacility.setCode((Long) record.get(SUBCENTRE_ID));
+                                healthSubFacility.setName((String) record.get(SUBCENTRE_NAME));
+                                String subFacilityMapKey = mapMainKey + "_" + record.get(SUBCENTRE_ID).toString();
+                                healthSubFacilityHashMap.put(subFacilityMapKey, healthSubFacility);
+                            }
 
                 }
             }
@@ -572,32 +547,28 @@ public class LocationServiceImpl implements LocationService {
             if (!districtHashMap.isEmpty()) {
                 fillDistricts(districtHashMap, stateHashMap);
                 locationFinder.setDistrictHashMap(districtHashMap);
+            }
 
                 if (!talukaHashMap.isEmpty()) {
-                    fillTalukas(talukaHashMap, districtHashMap);
+                    fillTalukas(talukaHashMap, stateHashMap);
                     locationFinder.setTalukaHashMap(talukaHashMap);
-
-                    if (!villageHashMap.isEmpty()) {
-                        fillVillages(villageHashMap, talukaHashMap);
-                        locationFinder.setVillageHashMap(villageHashMap);
-                    }
                 }
-                    if (!healthBlockHashMap.isEmpty()) {
-                        fillHealthBlocks(healthBlockHashMap, districtHashMap);
-                        locationFinder.setHealthBlockHashMap(healthBlockHashMap);
-
-                        if (!healthFacilityHashMap.isEmpty()) {
-                            fillHealthFacilities(healthFacilityHashMap, healthBlockHashMap);
-                            locationFinder.setHealthFacilityHashMap(healthFacilityHashMap);
-
-                            if (!healthSubFacilityHashMap.isEmpty()) {
-                                fillHealthSubFacilities(healthSubFacilityHashMap, healthFacilityHashMap);
-                                locationFinder.setHealthSubFacilityHashMap(healthSubFacilityHashMap);
-                            }
-                        }
-                    }
-
-            }
+                if (!villageHashMap.isEmpty()) {
+                    fillVillages(villageHashMap, stateHashMap);
+                    locationFinder.setVillageHashMap(villageHashMap);
+                }
+                if (!healthBlockHashMap.isEmpty()) {
+                    fillHealthBlocks(healthBlockHashMap, stateHashMap);
+                    locationFinder.setHealthBlockHashMap(healthBlockHashMap);
+                }
+                if (!healthFacilityHashMap.isEmpty()) {
+                    fillHealthFacilities(healthFacilityHashMap, stateHashMap);
+                    locationFinder.setHealthFacilityHashMap(healthFacilityHashMap);
+                }
+                if (!healthSubFacilityHashMap.isEmpty()) {
+                    fillHealthSubFacilities(healthSubFacilityHashMap, stateHashMap);
+                    locationFinder.setHealthSubFacilityHashMap(healthSubFacilityHashMap);
+                }
         }
         LOGGER.debug("Locations processed. Records Processed : {}", count);
 
@@ -980,16 +951,14 @@ public class LocationServiceImpl implements LocationService {
     /**
      * Fills talukaHashMap with Taluka objects from the database
      * @param talukaHashMap contains (stateCode_districtCode_talukaCode, Taluka) with dummy Taluka objects
-     * @param districtHashMap contains (stateCode_districtCode, District) with original District objects from database
+     * @param stateHashMap contains (stateCode, State) with original State objects from database
      */
-    private void fillTalukas(Map<String, Taluka> talukaHashMap, final Map<String, District> districtHashMap) {
+    private void fillTalukas(Map<String, Taluka> talukaHashMap, final Map<String, State> stateHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> talukaKeys = talukaHashMap.keySet();
-        Map<Long, String> districtIdMap = new HashMap<>();
-        for (String districtKey : districtHashMap.keySet()) {
-            LOGGER.debug("fillTalukas::The district key is {} and district is {} ", districtKey , districtHashMap.get(districtKey));
-            LOGGER.debug("fillTalukas:: The district ID from districtHashMap is {} " , districtHashMap.get(districtKey).getId());
-            districtIdMap.put(districtHashMap.get(districtKey).getId(), districtKey);
+        Map<Long, String> stateIdMap = new HashMap<>();
+        for (String stateKey : stateHashMap.keySet()) {
+            stateIdMap.put(stateHashMap.get(stateKey).getId(), stateKey);
         }
 
         @SuppressWarnings("unchecked")
@@ -1002,8 +971,8 @@ public class LocationServiceImpl implements LocationService {
                 for (String talukaString : talukaKeys) {
                     count--;
                     String[] ids = talukaString.split("_");
-                    Long districtId = districtHashMap.get(ids[0] + "_" + ids[1]).getId();
-                    query += CODE_SQL_STRING +"'"+ids[2]+"'" + " and district_id_oid = " + districtId + ")";
+                    Long stateId = stateHashMap.get(ids[0]).getId();
+                    query += CODE_SQL_STRING +"'"+ids[1]+"'" + " and state_id_OID = " + stateId + ")";
                     if (count > 0) {
                         query += OR_SQL_STRING;
                     }
@@ -1030,8 +999,8 @@ public class LocationServiceImpl implements LocationService {
         LOGGER.debug("TALUKA Query time: {}", queryTimer.time());
         if(talukas != null && !talukas.isEmpty()) {
             for (Taluka taluka : talukas) {
-                String districtKey = districtIdMap.get(taluka.getDistrict().getId());
-                talukaHashMap.put(districtKey + "_" + taluka.getCode(), taluka);
+                String stateKey = stateIdMap.get(taluka.getStateIdOID());
+                talukaHashMap.put(stateKey + "_" + taluka.getCode(), taluka);
             }
         }
     }
@@ -1039,16 +1008,16 @@ public class LocationServiceImpl implements LocationService {
 
     /**
      * Fills villageHashMap with Village objects from database
-     * @param villageHashMap contains (stateCode_districtCode_talukaCode_villageCode_Svid, Village) with dummy Village objects
-     * @param talukaHashMap contains (stateCode_districtCode_talukaCode, Taluka) with original Taluka objects from database
+     * @param villageHashMap contains (stateCode_villageCode_Svid, Village) with dummy Village objects
+     * @param stateHashMap contains (stateCode, state) with original state objects from database
      */
-    private void fillVillages(Map<String, Village> villageHashMap, final Map<String, Taluka> talukaHashMap) {
+    private void fillVillages(Map<String, Village> villageHashMap,  final Map<String, State> stateHashMap) {
         int count = 0;
         Timer queryTimer = new Timer();
-        Map<Long, String> talukaIdMap = new HashMap<>();
         List<Village> villagesTotal = new ArrayList<>();
-        for (String districtKey : talukaHashMap.keySet()) {
-            talukaIdMap.put(talukaHashMap.get(districtKey).getId(), districtKey);
+        Map<Long, String> stateIdMap = new HashMap<>();
+        for (String stateKey : stateHashMap.keySet()) {
+            stateIdMap.put(stateHashMap.get(stateKey).getId(), stateKey);
         }
         final Set<String> villageKeys = villageHashMap.keySet();
         Iterator<String> iterator = villageKeys.iterator();
@@ -1071,8 +1040,8 @@ public class LocationServiceImpl implements LocationService {
                     for (String villageString : villageKeysPart) {
                         count--;
                         String[] ids = villageString.split("_");
-                        Long talukaId = talukaHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]).getId();
-                        query += " (vcode = " + ids[3] + " and svid = " + ids[4] + " and taluka_id_oid = " + talukaId + ")";
+                        Long stateId = stateHashMap.get(ids[0]).getId();
+                        query += " (vcode = " + ids[1] + " and svid = " + ids[2] + " and state_id_OID = " + stateId + ")";
                         if (count > 0) {
                             query += OR_SQL_STRING;
                         }
@@ -1104,8 +1073,8 @@ public class LocationServiceImpl implements LocationService {
         LOGGER.debug("VILLAGE Query time: {}", queryTimer.time());
         if(villagesTotal != null && !villagesTotal.isEmpty()) {
             for (Village village : villagesTotal) {
-                String talukaKey = talukaIdMap.get(village.getTaluka().getId());
-                villageHashMap.put(talukaKey + "_" + village.getVcode() + "_" + village.getSvid(), village);
+                String stateKey = stateIdMap.get(village.getStateIdOID());
+                villageHashMap.put(stateKey + "_" + village.getVcode() + "_" + village.getSvid(), village);
             }
         }
     }
@@ -1114,14 +1083,14 @@ public class LocationServiceImpl implements LocationService {
     /**
      * Fills healthBlockHashMap with HealthBlock objects from database
      * @param healthBlockHashMap contains (stateCode_districtCode_healthBlockCode, HealthBlock) with dummy HealthBlock objects
-     * @param districtHashMap contains (stateCode_districtCode, District) with original District objects from database
+     * @param stateHashMap contains (stateCode, State) with original State objects from database
      */
-    private void fillHealthBlocks(Map<String, HealthBlock> healthBlockHashMap, final Map<String, District> districtHashMap) {
+    private void fillHealthBlocks(Map<String, HealthBlock> healthBlockHashMap, final Map<String, State> stateHashMap) {
         Timer queryTimer = new Timer();
         final Set<String> healthBlockKeys = healthBlockHashMap.keySet();
-        Map<Long, String> districtIdMap = new HashMap<>();
-        for (String districtKey : districtHashMap.keySet()) {
-            districtIdMap.put(districtHashMap.get(districtKey).getId(), districtKey);
+        Map<Long, String> stateIdMap = new HashMap<>();
+        for (String stateKey : stateHashMap.keySet()) {
+            stateIdMap.put(stateHashMap.get(stateKey).getId(), stateKey);
         }
 
         @SuppressWarnings("unchecked")
@@ -1134,8 +1103,8 @@ public class LocationServiceImpl implements LocationService {
                 for (String healthBlockString : healthBlockKeys) {
                     count--;
                     String[] ids = healthBlockString.split("_");
-                    Long districtId = districtHashMap.get(ids[0] + "_" + ids[1]).getId();
-                    query += "(code = " + ids[2] +  " and district_id_OID = " + districtId + ")";
+                    Long stateId = stateHashMap.get(ids[0]).getId();
+                    query += "(code = " + ids[1] +  " and state_id_OID = " + stateId + ")";
                     if (count > 0) {
                         query += OR_SQL_STRING;
                     }
@@ -1162,8 +1131,8 @@ public class LocationServiceImpl implements LocationService {
         LOGGER.debug("HEALTHBLOCK Query time: {}", queryTimer.time());
         if(healthBlocks != null && !healthBlocks.isEmpty()) {
             for (HealthBlock healthBlock : healthBlocks) {
-                    String districtKey = districtIdMap.get(healthBlock.getDistrict().getId());
-                    healthBlockHashMap.put(districtKey + "_" + healthBlock.getCode(), healthBlock);
+                    String stateKey = stateIdMap.get(healthBlock.getStateIdOID());
+                    healthBlockHashMap.put(stateKey + "_" + healthBlock.getCode(), healthBlock);
             }
         }
     }
@@ -1171,18 +1140,18 @@ public class LocationServiceImpl implements LocationService {
 
     /**
      * Fills healthFacilityHashMap with HealthFacility objects from the database
-     * @param healthFacilityHashMap contains (stateCode_districtCode_healthBlockCode_healthFacilityCode, HealthFacility)
+     * @param healthFacilityHashMap contains (stateCode_districtCode_healthFacilityCode, HealthFacility)
      *                              with dummy HealthFacility objects
-     * @param healthBlockHashMap contains (stateCode_districtCode_healthBlockCode, HealthBlock)
-     *                           with original HealthBlock objects from database
+     * @param stateHashMap contains (stateCode, State)
+     *                           with original State objects from database
      */
-    private void fillHealthFacilities(Map<String, HealthFacility> healthFacilityHashMap, final Map<String, HealthBlock> healthBlockHashMap) {
+    private void fillHealthFacilities(Map<String, HealthFacility> healthFacilityHashMap, final Map<String, State> stateHashMap) {
         int count = 0;
         List<HealthFacility> healthFacilitiesTotal = new ArrayList<>();
         Timer queryTimer = new Timer();
-        Map<Long, String> healthBlockIdMap = new HashMap<>();
-        for (String healthBlockKey : healthBlockHashMap.keySet()) {
-            healthBlockIdMap.put(healthBlockHashMap.get(healthBlockKey).getId(), healthBlockKey);
+        Map<Long, String> stateIdMap = new HashMap<>();
+        for (String stateKey : stateHashMap.keySet()) {
+            stateIdMap.put(stateHashMap.get(stateKey).getId(), stateKey);
         }
         final Set<String> healthFacilityKeys = healthFacilityHashMap.keySet();
         Iterator<String> iterator = healthFacilityKeys.iterator();
@@ -1205,8 +1174,8 @@ public class LocationServiceImpl implements LocationService {
                     for (String healthFacilityString : healthFacilityKeysPart) {
                         count--;
                         String[] ids = healthFacilityString.split("_");
-                        Long healthBlockId = healthBlockHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2]).getId();
-                        query += CODE_SQL_STRING + ids[3] + " and healthBlock_id_oid = " + healthBlockId + ")";
+                        Long stateId = stateHashMap.get(ids[0]).getId();
+                        query += CODE_SQL_STRING + ids[1] + " and state_id_OID = " + stateId + ")";
                         if (count > 0) {
                             query += OR_SQL_STRING;
                         }
@@ -1237,8 +1206,8 @@ public class LocationServiceImpl implements LocationService {
         LOGGER.debug("HEALTHFACILITY Query time: {}", queryTimer.time());
         if(healthFacilitiesTotal != null && !healthFacilitiesTotal.isEmpty()) {
             for (HealthFacility healthFacility : healthFacilitiesTotal) {
-                String healthBlockKey = healthBlockIdMap.get(healthFacility.getHealthBlock().getId());
-                healthFacilityHashMap.put(healthBlockKey + "_" + healthFacility.getCode(), healthFacility);
+                String stateKey = stateIdMap.get(healthFacility.getStateIdOID());
+                healthFacilityHashMap.put(stateKey + "_" + healthFacility.getCode(), healthFacility);
             }
         }
     }
@@ -1248,16 +1217,16 @@ public class LocationServiceImpl implements LocationService {
      * Fills healthSubFacilityHashMap with HealthSubFacility objects from the database
      * @param healthSubFacilityHashMap contains (stateCode_districtCode_healthBlockCode_healthFacilityCode_healthSubFacilityCode, HealthSubFacility)
      *                              with dummy HealthSubFacility objects
-     * @param healthFacilityHashMap contains (stateCode_districtCode_healthBlockCode_healthFacilityCode, HealthFacility)
-     *                           with original HealthFacility objects from database
+     * @param stateHasMap contains (stateCode, State)
+     *                           with original State objects from database
      */
-    private void fillHealthSubFacilities(Map<String, HealthSubFacility> healthSubFacilityHashMap, final Map<String, HealthFacility> healthFacilityHashMap) {
+    private void fillHealthSubFacilities(Map<String, HealthSubFacility> healthSubFacilityHashMap, final Map<String, State> stateHasMap) {
         int count = 0;
         List<HealthSubFacility> healthSubFacilitiesTotal = new ArrayList<>();
         Timer queryTimer = new Timer();
-        Map<Long, String> healthFacilityIdMap = new HashMap<>();
-        for (String healthFacilityKey : healthFacilityHashMap.keySet()) {
-            healthFacilityIdMap.put(healthFacilityHashMap.get(healthFacilityKey).getId(), healthFacilityKey);
+        Map<Long, String> stateIdMap = new HashMap<>();
+        for (String stateKey : stateHasMap.keySet()) {
+            stateIdMap.put(stateHasMap.get(stateKey).getId(), stateKey);
         }
         final Set<String> healthSubFacilityKeys = healthSubFacilityHashMap.keySet();
         Iterator<String> iterator = healthSubFacilityKeys.iterator();
@@ -1279,8 +1248,8 @@ public class LocationServiceImpl implements LocationService {
                     for (String healthFacilityString : healthSubFacilityKeysPart) {
                         count--;
                         String[] ids = healthFacilityString.split("_");
-                        Long healthFacilityId = healthFacilityHashMap.get(ids[0] + "_" + ids[1] + "_" + ids[2] + "_" + ids[3]).getId();
-                        query += CODE_SQL_STRING + ids[4] + " and healthFacility_id_oid = " + healthFacilityId + ")";
+                        Long stateId = stateHasMap.get(ids[0]).getId();
+                        query += CODE_SQL_STRING + ids[1] + " and state_id_OID = " + stateId + ")";
                         if (count > 0) {
                             query += OR_SQL_STRING;
                         }
@@ -1311,8 +1280,8 @@ public class LocationServiceImpl implements LocationService {
         LOGGER.debug("HEALTHSUBFACILITY Query time: {}", queryTimer.time());
         if(healthSubFacilitiesTotal != null && !healthSubFacilitiesTotal.isEmpty()) {
             for (HealthSubFacility healthSubFacility : healthSubFacilitiesTotal) {
-                String healthFacilityKey = healthFacilityIdMap.get(healthSubFacility.getHealthFacility().getId());
-                healthSubFacilityHashMap.put(healthFacilityKey + "_" + healthSubFacility.getCode(), healthSubFacility);
+                String stateKey = stateIdMap.get(healthSubFacility.getStateIdOID());
+                healthSubFacilityHashMap.put(stateKey + "_" + healthSubFacility.getCode(), healthSubFacility);
             }
         }
     }

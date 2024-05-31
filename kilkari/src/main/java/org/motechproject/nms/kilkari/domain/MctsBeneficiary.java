@@ -22,7 +22,7 @@ import javax.jdo.annotations.Unique;
 /**
  * A beneficiary (mother or child) sourced from MCTS.
  */
-@ValidFullLocation
+
 @Entity(tableName = "nms_mcts_beneficiaries")
 @TrackClass
 @TrackFields

@@ -26,7 +26,7 @@ import javax.jdo.annotations.Persistent;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
-@ValidFullLocation
+
 @ValidFrontLineWorker
 @Entity(tableName = "nms_front_line_workers")
 @Index(name = "status_invalidationDate_composit_idx", members = { "status", "invalidationDate" })

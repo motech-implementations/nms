@@ -12,6 +12,7 @@ public interface VillageService {
     Village findByTalukaAndVcodeAndSvid(Taluka taluka, long vcode, long svid);
     Village create(Village village);
     Village update(Village village);
+    Village findByStateAndVcodeAndSvid(State state, long vcode, long svid);
 
     Long createUpdateVillages(List<Map<String, Object>> recordList, Map<String, State> stateHashMap, Map<String, District> districtHashMap, Map<String, Taluka> talukaHashMap);
 }
