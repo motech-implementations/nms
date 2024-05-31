@@ -25,12 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -88,14 +83,14 @@ public class MobileAcademyController extends BaseController {
      */
     @Transactional(readOnly = true)
     @RequestMapping(
-            value = "/course",
+            value = "/course/{version}",
             method = RequestMethod.GET)
     @ResponseBody
-    public CourseResponse getCourse() {
+    public CourseResponse getCourse(@PathVariable long version) {
 
-        log("REQUEST: /mobileacademy/course");
+        log("REQUEST: /mobileacademy/course/{}" , String.valueOf(version));
 
-        MaCourse getCourse = mobileAcademyService.getCourse();
+        MaCourse getCourse = mobileAcademyService.getCourse(version);
 
         if (getCourse == null) {
             LOGGER.error("No course found in database. Check course ingestion and name");

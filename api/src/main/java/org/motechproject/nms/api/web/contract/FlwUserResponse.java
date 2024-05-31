@@ -1,5 +1,7 @@
 package org.motechproject.nms.api.web.contract;
 
+import org.motechproject.nms.props.domain.Service;
+
 /**
  * Response body
  *
@@ -22,6 +24,7 @@ public class FlwUserResponse extends UserResponse {
     private boolean welcomePromptFlag;
     private int maxAllowedUsageInPulses;
     private int maxAllowedEndOfUsagePrompt;
+    private int mobileAcademyVersion;
 
     public FlwUserResponse() {
         super();
@@ -67,6 +70,14 @@ public class FlwUserResponse extends UserResponse {
         this.maxAllowedEndOfUsagePrompt = maxAllowedEndOfUsagePrompt;
     }
 
+    public long getMobileAcademyVersion() {
+        return mobileAcademyVersion;
+    }
+
+    public void setMobileAcademyVersion(int mobileAcademyVersion) {
+        this.mobileAcademyVersion = mobileAcademyVersion;
+    }
+
     @Override
     public String toString() {
         return "FlwUserResponse{" +
@@ -75,7 +86,8 @@ public class FlwUserResponse extends UserResponse {
                 ", welcomePromptFlag=" + welcomePromptFlag +
                 ", maxAllowedUsageInPulses=" + maxAllowedUsageInPulses +
                 ", maxAllowedEndOfUsagePrompt=" + maxAllowedEndOfUsagePrompt +
-                "} " + super.toString();
+                ", mobileAcademyVersion=" +  mobileAcademyVersion +
+                " } " + super.toString();
     }
 
     @Override
@@ -104,6 +116,9 @@ public class FlwUserResponse extends UserResponse {
         if (maxAllowedUsageInPulses != that.maxAllowedUsageInPulses) {
             return false;
         }
+        if (mobileAcademyVersion != that.mobileAcademyVersion) {
+            return false;
+        }
         return maxAllowedEndOfUsagePrompt == that.maxAllowedEndOfUsagePrompt;
 
     }
@@ -116,6 +131,7 @@ public class FlwUserResponse extends UserResponse {
         result = 31 * result + (welcomePromptFlag ? 1 : 0);
         result = 31 * result + maxAllowedUsageInPulses;
         result = 31 * result + maxAllowedEndOfUsagePrompt;
+        result = 31 * result + mobileAcademyVersion;
         return result;
     }
 }

@@ -13,7 +13,7 @@ public interface MobileAcademyService {
      * Get the MA course structure for the given course name. This defaults to "MobileAcademyCourse" name
      * @return Course data object with the course name
      */
-    MaCourse getCourse();
+    MaCourse getCourse(long version);
 
     /**
      * Set the MA course structure. This should only be called by the config handler on json update

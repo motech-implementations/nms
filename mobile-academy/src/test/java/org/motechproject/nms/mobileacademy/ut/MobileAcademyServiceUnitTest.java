@@ -130,7 +130,7 @@ public class MobileAcademyServiceUnitTest {
         newCourse.setModificationDate(DateTime.now());
         nmsCourseDataService.create(newCourse);
         when(nmsCourseDataService.getCourseByName("MobileAcademyCourse")).thenReturn(newCourse);
-        assertTrue(mobileAcademyService.getCourse().getContent().equals(newCourse.getContent()));
+        assertTrue(mobileAcademyService.getCourse(1).getContent().equals(newCourse.getContent()));
     }
 
     @Test

@@ -34,6 +34,7 @@ public final class MobileAcademyConverter {
         CourseResponse response = new CourseResponse();
         response.setName(course.getName());
         response.setCourseVersion(course.getVersion());
+        response.setCourse(course.getCourse());
         response.setChapters(course.getContent());
         return response;
     }

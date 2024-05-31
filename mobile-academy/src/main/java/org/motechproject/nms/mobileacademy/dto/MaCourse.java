@@ -17,6 +17,9 @@ public class MaCourse {
     @JsonProperty("chapters")
     private String content;
 
+    @JsonProperty("course")
+    private String course;
+
     public MaCourse() {
     }
 
@@ -49,4 +52,8 @@ public class MaCourse {
     public void setContent(String content) {
         this.content = content;
     }
+
+    public String getCourse() {return course;}
+
+    public void setCourse(String course) {this.course = course;}
 }

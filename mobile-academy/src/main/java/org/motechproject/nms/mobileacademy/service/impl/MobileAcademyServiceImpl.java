@@ -54,6 +54,8 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
 
     private static final String COURSE_NAME = "MobileAcademyCourse";
 
+    private static final String COURSE_NAME_2 = "MobileAcademyCourse2.0";
+
     private static final String FINAL_BOOKMARK = "COURSE_COMPLETED";
 
     private static final String COURSE_COMPLETED = "nms.ma.course.completed";
@@ -144,9 +146,9 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     }
 
     @Override
-    public MaCourse getCourse() {
+    public MaCourse getCourse(long version) {
 
-        NmsCourse course = nmsCourseDataService.getCourseByName(COURSE_NAME);
+        NmsCourse course = (version == 1) ? nmsCourseDataService.getCourseByName(COURSE_NAME) : nmsCourseDataService.getCourseByName(COURSE_NAME_2);
 
         if (course == null) {
             alertService.create(COURSE_ENTITY_NAME, COURSE_NAME, "Could not find course", AlertType.CRITICAL, AlertStatus.NEW, 0, null);
@@ -456,7 +458,9 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         MaCourse courseDto = new MaCourse();
         courseDto.setName(course.getName());
         courseDto.setVersion(course.getModificationDate().getMillis() / MILLIS_PER_SEC);
-        courseDto.setContent(course.getContent());
+        courseDto.setContent(course.getName().equals(COURSE_NAME) ? course.getContent() : null);
+        courseDto.setCourse(course.getName().equals(COURSE_NAME) ? null : course.getContent());
+
         return courseDto;
     }
 

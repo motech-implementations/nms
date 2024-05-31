@@ -3,12 +3,14 @@ package org.motechproject.nms.api.web.contract.mobileAcademy;
 
 
 import com.fasterxml.jackson.annotation.JsonRawValue;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import javax.validation.constraints.NotNull;
 
 /**
  * Response object for get course API 2.2.2
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CourseResponse {
 
     // course name
@@ -22,6 +24,14 @@ public class CourseResponse {
     @NotNull
     @JsonRawValue
     private Object chapters;
+
+    @NotNull
+    @JsonRawValue
+    private Object course;
+
+    public Object getCourse() { return course;}
+
+    public void setCourse(Object course) {this.course = course;}
 
     public CourseResponse() {
     }

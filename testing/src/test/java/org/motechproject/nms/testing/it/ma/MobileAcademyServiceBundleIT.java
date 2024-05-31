@@ -159,7 +159,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
         assertNull(nmsCourseDataService.getCourseByName(VALID_COURSE_NAME));
 
         try {
-            maService.getCourse();
+            long version = 1;
+            maService.getCourse(version);
         } catch (IllegalStateException is) {
             assertTrue(is.toString().contains("No course bootstrapped. Check deployment"));
         }
@@ -175,7 +176,8 @@ public class MobileAcademyServiceBundleIT extends BasePaxIT {
     @Test
     public void testGetCourse() throws IOException {
         setupMaCourse();
-        assertNotNull(maService.getCourse());
+        long version = 1;
+        assertNotNull(maService.getCourse(version));
     }
 
     @Test

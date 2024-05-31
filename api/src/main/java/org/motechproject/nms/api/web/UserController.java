@@ -40,15 +40,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 @Controller
 public class UserController extends BaseController {
 
     public static final String SERVICE_NAME = "serviceName";
+
+    // TODO: take this stateIds from properties file
+    public static final Set<Integer> stateIds = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(1, 2, 10, 20)));
 
     @Autowired
     private SubscriberService subscriberService;
@@ -259,6 +260,7 @@ public class UserController extends BaseController {
     private UserResponse getFrontLineWorkerResponseUser(String serviceName, Long callingNumber, Circle circle) {
         FlwUserResponse user = new FlwUserResponse();
         Service service = getServiceFromName(serviceName);
+        int mobileAcademyVersion = 1;
         ServiceUsage serviceUsage = new ServiceUsage(null, service, 0, 0, false);
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(callingNumber);
         if (flw == null) {
@@ -271,6 +273,7 @@ public class UserController extends BaseController {
             if (!serviceDeployedInUserState(service, state)) {
                 throw new NotDeployedException(String.format(NOT_DEPLOYED, service));
             }
+            mobileAcademyVersion = stateIds.contains(state.getCode().intValue()) ? 2 : 1;
         } else {
             // If we have no state for the user see if the service is deployed in at least one state in the circle
             if (!serviceDeployedInCircle(service, circle)) {
@@ -303,6 +306,7 @@ public class UserController extends BaseController {
         user.setWelcomePromptFlag(serviceUsage.getWelcomePrompt());
         user.setMaxAllowedUsageInPulses(serviceUsageCap.getMaxUsageInPulses());
         user.setMaxAllowedEndOfUsagePrompt(2);
+        user.setMobileAcademyVersion(mobileAcademyVersion);
 
         return user;
     }
