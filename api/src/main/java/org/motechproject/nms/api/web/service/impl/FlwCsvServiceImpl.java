@@ -8,7 +8,8 @@ import org.motechproject.nms.api.web.service.FlwCsvService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.kilkari.domain.RejectionReasons;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+//import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.flw.domain.SubscriptionOriginFlw;
 import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.props.service.LogHelper;
 import org.motechproject.nms.region.repository.StateDataService;
@@ -143,7 +144,7 @@ public class FlwCsvServiceImpl implements FlwCsvService {
             flwProperties.put(FlwConstants.VILLAGE_NAME, addFlwRequest.getVillageName());
         }
 
-        frontLineWorkerImportService.createUpdate(flwProperties, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.createUpdate(flwProperties, SubscriptionOriginFlw.MCTS_IMPORT);
     }
 
     @Override
@@ -235,7 +236,7 @@ public class FlwCsvServiceImpl implements FlwCsvService {
             flwProperties.put(FlwConstants.VILLAGE_NAME, addRchFlwRequest.getVillageName());
         }
 
-        frontLineWorkerImportService.createUpdate(flwProperties, SubscriptionOrigin.RCH_IMPORT);
+        frontLineWorkerImportService.createUpdate(flwProperties, SubscriptionOriginFlw.RCH_IMPORT);
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity

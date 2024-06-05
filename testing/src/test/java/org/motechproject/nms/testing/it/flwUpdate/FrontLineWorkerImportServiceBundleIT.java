@@ -24,6 +24,7 @@ import org.motechproject.nms.flwUpdate.service.FrontLineWorkerImportService;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.kilkari.domain.RejectionReasons;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
+import org.motechproject.nms.flw.domain.SubscriptionOriginFlw;
 import org.motechproject.nms.mobileacademy.domain.CourseCompletionRecord;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.repository.CourseCompletionRecordDataService;
@@ -269,7 +270,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         transactionManager.commit(status);
 
         Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
     }
 
     // This test should load the FLW with MSISDN 1234567890 however that FLW already has a different MCTS ID
@@ -283,12 +284,12 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         frontLineWorkerService.add(flw);
 
         Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
     }
 
     @Test
     public void testASHAvalidation() throws Exception {
-        frontLineWorkerImportService.importData(read("csv/anm-asha.txt"), SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(read("csv/anm-asha.txt"), SubscriptionOriginFlw.MCTS_IMPORT);
         List<FrontLineWorker> flws = frontLineWorkerDataService.retrieveAll();
         assertEquals(9,flws.size());
     }
@@ -297,7 +298,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Ignore //Before Asha_csv import the duplicate records are removed
     @Test  //To test duplicate dataset validation
     public void testDuplicateDataSetvalidation() throws Exception {
-        frontLineWorkerImportService.importData(read("csv/anm-asha1.txt"), SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(read("csv/anm-asha1.txt"), SubscriptionOriginFlw.MCTS_IMPORT);
         List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
         List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
         assertEquals(2, frontLineWorkers.size());
@@ -312,7 +313,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test
     public void testImportWhenDistrictLanguageLocationPresent() throws Exception {
         Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1234567890L);
         assertFLW(flw, "#0", 1234567890L, "FLW 0", "District 11", "L1");
@@ -322,7 +323,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test
     public void testImportWhenDistrictLanguageLocationNotPresent() throws Exception {
         Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t12\t18-08-2016\tASHA\tActive");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(1234567890L);
         assertFLW(flw, "#0", 1234567890L, "FLW 0", "District 12", null);
@@ -334,7 +335,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test(expected = CsvImportDataException.class)
     public void testImportWhenDistrictNotPresent() throws Exception {
         Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t\t18-08-2016\tASHA\tActive");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
     }
 
 
@@ -342,7 +343,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test
     @Ignore
     public void testImportFromSampleDataFile() throws Exception {
-        frontLineWorkerImportService.importData(read("csv/anm-asha.txt"), SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(read("csv/anm-asha.txt"), SubscriptionOriginFlw.MCTS_IMPORT);
 
         FrontLineWorker flw1 = frontLineWorkerService.getByContactNumber(9999999996L);
         assertFLW(flw1, "72185", 9999999996L, "Bishnu Priya Behera", "Koraput", null);
@@ -394,7 +395,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         flw.setJobStatus(FlwJobStatus.ACTIVE);
         frontLineWorkerService.add(flw);
         Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
         FrontLineWorker flw1 = frontLineWorkerService.getByContactNumber(1234567890L);
         assertFLW(flw1, "#0", 1234567890L, "FLW 0", "District 11", "L1");
         assertEquals("State{name='State 1', code=1}", flw1.getState().toString());
@@ -426,7 +427,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test(expected = CsvImportDataException.class)
     public void verifyFT537() throws Exception {
         Reader reader = createReaderWithHeaders("#0\t\tFLW 0\t11\t18-08-2016\tASHA\tActive");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
     }
 
     /**
@@ -435,7 +436,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test(expected = IllegalArgumentException.class)
     public void verifyFT540() throws Exception {
         Reader reader = createReaderWithHeadersWithNoState("#1\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
     }
 
     /**
@@ -458,7 +459,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test(expected = CsvImportDataException.class)
     public void verifyFT543() throws Exception {
         Reader reader = createReaderWithHeaders("#1\t123456789\tFLW 1\t11\t18-08-2016\tASHA\tActive");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
     }
 
     /**
@@ -468,7 +469,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test
     public void ashaTypeInvalid() throws Exception {
         Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t11\t18-08-2016\tMother\tActive");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
         List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
         List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
         assertEquals(0, frontLineWorkers.size());
@@ -483,7 +484,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test
     public void ashaTypeIsNull() throws Exception {
         Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t11\t18-08-2016\t\tActive");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
         List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
         List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
         assertEquals(0, frontLineWorkers.size());
@@ -498,7 +499,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test
     public void testGF_StatusIsInvalid() throws Exception {
         Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t11\t18-08-2016\tASHA\tTest");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
         List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
         List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
         assertEquals(0, frontLineWorkers.size());
@@ -513,7 +514,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test
     public void testGF_StatusIsInActive() throws Exception {
         Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t11\t18-08-2016\tASHA\tINACTIVE");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
         List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
         List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
         assertEquals(0, frontLineWorkers.size());
@@ -528,7 +529,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test
     public void testGF_StatusIsNull() throws Exception {
         Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t11\t18-08-2016\tASHA\t");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
         List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
         List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
         assertEquals(0, frontLineWorkers.size());
@@ -543,7 +544,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test
     public void invalidGFID() throws Exception {
         Reader reader = createReaderWithHeaders("#@12%\t1234567890\tFLW 1\t11\t18-08-2016\tASHA\tActive");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
         List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
         List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
         assertEquals(0, frontLineWorkers.size());
@@ -557,7 +558,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Ignore
     public void testNullGFID() throws Exception {
         Reader reader = createReaderWithHeaders("\t1234567890\tFLW 1\t11\t18-08-2016\tASHA\tActive");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
         List<FlwImportRejection> flwImportRejections = flwImportRejectionDataService.retrieveAll();
         List<FrontLineWorker> frontLineWorkers = frontLineWorkerDataService.retrieveAll();
         assertEquals(0, frontLineWorkers.size());
@@ -570,7 +571,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test (expected = CsvImportDataException.class)
     public void testNullGFName() throws Exception {
         Reader reader = createReaderWithHeaders("#1\t1234567890\t\t11\t18-08-2016\tASHA\tActive");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
 
     }
 
@@ -580,7 +581,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test(expected = CsvImportDataException.class)
     public void verifyFT544() throws Exception {
         Reader reader = createReaderWithHeadersWithInvalidState("#1\t1234567890\tFLW 1\t11\t18-08-2016\tASHA\tActive");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
     }
 
     /**
@@ -589,7 +590,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test(expected = CsvImportDataException.class)
     public void verifyFT545() throws Exception {
         Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t111\t18-08-2016\tASHA\tActive");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
     }
 
     /**
@@ -600,7 +601,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
         State state2 = createState(2L, "State 2");
         createDistrict(state2, 22L, "District 22");
         Reader reader = createReaderWithHeaders("#1\t1234567890\tFLW 1\t22\t18-08-2016\tASHA\tActive");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
     }
 
     private void assertFLW(FrontLineWorker flw, String mctsFlwId, Long contactNumber, String name, String districtName, String languageLocationCode) {
@@ -751,7 +752,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test
     public void testMsisdnUpdateInMa() throws Exception {
         Reader reader = createReaderWithHeaders("#0\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
         Long oldMsisdn = 1234567890L;
 
         FrontLineWorker flw = frontLineWorkerService.getByContactNumber(oldMsisdn);
@@ -773,7 +774,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
 
         // Update Msisdn
         reader = createReaderWithHeaders("#0\t9876543210\tFLW 0\t11\t18-08-2016\tASHA\tActive");
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
         Long newMsisdn = 9876543210L;
 
         flw = frontLineWorkerService.getByContactNumber(newMsisdn);
@@ -810,7 +811,7 @@ public class FrontLineWorkerImportServiceBundleIT extends BasePaxIT {
     @Test(expected = CsvImportDataException.class) //adding expected result
     public void flwImportwithinvalidState() throws Exception {
         Reader reader = createReaderWithHeadersInvalidState("#0\t1234567890\tFLW 0\t11\t18-08-2016\tASHA\tActive"); //creating a flw with invalid state code
-        frontLineWorkerImportService.importData(reader, SubscriptionOrigin.MCTS_IMPORT);
+        frontLineWorkerImportService.importData(reader, SubscriptionOriginFlw.MCTS_IMPORT);
 
     }
 
