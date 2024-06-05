@@ -133,7 +133,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     return null;
                 }
                 List<Subscriber> subscriberList = (List<Subscriber>) fqr;
-                if(subscriberList==null || subscriberList.size()==0){
+                if(subscriberList==null || subscriberList.size()==0 || subscriberList.isEmpty()){
                     return null;
                 }
                 else if(subscriberList.size()==1){
@@ -141,7 +141,21 @@ public class SubscriberServiceImpl implements SubscriberService {
                 }
                 else {
                     LOGGER.debug("More than one row returned for beneficiary mother-id/child-id :  {}" , beneficiary.getId());
-                    return subscriberList.get(0);
+
+                    //if we have multiple subscriber for same user valid subscriber will be decided on below scenario
+                    //1. If we don't have any active subscription for any subscriber we will consider older subscriber as valid subscriber
+                    //2. If we have one or more active subscriptions for multiple subscriber we will consider latest subscriber with active subscriptions.
+
+                    int activeSubscribers = 0;
+                    Subscriber subscriber = new Subscriber();
+                    for(Subscriber subscriber1 : subscriberList) {
+                        if (subscriber1.getActiveAndPendingSubscriptions() != null && !subscriber1.getActiveAndPendingSubscriptions().isEmpty()) {
+                            subscriber = subscriber1;
+                            activeSubscribers++;
+                        }
+                    }
+                    if(activeSubscribers==0) return subscriberList.get(0);
+                    else return subscriber;
                 }
             }
         };
@@ -915,7 +929,21 @@ public class SubscriberServiceImpl implements SubscriberService {
             return subscriberList.get(0);
         } else {
             LOGGER.debug("More than one subscriber returned for motherID : {} , found {} subscribers ", motherId , subscriberList.size()); ;
-            return subscriberList.get(0);
+
+            //if we have multiple subscriber for same user valid subscriber will be decided on below scenario
+            //1. If we don't have any active subscription for any subscriber we will consider older subscriber as valid subscriber
+            //2. If we have one or more active subscriptions for multiple subscriber we will consider latest subscriber with active subscriptions.
+
+            int activeSubscribers = 0;
+            Subscriber subscriber = new Subscriber();
+            for(Subscriber subscriber1 : subscriberList) {
+                if (subscriber1.getActiveAndPendingSubscriptions() != null && !subscriber1.getActiveAndPendingSubscriptions().isEmpty()) {
+                    subscriber = subscriber1;
+                    activeSubscribers++;
+                }
+            }
+            if(activeSubscribers==0) return subscriberList.get(0);
+            else return subscriber;
         }
     }
 
