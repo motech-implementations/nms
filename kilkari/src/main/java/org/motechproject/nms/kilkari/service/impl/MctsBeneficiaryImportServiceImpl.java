@@ -524,28 +524,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
         List<DeactivatedBeneficiary> deactivatedUsers = null;
 
-        child.setAshaId(ashaId);
-
-        FrontLineWorker frontLineWorker;
-        if(ashaId==null || ashaId.isEmpty() || ashaId.trim().isEmpty() || ashaId=="0"){
-            LOGGER.debug("Asha id is null ");
-            frontLineWorker = null;
-        }
-        else{
-            State state;
-            if(child.getState()!=null){
-                state = child.getState();
-            }
-            else{
-                state = (State) locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID);
-            }
-            frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(ashaId , state );
-            if(frontLineWorker==null){
-                LOGGER.debug("No Asha present with mctsFlwID {} and state {} " , ashaId , state );
-            }
-        }
-        child.setFrontLineWorker(frontLineWorker);
-
         synchronized(this) {
             childRecords.addAndGet(1);
             Long chunkSize = Long.parseLong(settingsFacade.getProperty(CHUNK_SIZE));
@@ -574,11 +552,41 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 }
             }
             child.setRegistrationDate(regDate);
+            child.setAshaId(ashaId);
             if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
                 return subscriberService.updateChildSubscriber(msisdn, child, dob, record, action);
             } else {
-                return subscriberService.updateRchChildSubscriber(msisdn, child, dob, record, action);
+                ChildImportRejection childImportRejection = subscriberService.updateRchChildSubscriber(msisdn, child, dob, record, action);
 
+                if(childImportRejection == null){
+                    childRejectionRch(convertMapToRchChild(record), true, null, action);
+
+                    FrontLineWorker frontLineWorker;
+                    if(ashaId==null || ashaId.isEmpty() || ashaId.trim().isEmpty() || ashaId=="0"){
+                        LOGGER.debug("Asha id is null ");
+                        frontLineWorker = null;
+                    }
+                    else{
+                        State state;
+                        if(child.getState()!=null){
+                            state = child.getState();
+                        }
+                        else{
+                            state = (State) locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID);
+                        }
+                        frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(ashaId , state );
+                        if(frontLineWorker==null){
+                            LOGGER.debug("No Asha present with mctsFlwID {} and state {} " , ashaId , state );
+                        }
+                    }
+                    child.setFrontLineWorker(frontLineWorker);
+
+                    if (child.getId() != null) {
+                        mctsChildDataService.update(child);
+                    }
+                    return null;
+                }
+                else return childImportRejection;
             }
         }
     }

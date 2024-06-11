@@ -741,8 +741,6 @@ public class SubscriberServiceImpl implements SubscriberService {
         }
 
         liveBirthChildDeathCheck(finalSubscription, record);
-
-        childRejectionRch(convertMapToRchChild(record), true, null, action);
         return null;
     }
 
