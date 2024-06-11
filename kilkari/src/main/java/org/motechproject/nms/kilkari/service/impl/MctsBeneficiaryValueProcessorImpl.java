@@ -321,6 +321,26 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
         LOGGER.debug("Exit:: setLocationFieldsCSV");
     }
 
+    @Override
+    public void checkLocationFieldsCSV(LocationFinder locationFinder, Map<String, Object> record, MctsBeneficiary beneficiary) throws InvalidLocationException {
+
+        StringBuffer mapKey = new StringBuffer(record.get(KilkariConstants.STATE_ID).toString());
+        if (isValidID(record, KilkariConstants.STATE_ID) && (locationFinder.getStateHashMap().get(mapKey.toString()) != null)) {
+            String districtCode = record.get(KilkariConstants.DISTRICT_ID).toString();
+            mapKey.append("_");
+            mapKey.append(districtCode);
+
+            if (isValidID(record, KilkariConstants.DISTRICT_ID) && (locationFinder.getDistrictHashMap().get(mapKey.toString()) != null)) {
+                LOGGER.debug("State: {}, District: {}" , record.get(KilkariConstants.STATE_ID).toString(), districtCode);
+            } else {
+                throw new InvalidLocationException(String.format(KilkariConstants.INVALID_LOCATION, KilkariConstants.DISTRICT_ID, record.get(KilkariConstants.DISTRICT_ID)));
+            }
+        } else {
+            throw new InvalidLocationException(String.format(KilkariConstants.INVALID_LOCATION, KilkariConstants.STATE_ID, record.get(KilkariConstants.STATE_ID)));
+        }
+        LOGGER.debug("Exit:: checkLocationFieldsCSV");
+    }
+
     private boolean isValidID(final Map<String, Object> map, final String key) {
         Object obj = map.get(key);
         if (obj == null || obj.toString().isEmpty() || "NULL".equalsIgnoreCase(obj.toString())) {

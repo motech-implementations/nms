@@ -9,18 +9,7 @@ import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.kilkari.domain.DeactivatedBeneficiary;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.MctsChild;
-import org.motechproject.nms.kilkari.domain.MctsMother;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionError;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.exception.MultipleSubscriberException;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
@@ -35,9 +24,7 @@ import org.motechproject.nms.kilkari.service.DeactivatedBeneficiaryService;
 import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
-import org.motechproject.nms.kilkari.domain.RejectionReasons;
-import org.motechproject.nms.region.domain.LocationFinder;
-import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
@@ -209,7 +196,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         if (mother == null) {
             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.DATA_INTEGRITY_ERROR, false);
         }
-        mother.setRegistrationDate(motherRegistrationDate);
+//        mother.setRegistrationDate(motherRegistrationDate);
 
         boolean isInvalidLMP = !validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, importOrigin);
 
@@ -241,7 +228,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
 
         try {
-             mctsBeneficiaryValueProcessor.setLocationFieldsCSV(locationFinder, record, mother);
+            mctsBeneficiaryValueProcessor.checkLocationFieldsCSV(locationFinder, record, mother);
         } catch (InvalidLocationException le) {
             LOGGER.error(le.toString());
            return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.INVALID_LOCATION, false);
@@ -331,6 +318,13 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 }
             }
 
+            try {
+                mctsBeneficiaryValueProcessor.setLocationFieldsCSV(locationFinder, record, mother);
+            } catch (InvalidLocationException le) {
+                LOGGER.error(le.toString());
+                return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.INVALID_LOCATION, false);
+            }
+
             LOGGER.debug("MotherImportRejection::importMotherRecord Handled Subscriptions   " + beneficiaryId);
             // We rejected the update/create for the subscriber
 
@@ -369,6 +363,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 }
             }
             mother.setFrontLineWorker(frontLineWorker);
+            mother.setRegistrationDate(motherRegistrationDate);
 
             if(mother.getId() != null){
                 mctsMotherDataService.update(mother);
