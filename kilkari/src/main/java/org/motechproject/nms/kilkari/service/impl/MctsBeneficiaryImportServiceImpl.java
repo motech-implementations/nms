@@ -311,6 +311,16 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block " + beneficiaryId);
                     return motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.INVALID_CASE_NO.toString(), action);
                 }
+
+                StringBuffer mapKey = new StringBuffer(record.get(KilkariConstants.STATE_ID).toString());
+                String districtCode = record.get(KilkariConstants.DISTRICT_ID).toString();
+                State state = locationFinder.getStateHashMap().get(mapKey.toString());
+                mapKey.append("_");
+                mapKey.append(districtCode);
+                District district = locationFinder.getDistrictHashMap().get(mapKey.toString());
+                LOGGER.debug("district : {}, state : {}", district!=null ? district.getCode() : null, state!=null ? state.getCode() : null);
+                mother.setState(state);
+                mother.setDistrict(district);
                 subscription = subscriberService.updateRchMotherSubscriber(msisdn, mother, lmp, caseNo, deactivate, record, action,name,motherDOB,lastUpdatedDateNic, motherRegistrationDate);
                 if (subscription == null) {
                     LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block " + beneficiaryId);
