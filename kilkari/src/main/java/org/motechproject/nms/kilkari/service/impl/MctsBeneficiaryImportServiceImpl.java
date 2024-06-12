@@ -43,11 +43,7 @@ import org.supercsv.cellprocessor.ift.CellProcessor;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionMcts;
@@ -584,7 +580,12 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                             LOGGER.debug("No Asha present with mctsFlwID {} and state {} " , ashaId , state );
                         }
                     }
-                    child.setFrontLineWorker(frontLineWorker);
+
+                    if(child.getId()!= null  && !(frontLineWorker==null && child.getFrontLineWorker()==null) && (
+                            (frontLineWorker==null || child.getFrontLineWorker()==null)  ||
+                            !Objects.equals(frontLineWorker.getId(), child.getFrontLineWorker().getId()) )){
+                        child.setFrontLineWorker(frontLineWorker);
+                    }
 
                     if (child.getId() != null) {
                         mctsChildDataService.update(child);
