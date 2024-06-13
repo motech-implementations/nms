@@ -577,7 +577,12 @@ public class ChildRejectionServiceImpl implements ChildRejectionService {
         else{
             stringBuilder.append(QUOTATION + child.getRegistrationDate() + QUOTATION_COMMA);
         }
-        stringBuilder.append(QUOTATION + child.getRchAshaId() + QUOTATION_COMMA);
+        if(child.getRchAshaId()==null || child.getRchAshaId().trim().isEmpty()){
+            stringBuilder.append("NULL,");
+        }
+        else {
+            stringBuilder.append(QUOTATION + child.getRchAshaId() + QUOTATION_COMMA);
+        }
         stringBuilder.append(QUOTATION + child.getRegistrationNo() + QUOTATION_COMMA);
         stringBuilder.append(child.getEntryType() + ", ");
         stringBuilder.append(QUOTATION + child.getIdNo() + QUOTATION_COMMA);

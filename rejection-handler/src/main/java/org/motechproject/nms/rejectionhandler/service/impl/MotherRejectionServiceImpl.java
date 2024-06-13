@@ -583,7 +583,12 @@ public class MotherRejectionServiceImpl implements MotherRejectionService {
         else{
             stringBuilder.append(QUOTATION + mother.getRegistrationDate() + QUOTATION_COMMA);
         }
-        stringBuilder.append(QUOTATION + mother.getRchAshaId() + QUOTATION_COMMA);
+        if(mother.getRchAshaId()==null || mother.getRchAshaId().trim().isEmpty()){
+            stringBuilder.append("NULL,");
+        }
+        else {
+            stringBuilder.append(QUOTATION + mother.getRchAshaId() + QUOTATION_COMMA);
+        }
         stringBuilder.append(QUOTATION + mother.getLmpDate() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getBirthDate() + QUOTATION_COMMA);
         stringBuilder.append(QUOTATION + mother.getAbortionType() + QUOTATION_COMMA);

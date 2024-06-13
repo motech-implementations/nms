@@ -341,7 +341,10 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 //            if ((stillBirth != null) && stillBirth) {
 //                subscriptionService.deactivateSubscription(subscription, DeactivationReason.STILL_BIRTH);
 //            }
-            mother.setAshaId(ashaId);
+            if(ashaId==null || ashaId.isEmpty()){
+                mother.setAshaId(null);
+            }
+            else mother.setAshaId(ashaId);
 
             if ((death != null) && death) {
                 subscriptionService.deactivateSubscription(subscription, DeactivationReason.MATERNAL_DEATH);
@@ -364,8 +367,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     state = (State) locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID);
                 }
                 frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(ashaId , state );
+                if(frontLineWorker!=null && (frontLineWorker.getDesignation()==null || !frontLineWorker.getDesignation().equals("ASHA"))){
+                    frontLineWorker = null;
+                }
                 if(frontLineWorker==null){
-                    LOGGER.info("No Asha present with mctsFlwID {} and state {} " , ashaId , state );
+                    LOGGER.info("No Asha present with mctsFlwID {} and state {} with designation ASHA " , ashaId , state );
                 }
             }
             mother.setFrontLineWorker(frontLineWorker);
@@ -519,9 +525,9 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
         child.setDateOfBirth(dob);
         child.setUpdatedDateNic(lastUpdateDateNic);
-        if (child.getId() != null) {
-            mctsChildDataService.update(child);
-        }
+//        if (child.getId() != null) {
+//            mctsChildDataService.update(child);
+//        }
 
         List<DeactivatedBeneficiary> deactivatedUsers = null;
 
@@ -553,7 +559,10 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 }
             }
             child.setRegistrationDate(regDate);
-            child.setAshaId(ashaId);
+            if(ashaId==null || ashaId.isEmpty()){
+                child.setAshaId(null);
+            }
+            else child.setAshaId(ashaId);
             if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
                 return subscriberService.updateChildSubscriber(msisdn, child, dob, record, action);
             } else {
@@ -576,8 +585,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                             state = (State) locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID);
                         }
                         frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(ashaId , state );
+                        if(frontLineWorker!=null && (frontLineWorker.getDesignation()==null || !frontLineWorker.getDesignation().equals("ASHA"))){
+                            frontLineWorker = null;
+                        }
                         if(frontLineWorker==null){
-                            LOGGER.debug("No Asha present with mctsFlwID {} and state {} " , ashaId , state );
+                            LOGGER.debug("No Asha present with mctsFlwID {} and state {} with designation ASHA " , ashaId , state );
                         }
                     }
 
