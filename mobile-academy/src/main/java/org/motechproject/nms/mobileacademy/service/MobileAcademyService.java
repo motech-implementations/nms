@@ -1,7 +1,10 @@
 package org.motechproject.nms.mobileacademy.service;
 
+import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.dto.MaCourse;
+
+import java.util.Map;
 
 /**
  * Mobile academy service interface to perform crud operations on course and bookmarks
@@ -48,6 +51,10 @@ public interface MobileAcademyService {
      */
     void setBookmark(MaBookmark bookmark);
 
+
+    void setMA2Bookmark(MaBookmark bookmark);
+
+    void processMA2Bookmark(FrontLineWorker frontLineWorker , Map<String, Integer> scoresByChapter );
     /**
      * Retrigger the sms notification for course completion for user
      * @param flwId

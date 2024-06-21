@@ -72,6 +72,10 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
 
     private static final int PASS_SCORE = 22;
 
+    private static final int MA2_PASS_SCORE = 44; //60% of max score - 72
+
+    private static final int MA2_SCOREMAP_SIZE = 75; //72 chapters and 3 feedback
+
     private static final int MILLIS_PER_SEC = 1000;
 
     /**
@@ -267,6 +271,56 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     }
 
     @Override
+    public void setMA2Bookmark(MaBookmark saveBookmark) {
+
+        if (saveBookmark == null) {
+            LOGGER.error("Bookmark cannot be null, check request");
+            throw new IllegalArgumentException("Invalid bookmark, cannot be null");
+        }
+
+        String flwId = saveBookmark.getFlwId().toString();
+        Bookmark existingBookmark = bookmarkService.getLatestBookmarkByUserId(flwId);
+        FrontLineWorker flw = frontLineWorkerService.getById(saveBookmark.getFlwId());
+        String callingNumber = flw.getContactNumber().toString();
+
+        // write a new activity record if existing bookmark is null or
+        // existing bookmark has no progress from earlier reset
+        if (existingBookmark == null ||
+                (existingBookmark.getProgress() != null && existingBookmark.getProgress().isEmpty())) {
+            activityService.createActivity(
+                    new ActivityRecord(callingNumber, null, null, null, DateTime.now(), null, ActivityState.STARTED));
+        }
+
+        if (existingBookmark == null) {
+            // if no bookmarks exist for user
+            LOGGER.info("No bookmarks found for user " + LogHelper.obscure(saveBookmark.getFlwId()));
+            bookmarkService.createBookmark(setBookmarkProperties(saveBookmark, new Bookmark()));
+        } else {
+
+            // update the first bookmark
+            LOGGER.info("Updating bookmark for user");
+            bookmarkService.updateBookmark(setBookmarkProperties(saveBookmark, existingBookmark));
+        }
+
+        if (saveBookmark.getBookmark() != null
+                && saveBookmark.getBookmark().equals(FINAL_BOOKMARK)
+                && saveBookmark.getScoresByChapter() != null
+                && saveBookmark.getScoresByChapter().size() == MA2_SCOREMAP_SIZE) {
+
+            LOGGER.debug("Found last bookmark and 72 + 3 scores. Starting evaluation & notification");
+            // Create an activity record here since pass/fail counts as 1 try
+            activityService.createActivity(
+                    new ActivityRecord(callingNumber, null, null, null, null, DateTime.now(), ActivityState.COMPLETED));
+            evaluateMA2CourseCompletion(saveBookmark.getFlwId(), saveBookmark.getScoresByChapter());
+        }
+    }
+
+    @Override
+    public void processMA2Bookmark(FrontLineWorker frontLineWorker, Map<String, Integer> scoresByChapter){
+
+    }
+
+    @Override
     public void triggerCompletionNotification(final Long flwId) {
 
         List<CourseCompletionRecord> ccrs = courseCompletionRecordDataService.findByFlwId(flwId);
@@ -382,6 +436,25 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
         }
     }
 
+    private void evaluateMA2CourseCompletion(Long flwId, Map<String, Integer> scores) {
+
+        int totalScore = getMA2TotalScore(scores);
+        CourseCompletionRecord ccr = new CourseCompletionRecord(flwId, totalScore, scores.toString());
+        courseCompletionRecordDataService.create(ccr);
+
+        if (totalScore < MA2_PASS_SCORE) {
+            LOGGER.debug("User with flwId: " + LogHelper.obscure(flwId) + " failed with score: " + totalScore);
+            ccr.setPassed(false);
+            courseCompletionRecordDataService.update(ccr);
+            return;
+        } else {
+            // we updated the completion record. Start event message to trigger notification workflow
+            ccr.setPassed(true);
+            courseCompletionRecordDataService.update(ccr);
+            triggerCompletionNotification(flwId);
+        }
+    }
+
     /**
      * Get total scores from all chapters
      * @param scoresByChapter scores by chapter
@@ -399,6 +472,21 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
             totalScore += scoresByChapter.get(String.valueOf(chapterCount));
         }
 
+        return totalScore;
+    }
+
+    private static int getMA2TotalScore(Map<String, Integer> scoresByChapter) {
+
+        if (scoresByChapter == null) {
+            return 0;
+        }
+
+        int totalScore = 0;
+        for (String key : scoresByChapter.keySet()) {
+            if(!key.contains("FeedBack")){
+                totalScore += scoresByChapter.get(key);
+            }
+        }
         return totalScore;
     }
 

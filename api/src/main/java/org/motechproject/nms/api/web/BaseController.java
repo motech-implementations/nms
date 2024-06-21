@@ -59,6 +59,8 @@ public class BaseController {
     public static final int MAX_LENGTH_255 = 255;
     public static final int MA_MIN_SCORE = 0;
     public static final int MA_MAX_SCORE = 4;
+    public static final int MA2_MIN_SCORE = 0;
+    public static final int MA2_MAX_SCORE = 1;
     public static final String CALLING_NUMBER = "callingNumber";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseController.class);
@@ -334,6 +336,67 @@ public class BaseController {
         }
         return true;
     }
+
+
+    protected  boolean validateMA2Scores(Map<String, Integer> scores, String bookmark) {
+        if (scores != null) {
+            for (Integer currentScore : scores.values()) {
+                if (currentScore < MA2_MIN_SCORE || currentScore > MA2_MAX_SCORE) {
+                    throw new IllegalArgumentException(String.format(INVALID, "scoresByChapter"));
+                }
+            }
+            for (String key : scores.keySet()){
+                if(bookmark!= null && !bookmark.isEmpty()) {
+                    if(key.equals("0") && !bookmark.startsWith("Module0")) {
+                        throw new IllegalArgumentException(String.format(INVALID, "scoresByChapter"));
+                    }
+                }
+            }
+
+            if(bookmark.contains("StartMenu") && (bookmark.contains("01") && scores.size()!=0) ||
+                    (bookmark.contains("02") && scores.size()!=25) ||
+                    (bookmark.contains("03") && scores.size()!=50 ) ){
+                LOGGER.debug("Size of score map is mismatching");
+                throw new IllegalArgumentException(String.format(INVALID, "scoresByChapter"));
+            }
+            else if(bookmark.contains("Quiz") && bookmark.length()==15){ //Module02_Quiz24
+                int moduleNo = Integer.parseInt(bookmark.substring(7,8));
+                int chapter = Integer.parseInt(bookmark.substring(13,15));
+                int allowedSize = chapter>12 ? ((moduleNo-1)*25 + chapter-1) : ((moduleNo-1)*25 + chapter);
+                if(scores.size()!=allowedSize){
+                    throw new IllegalArgumentException(String.format(INVALID, "scoresByChapter"));
+                }
+            }
+            else if(bookmark.contains("Transition") && bookmark.length()==28){ //Module02_Lesson24_Transition
+                int moduleNo = Integer.parseInt(bookmark.substring(7,8));
+                int chapter = Integer.parseInt(bookmark.substring(15,17));
+                int allowedSize = chapter>12 ? ((moduleNo-1)*25 + chapter) : ((moduleNo-1)*25 + chapter +1);
+                if(scores.size()!=allowedSize){
+                    throw new IllegalArgumentException(String.format(INVALID, "scoresByChapter"));
+                }
+            }
+            else if(bookmark.contains("Lesson") && bookmark.length()==17){ //Module02_Lesson24
+                int moduleNo = Integer.parseInt(bookmark.substring(7,8));
+                int chapter = Integer.parseInt(bookmark.substring(15,17));
+                int allowedSize = chapter>12 ? ((moduleNo-1)*25 + chapter-1) : ((moduleNo-1)*25 + chapter);
+                if(scores.size()!=allowedSize){
+                    throw new IllegalArgumentException(String.format(INVALID, "scoresByChapter"));
+                }
+            }
+            else if(bookmark.contains("FeedBack") && bookmark.length()==19){ //Module01_Feedback01
+                int moduleNo = Integer.parseInt(bookmark.substring(7,8));
+                int allowedSize = (moduleNo-1)*25 + 12;
+                if(scores.size()!=allowedSize){
+                    throw new IllegalArgumentException(String.format(INVALID, "scoresByChapter"));
+                }
+            }
+            else{
+                throw new IllegalArgumentException(String.format(INVALID, "scoresByChapter"));
+            }
+        }
+        return true;
+    }
+
 
     @ExceptionHandler(NotAuthorizedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)

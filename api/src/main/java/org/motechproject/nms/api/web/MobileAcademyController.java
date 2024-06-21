@@ -27,8 +27,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -41,6 +40,9 @@ public class MobileAcademyController extends BaseController {
     private static final Logger LOGGER = LoggerFactory.getLogger(MobileAcademyController.class);
 
     private static final String SMS_STATUS_SUBJECT = "nms.ma.sms.deliveryStatus";
+
+    // TODO: take this stateIds from properties file
+    public static final Set<Integer> stateIds = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(1, 2, 10, 20)));
 
     /**
      * MA service to handle all business logic
@@ -197,9 +199,14 @@ public class MobileAcademyController extends BaseController {
         }
 
         // validate scores
-        if (validateMAScores(bookmarkRequest.getScoresByChapter(), bookmarkRequest.getBookmark())) {
-            FrontLineWorker flw = frontLineWorkerService.getByContactNumber(bookmarkRequest.getCallingNumber());
-            Long flwId = flw.getId();
+        FrontLineWorker flw = frontLineWorkerService.getByContactNumber(bookmarkRequest.getCallingNumber());
+        Long flwId = flw.getId();
+        if(stateIds.contains(flw.getState()) && validateMA2Scores(bookmarkRequest.getScoresByChapter(), bookmarkRequest.getBookmark())){
+            MaBookmark bookmark = MobileAcademyConverter.convertSaveBookmarkRequest(bookmarkRequest, flwId);
+            mobileAcademyService.setMA2Bookmark(bookmark);
+            mobileAcademyService.processMA2Bookmark(flw , bookmark.getScoresByChapter());
+        }
+        else if (validateMAScores(bookmarkRequest.getScoresByChapter(), bookmarkRequest.getBookmark())) {
             MaBookmark bookmark = MobileAcademyConverter.convertSaveBookmarkRequest(bookmarkRequest, flwId);
             mobileAcademyService.setBookmark(bookmark);
         }
