@@ -1,5 +1,6 @@
 package org.motechproject.nms.mobileacademy.service.impl;
 
+import com.fasterxml.jackson.databind.Module;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.json.JSONObject;
@@ -19,12 +20,14 @@ import org.motechproject.mtraining.service.BookmarkService;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
 import org.motechproject.nms.mobileacademy.domain.CourseCompletionRecord;
+import org.motechproject.nms.mobileacademy.domain.FlwModule;
 import org.motechproject.nms.mobileacademy.domain.NmsCourse;
 import org.motechproject.nms.mobileacademy.domain.MtrainingModuleActivityRecordAudit;
 import org.motechproject.nms.mobileacademy.dto.MaBookmark;
 import org.motechproject.nms.mobileacademy.dto.MaCourse;
 import org.motechproject.nms.mobileacademy.exception.CourseNotCompletedException;
 import org.motechproject.nms.mobileacademy.repository.CourseCompletionRecordDataService;
+import org.motechproject.nms.mobileacademy.repository.FlwModuleDataService;
 import org.motechproject.nms.mobileacademy.repository.NmsCourseDataService;
 import org.motechproject.nms.mobileacademy.repository.MtrainingModuleActivityRecordAuditDataService;
 import org.motechproject.nms.mobileacademy.service.MobileAcademyService;
@@ -40,6 +43,7 @@ import org.springframework.transaction.support.TransactionSynchronizationAdapter
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -120,6 +124,11 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
      * Used for alerting
      */
     private AlertService alertService;
+
+    /*
+    * used for creating and retrieving data
+    */
+    private FlwModuleDataService flwModuleDataService;
 
     private MtrainingModuleActivityRecordAuditDataService mtrainingModuleActivityRecordAuditDataService;
 
@@ -611,4 +620,52 @@ public class MobileAcademyServiceImpl implements MobileAcademyService {
     public void setBookmarkService(BookmarkService bookmarkService) {
         this.bookmarkService = bookmarkService;
     }
+
+
+    @Override
+    public void createModule(HashMap<String, Integer> scores, Long externalId){
+
+        List<Module> modules = flwModuleDataService.getModulesByexternalId(externalId);
+
+        int entryCount = 1;
+
+        int moduleNumber = 1;
+
+        FlwModule module = new FlwModule();
+        module.setExternalId(externalId);
+
+        for (Map.Entry<String, Integer> score : scores.entrySet()) {
+            try {
+                String key = score.getKey();
+                Integer value = score.getValue();
+
+                if (key.contains("Feedback")) {
+                    module.setFeedback(value);
+                } else {
+                    String fieldName = key.substring(9).toLowerCase();
+                    Field field = module.getClass().getDeclaredField(fieldName);
+                    field.setAccessible(true);
+                    field.set(module, value);
+                }
+
+                entryCount++;
+
+                if (entryCount == 25) {
+                    if (moduleNumber > modules.size() && module.getFeedback() != null) {
+                        flwModuleDataService.createModule(module);
+                    }
+
+                    // Reset for the next module
+                    entryCount = 1;
+                    moduleNumber++;
+                    module = new FlwModule();
+                    module.setExternalId(externalId);
+                }
+
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                e.getLocalizedMessage();
+            }
+        }
+    }
+
 }

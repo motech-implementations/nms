@@ -6,6 +6,7 @@ import org.motechproject.nms.mobileacademy.dto.MaCourse;
 
 import java.util.Map;
 
+import java.util.HashMap;
 /**
  * Mobile academy service interface to perform crud operations on course and bookmarks
  * This also lets you manually (re)trigger notifications for course completion
@@ -77,4 +78,5 @@ public interface MobileAcademyService {
      */
     void updateMsisdn(Long id, Long oldCallingNumber, Long newCallingNumber);
 
+    void createModule(HashMap<String, Integer> scores, Long flwId);
 }
