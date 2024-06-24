@@ -301,8 +301,8 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                 if (healthFacility != null && healthFacility.getId() != null) {
                     beneficiary.setHealthFacility(healthFacility);
                 } else {
-                    /*beneficiary.setHealthFacility(null);
-                    beneficiary.setHealthSubFacility(null);
+                    beneficiary.setHealthFacility(null);
+                    /*beneficiary.setHealthSubFacility(null);
                     return;*/
                 }
                 HealthSubFacility healthSubFacility = locationFinder.getHealthSubFacilityHashMap().get(mapMainKey + "_" + Long.parseLong(healthSubFacilityCode));
