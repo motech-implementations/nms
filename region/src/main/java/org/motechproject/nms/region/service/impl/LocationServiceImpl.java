@@ -176,107 +176,129 @@ public class LocationServiceImpl implements LocationService {
         locations.put(DISTRICT_ID, district);
 
 
+
+
+
         // set and/or create taluka
-        if (!isValidID(map, TALUKA_ID)) {
-            return locations;
-        }
-        Taluka taluka = talukaService.findByDistrictAndCode(district, (String) map.get(TALUKA_ID));
-        if (taluka == null && createIfNotExists) {
-            taluka = new Taluka();
-            taluka.setCode((String) map.get(TALUKA_ID));
-            taluka.setName((String) map.get(TALUKA_NAME));
-            taluka.setDistrict(district);
-            district.getTalukas().add(taluka);
-            LOGGER.debug(String.format("Created {} in {} with id {}", taluka, district, taluka.getId()));
-        }
-        if (taluka!=null) {
-            locations.put(TALUKA_ID, taluka);
-        }
+//        if (!isValidID(map, TALUKA_ID)) {
+//            return locations;
+//        }
+//        Taluka taluka = talukaService.findByDistrictAndCode(district, (String) map.get(TALUKA_ID));
+//        if (taluka == null && createIfNotExists) {
+//            taluka = new Taluka();
+//            taluka.setCode((String) map.get(TALUKA_ID));
+//            taluka.setName((String) map.get(TALUKA_NAME));
+//            taluka.setDistrict(district);
+//            district.getTalukas().add(taluka);
+//            LOGGER.debug(String.format("Created {} in {} with id {}", taluka, district, taluka.getId()));
+//        }
+//        if (taluka!=null) {
+//            locations.put(TALUKA_ID, taluka);
+//        }
+//
+//
+//        // set and/or create village
+//        Long svid = map.get(NON_CENSUS_VILLAGE) == null ? 0 : (Long) map.get(NON_CENSUS_VILLAGE);
+//        Long vcode = map.get(VILLAGE_ID) == null ? 0 : (Long) map.get(VILLAGE_ID);
+//        Village village = new Village();
+//        if (vcode != 0 || svid != 0) {
+//            village = villageService.findByTalukaAndVcodeAndSvid(taluka, vcode, svid);
+//            if (village == null && createIfNotExists) {
+//                village = new Village();
+//                village.setSvid(svid);
+//                village.setVcode(vcode);
+//                village.setTaluka(taluka);
+//                village.setName((String) map.get(VILLAGE_NAME));
+//                taluka.getVillages().add(village);
+//                LOGGER.debug(String.format("Created %s in %s with id %d", village, taluka, village.getId()));
+//            }
+//            if (village!=null) {
+//                locations.put(VILLAGE_ID + NON_CENSUS_VILLAGE, village);
+//            }
+//        }
 
-
-        // set and/or create village
-        Long svid = map.get(NON_CENSUS_VILLAGE) == null ? 0 : (Long) map.get(NON_CENSUS_VILLAGE);
-        Long vcode = map.get(VILLAGE_ID) == null ? 0 : (Long) map.get(VILLAGE_ID);
-        Village village = new Village();
-        if (vcode != 0 || svid != 0) {
-            village = villageService.findByTalukaAndVcodeAndSvid(taluka, vcode, svid);
-            if (village == null && createIfNotExists) {
-                village = new Village();
-                village.setSvid(svid);
-                village.setVcode(vcode);
-                village.setTaluka(taluka);
-                village.setName((String) map.get(VILLAGE_NAME));
-                taluka.getVillages().add(village);
-                LOGGER.debug(String.format("Created %s in %s with id %d", village, taluka, village.getId()));
+        if (isValidID(map, TALUKA_ID)) {
+            Taluka taluka = talukaService.findByDistrictAndCode(district, (String) map.get(TALUKA_ID));
+            if (taluka == null && createIfNotExists) {
+                taluka = new Taluka();
+                taluka.setCode((String) map.get(TALUKA_ID));
+                taluka.setName((String) map.get(TALUKA_NAME));
+                taluka.setDistrict(district);
+                district.getTalukas().add(taluka);
+                LOGGER.debug(String.format("Created %s in %s with id %d", taluka, district, taluka.getId()));
             }
-            if (village!=null) {
-                locations.put(VILLAGE_ID + NON_CENSUS_VILLAGE, village);
+            if (taluka != null) {
+                locations.put(TALUKA_ID, taluka);
+
+                // set and/or create village
+                Long svid = map.get(NON_CENSUS_VILLAGE) == null ? 0 : (Long) map.get(NON_CENSUS_VILLAGE);
+                Long vcode = map.get(VILLAGE_ID) == null ? 0 : (Long) map.get(VILLAGE_ID);
+                if (vcode != 0 || svid != 0) {
+                    Village village = villageService.findByTalukaAndVcodeAndSvid(taluka, vcode, svid);
+                    if (village == null && createIfNotExists) {
+                        village = new Village();
+                        village.setSvid(svid);
+                        village.setVcode(vcode);
+                        village.setTaluka(taluka);
+                        village.setName((String) map.get(VILLAGE_NAME));
+                        taluka.getVillages().add(village);
+                        LOGGER.debug(String.format("Created %s in %s with id %d", village, taluka, village.getId()));
+                    }
+                    if (village != null) {
+                        locations.put(VILLAGE_ID + NON_CENSUS_VILLAGE, village);
+                    }
+                }
             }
         }
 
 
         // set and/or create health block
-        if (!isValidID(map, HEALTHBLOCK_ID)) {
-            return locations;
-        }
-        HealthBlock healthBlock = healthBlockService.findByDistrictAndCode(district, (Long) map.get(HEALTHBLOCK_ID));
-        if (healthBlock == null && createIfNotExists) {
-            healthBlock = new HealthBlock();
-            //TODO HARITHA removing talukas commenting 2 lines
-            healthBlock.setTalukaIdOID(taluka.getId());
-            //healthBlock.addTaluka(taluka);
-            healthBlock.setDistrict(district);
-            healthBlock.setCode((Long) map.get(HEALTHBLOCK_ID));
-            healthBlock.setName((String) map.get(HEALTHBLOCK_NAME));
-            //taluka.addHealthBlock(healthBlock);
-            district.getHealthBlocks().add(healthBlock);
-            LOGGER.debug(String.format("Created %s in %s with id %d", healthBlock, taluka, healthBlock.getId()));
-        }
-        if (healthBlock==null) {
-            return locations;
-        }
-        locations.put(HEALTHBLOCK_ID, healthBlock);
+        if (isValidID(map, HEALTHBLOCK_ID)) {
+            HealthBlock healthBlock = healthBlockService.findByDistrictAndCode(district, (Long) map.get(HEALTHBLOCK_ID));
+            if (healthBlock == null && createIfNotExists) {
+                healthBlock = new HealthBlock();
+                healthBlock.setDistrict(district);
+                healthBlock.setCode((Long) map.get(HEALTHBLOCK_ID));
+                healthBlock.setName((String) map.get(HEALTHBLOCK_NAME));
+                district.getHealthBlocks().add(healthBlock);
+                LOGGER.debug(String.format("Created %s in %s with id %d", healthBlock, district, healthBlock.getId()));
+            }
+            if (healthBlock != null) {
+                locations.put(HEALTHBLOCK_ID, healthBlock);
 
+                // set and/or create health facility
+                if (isValidID(map, PHC_ID)) {
+                    HealthFacility healthFacility = healthFacilityService.findByHealthBlockAndCode(healthBlock, (Long) map.get(PHC_ID));
+                    if (healthFacility == null && createIfNotExists) {
+                        healthFacility = new HealthFacility();
+                        healthFacility.setHealthBlock(healthBlock);
+                        healthFacility.setCode((Long) map.get(PHC_ID));
+                        healthFacility.setName((String) map.get(PHC_NAME));
+                        healthBlock.getHealthFacilities().add(healthFacility);
+                        LOGGER.debug(String.format("Created %s in %s with id %d", healthFacility, healthBlock, healthFacility.getId()));
+                    }
+                    if (healthFacility != null) {
+                        locations.put(PHC_ID, healthFacility);
 
-        // set and/or create health facility
-        if (!isValidID(map, PHC_ID)) {
-            return locations;
+                        // set and/or create health sub-facility
+                        if (isValidID(map, SUBCENTRE_ID)) {
+                            HealthSubFacility healthSubFacility = healthSubFacilityService.findByHealthFacilityAndCode(healthFacility, (Long) map.get(SUBCENTRE_ID));
+                            if (healthSubFacility == null && createIfNotExists) {
+                                healthSubFacility = new HealthSubFacility();
+                                healthSubFacility.setHealthFacility(healthFacility);
+                                healthSubFacility.setCode((Long) map.get(SUBCENTRE_ID));
+                                healthSubFacility.setName((String) map.get(SUBCENTRE_NAME));
+                                healthFacility.getHealthSubFacilities().add(healthSubFacility);
+                                LOGGER.debug(String.format("Created %s in %s with id %d", healthSubFacility, healthFacility, healthSubFacility.getId()));
+                            }
+                            if (healthSubFacility != null) {
+                                locations.put(SUBCENTRE_ID, healthSubFacility);
+                            }
+                        }
+                    }
+                }
+            }
         }
-        HealthFacility healthFacility = healthFacilityService.findByHealthBlockAndCode(healthBlock, (Long) map.get(PHC_ID));
-        if (healthFacility == null && createIfNotExists) {
-            healthFacility = new HealthFacility();
-            healthFacility.setHealthBlock(healthBlock);
-            healthFacility.setCode((Long) map.get(PHC_ID));
-            healthFacility.setName((String) map.get(PHC_NAME));
-            healthBlock.getHealthFacilities().add(healthFacility);
-            LOGGER.debug(String.format("Created %s in %s with id %d", healthFacility, healthBlock, healthFacility.getId()));
-        }
-        if (healthFacility==null) {
-            return locations;
-        }
-        locations.put(PHC_ID, healthFacility);
-
-
-        // set and/or create health sub-facility
-        if (!isValidID(map, SUBCENTRE_ID)) {
-            return locations;
-        }
-        HealthSubFacility healthSubFacility = healthSubFacilityService.findByHealthFacilityAndCode(healthFacility, (Long) map.get(SUBCENTRE_ID));
-        if (healthSubFacility == null && createIfNotExists) {
-            //TODO HARITHA commented 2 lines m-n taluka hb
-            healthSubFacility = new HealthSubFacility();
-            //healthSubFacility.addVillage(village);
-            healthSubFacility.setHealthFacility(healthFacility);
-            healthSubFacility.setCode((Long) map.get(SUBCENTRE_ID));
-            healthSubFacility.setName((String) map.get(SUBCENTRE_NAME));
-            healthFacility.getHealthSubFacilities().add(healthSubFacility);
-            //village.addHealthSubFacility(healthSubFacility);
-            LOGGER.debug(String.format("Created %s in %s with id %d", healthSubFacility, healthFacility, healthSubFacility.getId()));
-        }
-        if (healthSubFacility==null) {
-            return locations;
-        }
-        locations.put(SUBCENTRE_ID, healthSubFacility);
 
         return locations;
     }
