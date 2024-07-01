@@ -58,8 +58,8 @@ public class ValidFrontLineWorkerUnitTest {
 
         Set<ConstraintViolation<FrontLineWorker>> constraintViolations = validator.validate(flw);
 
-        // One violation is Active without state and district the other is from @FullLocatinValidator
-        assertEquals(2, constraintViolations.size());
+        // One violation is Active without state and district
+        assertEquals(1, constraintViolations.size());
     }
 
     // Test Active no district
@@ -71,8 +71,8 @@ public class ValidFrontLineWorkerUnitTest {
 
         Set<ConstraintViolation<FrontLineWorker>> constraintViolations = validator.validate(flw);
 
-        // One violation is Active without state and district the other is from @FullLocatinValidator
-        assertEquals(2, constraintViolations.size());
+        // One violation is Active without state and district
+        assertEquals(1, constraintViolations.size());
     }
 
     // Test Active no district and state

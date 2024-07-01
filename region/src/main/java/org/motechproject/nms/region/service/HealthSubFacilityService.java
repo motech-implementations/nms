@@ -7,6 +7,7 @@ import java.util.Map;
 
 public interface HealthSubFacilityService {
     HealthSubFacility findByHealthFacilityAndCode(HealthFacility healthFacility, Long code);
+    HealthSubFacility findByStateAndCode(State state, Long code);
     HealthSubFacility create(HealthSubFacility healthSubFacility);
     HealthSubFacility update(HealthSubFacility healthSubFacility);
 

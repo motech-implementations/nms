@@ -9,18 +9,7 @@ import org.motechproject.nms.csv.utils.GetLong;
 import org.motechproject.nms.csv.utils.GetString;
 import org.motechproject.nms.flw.domain.FrontLineWorker;
 import org.motechproject.nms.flw.service.FrontLineWorkerService;
-import org.motechproject.nms.kilkari.domain.DeactivatedBeneficiary;
-import org.motechproject.nms.kilkari.domain.DeactivationReason;
-import org.motechproject.nms.kilkari.domain.MctsChild;
-import org.motechproject.nms.kilkari.domain.MctsMother;
-import org.motechproject.nms.kilkari.domain.Subscription;
-import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
-import org.motechproject.nms.kilkari.domain.Subscriber;
-import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
-import org.motechproject.nms.kilkari.domain.SubscriptionError;
-import org.motechproject.nms.kilkari.domain.SubscriptionPack;
-import org.motechproject.nms.kilkari.domain.SubscriptionRejectionReason;
-import org.motechproject.nms.kilkari.domain.SubscriptionStatus;
+import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.exception.MultipleSubscriberException;
 import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
@@ -35,9 +24,7 @@ import org.motechproject.nms.kilkari.service.DeactivatedBeneficiaryService;
 import org.motechproject.nms.kilkari.utils.FlwConstants;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.kilkari.utils.MctsBeneficiaryUtils;
-import org.motechproject.nms.kilkari.domain.RejectionReasons;
-import org.motechproject.nms.region.domain.LocationFinder;
-import org.motechproject.nms.region.domain.State;
+import org.motechproject.nms.region.domain.*;
 import org.motechproject.nms.region.exception.InvalidLocationException;
 import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 import org.motechproject.nms.rejectionhandler.domain.MotherImportRejection;
@@ -56,11 +43,7 @@ import org.supercsv.cellprocessor.ift.CellProcessor;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionMcts;
@@ -209,7 +192,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         if (mother == null) {
             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.DATA_INTEGRITY_ERROR, false);
         }
-        mother.setRegistrationDate(motherRegistrationDate);
+//        mother.setRegistrationDate(motherRegistrationDate);
 
         boolean isInvalidLMP = !validateReferenceDate(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, importOrigin);
 
@@ -241,7 +224,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
 
         try {
-             mctsBeneficiaryValueProcessor.setLocationFieldsCSV(locationFinder, record, mother);
+            mctsBeneficiaryValueProcessor.checkLocationFieldsCSV(locationFinder, record, mother);
         } catch (InvalidLocationException le) {
             LOGGER.error(le.toString());
            return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.INVALID_LOCATION, false);
@@ -324,11 +307,28 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block " + beneficiaryId);
                     return motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.INVALID_CASE_NO.toString(), action);
                 }
+
+                StringBuffer mapKey = new StringBuffer(record.get(KilkariConstants.STATE_ID).toString());
+                String districtCode = record.get(KilkariConstants.DISTRICT_ID).toString();
+                State state = locationFinder.getStateHashMap().get(mapKey.toString());
+                mapKey.append("_");
+                mapKey.append(districtCode);
+                District district = locationFinder.getDistrictHashMap().get(mapKey.toString());
+                LOGGER.debug("district : {}, state : {}", district!=null ? district.getCode() : null, state!=null ? state.getCode() : null);
+                mother.setState(state);
+                mother.setDistrict(district);
                 subscription = subscriberService.updateRchMotherSubscriber(msisdn, mother, lmp, caseNo, deactivate, record, action,name,motherDOB,lastUpdatedDateNic, motherRegistrationDate);
                 if (subscription == null) {
                     LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block " + beneficiaryId);
                     return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED, false);
                 }
+            }
+
+            try {
+                mctsBeneficiaryValueProcessor.setLocationFieldsCSV(locationFinder, record, mother);
+            } catch (InvalidLocationException le) {
+                LOGGER.error(le.toString());
+                return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.INVALID_LOCATION, false);
             }
 
             LOGGER.debug("MotherImportRejection::importMotherRecord Handled Subscriptions   " + beneficiaryId);
@@ -341,7 +341,10 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 //            if ((stillBirth != null) && stillBirth) {
 //                subscriptionService.deactivateSubscription(subscription, DeactivationReason.STILL_BIRTH);
 //            }
-            mother.setAshaId(ashaId);
+            if(ashaId==null || ashaId.isEmpty()){
+                mother.setAshaId(null);
+            }
+            else mother.setAshaId(ashaId);
 
             if ((death != null) && death) {
                 subscriptionService.deactivateSubscription(subscription, DeactivationReason.MATERNAL_DEATH);
@@ -364,11 +367,15 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     state = (State) locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID);
                 }
                 frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(ashaId , state );
+                if(frontLineWorker!=null && (frontLineWorker.getDesignation()==null || !frontLineWorker.getDesignation().equals("ASHA"))){
+                    frontLineWorker = null;
+                }
                 if(frontLineWorker==null){
-                    LOGGER.info("No Asha present with mctsFlwID {} and state {} " , ashaId , state );
+                    LOGGER.info("No Asha present with mctsFlwID {} and state {} with designation ASHA " , ashaId , state );
                 }
             }
             mother.setFrontLineWorker(frontLineWorker);
+            mother.setRegistrationDate(motherRegistrationDate);
 
             if(mother.getId() != null){
                 mctsMotherDataService.update(mother);
@@ -518,33 +525,11 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
         child.setDateOfBirth(dob);
         child.setUpdatedDateNic(lastUpdateDateNic);
-        if (child.getId() != null) {
-            mctsChildDataService.update(child);
-        }
+//        if (child.getId() != null) {
+//            mctsChildDataService.update(child);
+//        }
 
         List<DeactivatedBeneficiary> deactivatedUsers = null;
-
-        child.setAshaId(ashaId);
-
-        FrontLineWorker frontLineWorker;
-        if(ashaId==null || ashaId.isEmpty() || ashaId.trim().isEmpty() || ashaId=="0"){
-            LOGGER.debug("Asha id is null ");
-            frontLineWorker = null;
-        }
-        else{
-            State state;
-            if(child.getState()!=null){
-                state = child.getState();
-            }
-            else{
-                state = (State) locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID);
-            }
-            frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(ashaId , state );
-            if(frontLineWorker==null){
-                LOGGER.debug("No Asha present with mctsFlwID {} and state {} " , ashaId , state );
-            }
-        }
-        child.setFrontLineWorker(frontLineWorker);
 
         synchronized(this) {
             childRecords.addAndGet(1);
@@ -574,11 +559,52 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 }
             }
             child.setRegistrationDate(regDate);
+            if(ashaId==null || ashaId.isEmpty()){
+                child.setAshaId(null);
+            }
+            else child.setAshaId(ashaId);
             if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
                 return subscriberService.updateChildSubscriber(msisdn, child, dob, record, action);
             } else {
-                return subscriberService.updateRchChildSubscriber(msisdn, child, dob, record, action);
+                ChildImportRejection childImportRejection = subscriberService.updateRchChildSubscriber(msisdn, child, dob, record, action);
 
+                if(childImportRejection == null){
+                    childRejectionRch(convertMapToRchChild(record), true, null, action);
+
+                    FrontLineWorker frontLineWorker;
+                    if(ashaId==null || ashaId.isEmpty() || ashaId.trim().isEmpty() || ashaId=="0"){
+                        LOGGER.debug("Asha id is null ");
+                        frontLineWorker = null;
+                    }
+                    else{
+                        State state;
+                        if(child.getState()!=null){
+                            state = child.getState();
+                        }
+                        else{
+                            state = (State) locationFinder.getStateHashMap().get(KilkariConstants.STATE_ID);
+                        }
+                        frontLineWorker = frontLineWorkerService.getByMctsFlwIdAndState(ashaId , state );
+                        if(frontLineWorker!=null && (frontLineWorker.getDesignation()==null || !frontLineWorker.getDesignation().equals("ASHA"))){
+                            frontLineWorker = null;
+                        }
+                        if(frontLineWorker==null){
+                            LOGGER.debug("No Asha present with mctsFlwID {} and state {} with designation ASHA " , ashaId , state );
+                        }
+                    }
+
+                    if(child.getId()!= null  && !(frontLineWorker==null && child.getFrontLineWorker()==null) && (
+                            (frontLineWorker==null || child.getFrontLineWorker()==null)  ||
+                            !Objects.equals(frontLineWorker.getId(), child.getFrontLineWorker().getId()) )){
+                        child.setFrontLineWorker(frontLineWorker);
+                    }
+
+                    if (child.getId() != null) {
+                        mctsChildDataService.update(child);
+                    }
+                    return null;
+                }
+                else return childImportRejection;
             }
         }
     }

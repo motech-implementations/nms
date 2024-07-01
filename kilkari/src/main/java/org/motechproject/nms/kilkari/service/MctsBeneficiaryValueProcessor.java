@@ -38,4 +38,6 @@ public interface MctsBeneficiaryValueProcessor {
     MctsChild getOrCreateRchChildInstance(String childId, String mctsId);
 
     void setLocationFieldsCSV(LocationFinder locationFinder, Map<String, Object> record, MctsBeneficiary beneficiary) throws InvalidLocationException;
+
+    void checkLocationFieldsCSV(LocationFinder locationFinder, Map<String, Object> record, MctsBeneficiary beneficiary) throws InvalidLocationException;
 }

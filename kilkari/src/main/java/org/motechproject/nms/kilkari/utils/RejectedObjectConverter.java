@@ -247,7 +247,7 @@ public final class RejectedObjectConverter {
         motherImportRejection.setCaseNo(record.getCaseNo());
         motherImportRejection.setName(record.getName());
         motherImportRejection.setMobileNo(record.getMobileNo());
-        motherImportRejection.setRchAshaId(record.getRchAshaId());
+        motherImportRejection.setRchAshaId((record.getRchAshaId()==null || record.getRchAshaId().trim().isEmpty() || record.getRchAshaId().isEmpty()) ? null : record.getRchAshaId());
         motherImportRejection.setRegistrationDate(record.getRegistrationDate());
         motherImportRejection.setLmpDate(record.getLmpDate());
         motherImportRejection.setBirthDate(record.getBirthDate());
@@ -494,7 +494,7 @@ public final class RejectedObjectConverter {
         rchMotherRecord.setName(record.get(KilkariConstants.BENEFICIARY_NAME) == null ? null : record.get(KilkariConstants.BENEFICIARY_NAME).toString());
         rchMotherRecord.setMobileNo(record.get(KilkariConstants.MOBILE_NO) == null ? null : record.get(KilkariConstants.MOBILE_NO).toString());
         rchMotherRecord.setRegistrationDate(record.get(KilkariConstants.MOTHER_REGISTRATION_DATE) == null ? null : record.get(KilkariConstants.MOTHER_REGISTRATION_DATE).toString());
-        rchMotherRecord.setRchAshaId(record.get(KilkariConstants.KILKARI_ASHA_ID)==null ? null : record.get(KilkariConstants.KILKARI_ASHA_ID).toString());
+        rchMotherRecord.setRchAshaId((record.get(KilkariConstants.KILKARI_ASHA_ID)==null || record.get(KilkariConstants.KILKARI_ASHA_ID).toString().trim().isEmpty() ) ? null : record.get(KilkariConstants.KILKARI_ASHA_ID).toString());
         rchMotherRecord.setLmpDate(record.get(KilkariConstants.LMP) == null ? null : record.get(KilkariConstants.LMP).toString());
         rchMotherRecord.setBirthDate(record.get(KilkariConstants.MOTHER_DOB) == null ? null : record.get(KilkariConstants.MOTHER_DOB).toString());
         rchMotherRecord.setAbortionType(record.get(KilkariConstants.ABORTION_TYPE) == null ? null : record.get(KilkariConstants.ABORTION_TYPE).toString());

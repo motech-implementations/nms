@@ -81,6 +81,34 @@ public class VillageServiceImpl implements VillageService {
     }
 
     @Override
+    public Village findByStateAndVcodeAndSvid(State state, long vcode, long svid) {
+        if (state == null) { return null; }
+
+        SqlQueryExecution<Village> queryExecution = new SqlQueryExecution<Village>() {
+
+            @Override
+            public String getSqlQuery() {
+                return "select * from nms_villages where state_id_OID = ? and vcode = ? and svid = ?";
+            }
+
+            @Override
+            public Village execute(Query query) {
+                query.setClass(Village.class);
+                ForwardQueryResult fqr = (ForwardQueryResult) query.execute(state.getId(), vcode, svid);
+                if (fqr.isEmpty()) {
+                    return null;
+                }
+                if (fqr.size() == 1) {
+                    return (Village) fqr.get(0);
+                }
+                throw new IllegalStateException("More than one row returned!");
+            }
+        };
+
+        return dataService.executeSQLQuery(queryExecution);
+    }
+
+    @Override
     @Transactional
     public Long createUpdateVillages(final List<Map<String, Object>> villages, final Map<String, State> stateHashMap, final Map<String, District> districtHashMap, final Map<String, Taluka> talukaHashMap) {
         Timer queryTimer = new Timer();

@@ -27,6 +27,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
+import static org.motechproject.nms.region.utils.LocationConstants.DISTRICT_ID;
+import static org.motechproject.nms.region.utils.LocationConstants.STATE_ID;
+
 @Service("mctsBeneficiaryValueProcessor")
 public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValueProcessor {
 
@@ -246,19 +249,17 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
     public void setLocationFieldsCSV(LocationFinder locationFinder, Map<String, Object> record, MctsBeneficiary beneficiary) throws InvalidLocationException {
 
         LOGGER.debug("Enter:: setLocationFieldsCSV %s" , beneficiary.getId());
+        String mapMainKey = new String(record.get(STATE_ID).toString());
         StringBuffer mapKey = new StringBuffer(record.get(KilkariConstants.STATE_ID).toString());
         if (isValidID(record, KilkariConstants.STATE_ID) && (locationFinder.getStateHashMap().get(mapKey.toString()) != null)) {
             beneficiary.setState(locationFinder.getStateHashMap().get(mapKey.toString()));
             String districtCode = record.get(KilkariConstants.DISTRICT_ID).toString();
             mapKey.append("_");
             mapKey.append(districtCode);
-
             if (isValidID(record, KilkariConstants.DISTRICT_ID) && (locationFinder.getDistrictHashMap().get(mapKey.toString()) != null)) {
                 beneficiary.setDistrict(locationFinder.getDistrictHashMap().get(mapKey.toString()));
                 String talukaCode = record.get(KilkariConstants.TALUKA_ID) == null ? "0" : record.get(KilkariConstants.TALUKA_ID).toString().trim();
-                mapKey.append("_");
-                mapKey.append(talukaCode);
-                Taluka taluka = locationFinder.getTalukaHashMap().get(mapKey.toString());
+                Taluka taluka = locationFinder.getTalukaHashMap().get(mapMainKey + "_" + talukaCode);
                 LOGGER.debug("taluka code: {}", talukaCode.toString());
                 LOGGER.debug("Taluka: {}", taluka == null ? null : taluka.getId());
                 if (taluka != null && taluka.getId() != null) {
@@ -280,38 +281,31 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
 
                 LOGGER.debug("State: {}, District: {}, Taluka: {}, VilageSvid: {}, VillageCode: {}, HB: {}, HF: {}, HSF: {}", record.get(KilkariConstants.STATE_ID).toString(), districtCode,
                         talukaCode, villageSvid, villageCode, healthBlockCode, healthFacilityCode, healthSubFacilityCode);
-                Village village = locationFinder.getVillageHashMap().get(mapKey.toString() + "_" + Long.parseLong(villageCode) + "_" + Long.parseLong(villageSvid));
+                Village village = locationFinder.getVillageHashMap().get(mapMainKey + "_" + Long.parseLong(villageCode) + "_" + Long.parseLong(villageSvid));
                 if (village != null && village.getId() != null) {
                     beneficiary.setVillage(village);
                 } else {
                     beneficiary.setVillage(null);
                 }
-                mapKey = new StringBuffer(record.get(KilkariConstants.STATE_ID).toString() + "_" + districtCode);
-                mapKey.append("_");
-                mapKey.append(Long.parseLong(healthBlockCode));
-                HealthBlock healthBlock = locationFinder.getHealthBlockHashMap().get(mapKey.toString());
+                HealthBlock healthBlock = locationFinder.getHealthBlockHashMap().get(mapMainKey + "_" + Long.parseLong(healthBlockCode));
                 if (healthBlock != null && healthBlock.getId() != null) {
                     beneficiary.setHealthBlock(healthBlock);
                 } else {
                     beneficiary.setHealthBlock(null);
-                    beneficiary.setHealthFacility(null);
+                    /*beneficiary.setHealthFacility(null);
                     beneficiary.setHealthSubFacility(null);
                     beneficiary.setVillage(null);
-                    return;
+                    return;*/
                 }
-                mapKey.append("_");
-                mapKey.append(Long.parseLong(healthFacilityCode));
-                HealthFacility healthFacility = locationFinder.getHealthFacilityHashMap().get(mapKey.toString());
+                HealthFacility healthFacility = locationFinder.getHealthFacilityHashMap().get(mapMainKey + "_" + Long.parseLong(healthFacilityCode));
                 if (healthFacility != null && healthFacility.getId() != null) {
                     beneficiary.setHealthFacility(healthFacility);
                 } else {
                     beneficiary.setHealthFacility(null);
-                    beneficiary.setHealthSubFacility(null);
-                    return;
+                    /*beneficiary.setHealthSubFacility(null);
+                    return;*/
                 }
-                mapKey.append("_");
-                mapKey.append(Long.parseLong(healthSubFacilityCode));
-                HealthSubFacility healthSubFacility = locationFinder.getHealthSubFacilityHashMap().get(mapKey.toString());
+                HealthSubFacility healthSubFacility = locationFinder.getHealthSubFacilityHashMap().get(mapMainKey + "_" + Long.parseLong(healthSubFacilityCode));
                 if (healthSubFacility != null && healthSubFacility.getId() != null) {
                     beneficiary.setHealthSubFacility(healthSubFacility);
                 } else {
@@ -325,6 +319,26 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
             throw new InvalidLocationException(String.format(KilkariConstants.INVALID_LOCATION, KilkariConstants.STATE_ID, record.get(KilkariConstants.STATE_ID)));
         }
         LOGGER.debug("Exit:: setLocationFieldsCSV");
+    }
+
+    @Override
+    public void checkLocationFieldsCSV(LocationFinder locationFinder, Map<String, Object> record, MctsBeneficiary beneficiary) throws InvalidLocationException {
+
+        StringBuffer mapKey = new StringBuffer(record.get(KilkariConstants.STATE_ID).toString());
+        if (isValidID(record, KilkariConstants.STATE_ID) && (locationFinder.getStateHashMap().get(mapKey.toString()) != null)) {
+            String districtCode = record.get(KilkariConstants.DISTRICT_ID).toString();
+            mapKey.append("_");
+            mapKey.append(districtCode);
+
+            if (isValidID(record, KilkariConstants.DISTRICT_ID) && (locationFinder.getDistrictHashMap().get(mapKey.toString()) != null)) {
+                LOGGER.debug("State: {}, District: {}" , record.get(KilkariConstants.STATE_ID).toString(), districtCode);
+            } else {
+                throw new InvalidLocationException(String.format(KilkariConstants.INVALID_LOCATION, KilkariConstants.DISTRICT_ID, record.get(KilkariConstants.DISTRICT_ID)));
+            }
+        } else {
+            throw new InvalidLocationException(String.format(KilkariConstants.INVALID_LOCATION, KilkariConstants.STATE_ID, record.get(KilkariConstants.STATE_ID)));
+        }
+        LOGGER.debug("Exit:: checkLocationFieldsCSV");
     }
 
     private boolean isValidID(final Map<String, Object> map, final String key) {

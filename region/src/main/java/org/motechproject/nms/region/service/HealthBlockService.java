@@ -13,6 +13,8 @@ public interface HealthBlockService {
 
     HealthBlock findByDistrictAndCode(District district, Long code);
 
+    HealthBlock findByStateAndCode(State state, Long code);
+
     HealthBlock create(HealthBlock healthBlock);
     HealthBlock update(HealthBlock healthBlock);
 
