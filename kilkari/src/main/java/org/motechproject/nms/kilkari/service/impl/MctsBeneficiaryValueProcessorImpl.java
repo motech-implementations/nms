@@ -78,6 +78,9 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
                     motherByRchId = new MctsMother(rchId, mctsId);
                     return motherByRchId;
                 } else {
+                    if(motherByMctsId.getRchId() != null && !rchId.equals(motherByMctsId.getRchId())){
+                        return null;
+                    }
                     motherByMctsId.setRchId(rchId);
                     return motherByMctsId;
                 }
