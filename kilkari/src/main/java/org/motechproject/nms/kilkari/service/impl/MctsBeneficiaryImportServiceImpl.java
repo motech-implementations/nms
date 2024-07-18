@@ -231,7 +231,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         }
 
         //validate if it's an updated record compared to one from database
-        if (mother.getUpdatedDateNic() != null && (lastUpdatedDateNic == null || mother.getUpdatedDateNic().isAfter(lastUpdatedDateNic))) {
+        if (mother.getUpdatedDateNic() != null && (lastUpdatedDateNic == null || mother.getUpdatedDateNic().isAfter(lastUpdatedDateNic) || lastUpdatedDateNic.isAfter(LocalDate.now()))) {
            return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
         }
         // Check if existing subscription needs to be deactivated
@@ -508,7 +508,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         //validate if it's an updated record compared to one from database
         LOGGER.debug("child.getUpdatedDateNic() : {}", child.getUpdatedDateNic());
         LOGGER.debug("lastUpdateDateNic: {}", lastUpdateDateNic);
-        if (child.getUpdatedDateNic() != null && (lastUpdateDateNic == null || child.getUpdatedDateNic().isAfter(lastUpdateDateNic))) {
+        if (child.getUpdatedDateNic() != null && (lastUpdateDateNic == null || child.getUpdatedDateNic().isAfter(lastUpdateDateNic) || lastUpdateDateNic.isAfter(LocalDate.now()))) {
             return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.UPDATED_RECORD_ALREADY_EXISTS, false);
         }
 
