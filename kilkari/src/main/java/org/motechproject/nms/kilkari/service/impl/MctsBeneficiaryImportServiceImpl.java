@@ -292,12 +292,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 //validate if an ACTIVE child is already present for the mother. If yes, ignore the update
                 if (childAlreadyPresent(beneficiaryId, importOrigin)) {
                     LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block " + beneficiaryId);
-                    if (mother.getLastMenstrualPeriod() == null) {
-                        mother.setName(name);
-                        mother.setDateOfBirth(motherDOB);
-                        mother.setUpdatedDateNic(lastUpdatedDateNic);
-                        //mctsMotherDataService.update(mother);
-                    }
                     return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ACTIVE_CHILD_PRESENT, false);
                 }
                 subscription = subscriberService.updateMotherSubscriber(msisdn, mother, lmp, record, action,name,motherDOB,lastUpdatedDateNic);
@@ -309,12 +303,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
 
                 if (childAlreadyPresent(beneficiaryId, importOrigin)) {
                     LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block " + beneficiaryId);
-                    if (mother.getLastMenstrualPeriod() == null) {
-                        mother.setName(name);
-                        mother.setDateOfBirth(motherDOB);
-                        mother.setUpdatedDateNic(lastUpdatedDateNic);
-                        //mctsMotherDataService.update(mother);
-                    }
                     return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ACTIVE_CHILD_PRESENT, false);
                 }
 
