@@ -655,6 +655,10 @@ public class SubscriberServiceImpl implements SubscriberService {
 
             if(childUpdate.getMother() != null && childUpdate.getMother().getId() != null &&  getSubscriberListByMother(childUpdate.getMother().getId()) != null){
                 Subscriber motherSubscriberByRchId = getSubscriberListByMother(childUpdate.getMother().getId());
+                Subscription subscription = subscriptionService.getActiveSubscription(motherSubscriberByRchId, pack.getType());
+                if (subscription!=null)
+                    // Mother is already having another active child registered
+                    return childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.ALREADY_SUBSCRIBED.toString(), action);
                 motherSubscriberByRchId.setDateOfBirth(dob);
                 motherSubscriberByRchId.setChild(childUpdate);
                 motherSubscriberByRchId.setModificationDate(DateTime.now());
