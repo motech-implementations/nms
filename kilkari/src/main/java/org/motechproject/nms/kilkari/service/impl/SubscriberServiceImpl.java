@@ -601,6 +601,14 @@ public class SubscriberServiceImpl implements SubscriberService {
             return childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.MOBILE_NUMBER_ALREADY_SUBSCRIBED.toString(), action);
         }
 
+        if(subscriberByRchId==null && childUpdate.getMother() != null && childUpdate.getMother().getId() != null &&  getSubscriberListByMother(childUpdate.getMother().getId()) != null){
+            Subscriber motherSubscriberByRchId = getSubscriberListByMother(childUpdate.getMother().getId());
+            Subscription subscription = subscriptionService.getActiveSubscription(motherSubscriberByRchId, pack.getType());
+            if(motherSubscriberByRchId.getChild()!=null && motherSubscriberByRchId.getChild().getRchId()!=null  && !Objects.equals(motherSubscriberByRchId.getChild().getRchId(), childUpdate.getRchId()) && subscription!=null){
+                return childRejectionRch(convertMapToRchChild(record), false, RejectionReasons.ALREADY_SUBSCRIBED.toString(), action);
+            }
+        }
+
         if (subscriberByRchId != null) { //subscriber exists with the provided RCH id
             if (subscribersByMsisdn.isEmpty()) { //no subscriber with provided msisdn
                 //subscriber's number has changed
@@ -668,6 +676,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 motherSubscriberByRchId.setDateOfBirth(dob);
                 motherSubscriberByRchId.setChild(childUpdate);
                 motherSubscriberByRchId.setModificationDate(DateTime.now());
+                motherSubscriberByRchId.setCallingNumber(msisdn);
                 finalSubscription = updateOrCreateSubscription(motherSubscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
             }
             else {
