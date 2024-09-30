@@ -104,6 +104,8 @@ public interface SubscriptionService {
      */
     void deactivateSubscription(Subscription subscription, DeactivationReason reason);
 
+    void deleteCallRetry(String subscriptionId);
+
     void deleteBlockedMsisdn(Long motherId, Long oldCallingNumber, Long newCallingNumber);
 
     /**

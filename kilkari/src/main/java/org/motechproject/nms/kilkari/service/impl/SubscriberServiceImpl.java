@@ -35,6 +35,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.jdo.Query;
@@ -391,6 +393,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 motherUpdate.setRegistrationDate(motherRegistrationDate);
                 subscriberByRchId.setCaseNo(caseNo);
                 motherUpdate.setMaxCaseNo(caseNo);
+                if(subscription != null){subscriptionService.deleteCallRetry(subscription.getSubscriptionId());}
                 return updateOrCreateSubscription(subscriberByRchId, subscription, lmp, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
             } else {  // we have a subscriber by phone# and also one with the RCH id
                 if (subscriptionService.activeSubscriptionByMsisdnRch(subscribersByMsisdn,msisdn, SubscriptionPackType.PREGNANCY, motherUpdate.getRchId(), null)) {
@@ -401,6 +404,9 @@ public class SubscriberServiceImpl implements SubscriberService {
                     if ((subscriberByRchId.getId().equals(subscriber.getId())) && (subscriberByRchId.getCaseNo() == null || subscriberByRchId.getCaseNo() <= caseNo)) {
                         Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                         motherUpdate.setMaxCaseNo(caseNo);
+                        if ((subscription != null) && !((subscriberByRchId.getLastMenstrualPeriod().getDayOfYear() == lmp.getDayOfYear()) && (subscriberByRchId.getLastMenstrualPeriod().getYear() == lmp.getYear()))) {
+                            subscriptionService.deleteCallRetry(subscription.getSubscriptionId());
+                        }
                         subscriberByRchId.setLastMenstrualPeriod(lmp);
 
                         motherUpdate.setName(name);
@@ -428,6 +434,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     subscriberByRchId.setCaseNo(caseNo);
                     motherUpdate.setMaxCaseNo(caseNo);
                     subscriberByRchId.setModificationDate(DateTime.now());
+                    if(subscription != null){subscriptionService.deleteCallRetry(subscription.getSubscriptionId());}
 
                     return updateOrCreateSubscription(subscriberByRchId, subscription, lmp, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
             }
@@ -621,16 +628,21 @@ public class SubscriberServiceImpl implements SubscriberService {
                 Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                 subscriberByRchId.setDateOfBirth(dob);
                 subscriberByRchId.setModificationDate(DateTime.now());
+                // Delete that record from retry table as beneficiary gets their mobile number update
+                if(subscription != null){subscriptionService.deleteCallRetry(subscription.getSubscriptionId());}
                 finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
             } else {
                 //subscriber found with provided msisdn
                 if(childUpdate.getMother()!=null){
                     Subscriber subscriber = getSubscriberListByMother(childUpdate.getMother().getId());
+                    Subscription subscription = subscriptionService.getActiveSubscription(subscriber, pack.getType());
+                    if ((!Objects.equals(subscriber.getCallingNumber(), msisdn) || subscriber.getDateOfBirth().getDayOfYear() != dob.getDayOfYear()) && subscription!=null){
+                        subscriptionService.deleteCallRetry(subscription.getSubscriptionId());
+                    }
                     subscriber.setCallingNumber(msisdn);
                     subscriber.setDateOfBirth(dob);
                     subscriber.setChild(childUpdate);
                     subscriber.setModificationDate(DateTime.now());
-                    Subscription subscription = subscriptionService.getActiveSubscription(subscriber, pack.getType());
                     finalSubscription = updateOrCreateSubscription(subscriber, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
                 }
                 else {
@@ -640,6 +652,9 @@ public class SubscriberServiceImpl implements SubscriberService {
                             Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                             if (subscriberByRchId.getMother() == null) {
                                 subscriberByRchId.setMother(childUpdate.getMother());
+                            }
+                            if ((subscriberByRchId.getDateOfBirth().getDayOfYear() != dob.getDayOfYear()) && subscription!=null){
+                                subscriptionService.deleteCallRetry(subscription.getSubscriptionId());
                             }
                             subscriberByRchId.setDateOfBirth(dob);
                             subscriberByRchId.setModificationDate(DateTime.now());
@@ -706,10 +721,13 @@ public class SubscriberServiceImpl implements SubscriberService {
                         //update subscriber with child
                         if (childUpdate.getMother().getRchId() != null && subscribersByMsisdn.get(0).getMother().getRchId() != null && childUpdate.getMother().getRchId().equals(subscribersByMsisdn.get(0).getMother().getRchId())) {
                             Subscriber subscriber = subscribersByMsisdn.get(0);
+                            Subscription subscription = subscriptionService.getActiveSubscription(subscriber, pack.getType());
+                            if (subscription != null && !((subscriber.getDateOfBirth().getDayOfYear() == dob.getDayOfYear()) && (subscriber.getDateOfBirth().getYear() == dob.getYear()))){
+                                subscriptionService.deleteCallRetry(subscription.getSubscriptionId());
+                            }
                             subscriber.setDateOfBirth(dob);
                             subscriber.setChild(childUpdate);
                             subscriber.setModificationDate(DateTime.now());
-                            Subscription subscription = subscriptionService.getActiveSubscription(subscriber, pack.getType());
                             finalSubscription = updateOrCreateSubscription(subscriber, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
                         } else {
                             if (subscriptionService.activeSubscriptionByMsisdnRch(subscribersByMsisdn, msisdn, SubscriptionPackType.CHILD, motherRchId, childUpdate.getRchId())) {
