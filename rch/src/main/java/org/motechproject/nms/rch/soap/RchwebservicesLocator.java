@@ -22,7 +22,7 @@ public class RchwebservicesLocator extends org.apache.axis.client.Service implem
     }
 
     // Use to get a proxy class for BasicHttpBinding_Irchwebservices
-    private java.lang.String BasicHttpBinding_Irchwebservices_address = "http://rchrpt.nhm.gov.in/RCH_WS/rchwebservices.svc";
+    private java.lang.String BasicHttpBinding_Irchwebservices_address = "http://rchrpt.mohfw.gov.in/RCH_WS/rchwebservices.svc";
 
     public java.lang.String getBasicHttpBinding_IrchwebservicesAddress() {
         return BasicHttpBinding_Irchwebservices_address;
