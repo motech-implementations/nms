@@ -16,6 +16,9 @@
     <osgi:service ref="subscriptionService"
                   interface="org.motechproject.nms.kilkari.service.SubscriptionService" />
 
+    <osgi:service ref="subscriptionTimeSlotService"
+                  interface="org.motechproject.nms.kilkari.service.SubscriptionTimeSlotService" />
+
     <osgi:service ref="callRetryService"
                   interface="org.motechproject.nms.kilkari.service.CallRetryService" />
 
@@ -81,6 +84,9 @@
 
     <osgi:reference id="WhatsAppOptSMSDataService"
                     interface="org.motechproject.nms.kilkari.repository.WhatsAppOptSMSDataService" />
+
+    <osgi:reference id="SubscriptionTimeSlotDataService"
+                    interface="org.motechproject.nms.kilkari.repository.SubscriptionTimeSlotDataService" />
 
     <osgi:reference id="mctsChildDataService"
                     interface="org.motechproject.nms.kilkari.repository.MctsChildDataService" />

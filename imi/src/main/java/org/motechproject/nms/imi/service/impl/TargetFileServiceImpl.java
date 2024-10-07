@@ -30,6 +30,7 @@ import org.motechproject.nms.kilkari.domain.WhatsAppOptSMS;
 import org.motechproject.nms.kilkari.repository.WhatsAppOptSMSDataService;
 import org.motechproject.nms.kilkari.service.CallRetryService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
+import org.motechproject.nms.kilkari.service.SubscriptionTimeSlotService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.props.domain.RequestId;
@@ -101,6 +102,7 @@ public class TargetFileServiceImpl implements TargetFileService {
     private MotechSchedulerService schedulerService;
     private AlertService alertService;
     private SubscriptionService subscriptionService;
+    private SubscriptionTimeSlotService subscriptionTimeSlotService;
     private CallRetryService callRetryService;
     private FileAuditRecordDataService fileAuditRecordDataService;
     private WhatsAppOptSMSDataService whatsAppOptSMSDataService;
@@ -201,7 +203,8 @@ public class TargetFileServiceImpl implements TargetFileService {
                                  SubscriptionService subscriptionService,
                                  CallRetryService callRetryService,
                                  FileAuditRecordDataService fileAuditRecordDataService,
-                                 WhatsAppOptSMSDataService whatsAppOptSMSDataService) {
+                                 WhatsAppOptSMSDataService whatsAppOptSMSDataService,
+                                 SubscriptionTimeSlotService subscriptionTimeSlotService) {
         this.schedulerService = schedulerService;
         this.settingsFacade = settingsFacade;
         this.alertService = alertService;
@@ -209,6 +212,7 @@ public class TargetFileServiceImpl implements TargetFileService {
         this.callRetryService = callRetryService;
         this.fileAuditRecordDataService = fileAuditRecordDataService;
         this.whatsAppOptSMSDataService = whatsAppOptSMSDataService;
+        this.subscriptionTimeSlotService = subscriptionTimeSlotService;
 
         scheduleTargetFileGeneration();
         scheduleWhatsAppTargetFileGeneration();
@@ -412,6 +416,15 @@ public class TargetFileServiceImpl implements TargetFileService {
          * # WhatsApp OPT-IN Call need to be played at welcome prompt
          */
         writer.write("opt_in_call_eligibility");
+        writer.write(",");
+
+        writer.write("time_stamp1");
+        writer.write(",");
+
+        writer.write("time_stamp2");
+        writer.write(",");
+
+        writer.write("time_stamp3");
 
         writer.write("\n");
     }
@@ -421,9 +434,10 @@ public class TargetFileServiceImpl implements TargetFileService {
     }
 
     private void writeSubscriptionRow(String requestId, String serviceId, // NO CHECKSTYLE More than 7 parameters
-                                      String msisdn, String priority,  String callFlowUrl, String contentFileName,
+                                      String msisdn, String priority, String callFlowUrl, String contentFileName,
                                       String weekId, String languageLocationCode, String circle,
-                                      String subscriptionOrigin, OutputStreamWriter writer, Boolean needsWelcomeOptInForWP) throws IOException {
+                                      String subscriptionOrigin, OutputStreamWriter writer, Boolean needsWelcomeOptInForWP,
+                                      String timestamp1, String timestamp2, String timestamp3)throws IOException {
         /*
          * #1 RequestId
          *
@@ -521,6 +535,32 @@ public class TargetFileServiceImpl implements TargetFileService {
 
         writer.write((((contentFileName.equals("w1_1.wav") || contentFileName.equals("opt_in.wav"))  && needsWelcomeOptInForWP != null) ? needsWelcomeOptInForWP : Boolean.FALSE).toString());
 
+        writer.write(",");
+
+        if (timestamp1 != null) {
+            writer.write(timestamp1);
+        }
+        writer.write(",");
+
+        /*
+         * #14 Extra Column 2
+         *
+         * Additional data from SubscriptionTimeSlot
+         */
+        if (timestamp2 != null) {
+            writer.write(timestamp2);
+        }
+        writer.write(",");
+
+        /*
+         * #15 Extra Column 3
+         *
+         * Additional data from SubscriptionTimeSlot
+         */
+        if (timestamp3 != null) {
+            writer.write(timestamp3);
+        }
+
         writer.write("\n");
     }
 
@@ -545,8 +585,31 @@ public class TargetFileServiceImpl implements TargetFileService {
                 break;
             }
 
+            List<String> subscriptionIds = new ArrayList<>();
             for (Subscription subscription : subscriptions) {
-                LOGGER.debug("Handling Subscription " + subscription.getId());
+                subscriptionIds.add(subscription.getSubscriptionId());
+            }
+
+            List<SubscriptionTimeSlot> timeSlots = null;
+
+            try {
+                timeSlots = subscriptionTimeSlotService.findTimeSlotsForSubscriptionsById(subscriptionIds);
+
+                }catch (Exception e){
+                LOGGER.error("Error finding time slots for subscriptions", e);
+                }
+            if(timeSlots==null){
+                continue;
+            }
+
+
+            Map<String, SubscriptionTimeSlot> timeSlotMap = new HashMap<>();
+            for (SubscriptionTimeSlot timeSlot : timeSlots) {
+                timeSlotMap.put(timeSlot.getSubscriptionId(), timeSlot);
+            }
+
+            for (Subscription subscription : subscriptions) {
+//                LOGGER.debug("Handling Subscription " + subscription.getId());
                 offset = subscription.getId();
 
                 Subscriber subscriber = subscription.getSubscriber();
@@ -570,6 +633,14 @@ public class TargetFileServiceImpl implements TargetFileService {
                     }
 
                     SubscriptionPackMessage msg = subscription.nextScheduledMessage(timestamp);
+
+                    SubscriptionTimeSlot timeSlot = timeSlotMap.get(subscription.getSubscriptionId());
+                    String timeStamp1 = timeSlot != null ? timeSlot.getTimeStamp1() != null ? timeSlot.getTimeStamp1().toString() : "" : "";
+                    String timeStamp2 = timeSlot != null ? timeSlot.getTimeStamp2() != null ? timeSlot.getTimeStamp2().toString() : "" : "";
+                    String timeStamp3 = timeSlot != null ? timeSlot.getTimeStamp3() != null ? timeSlot.getTimeStamp3().toString() : "" : "";
+
+
+
                     if(split && subscriptionIdsJh.contains(subscription.getSubscriptionId())) {
                             writeSubscriptionRow(
                                     requestId.toString(),
@@ -584,14 +655,17 @@ public class TargetFileServiceImpl implements TargetFileService {
                                     subscriber.getCircle() == null ? "" : subscriber.getCircle().getName(),
                                     subscription.getOrigin().getCode(),
                                     wr.get(Jh),
-                                    subscription.isNeedsWelcomeOptInForWP());
+                                    subscription.isNeedsWelcomeOptInForWP(),
+                                    timeStamp1,
+                                    timeStamp2,
+                                    timeStamp3);
                             recordsWrittenJh++;
                         }
                     else if(specificStateList.contains(stateID)){
-                        recordsWrittenSpecific = getRecordsWritten(callFlowUrl, wr, recordsWrittenSpecific, subscription, subscriber, requestId, msg, specific_non_Jh);
+                        recordsWrittenSpecific = getRecordsWritten(callFlowUrl, wr, recordsWrittenSpecific, subscription, subscriber, requestId, msg, specific_non_Jh,timeStamp1,timeStamp2,timeStamp3);
                     }
                     else {
-                        recordsWritten = getRecordsWritten(callFlowUrl, wr, recordsWritten, subscription, subscriber, requestId, msg, non_Jh);
+                        recordsWritten = getRecordsWritten(callFlowUrl, wr, recordsWritten, subscription, subscriber, requestId, msg, non_Jh,timeStamp1,timeStamp2,timeStamp3);
 
                     }
                 } catch (IllegalStateException se) {
@@ -614,7 +688,7 @@ public class TargetFileServiceImpl implements TargetFileService {
         return recordsMap;
     }
 
-    private int getRecordsWritten(String callFlowUrl, HashMap<String, OutputStreamWriter> wr, int recordsWrittenJh, Subscription subscription, Subscriber subscriber, RequestId requestId, SubscriptionPackMessage msg, String specific_non_jh) throws IOException {
+    private int getRecordsWritten(String callFlowUrl, HashMap<String, OutputStreamWriter> wr, int recordsWrittenJh, Subscription subscription, Subscriber subscriber, RequestId requestId, SubscriptionPackMessage msg, String specific_non_jh,String timeStamp1,String timeStamp2,String timeStamp3) throws IOException {
         writeSubscriptionRow(
                 requestId.toString(),
                 serviceIdFromOrigin(true, subscription.getOrigin()),
@@ -628,7 +702,10 @@ public class TargetFileServiceImpl implements TargetFileService {
                 subscriber.getCircle() == null ? "" : subscriber.getCircle().getName(),
                 subscription.getOrigin().getCode(),
                 wr.get(specific_non_jh),
-                subscription.isNeedsWelcomeOptInForWP());
+                subscription.isNeedsWelcomeOptInForWP(),
+                timeStamp1,
+                timeStamp2,
+                timeStamp3);
         recordsWrittenJh++;
         return recordsWrittenJh;
     }
@@ -734,9 +811,39 @@ public class TargetFileServiceImpl implements TargetFileService {
                     if (callRetries.size() == 0) {
                         break;
                     }
+
+                    List<String> subscriptionIds = new ArrayList<>();
+                    for (CallRetry callRetry : callRetries) {
+                        subscriptionIds.add(callRetry.getSubscriptionId());
+                    }
+
+
+                    List<SubscriptionTimeSlot> timeSlots = null;
+                    try {
+                        timeSlots = subscriptionTimeSlotService.findTimeSlotsForSubscriptionsById(subscriptionIds);
+                    } catch (Exception e) {
+                        LOGGER.error("Error finding time slots for subscriptions", e);
+                    }
+
+                    if (timeSlots == null) {
+                        continue;
+                    }
+
+                    Map<String, SubscriptionTimeSlot> timeSlotMap = new HashMap<>();
+                    for (SubscriptionTimeSlot timeSlot : timeSlots) {
+                        timeSlotMap.put(timeSlot.getSubscriptionId(), timeSlot);
+                    }
+
+
                     for (CallRetry callRetry : callRetries) {
                         offset = callRetry.getId();
                         RequestId requestId = new RequestId(callRetry.getSubscriptionId(), TIME_FORMATTER.print(timestamp));
+
+                        SubscriptionTimeSlot timeSlot = timeSlotMap.get(callRetry.getSubscriptionId());
+                        String timeStamp1 = timeSlot != null ? timeSlot.getTimeStamp1() != null ? timeSlot.getTimeStamp1().toString() : "" : "";
+                        String timeStamp2 = timeSlot != null ? timeSlot.getTimeStamp2() != null ? timeSlot.getTimeStamp2().toString() : "" : "";
+                        String timeStamp3 = timeSlot != null ? timeSlot.getTimeStamp3() != null ? timeSlot.getTimeStamp3().toString() : "" : "";
+
                         writeSubscriptionRow(
                                 requestId.toString(),
                                 serviceIdFromOrigin(false, callRetry.getSubscriptionOrigin()),
@@ -749,7 +856,10 @@ public class TargetFileServiceImpl implements TargetFileService {
                                 callRetry.getCircle(),
                                 callRetry.getSubscriptionOrigin().getCode(),
                                 wr.get(specific_non_Jh),
-                                callRetry.isOpt_in_call_eligibility());
+                                callRetry.isOpt_in_call_eligibility(),
+                                timeStamp1,
+                                timeStamp2,
+                                timeStamp3);
                         countSpecific++;
                     }
 
@@ -764,10 +874,38 @@ public class TargetFileServiceImpl implements TargetFileService {
                     if (callRetries.size() == 0) {
                         break;
                     }
+                    List<String> subscriptionIds = new ArrayList<>();
+                    for (CallRetry callRetry : callRetries) {
+                        subscriptionIds.add(callRetry.getSubscriptionId());
+                    }
+
+
+                    List<SubscriptionTimeSlot> timeSlots = null;
+                    try {
+                        timeSlots = subscriptionTimeSlotService.findTimeSlotsForSubscriptionsById(subscriptionIds);
+                    } catch (Exception e) {
+                        LOGGER.error("Error finding time slots for subscriptions", e);
+                    }
+
+                    if (timeSlots == null) {
+//                        LOGGER.warn("No time slots found for subscriptions: {}", subscriptionIds);
+                        continue;
+                    }
+
+                    Map<String, SubscriptionTimeSlot> timeSlotMap = new HashMap<>();
+                    for (SubscriptionTimeSlot timeSlot : timeSlots) {
+                        timeSlotMap.put(timeSlot.getSubscriptionId(), timeSlot);
+                    }
+
 
                     for (CallRetry callRetry : callRetries) {
                         offset = callRetry.getId();
                         RequestId requestId = new RequestId(callRetry.getSubscriptionId(), TIME_FORMATTER.print(timestamp));
+                        SubscriptionTimeSlot timeSlot = timeSlotMap.get(callRetry.getSubscriptionId());
+                        String timeStamp1 = timeSlot != null ? timeSlot.getTimeStamp1() != null ? timeSlot.getTimeStamp1().toString() : "" : "";
+                        String timeStamp2 = timeSlot != null ? timeSlot.getTimeStamp2() != null ? timeSlot.getTimeStamp2().toString() : "" : "";
+                        String timeStamp3 = timeSlot != null ? timeSlot.getTimeStamp3() != null ? timeSlot.getTimeStamp3().toString() : "" : "";
+
                         if (split && subscriptionIdsJh.contains(callRetry.getSubscriptionId())) {
                             writeSubscriptionRow(
                                     requestId.toString(),
@@ -781,7 +919,10 @@ public class TargetFileServiceImpl implements TargetFileService {
                                     callRetry.getCircle(),
                                     callRetry.getSubscriptionOrigin().getCode(),
                                     wr.get(Jh),
-                                    callRetry.isOpt_in_call_eligibility());
+                                    callRetry.isOpt_in_call_eligibility(),
+                                    timeStamp1,
+                                    timeStamp2,
+                                    timeStamp3);
                             countJh++;
                         } else {
                             writeSubscriptionRow(
@@ -796,7 +937,10 @@ public class TargetFileServiceImpl implements TargetFileService {
                                     callRetry.getCircle(),
                                     callRetry.getSubscriptionOrigin().getCode(),
                                     wr.get(non_Jh),
-                                    callRetry.isOpt_in_call_eligibility());
+                                    callRetry.isOpt_in_call_eligibility(),
+                                    timeStamp1,
+                                    timeStamp2,
+                                    timeStamp3);
                             count++;
                         }
                     }
