@@ -934,7 +934,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      * Delete the CallRetry record corresponding to the given subscription     *
      * @param subscriptionId subscription to delete the CallRetry record fors
      */
-    private void deleteCallRetry(String subscriptionId) {
+    @Override
+    public void deleteCallRetry(String subscriptionId) {
         CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
         if (callRetry != null) {
             callRetryDataService.delete(callRetry);
