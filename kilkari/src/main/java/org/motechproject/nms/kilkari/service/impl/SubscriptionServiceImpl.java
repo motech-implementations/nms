@@ -60,6 +60,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService;
     private SubscriberMsisdnTrackerDataService subscriberMsisdnTrackerDataService;
     public static AtomicBoolean isCapacityAvailable = new AtomicBoolean(true);
+    private final String HIGH_PRIORITY_BLOCK = "kilkari.highPriority_blockId";
 
 
     @Autowired
@@ -886,7 +887,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                         "JOIN nms_subscription_packs AS sp ON ss.subscriptionPack_id_OID = sp.id " +
                         "JOIN nms_subscribers AS s ON ss.subscriber_id_OID = s.id " +
                         "JOIN nms_mcts_mothers m ON s.mother_id_OID = m.id " +
-                        "WHERE ss.status = 'HOLD' AND m.healthBlock_id_OID IN (3122, 3139, 3144, 1669, 3027, 3240, 3251, 3252, 3266, 3322, 3331, 3340) AND origin in ('MCTS_IMPORT', 'RCH_IMPORT')) AS res1 " +
+                        "WHERE ss.status = 'HOLD' AND m.healthBlock_id_OID IN ( " + highPriorityBlocks() + " ) AND origin in ('MCTS_IMPORT', 'RCH_IMPORT')) AS res1 " +
                         "UNION " +
                          "SELECT res.id as id, res.activationDate, res.deactivationReason, res.endDate, res.firstMessageDayOfWeek, res.needsWelcomeMessageViaObd, " +
                                 "res.origin, res.secondMessageDayOfWeek, res.startDate, res.status, res.subscriber_id_OID, res.subscriptionId, res.subscriptionPack_id_OID, " +
@@ -1318,6 +1319,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             states.add(stateId);
         }
         return states;
+    }
+    
+    private String highPriorityBlocks(){
+        if (settingsFacade.getProperty(HIGH_PRIORITY_BLOCK)==null || settingsFacade.getProperty(HIGH_PRIORITY_BLOCK).trim().isEmpty()){
+            return "0";
+        }
+        return settingsFacade.getProperty(HIGH_PRIORITY_BLOCK);
     }
 
 }
