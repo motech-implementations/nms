@@ -60,7 +60,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private DeactivatedBeneficiaryDataService deactivatedBeneficiaryDataService;
     private SubscriberMsisdnTrackerDataService subscriberMsisdnTrackerDataService;
     public static AtomicBoolean isCapacityAvailable = new AtomicBoolean(true);
-    private final String HIGH_PRIORITY_BLOCK = "kilkari.highPriority_blockId";
+    private static final String HIGH_PRIORITY_BLOCK = "kilkari.highPriority.blockId";
 
 
     @Autowired
