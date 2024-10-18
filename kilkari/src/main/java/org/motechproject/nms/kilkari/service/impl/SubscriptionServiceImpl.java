@@ -312,7 +312,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                 return (subscriber.getMother() != null && subscriber.getMother().getRchId() != null && !motherRchId.equals(subscriber.getMother().getRchId()));
                             }
                         } else {
-                            return (subscriber.getMother() != null && !motherRchId.equals(subscriber.getMother().getRchId()));
+                            return (subscriber.getMother() == null || !motherRchId.equals(subscriber.getMother().getRchId()));
                         }
                     }
                 }
@@ -327,7 +327,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     subscriptionsSize = subscriptions.size();
                     if (subscriptionsSize != 0) {
                         if (subscriptionsSize == 1) {
-                            if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && subscriber.getMother().getRchId() != null && motherRchId != null && !motherRchId.equals(subscriber.getMother().getRchId())) {
+                            if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && subscriber.getMother().getRchId() != null && (motherRchId == null || !motherRchId.equals(subscriber.getMother().getRchId()))) {
                                 return true;
                             } else if (SubscriptionPackType.PREGNANCY.equals(subscriptions.get(0).getSubscriptionPack().getType()) && subscriber.getMother() != null && subscriber.getMother().getRchId() != null && motherRchId != null && motherRchId.equals(subscriber.getMother().getRchId())) {
                                 return false;
