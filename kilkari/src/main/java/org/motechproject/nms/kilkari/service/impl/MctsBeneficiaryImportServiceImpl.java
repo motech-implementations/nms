@@ -144,6 +144,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         String action = "";
         Boolean flagForMcts = true;
         String ashaId ;
+        Long caseNo;
         if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
             action = actionFinderService.motherActionFinder(convertMapToMother(record));
             beneficiaryId = (String) record.get(KilkariConstants.BENEFICIARY_ID);
@@ -153,6 +154,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             stillBirth = (Boolean) record.get(KilkariConstants.STILLBIRTH);
             lastUpdatedDateNic = (LocalDate) record.get(KilkariConstants.LAST_UPDATE_DATE);
             ashaId = (String) record.get(KilkariConstants.KILKARI_ASHA_ID);
+            caseNo = (Long) record.get(KilkariConstants.CASE_NO);
         } else {
             flagForMcts = false;
             action = actionFinderService.rchMotherActionFinder((convertMapToRchMother(record)));
@@ -164,6 +166,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             stillBirth = (Boolean) record.get(KilkariConstants.DELIVERY_OUTCOMES);
             lastUpdatedDateNic = (LocalDate) record.get(KilkariConstants.EXECUTION_DATE);
             ashaId = (String) record.get(KilkariConstants.KILKARI_ASHA_ID);
+            caseNo = (Long) record.get(KilkariConstants.CASE_NO);
         }
 
         LOGGER.trace("MotherImportRejection::importMotherRecord Start " + beneficiaryId) ;
@@ -203,7 +206,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         //new rejection reason less_than_12_week
         boolean isServiceable=validateIsServiceable(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, importOrigin);
 
-        if (!isServiceable) {
+        if (!isServiceable && (action.equals("CREATE") || mother.getMaxCaseNo() < caseNo)) {
             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.LESS_THAN_12_WEEK, false);
         }
 
@@ -289,7 +292,6 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ACTIVE_CHILD_PRESENT, false);
                 }
 
-                Long caseNo = (Long) record.get(KilkariConstants.CASE_NO);
                 // validate caseNo
                 if (!validateCaseNo(caseNo, mother)) {
                     LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block " + beneficiaryId);
@@ -463,7 +465,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         //new rejection reason less_than_12_week
         boolean isServiceable=validateIsServiceable(dob, SubscriptionPackType.CHILD, msisdn, childId, importOrigin);
 
-        if (!isServiceable) {
+        if (!isServiceable && action.equals("CREATE")) {
             return createUpdateChildRejections(flagForMcts, record, action, RejectionReasons.LESS_THAN_12_WEEK, false);
         }
 
