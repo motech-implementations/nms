@@ -1,5 +1,8 @@
 package org.motechproject.nms.kilkari.contract;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -7,6 +10,7 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlType
 @XmlAccessorType(XmlAccessType.NONE)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RchChildRecord {
 
     private Long stateId;
@@ -44,6 +48,7 @@ public class RchChildRecord {
     }
 
     @XmlElement(name = "District_Name")
+    @JsonProperty("District_Name")
     public void setDistrictName(String districtName) {
         this.districtName = districtName;
     }
@@ -53,11 +58,13 @@ public class RchChildRecord {
     }
 
     @XmlElement(name = "Taluka_ID")
+    @JsonProperty("Taluka_ID")
     public void setTalukaId(String talukaId) {
         this.talukaId = talukaId;
     }
 
     @XmlElement(name = "StateID")
+    @JsonProperty("StateID")
     public void setStateId(Long stateId) {
         this.stateId = stateId;
     }
@@ -67,6 +74,7 @@ public class RchChildRecord {
     }
 
     @XmlElement(name = "District_ID")
+    @JsonProperty("District_ID")
     public void setDistrictId(Long districtId) {
         this.districtId = districtId;
     }
@@ -76,6 +84,7 @@ public class RchChildRecord {
     }
 
     @XmlElement(name = "Taluka_Name")
+    @JsonProperty("Taluka_Name")
     public void setTalukaName(String talukaName) {
         this.talukaName = talukaName;
     }
@@ -89,6 +98,7 @@ public class RchChildRecord {
     }
 
     @XmlElement(name = "SubCentre_Name")
+    @JsonProperty("SubCentre_Name")
     public void setSubCentreName(String subCentreName) {
         this.subCentreName = subCentreName;
     }
@@ -102,16 +112,19 @@ public class RchChildRecord {
     }
 
     @XmlElement(name = "SubCentre_ID")
+    @JsonProperty("SubCentre_ID")
     public void setSubCentreId(Long subCentreId) {
         this.subCentreId = subCentreId;
     }
 
     @XmlElement(name = "Village_ID")
+    @JsonProperty("Village_ID")
     public void setVillageId(Long villageId) {
         this.villageId = villageId;
     }
 
     @XmlElement(name = "HealthBlock_ID")
+    @JsonProperty("HealthBlock_ID")
     public void setHealthBlockId(Long healthBlockId) {
         this.healthBlockId = healthBlockId;
     }
@@ -121,6 +134,7 @@ public class RchChildRecord {
     }
 
     @XmlElement(name = "HealthBlock_Name")
+    @JsonProperty("HealthBlock_Name")
     public void setHealthBlockName(String healthBlockName) {
         this.healthBlockName = healthBlockName;
     }
@@ -130,6 +144,7 @@ public class RchChildRecord {
     }
 
     @XmlElement(name = "PHC_ID")
+    @JsonProperty("PHC_ID")
     public void setPhcId(Long phcId) {
         this.phcId = phcId;
     }
@@ -139,6 +154,7 @@ public class RchChildRecord {
     }
 
     @XmlElement(name = "PHC_Name")
+    @JsonProperty("PHC_Name")
     public void setPhcName(String phcName) {
         this.phcName = phcName;
     }
@@ -148,6 +164,7 @@ public class RchChildRecord {
     }
 
     @XmlElement(name = "Village_Name")
+    @JsonProperty("Village_Name")
     public void setVillageName(String villageName) {
         this.villageName = villageName;
     }
@@ -157,6 +174,7 @@ public class RchChildRecord {
     }
 
     @XmlElement(name = "Name")
+    @JsonProperty("Name")
     public void setName(String name) {
         this.name = name;
     }
@@ -166,6 +184,7 @@ public class RchChildRecord {
     }
 
     @XmlElement(name = "Mobile_no")
+    @JsonProperty("Mobile_no")
     public void setMobileNo(String mobileNo) {
         this.mobileNo = mobileNo;
     }
@@ -173,6 +192,7 @@ public class RchChildRecord {
     public String getRchAshaId(){return rchAshaId; }
 
     @XmlElement(name = "Asha_ID")
+    @JsonProperty("Asha_ID")
     public void setRchAshaId(String rchAshaId){ this.rchAshaId = rchAshaId; }
 
     public String getBirthdate() {
@@ -180,6 +200,7 @@ public class RchChildRecord {
     }
 
     @XmlElement(name = "Birthdate")
+    @JsonProperty("Birthdate")
     public void setBirthdate(String birthdate) {
         this.birthdate = birthdate;
     }
@@ -187,7 +208,9 @@ public class RchChildRecord {
     public String getRegistrationDate() {
         return registrationDate;
     }
+
     @XmlElement(name = "Registration_Date")
+    @JsonProperty("Registration_Date")
     public void setRegistrationDate(String registrationDate) {
         this.registrationDate = registrationDate;
     }
@@ -197,6 +220,7 @@ public class RchChildRecord {
     }
 
     @XmlElement(name = "Registration_no")
+    @JsonProperty("Registration_no")
     public void setRegistrationNo(String registrationNo) {
         this.registrationNo = registrationNo;
     }
@@ -206,6 +230,7 @@ public class RchChildRecord {
     }
 
     @XmlElement(name = "Mother_Registration_no")
+    @JsonProperty("Mother_Registration_no")
     public void setMotherRegistrationNo(String motherRegistrationNo) {
         this.motherRegistrationNo = motherRegistrationNo;
     }
@@ -215,6 +240,7 @@ public class RchChildRecord {
     }
 
     @XmlElement(name = "MCTS_ID_No")
+    @JsonProperty("MCTS_ID_No")
     public void setMctsId(String mctsId) {
         this.mctsId = mctsId;
     }
@@ -224,6 +250,7 @@ public class RchChildRecord {
     }
 
     @XmlElement(name = "MCTS_Mother_ID_No")
+    @JsonProperty("MCTS_Mother_ID_No")
     public void setMctsMotherIdNo(String mctsMotherIdNo) {
         this.mctsMotherIdNo = mctsMotherIdNo;
     }
@@ -233,6 +260,7 @@ public class RchChildRecord {
     }
 
     @XmlElement(name = "Entry_Type")
+    @JsonProperty("Entry_Type")
     public void setEntryType(String entryType) {
         this.entryType = entryType;
     }
@@ -242,6 +270,7 @@ public class RchChildRecord {
     }
 
     @XmlElement(name = "Exec_Date")
+    @JsonProperty("Exec_Date")
     public void setExecDate(String execDate) {
         this.execDate = execDate;
     }

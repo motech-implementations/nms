@@ -174,13 +174,13 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         DateTime lmp = (DateTime) record.get(KilkariConstants.LMP);
         try {
             String regDate = record.get(KilkariConstants.MOTHER_REGISTRATION_DATE).toString();
-            if(regDate != null && regDate.length() == 29){
+            if(regDate != null && regDate.length() == 29){ //2023-05-25T00:00:00
                 //for csv processing
                 motherRegistrationDate = (DateTime) record.get(KilkariConstants.MOTHER_REGISTRATION_DATE);
             }
             else{
                 //for xml processing
-                DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ");
+                DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss");
                 DateTime dateTime = formatter.parseDateTime(record.get(KilkariConstants.MOTHER_REGISTRATION_DATE).toString());
                 motherRegistrationDate = dateTime;
             }

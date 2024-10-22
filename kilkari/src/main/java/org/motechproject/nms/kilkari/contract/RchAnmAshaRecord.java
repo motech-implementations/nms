@@ -1,5 +1,7 @@
 package org.motechproject.nms.kilkari.contract;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.motechproject.nms.kilkari.utils.FlwConstants;
@@ -13,6 +15,7 @@ import java.util.Map;
 
 @XmlType
 @XmlAccessorType(XmlAccessType.NONE)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RchAnmAshaRecord {
 
     private Long stateId;
@@ -37,6 +40,7 @@ public class RchAnmAshaRecord {
     private String updatedOn;
 
     @XmlElement(name = "Taluka_Name")
+    @JsonProperty("Taluka_Name")
     public void setTalukaName(String talukaName) {
         this.talukaName = talukaName;
     }
@@ -46,6 +50,7 @@ public class RchAnmAshaRecord {
     }
 
     @XmlElement(name = "HealthBlock_ID")
+    @JsonProperty("HealthBlock_ID")
     public void setHealthBlockId(Long healthBlockId) {
         this.healthBlockId = healthBlockId;
     }
@@ -59,6 +64,7 @@ public class RchAnmAshaRecord {
     }
 
     @XmlElement(name = "District_Name")
+    @JsonProperty("District_Name")
     public void setDistrictName(String districtName) {
         this.districtName = districtName;
     }
@@ -68,6 +74,7 @@ public class RchAnmAshaRecord {
     }
 
     @XmlElement(name = "Taluka_ID")
+    @JsonProperty("Taluka_ID")
     public void setTalukaId(String talukaId) {
         this.talukaId = talukaId;
     }
@@ -82,6 +89,7 @@ public class RchAnmAshaRecord {
     }
 
     @XmlElement(name = "StateID")
+    @JsonProperty("StateID")
     public void setStateId(Long stateId) {
         this.stateId = stateId;
     }
@@ -91,6 +99,7 @@ public class RchAnmAshaRecord {
     }
 
     @XmlElement(name = "District_ID")
+    @JsonProperty("District_ID")
     public void setDistrictId(Long districtId) {
         this.districtId = districtId;
     }
@@ -100,6 +109,7 @@ public class RchAnmAshaRecord {
     }
 
     @XmlElement(name = "Village_Name")
+    @JsonProperty("Village_Name")
     public void setVillageName(String villageName) {
         this.villageName = villageName;
     }
@@ -109,6 +119,7 @@ public class RchAnmAshaRecord {
     }
 
     @XmlElement(name = "GF_ID")
+    @JsonProperty("GF_ID")
     public void setGfId(Long gfId) {
         this.gfId = gfId;
     }
@@ -118,6 +129,7 @@ public class RchAnmAshaRecord {
     }
 
     @XmlElement(name = "HealthBlock_Name")
+    @JsonProperty("HealthBlock_Name")
     public void setHealthBlockName(String healthBlockName) {
         this.healthBlockName = healthBlockName;
     }
@@ -125,7 +137,9 @@ public class RchAnmAshaRecord {
     public Long getPhcId() {
         return phcId;
     }
+
     @XmlElement(name = "Mobile_no")
+    @JsonProperty("Mobile_no")
     public void setMobileNo(String mobileNo) {
         this.mobileNo = mobileNo;
     }
@@ -135,6 +149,7 @@ public class RchAnmAshaRecord {
     }
 
     @XmlElement(name = "SubCentre_ID")
+    @JsonProperty("SubCentre_ID")
     public void setSubCentreId(Long subCentreId) {
         this.subCentreId = subCentreId;
     }
@@ -144,6 +159,7 @@ public class RchAnmAshaRecord {
     }
 
     @XmlElement(name = "SubCentre_Name")
+    @JsonProperty("SubCentre_Name")
     public void setSubCentreName(String subCentreName) {
         this.subCentreName = subCentreName;
     }
@@ -153,6 +169,7 @@ public class RchAnmAshaRecord {
     }
 
     @XmlElement(name = "PHC_ID")
+    @JsonProperty("PHC_ID")
     public void setPhcId(Long phcId) {
         this.phcId = phcId;
     }
@@ -162,6 +179,7 @@ public class RchAnmAshaRecord {
     }
 
     @XmlElement(name = "PHC_Name")
+    @JsonProperty("PHC_Name")
     public void setPhcName(String phcName) {
         this.phcName = phcName;
     }
@@ -171,11 +189,13 @@ public class RchAnmAshaRecord {
     }
 
     @XmlElement(name = "Village_ID")
+    @JsonProperty("Village_ID")
     public void setVillageId(Long villageId) {
         this.villageId = villageId;
     }
 
     @XmlElement(name = "GF_Name")
+    @JsonProperty("GF_Name")
     public void setGfName(String gfName) {
         this.gfName = gfName;
     }
@@ -185,6 +205,7 @@ public class RchAnmAshaRecord {
     }
 
     @XmlElement(name = "GF_type")
+    @JsonProperty("GF_type")
     public void setGfType(String gfType) {
         this.gfType = gfType;
     }
@@ -194,6 +215,7 @@ public class RchAnmAshaRecord {
     }
 
     @XmlElement(name = "Exec_Date")
+    @JsonProperty("Exec_Date")
     public void setExecDate(String execDate) {
         this.execDate = execDate;
     }
@@ -203,6 +225,7 @@ public class RchAnmAshaRecord {
     }
 
     @XmlElement(name = "GF_Status")
+    @JsonProperty("GF_Status")
     public void setGfStatus(String gfStatus) {
         this.gfStatus = gfStatus;
     }
@@ -212,6 +235,7 @@ public class RchAnmAshaRecord {
     }
 
     @XmlElement(name = "Updated_On")
+    @JsonProperty("Updated_On")
     public void setUpdatedOn(String updatedOn) {
         this.updatedOn = updatedOn;
     }
@@ -235,7 +259,7 @@ public class RchAnmAshaRecord {
         map.put(FlwConstants.MOBILE_NO, getMobileNo() == null ? null : Long.parseLong(getMobileNo()));
         map.put(FlwConstants.GF_NAME, getGfName());
         map.put(FlwConstants.GF_TYPE, getGfType());
-        map.put(FlwConstants.EXEC_DATE, "".equals(getExecDate()) ? null : LocalDate.parse(getExecDate(), DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")));
+        map.put(FlwConstants.EXEC_DATE, "".equals(getExecDate()) ? null : LocalDate.parse(getExecDate(), DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")));
         map.put(FlwConstants.GF_STATUS, getGfStatus());
         map.put(FlwConstants.UPDATED_ON, "".equals(getUpdatedOn()) ? null : getUpdatedOn());
         return map;

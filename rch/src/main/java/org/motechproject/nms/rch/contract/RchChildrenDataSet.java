@@ -1,5 +1,6 @@
 package org.motechproject.nms.rch.contract;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.motechproject.nms.kilkari.contract.RchChildRecord;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -19,6 +20,7 @@ public class RchChildrenDataSet {
     }
 
     @XmlElement(name = "Records")
+    @JsonProperty("Records")
     public void setRecords(List<RchChildRecord> records) {
         this.records = records;
     }

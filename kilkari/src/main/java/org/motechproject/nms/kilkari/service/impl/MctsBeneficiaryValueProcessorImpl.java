@@ -195,8 +195,11 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
             DateTimeParser[] parsers = {
                     DateTimeFormat.forPattern("dd-MM-yyyy").getParser(),
                     DateTimeFormat.forPattern("dd/MM/yyyy").getParser(),
+                    DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss").getParser(),
+                    DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").getParser(),
                     DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZZ").getParser(),
                     DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZZ").getParser()};
+
             DateTimeFormatter formatter = new DateTimeFormatterBuilder().append(null, parsers).toFormatter();
 
             referenceDate = formatter.parseDateTime(value);
