@@ -5,6 +5,7 @@ import org.motechproject.event.MotechEvent;
 import org.motechproject.nms.rch.domain.RchUserType;
 import org.motechproject.nms.rch.exception.RchFileManipulationException;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
@@ -67,4 +68,22 @@ public interface RchWebServiceFacade {
     String getLocationFilesDirectory();
 
     void readBeneficiaryDataFromFile(String remoteLocation);
+
+    String callEncryptApi(String state, String typeOfData,LocalDate startDate, LocalDate endDate);
+
+    String generateAuthToken();
+
+    String callSecondApi(String tempFilePath, String token);
+
+    String callKeelDeelApi(String token,String keel,String deel);
+
+    String saveToFile(String data, String type, String state);
+
+    String callThirdApi(String payload);
+
+    File generateJsonResponseFile(String  APIresponse, RchUserType userType, Long stateId);
+
+    String readPayloadFromTempFile(String tempFilePath);
+
+    boolean retryScpAndAudit(String name, LocalDate from, LocalDate to, Long stateId, RchUserType userType, int trialCount);
 }

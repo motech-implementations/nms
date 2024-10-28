@@ -1,6 +1,9 @@
 package org.motechproject.nms.rch.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +19,15 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -95,9 +107,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.supercsv.cellprocessor.ift.CellProcessor;
@@ -119,11 +136,14 @@ import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.rmi.RemoteException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -185,6 +205,19 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String LOCATIONS_FILES_HAVING_ERROR_MESSAGE = "[{\"Message\"";
 
 
+    public static final String FIRST_API = "rch.api.first";
+    public static final String PROJECT_ID = "rch.credentials.project_id";
+    public static final String SECURE_CODE = "rch.firstapi.securecode";
+    public static final String TOKEN_API = "rch.api.token";
+    public static final String CLIENT_ID = "rch.client.id";
+    public static final String CLIENT_SECRET = "rch.client.secret";
+    private static final String MOTHER_FIRST_EVENT = "rch.mother.first";
+    private static final String CHILD_FIRST_EVENT = "rch.child.first";
+    private static final String ASHA_FIRST_EVENT = "rch.asha.first";
+    private static final String SECOND_EVENT_PREFIX = "rch.second.";
+    private static final String THIRD_EVENT_PREFIX = "rch.thirdF.";
+
+
     @Autowired
     @Qualifier("rchSettings")
     private SettingsFacade settingsFacade;
@@ -200,6 +233,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     @Autowired
     private RchImportFacilitatorDataService rchImportFacilitatorDataService;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Autowired
     private RchImportFacilitatorService rchImportFacilitatorService;
@@ -292,10 +328,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     }
 
-    private boolean retryScpAndAudit(String name, LocalDate from, LocalDate to, Long stateId, RchUserType userType, int trialCount) {
+    public boolean retryScpAndAudit(String name, LocalDate from, LocalDate to, Long stateId, RchUserType userType, int trialCount) {
         try {
             scpResponseToRemote(name);
-            LOGGER.info("RCH mother response file successfully copied to remote server");
+            LOGGER.info("RCH {} response file successfully copied to remote server",userType);
 
             RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(name, from, to, stateId, userType, LocalDate.now(), true);
             rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
@@ -2242,7 +2278,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
         return localResponseFile;
     }
-     private File generateJsonResponseFile(String  APIresponse, RchUserType userType, Long stateId) {
+     public File generateJsonResponseFile(String  APIresponse, RchUserType userType, Long stateId) {
 
         String targetFileName = targetFileName(TIME_FORMATTER.print(DateTime.now()), userType, stateId);
         File localResponseDir = localResponseDir();
@@ -3968,4 +4004,275 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                ? resultString.substring(0, resultString.length() - 1)
                : resultString;
    }
+
+    /**
+     * Generic method to call the first API (Encrypt API) for Mother, Child, or ASHA.
+     */
+    public String callEncryptApi(String state, String typeOfData,LocalDate startDate,LocalDate endDate) {
+        LOGGER.debug("inside call encryptapi method");
+        String firstApiUrl = settingsFacade.getProperty(FIRST_API);
+        LOGGER.debug("this is first api url: {}",firstApiUrl);
+        String key = String.valueOf(Instant.now().toEpochMilli());
+
+        // Convert LocalDate to Date
+        Date startDateUtil = java.sql.Date.valueOf(String.valueOf(startDate));
+        Date endDateUtil = java.sql.Date.valueOf(String.valueOf(endDate));
+
+        // Format the dates to "yyyy-MM-dd"
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String formattedStartDate = sdf.format(startDateUtil);
+        String formattedEndDate = sdf.format(endDateUtil);
+
+        // Update the plainText with the formatted dates
+        String plainText = "{\"ProjectID\":\"" + settingsFacade.getProperty(PROJECT_ID) +
+                "\",\"ID\":\"mcts-MOTECH\",\"SecureCode\":\"" + settingsFacade.getProperty(SECURE_CODE) +
+                "\",\"FromDate\":\"" + formattedStartDate +
+                "\",\"ToDate\":\"" + formattedEndDate +
+                "\",\"STID\":\"" + state +
+                "\",\"DTID\":\"0\",\"TypeOfData\":\"" + typeOfData + "\"}";
+
+
+
+        Map<String, String> requestBody = new HashMap<>();
+        requestBody.put("plainText", plainText);
+        requestBody.put("key", key);
+
+        LOGGER.debug("this is plain text: {}",plainText);
+
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        LOGGER.debug("this is request: {}",requestBody);
+        HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
+        LOGGER.debug("this is request entity: {}",requestEntity);
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity(firstApiUrl, requestEntity, String.class);
+        LOGGER.debug("this is response entity: {}",responseEntity);
+        if (responseEntity.getStatusCode() == HttpStatus.OK) {
+            LOGGER.debug("inside ok condition");
+            return responseEntity.getBody();
+
+        } else {
+            throw new RuntimeException("Error fetching keel and deel from first API: " + responseEntity.getStatusCode());
+        }
+    }
+
+    /**
+     * Generic method to save the data to a temp file.
+     */
+    public String saveToFile(String data, String type, String state) {
+        String fileName = "RCH_" +state + "_" + type + "_" + java.time.LocalDate.now() + "_tmp.json";
+        String tmpFolderPath = settingsFacade.getProperty("rch.folder.tmp");
+        Path filePath = Paths.get(tmpFolderPath, fileName);
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath.toFile()))) {
+            writer.write(data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return filePath.toString();
+    }
+
+    /**
+     * Generate token using the token API (common for all entities).
+     */
+    public String generateAuthToken() {
+        LOGGER.debug("we are inside the generate auth token");
+        String tokenApiUrl = settingsFacade.getProperty(TOKEN_API);
+        LOGGER.debug("this is tokenapiUrl: {}",tokenApiUrl);
+        String clientId = settingsFacade.getProperty(CLIENT_ID);
+        String clientSecret = settingsFacade.getProperty(CLIENT_SECRET);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "client_credentials");
+        body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
+        body.add("scope", "napix");
+
+        LOGGER.debug("this is body: {}",body);
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(body, headers);
+        String tokenResponse = restTemplate.postForObject(tokenApiUrl, requestEntity, String.class);
+
+        LOGGER.debug("this is token response: {}",tokenResponse);
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(tokenResponse);
+            LOGGER.debug("this is return : {}",jsonNode.path("access_token").asText());
+            return jsonNode.path("access_token").asText();
+
+        } catch (Exception e) {
+
+            throw new RuntimeException("Failed to parse token response", e);
+        }
+    }
+
+    /**
+     * Generic method to call the second API.
+     */
+    public String callSecondApi(String tempFilePath, String token) {
+        LOGGER.debug("We are inside the callSecondApi method");
+
+        StringBuilder payloadBuilder = new StringBuilder();
+        String line;
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(tempFilePath));
+            while ((line = reader.readLine()) != null) {
+                payloadBuilder.append(line);
+            }
+        } catch (IOException e) {
+            LOGGER.error("Error reading from file: {}", tempFilePath, e);
+            return null;
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    LOGGER.error("Error closing file reader", e);
+                }
+            }
+        }
+
+        String payload = payloadBuilder.toString();
+        LOGGER.debug("This is payload: {}", payload);
+
+        String secondApiUrl = settingsFacade.getProperty("rch.api.second");
+
+        // Create request body using a Map
+        Map<String, String> requestBody = new HashMap<>();
+        requestBody.put("payload", payload);
+
+        LOGGER.debug("This is request body: {}", requestBody);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", "Bearer " + token);
+
+        HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
+        LOGGER.debug("This is request entity: {}", requestEntity);
+
+        String curlCommand = null;
+        try {
+            curlCommand = String.format("curl -X POST %s -H \"Content-Type: application/json\" -H \"Authorization: Bearer %s\" -d '%s'",
+                    secondApiUrl, token, new ObjectMapper().writeValueAsString(requestBody));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        LOGGER.debug("Generated curl command: {}", curlCommand);
+
+        try {
+            ResponseEntity<String> responseEntity = restTemplate.postForEntity(secondApiUrl, requestEntity, String.class);
+
+            if (responseEntity.getStatusCode() == HttpStatus.OK) {
+                LOGGER.debug("Received successful response from second API: {}", responseEntity.getBody());
+                return responseEntity.getBody();
+            } else {
+                LOGGER.error("Error from second API: {}, Body: {}", responseEntity.getStatusCode(), responseEntity.getBody());
+                throw new RuntimeException("Error fetching data from second API: " + responseEntity.getStatusCode());
+            }
+        } catch (HttpClientErrorException e) {
+            LOGGER.error("Client error when calling second API: {} - Response: {}", e.getStatusCode(), e.getResponseBodyAsString());
+            return null;
+        } catch (Exception e) {
+            LOGGER.error("Error calling second API: ", e);
+            return null;
+        }
+    }
+
+
+    public   String callKeelDeelApi(String token, String keel, String deel)  {
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        String responseString = null;
+        try {
+            HttpPost request = new HttpPost(settingsFacade.getProperty("rch.api.second"));
+            request.setHeader("Authorization", "Bearer " + token);
+            request.setHeader("Content-Type", "application/json");
+
+            // Payload for Keel and Deel API
+            LOGGER.debug("this is keel and deel insdie api call method: {}, {},token: {}",keel,deel,token);
+            String jsonPayload = String.format("{\"keel\":\"%s\", \"deel\":\"%s\"}", keel, deel);
+            StringEntity entity = new StringEntity(jsonPayload, ContentType.APPLICATION_JSON);
+            request.setEntity(entity);
+
+            // Execute API request
+            responseString = new BasicResponseHandler().handleResponse(httpClient.execute(request));
+        } catch (HttpResponseException e) {
+            throw new RuntimeException(e);
+        } catch (ClientProtocolException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return responseString;
+
+    }
+
+
+    public String callThirdApi(String payload) {
+        String thirdApiUrl = settingsFacade.getProperty("rch.api.third");
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        String responseString = null;
+
+        try {
+            HttpPost request = new HttpPost(thirdApiUrl);
+            request.setHeader("Content-Type", "application/json");
+
+            // Setting the payload in the request
+            //
+            StringEntity entity = new StringEntity(payload,ContentType.APPLICATION_JSON);
+            request.setEntity(entity);
+
+            // Execute API request
+            responseString = new BasicResponseHandler().handleResponse(httpClient.execute(request));
+
+        } catch (IOException e) {
+            LOGGER.error("Error calling third API: ", e);
+        }finally {
+            try {
+                httpClient.close();
+            } catch (IOException e) {
+                LOGGER.error("Error closing HttpClient", e);
+            }
+        }
+        return responseString;
+    }
+
+
+
+    /**
+     * Method to read the payload from the temp file.
+     */
+    public String readPayloadFromTempFile(String tempFilePath) {
+        StringBuilder payloadBuilder = new StringBuilder();
+        String line;
+        BufferedReader reader = null;
+
+        try {
+            reader = new BufferedReader(new FileReader(tempFilePath));
+            while ((line = reader.readLine()) != null) {
+                payloadBuilder.append(line).append(System.lineSeparator()); // Append the line and a line separator
+            }
+        } catch (IOException e) {
+            LOGGER.error("Error reading from file: {}", tempFilePath, e);
+            return null;
+        }finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    LOGGER.error("Error closing file reader", e);
+                }
+            }
+        }
+
+        return payloadBuilder.toString();
+    }
+
+
+
+
+
 }
