@@ -349,31 +349,110 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
-            String error = String.format("State with code %s doesn't exist in database. Skipping district import for this state", stateId);
+            String error = String.format("State with code %s doesn't exist in the database. Skipping district import for this state.", stateId);
             LOGGER.error(error);
             return;
         }
 
         String stateName = state.getName();
         Long stateCode = state.getCode();
+
         try {
-            if (rchWebServiceFacade.getDistrictData(startDate, endDate, endpoint, stateId)) {
-                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
-            }
-        } catch (RchWebServiceException e) {
-            String error = String.format("Cannot read RCH district data from %s state with state id: %d", stateName, stateId);
-            LOGGER.error(error, e);
-            alertService.create(RCH_WEB_SERVICE, "RCH Web Service district Import", e
-                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
+            String keelDeelData = rchWebServiceFacade.callEncryptApiLocations(stateId.toString(), settingsFacade.getProperty(Constants.TYPE_ID_DISTRICT));
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode encryptJson = objectMapper.readTree(keelDeelData);
+            String keel = encryptJson.get("keel").asText();
+            String deel = encryptJson.get("deel").asText();
+
+            String token = rchWebServiceFacade.generateAuthToken();
+            String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
+
+            String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "district", stateId.toString());
+
+            Map<String, Object> params = new HashMap<>();
+            params.put("state", stateId.toString());
+            params.put("tempFilePath", tempFilePath);
+            params.put("fromDate", startDate);
+            params.put("endDate", endDate);
+            params.put("stateName", stateName);
+            params.put("stateCode", stateCode.toString());
+            MotechEvent nextEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "district", params);
+            eventRelay.sendEventMessage(nextEvent);
+
         } catch (Exception e) {
-            String error = String.format("Cannot read RCH district data from %s state with state id: %d due to exception %s.", stateName, stateId , e.getMessage());
+            String error = String.format("Error processing RCH district data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             LOGGER.error(error, e);
-            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
+            handleError(RchUserType.DISTRICT, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
+
+
+    private RchUserType getUserTypeFromEventSubject(String subject) {
+        if (subject.endsWith("villagehealthsubfacility")) return RchUserType.VILLAGEHEALTHSUBFACILITY;
+        if (subject.endsWith("talukahealthblock")) return RchUserType.TALUKAHEALTHBLOCK;
+        if (subject.endsWith("district")) return RchUserType.DISTRICT;
+        if (subject.endsWith("taluka")) return RchUserType.TALUKA;
+        if (subject.endsWith("village")) return RchUserType.VILLAGE;
+        if (subject.endsWith("healthblock")) return RchUserType.HEALTHBLOCK;
+        if (subject.endsWith("healthfacility")) return RchUserType.HEALTHFACILITY;
+        if (subject.endsWith("healthsubfacility")) return RchUserType.HEALTHSUBFACILITY;
+        return null;
+    }
+
+
+
+    @MotechListener(subjects = {
+            Constants.SECOND_EVENT_PREFIX + "district",
+            Constants.SECOND_EVENT_PREFIX + "taluka",
+            Constants.SECOND_EVENT_PREFIX + "village",
+            Constants.SECOND_EVENT_PREFIX + "healthblock",
+            Constants.SECOND_EVENT_PREFIX + "talukahealthblock",
+            Constants.SECOND_EVENT_PREFIX + "healthfacility",
+            Constants.SECOND_EVENT_PREFIX + "healthsubfacility",
+            Constants.SECOND_EVENT_PREFIX + "villagehealthsubfacility"
+    })
+    public void handleApiEvent(MotechEvent event) {
+        String subject = event.getSubject();
+        RchUserType userType = getUserTypeFromEventSubject(subject);
+        if (userType == null) {
+            LOGGER.error("Unrecognized event subject: {}", subject);
+            return;
+        }
+
+        String stateId = (String) event.getParameters().get("state");
+        LocalDate from = (LocalDate) event.getParameters().get("fromDate");
+        LocalDate to = (LocalDate) event.getParameters().get("endDate");
+        String tempFilePath = (String) event.getParameters().get("tempFilePath");
+        String stateName = (String) event.getParameters().get("stateName");
+        String stateCode = (String) event.getParameters().get("stateCode");
+        boolean status = false;
+
+        try {
+            String payload = rchWebServiceFacade.readPayloadFromTempFile(tempFilePath);
+
+            String thirdApiResponse = rchWebServiceFacade.callThirdApi(payload);
+
+            File responseFile = rchWebServiceFacade.generateJsonResponseFile(thirdApiResponse, userType, Long.valueOf(stateId));
+            if (responseFile != null) {
+                LOGGER.info("RCH {} response successfully written to file. Copying to remote directory.", userType);
+                status = rchWebServiceFacade.retryScpAndAudit(responseFile.getName(), from, to, Long.valueOf(stateId), userType, 0);
+            } else {
+                LOGGER.error("Error writing {} response to file for state {}", userType, stateId);
+            }
+
+            if (status) {
+                LOGGER.info("{} data processed successfully for state ID: {}", userType, stateId);
+            } else {
+                handleError(userType, Long.valueOf(stateId), stateName, Long.valueOf(stateCode), from, to, "Failed to process third API response.");
+            }
+
+        } catch (Exception e) {
+            LOGGER.error("Error handling third API event for {} data for state: {}", userType, stateId, e);
+            handleError(userType, Long.valueOf(stateId), stateName, Long.valueOf(stateCode), from, to, e.getMessage());
+        }
+    }
+
 
     @MotechListener(subjects = { Constants.RCH_TALUKA_IMPORT_SUBJECT })
     @Transactional
@@ -382,7 +461,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
         LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
         LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
-        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
 
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
@@ -394,21 +472,32 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         String stateName = state.getName();
         Long stateCode = state.getCode();
         try {
-            if (rchWebServiceFacade.getTalukasData(startDate, endDate, endpoint, stateId)) {
-                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
-            }
-        } catch (RchWebServiceException e) {
-            String error = String.format("Cannot read RCH taluka data from %s state with state id: %d", stateName, stateId);
-            LOGGER.error(error, e);
-            alertService.create(RCH_WEB_SERVICE, "RCH Web Service Taluka Import", e
-                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
+            String keelDeelData = rchWebServiceFacade.callEncryptApiLocations(stateId.toString(), settingsFacade.getProperty(Constants.TYPE_ID_SUB_DISTRICT));
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode encryptJson = objectMapper.readTree(keelDeelData);
+            String keel = encryptJson.get("keel").asText();
+            String deel = encryptJson.get("deel").asText();
+
+            String token = rchWebServiceFacade.generateAuthToken();
+            String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
+
+            String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "taluka", stateId.toString());
+
+            Map<String, Object> params = new HashMap<>();
+            params.put("state", stateId.toString());
+            params.put("tempFilePath", tempFilePath);
+            params.put("fromDate", startDate);
+            params.put("endDate", endDate);
+            params.put("stateName", stateName);
+            params.put("stateCode", stateCode.toString());
+            MotechEvent nextEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "taluka", params);
+            eventRelay.sendEventMessage(nextEvent);
+
         } catch (Exception e) {
-            String error = String.format("Cannot read RCH taluka data from %s state with state id: %d due to exception %s.", stateName, stateId , e.getMessage());
+            String error = String.format("Error processing RCH taluka data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             LOGGER.error(error, e);
-            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
+            handleError(RchUserType.TALUKA, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
 
@@ -431,21 +520,34 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         String stateName = state.getName();
         Long stateCode = state.getCode();
         try {
-            if (rchWebServiceFacade.getVillagesData(startDate, endDate, endpoint, stateId)) {
-                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
-            }
-        } catch (RchWebServiceException e) {
-            String error = String.format("Cannot read RCH Village data from %s state with state id: %d", stateName, stateId);
-            LOGGER.error(error, e);
-            alertService.create(RCH_WEB_SERVICE, "RCH Web Service Village Import", e
-                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGE, stateId));
+            LOGGER.debug("Calling encrypt API for village data for state ID: {}", stateId);
+            String keelDeelData = rchWebServiceFacade.callEncryptApiLocations(stateId.toString(), settingsFacade.getProperty(Constants.TYPE_ID_VILLAGE));
+            LOGGER.debug("Keel and Deel data received for village import: {}", keelDeelData);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode encryptJson = objectMapper.readTree(keelDeelData);
+            String keel = encryptJson.get("keel").asText();
+            String deel = encryptJson.get("deel").asText();
+
+            String token = rchWebServiceFacade.generateAuthToken();
+            String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
+
+            String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "village", stateId.toString());
+
+            Map<String, Object> params = new HashMap<>();
+            params.put("state", stateId.toString());
+            params.put("tempFilePath", tempFilePath);
+            params.put("fromDate", startDate);
+            params.put("endDate", endDate);
+            params.put("stateName", stateName);
+            params.put("stateCode", stateCode.toString());
+            MotechEvent nextEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "village", params);
+            eventRelay.sendEventMessage(nextEvent);
+
         } catch (Exception e) {
-            String error = String.format("Cannot read RCH village data from %s state with state id: %d due to exception %s.", stateName, stateId , e.getMessage());
+            String error = String.format("Error processing RCH village data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             LOGGER.error(error, e);
-            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGE, stateId));
+            handleError(RchUserType.VILLAGE, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
 
@@ -457,7 +559,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         LOGGER.debug(LOG_STATEID, stateId);
         LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
         LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
-        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
 
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
@@ -469,21 +570,34 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         String stateName = state.getName();
         Long stateCode = state.getCode();
         try {
-            if (rchWebServiceFacade.getHealthBlockData(startDate, endDate, endpoint, stateId)) {
-                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
-            }
-        } catch (RchWebServiceException e) {
-            String error = String.format("Cannot read RCH healthblock data from %s state with state id: %d", stateName, stateId);
-            LOGGER.error(error, e);
-            alertService.create(RCH_WEB_SERVICE, "RCH Web Service HealthBlock Import", e
-                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHBLOCK, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHBLOCK, stateId));
+            LOGGER.debug("Calling encrypt API for healthblock data for state ID: {}", stateId);
+            String keelDeelData = rchWebServiceFacade.callEncryptApiLocations(stateId.toString(), settingsFacade.getProperty(Constants.TYPE_ID_HEALTH_BLOCK));
+            LOGGER.debug("Keel and Deel data received for healthblock import: {}", keelDeelData);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode encryptJson = objectMapper.readTree(keelDeelData);
+            String keel = encryptJson.get("keel").asText();
+            String deel = encryptJson.get("deel").asText();
+
+            String token = rchWebServiceFacade.generateAuthToken();
+            String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
+
+            String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "healthblock", stateId.toString());
+
+            Map<String, Object> params = new HashMap<>();
+            params.put("state", stateId.toString());
+            params.put("tempFilePath", tempFilePath);
+            params.put("fromDate", startDate);
+            params.put("endDate", endDate);
+            params.put("stateName", stateName);
+            params.put("stateCode", stateCode.toString());
+            MotechEvent nextEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "healthblock", params);
+            eventRelay.sendEventMessage(nextEvent);
+
         } catch (Exception e) {
-            String error = String.format("Cannot read RCH healthBlock data from %s state with state id: %d due to exception %s.", stateName, stateId , e.getMessage());
+            String error = String.format("Error processing RCH healthblock data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             LOGGER.error(error, e);
-            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHBLOCK, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHBLOCK, stateId));
+            handleError(RchUserType.HEALTHBLOCK, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
 
@@ -506,21 +620,32 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         String stateName = state.getName();
         Long stateCode = state.getCode();
         try {
-            if (rchWebServiceFacade.getTalukaHealthBlockData(startDate, endDate, endpoint, stateId)) {
-                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
-            }
-        } catch (RchWebServiceException e) {
-            String error = String.format("Cannot read RCH taluka-healthblock data from %s state with state id: %d", stateName, stateId);
-            LOGGER.error(error, e);
-            alertService.create(RCH_WEB_SERVICE, "RCH Web Service Taluka healthBlock Import", e
-                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKAHEALTHBLOCK, stateId));
+            String keelDeelData = rchWebServiceFacade.callEncryptApiLocations(stateId.toString(), settingsFacade.getProperty(Constants.TYPE_ID_TALUKA_HEALTH_BLOCK));
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode encryptJson = objectMapper.readTree(keelDeelData);
+            String keel = encryptJson.get("keel").asText();
+            String deel = encryptJson.get("deel").asText();
+
+            String token = rchWebServiceFacade.generateAuthToken();
+            String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
+
+            String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "talukahealthblock", stateId.toString());
+
+            Map<String, Object> params = new HashMap<>();
+            params.put("state", stateId.toString());
+            params.put("tempFilePath", tempFilePath);
+            params.put("fromDate", startDate);
+            params.put("endDate", endDate);
+            params.put("stateName", stateName);
+            params.put("stateCode", stateCode.toString());
+            MotechEvent nextEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "talukahealthblock", params);
+            eventRelay.sendEventMessage(nextEvent);
+
         } catch (Exception e) {
-            String error = String.format("Cannot read RCH taluka-healthblock data from %s state with state id: %d due to exception %s.", stateName, stateId , e.getMessage());
+            String error = String.format("Error processing RCH talukahealthblock data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             LOGGER.error(error, e);
-            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKAHEALTHBLOCK, stateId));
+            handleError(RchUserType.TALUKAHEALTHBLOCK, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
 
@@ -532,7 +657,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         LOGGER.debug(LOG_STATEID, stateId);
         LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
         LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
-        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
 
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
@@ -544,22 +668,34 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         String stateName = state.getName();
         Long stateCode = state.getCode();
         try {
-            if (rchWebServiceFacade.getHealthFacilityData(startDate, endDate, endpoint, stateId)) {
-                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
-            }
-        } catch (RchWebServiceException e) {
-            String error = String.format("Cannot read RCH HealthFacility data from %s state with state id: %d", stateName, stateId);
-            LOGGER.error(error, e);
-            alertService.create(RCH_WEB_SERVICE, "RCH Web Service HealthFacility Import", e
-                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHFACILITY, stateId));
+            String keelDeelData = rchWebServiceFacade.callEncryptApiLocations(stateId.toString(), settingsFacade.getProperty(Constants.TYPE_ID_HEALTH_FACILITY));
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode encryptJson = objectMapper.readTree(keelDeelData);
+            String keel = encryptJson.get("keel").asText();
+            String deel = encryptJson.get("deel").asText();
+
+            String token = rchWebServiceFacade.generateAuthToken();
+            String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
+
+            String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "healthfacility", stateId.toString());
+
+            Map<String, Object> params = new HashMap<>();
+            params.put("state", stateId.toString());
+            params.put("tempFilePath", tempFilePath);
+            params.put("fromDate", startDate);
+            params.put("endDate", endDate);
+            params.put("stateName", stateName);
+            params.put("stateCode", stateCode.toString());
+            MotechEvent nextEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "healthfacility", params);
+            eventRelay.sendEventMessage(nextEvent);
+
         } catch (Exception e) {
-            String error = String.format("Cannot read RCH HealthFacility data from %s state with state id: %d due to exception %s.", stateName, stateId , e.getMessage());
+            String error = String.format("Error processing RCH healthfacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             LOGGER.error(error, e);
-            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHFACILITY, stateId));
+            handleError(RchUserType.HEALTHFACILITY, stateId, stateName, stateCode, startDate, endDate, error);
         }
+
     }
 
     @MotechListener(subjects = { Constants.RCH_HEALTHSUBFACILITY_IMPORT_SUBJECT})
@@ -570,7 +706,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         LOGGER.debug(LOG_STATEID, stateId);
         LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
         LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
-        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
 
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
@@ -582,21 +717,32 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         String stateName = state.getName();
         Long stateCode = state.getCode();
         try {
-            if (rchWebServiceFacade.getHealthSubFacilityData(startDate, endDate, endpoint, stateId)) {
-                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
-            }
-        } catch (RchWebServiceException e) {
-            String error = String.format("Cannot read RCH HealthSubFacility data from %s state with state id: %d", stateName, stateId);
-            LOGGER.error(error, e);
-            alertService.create(RCH_WEB_SERVICE, "RCH Web Service HealthSubFacility Import", e
-                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHSUBFACILITY, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHSUBFACILITY, stateId));
+            String keelDeelData = rchWebServiceFacade.callEncryptApiLocations(stateId.toString(), settingsFacade.getProperty(Constants.TYPE_ID_HEALTH_SUB_FACILITY));
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode encryptJson = objectMapper.readTree(keelDeelData);
+            String keel = encryptJson.get("keel").asText();
+            String deel = encryptJson.get("deel").asText();
+
+            String token = rchWebServiceFacade.generateAuthToken();
+            String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
+
+            String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "healthsubfacility", stateId.toString());
+
+            Map<String, Object> params = new HashMap<>();
+            params.put("state", stateId.toString());
+            params.put("tempFilePath", tempFilePath);
+            params.put("fromDate", startDate);
+            params.put("endDate", endDate);
+            params.put("stateName", stateName);
+            params.put("stateCode", stateCode.toString());
+            MotechEvent nextEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "healthsubfacility", params);
+            eventRelay.sendEventMessage(nextEvent);
+
         } catch (Exception e) {
-            String error = String.format("Cannot read RCH HealthSubFacility data from %s state with state id: %d due to exception %s.", stateName, stateId , e.getMessage());
+            String error = String.format("Error processing RCH healthfacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             LOGGER.error(error, e);
-            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHSUBFACILITY, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHSUBFACILITY, stateId));
+            handleError(RchUserType.HEALTHSUBFACILITY, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
 
@@ -620,21 +766,32 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         String stateName = state.getName();
         Long stateCode = state.getCode();
         try {
-            if (rchWebServiceFacade.getVillageHealthSubFacilityData(startDate, endDate, endpoint, stateId)) {
-                LOGGER.info(FILE_RECORD_SUCCESS, stateId);
-            }
-        } catch (RchWebServiceException e) {
-            String error = String.format("Cannot read RCH VillageHealthSubFacility data from %s state with state id: %d", stateName, stateId);
-            LOGGER.error(error, e);
-            alertService.create(RCH_WEB_SERVICE, "RCH Web Service VillageHealthSubFacility Import", e
-                    .getMessage() + " " + error, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId));
+            String keelDeelData = rchWebServiceFacade.callEncryptApiLocations(stateId.toString(), settingsFacade.getProperty(Constants.TYPE_ID_HEALTH_VILLAGE));
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode encryptJson = objectMapper.readTree(keelDeelData);
+            String keel = encryptJson.get("keel").asText();
+            String deel = encryptJson.get("deel").asText();
+
+            String token = rchWebServiceFacade.generateAuthToken();
+            String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
+
+            String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "villagehealthsubfacility", stateId.toString());
+
+            Map<String, Object> params = new HashMap<>();
+            params.put("state", stateId.toString());
+            params.put("tempFilePath", tempFilePath);
+            params.put("fromDate", startDate);
+            params.put("endDate", endDate);
+            params.put("stateName", stateName);
+            params.put("stateCode", stateCode.toString());
+            MotechEvent nextEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "villagehealthsubfacility", params);
+            eventRelay.sendEventMessage(nextEvent);
+
         } catch (Exception e) {
-            String error = String.format("Cannot read RCH VillageHealthSubFacility data from %s state with state id: %d due to exception %s.", stateName, stateId , e.getMessage());
+            String error = String.format("Error processing RCH villagehealthsubfacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             LOGGER.error(error, e);
-            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId));
+            handleError(RchUserType.VILLAGEHEALTHSUBFACILITY, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
 
@@ -656,24 +813,19 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         String stateName = state.getName();
         Long stateCode = state.getCode();
         try {
-            // 1. Call the first API (encrypt API) to get keel and deel
-            LOGGER.debug("Calling first API (encrypt API) for state ID: {}", stateId);
+
             String keelDeelData = rchWebServiceFacade.callEncryptApi(stateId.toString(), settingsFacade.getProperty(Constants.RCH_CHILD_USER),startReferenceDate,endReferenceDate); // "1" for mother data
 
-            // Parse the response to get keel and deel
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode encryptJson = objectMapper.readTree(keelDeelData);
             String keel = encryptJson.get("keel").asText();
             String deel = encryptJson.get("deel").asText();
 
-            // 2. Call the second API using the keel and deel from the first API
             String token = rchWebServiceFacade.generateAuthToken();
             String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApi(token, keel, deel);
 
-            // 3. Save the response from the second API (keel and deel)
             String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "child", stateId.toString());
 
-            // 4. Trigger the event for the third API call after saving the keel-deel response
             Map<String, Object> params = new HashMap<>();
             params.put("state", stateId.toString());
             params.put("tempFilePath", tempFilePath);
@@ -700,7 +852,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
         LocalDate startReferenceDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
         LocalDate endReferenceDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
-        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
 
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
@@ -714,24 +865,18 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         Long stateCode = state.getCode();
 
         try {
-            // 1. Call the first API (encrypt API) to get keel and deel
-            LOGGER.debug("Calling first API (encrypt API) for state ID: {}", stateId);
             String keelDeelData = rchWebServiceFacade.callEncryptApi(stateId.toString(), settingsFacade.getProperty(Constants.RCH_ASHA_USER),startReferenceDate,endReferenceDate);
 
-            // Parse the response to get keel and deel
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode encryptJson = objectMapper.readTree(keelDeelData);
             String keel = encryptJson.get("keel").asText();
             String deel = encryptJson.get("deel").asText();
 
-            // 2. Call the second API using the keel and deel from the first API
             String token = rchWebServiceFacade.generateAuthToken();
             String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApi(token, keel, deel);
 
-            // 3. Save the response from the second API (keel and deel)
             String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "asha", stateId.toString());
 
-            // 4. Trigger the event for the third API call after saving the keel-deel response
             Map<String, Object> params = new HashMap<>();
             params.put("state", stateId.toString());
             params.put("tempFilePath", tempFilePath);

@@ -71,11 +71,13 @@ public interface RchWebServiceFacade {
 
     String callEncryptApi(String state, String typeOfData,LocalDate startDate, LocalDate endDate);
 
+    String callEncryptApiLocations(String stateId, String typeId);
+
     String generateAuthToken();
 
-    String callSecondApi(String tempFilePath, String token);
-
     String callKeelDeelApi(String token,String keel,String deel);
+
+    String callKeelDeelApiLocations(String token, String keel, String deel);
 
     String saveToFile(String data, String type, String state);
 
