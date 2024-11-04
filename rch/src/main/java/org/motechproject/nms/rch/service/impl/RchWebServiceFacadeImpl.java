@@ -3088,11 +3088,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             string = string.replaceAll("(?<!\\\\)(?<!\\\\\\\\)(\\\\)(?!\\\\)(?!\\\\\\\\)", "");
             string=string.replace("{\"response\":\"","");
             string=string.replace("]}\"}","]}");
-            LOGGER.info(string);
-            LOGGER.info("BREAK");
             string=string.replace("{\"RCH Data\":","");
             string=string.replace("]}","]");
-            LOGGER.info(string);
             return string;
         } catch (Exception e) {
             throw new RchFileManipulationException("Failed to read response file.", e); //NOPMD
