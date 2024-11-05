@@ -223,56 +223,86 @@ public class RchWsImportServiceImpl implements RchWsImportService {
     @Transactional
     @Override
     public void importRchMothersData(MotechEvent motechEvent) {
+        LOGGER.info("Starting import of RCH mother data");
+
+
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
-        LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
-        LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
+        LocalDate startReferenceDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
+        LocalDate endReferenceDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
 
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
-            String error = String.format("State with code %s doesn't exist in database. Skipping RCH Mother import for this state", stateId);
+            String error = String.format("State with code %s does not exist in database. Skipping RCH Mother import for this state", stateId);
             LOGGER.error(error);
-            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.MOTHER, stateId, null, 0, 0, error));
+            rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateId, null, 0, 0, error));
             return;
         }
 
         String stateName = state.getName();
         Long stateCode = state.getCode();
+        boolean success = false;
+        int retryCount = 0;
 
-        try {
-            // 1. Call the first API (encrypt API) to get keel and deel
-            LOGGER.debug("Calling first API (encrypt API) for state ID: {}", stateId);
-            String keelDeelData = rchWebServiceFacade.callEncryptApi(stateId.toString(), settingsFacade.getProperty(Constants.RCH_MOTHER_USER),startDate,endDate); // "1" for mother data
-            LOGGER.debug("Keel and Deel data received: {}", keelDeelData);
+        while (!success && retryCount < 2) {
+            try {
+                String keelDeelData = rchWebServiceFacade.callEncryptApi(stateId.toString(), settingsFacade.getProperty(Constants.RCH_MOTHER_USER), startReferenceDate, endReferenceDate);
 
-            // Parse the response to get keel and deel
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode encryptJson = objectMapper.readTree(keelDeelData);
-            String keel = encryptJson.get("keel").asText();
-            String deel = encryptJson.get("deel").asText();
+                if (keelDeelData == null) {
+                    String error = String.format("Received null response from encrypt API for mother data for state %s (ID: %d)", stateName, stateId);
+                    LOGGER.error(error);
 
-            // 2. Call the second API using the keel and deel from the first API
-            String token = rchWebServiceFacade.generateAuthToken();
-            String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApi(token, keel, deel);
+                    if (retryCount == 0) {
+                        rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
+                        rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.MOTHER, stateId));
+                    }
+                    retryCount++;
+                    continue;
+                }
 
-            // 3. Save the response from the second API (keel and deel)
-            String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "mother", stateId.toString());
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode encryptJson = objectMapper.readTree(keelDeelData);
+                String keel = encryptJson.get("keel").asText();
+                String deel = encryptJson.get("deel").asText();
 
-            // 4. Trigger the event for the third API call after saving the keel-deel response
-            Map<String, Object> params = new HashMap<>();
-            params.put("state", stateId.toString());
-            params.put("tempFilePath", tempFilePath);
-            params.put("fromDate",startDate);
-            params.put("endDate",endDate);
-            params.put("stateName",stateName);
-            params.put("stateCode",stateCode.toString());
-            MotechEvent thirdEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "mother", params);
-            eventRelay.sendEventMessage(thirdEvent);
+                String token = rchWebServiceFacade.generateAuthToken(); // Ensure token is generated before use
+                String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApi(token, keel, deel);
 
-        } catch (Exception e) {
-            String error = String.format("Error processing RCH mothers data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
-            LOGGER.error(error, e);
-            rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.MOTHER, stateId));
+                if (keelDeelApiResponse != null) {
+                    String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "mother", stateId.toString());
+
+                    Map<String, Object> params = new HashMap<>();
+                    params.put("state", stateId.toString());
+                    params.put("tempFilePath", tempFilePath);
+                    params.put("fromDate", startReferenceDate);
+                    params.put("endDate", endReferenceDate);
+                    params.put("stateName", stateName);
+                    params.put("stateCode", stateCode.toString());
+
+                    MotechEvent thirdEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "mother", params);
+                    eventRelay.sendEventMessage(thirdEvent);
+
+                    success = true; // Mark as successful
+                } else {
+                    String error = String.format("Received null response from keel-deel API for mother data for state %s (ID: %d)", stateName, stateId);
+                    LOGGER.error(error);
+
+                    if (retryCount == 0) {
+                        rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
+                        rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.MOTHER, stateId));
+                    }
+                    retryCount++;
+                }
+
+            } catch (Exception e) {
+                String error = String.format("Failed to process RCH mother data for state %s (ID: %d) after retries: %s", stateName, stateId, e.getMessage());
+                LOGGER.error(error);
+
+                if (retryCount == 0) {
+                    rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
+                    rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.MOTHER, stateId));
+                }
+                retryCount++;
+            }
         }
     }
 
@@ -797,11 +827,13 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
     @MotechListener(subjects = { Constants.RCH_CHILD_IMPORT_SUBJECT })
     @Transactional
+    @Override
     public void importRchChildrenData(MotechEvent motechEvent) {
+        LOGGER.info("Starting import of RCH child data");
+
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
         LocalDate startReferenceDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
         LocalDate endReferenceDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
-//        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
 
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
@@ -810,11 +842,26 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateId, null, 0, 0, error));
             return;
         }
+
         String stateName = state.getName();
         Long stateCode = state.getCode();
-        try {
+        boolean success = false;
+        int retryCount = 0;
 
-            String keelDeelData = rchWebServiceFacade.callEncryptApi(stateId.toString(), settingsFacade.getProperty(Constants.RCH_CHILD_USER),startReferenceDate,endReferenceDate); // "1" for mother data
+        while (!success && retryCount < 2) {
+            try {
+                String keelDeelData = rchWebServiceFacade.callEncryptApi(stateId.toString(), settingsFacade.getProperty(Constants.RCH_CHILD_USER), startReferenceDate, endReferenceDate);
+
+                if (keelDeelData == null) {
+                    String error = String.format("Received null response from encrypt API for child data for state %s (ID: %d)", stateName, stateId);
+
+                    if (retryCount == 0) {
+                        rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
+                        rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
+                    }
+                    retryCount++;
+                    continue;
+                }
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode encryptJson = objectMapper.readTree(keelDeelData);
@@ -824,7 +871,8 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             String token = rchWebServiceFacade.generateAuthToken();
             String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApi(token, keel, deel);
 
-            String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "child", stateId.toString());
+                if (keelDeelApiResponse != null) {
+                    String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "child", stateId.toString());
 
             Map<String, Object> params = new HashMap<>();
             params.put("state", stateId.toString());
@@ -836,11 +884,26 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             MotechEvent thirdEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "child", params);
             eventRelay.sendEventMessage(thirdEvent);
 
-        } catch (Exception e) {
-            String error = String.format("Error processing RCH child data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
-            LOGGER.error(error, e);
-            rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
+                    success = true;
+                } else {
+                    String error = String.format("Received null response from keel-deel API for child data for state %s (ID: %d)", stateName, stateId);
+
+                    if (retryCount == 0) {
+                        rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
+                        rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
+                    }
+                    retryCount++;
+                }
+            } catch (Exception e) {
+                String error = String.format("Failed to process RCH child data for state %s (ID: %d) after retries: %s", stateName, stateId, e.getMessage());
+
+                LOGGER.error(error);
+                if (retryCount == 0) {
+                    rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
+                    rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
+                }
+                retryCount++;
+            }
         }
     }
 
@@ -848,14 +911,15 @@ public class RchWsImportServiceImpl implements RchWsImportService {
     @Transactional
     @Override
     public void importRchAshaData(MotechEvent motechEvent) {
-        LOGGER.info("Asha import entry point");
+        LOGGER.info("Starting import of RCH ASHA data");
+
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
         LocalDate startReferenceDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
         LocalDate endReferenceDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
 
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
-            String error = String.format("State with code %s does not exist in database. Skipping RCH FLW import for this state.", stateId);
+            String error = String.format("State with code %s does not exist in database. Skipping RCH ASHA import for this state", stateId);
             LOGGER.error(error);
             rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateId, null, 0, 0, error));
             return;
@@ -863,19 +927,23 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         String stateName = state.getName();
         Long stateCode = state.getCode();
+        boolean success = false;
+        int retryCount = 0;
 
-        try {
-            String keelDeelData = rchWebServiceFacade.callEncryptApi(stateId.toString(), settingsFacade.getProperty(Constants.RCH_ASHA_USER),startReferenceDate,endReferenceDate);
+        while (!success && retryCount < 2) {
+            try {
+                String keelDeelData = rchWebServiceFacade.callEncryptApi(stateId.toString(), settingsFacade.getProperty(Constants.RCH_ASHA_USER), startReferenceDate, endReferenceDate);
 
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode encryptJson = objectMapper.readTree(keelDeelData);
             String keel = encryptJson.get("keel").asText();
             String deel = encryptJson.get("deel").asText();
 
-            String token = rchWebServiceFacade.generateAuthToken();
-            String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApi(token, keel, deel);
+                String token = rchWebServiceFacade.generateAuthToken();
+                String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApi(token, keel, deel);
 
-            String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "asha", stateId.toString());
+                if (keelDeelApiResponse != null) {
+                    String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "asha", stateId.toString());
 
             Map<String, Object> params = new HashMap<>();
             params.put("state", stateId.toString());
@@ -887,11 +955,25 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             MotechEvent thirdEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "asha", params);
             eventRelay.sendEventMessage(thirdEvent);
 
-        } catch (Exception e) {
-            String error = String.format("Error processing RCH asha data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
-            LOGGER.error(error, e);
-            rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
+                    success = true;
+                } else {
+                    String error = String.format("Received null response from keel-deel API for ASHA data for state %s (ID: %d)", stateName, stateId);
+                    if (retryCount == 0) {
+                        rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, error));
+                        rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
+                    }
+                    retryCount++;
+                }
+
+            } catch (Exception e) {
+                String error = String.format("Failed to process RCH ASHA data for state %s (ID: %d) after retries: %s", stateName, stateId, e.getMessage());
+                LOGGER.error(error);
+                if (retryCount == 0) {
+                    rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, error));
+                    rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
+                }
+                retryCount++;
+            }
         }
     }
 
