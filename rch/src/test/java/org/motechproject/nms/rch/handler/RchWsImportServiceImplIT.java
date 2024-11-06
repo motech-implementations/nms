@@ -70,40 +70,11 @@ public class RchWsImportServiceImplIT extends BasePaxIT {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        // Set up any necessary mocks and stubs
     }
-
 
     @Test
     public void testImportRchMothersDataFlow() throws Exception {
-        // Mock State Data
-        State mockState = new State();
-        mockState.setCode(stateId);
-        mockState.setName("TestState");
-        when(stateDataService.findByCode(stateId)).thenReturn(mockState);
-
-        when(settingsFacade.getProperty(Constants.RCH_MOTHER_USER)).thenReturn("dummyUser");
-
-        //System.out.println(settingsFacade.getProperty(Constants.RCH_MOTHER_USER));
-
-
-        // Step 1: Mock encrypt API response
-        when(rchWebServiceFacade.callEncryptApi(anyString(), anyString(), any(LocalDate.class), any(LocalDate.class)))
-                .thenReturn(apiResponse);
-
-        //System.out.println(rchWebServiceFacade.callEncryptApi(stateId.toString(), settingsFacade.getProperty(Constants.RCH_MOTHER_USER),LocalDate.now(),LocalDate.now()));
-
-        // Step 2: Mock token generation and keel-deel API call
-        String token = "dummyToken";
-        when(rchWebServiceFacade.generateAuthToken()).thenReturn(token);
-        String keelDeelResponse = "{\"status\":\"success\"}";
-        when(rchWebServiceFacade.callKeelDeelApi(anyString(), anyString(), anyString()))
-                .thenReturn(keelDeelResponse);
-
-        // Step 3: Mock the file saving operation
-        String tempFilePath = "dummyPath/tempFile.json";
-        when(rchWebServiceFacade.saveToFile(anyString(), anyString(), anyString()))
-                .thenReturn(tempFilePath);
+       setupMocksAndInitialData();
 
         // Step 4: Trigger the first Motech event to start the import process
         Map<String, Object> params = new HashMap<>();
@@ -114,65 +85,66 @@ public class RchWsImportServiceImplIT extends BasePaxIT {
 
         // Call the method
         rchWsImportService.importRchMothersData(importEvent);
-
-        // Verify first API call (Encrypt API)
-        verify(rchWebServiceFacade).callEncryptApi(eq(stateId.toString()), anyString(), any(LocalDate.class), any(LocalDate.class));
-
-        // Verify token generation and keel-deel API call
-        verify(rchWebServiceFacade).generateAuthToken();
-        verify(rchWebServiceFacade).callKeelDeelApi(eq(token), eq("dummyKeel"), eq("dummyDeel"));
-
-        // Verify file save
-        verify(rchWebServiceFacade).saveToFile(eq(keelDeelResponse), eq("mother"), eq(stateId.toString()));
-
-        // Trigger the second Motech event to simulate the third API call
+        verifyImportProcessInteractions();
 
         Map<String, Object> param2 = new HashMap<>();
         param2.put("state", stateId.toString());
-        param2.put("tempFilePath", tempFilePath);
-        param2.put("stateName", mockState.getName());
+        param2.put("tempFilePath", "dummyPath/tempFile.json");
+        param2.put("stateName", "TestState");
         param2.put("stateCode", stateId.toString());
         MotechEvent thirdEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "mother", param2);
         String thirdApiResponse = "{\"status\":\"success\"}";
         when(rchWebServiceFacade.callThirdApi(anyString())).thenReturn(thirdApiResponse);
 
-       /* File mockFile = mock(File.class);
-        when(mockFile.exists()).thenReturn(true);  // Simulate the file exists
-        when(rchWebServiceFacade.generateJsonResponseFile(eq(thirdApiResponse), eq(RchUserType.MOTHER), eq(stateId)))
-                .thenReturn(mockFile);*/
         File tempFile = File.createTempFile("tempFile", ".json");
         FileWriter writer = new FileWriter(tempFile);
-        writer.write("{\"sampleKey\":\"sampleValue\"}"); // Sample data to make the file non-empty
+        writer.write("{\"sampleKey\":\"sampleValue\"}");
         writer.close();
 
-        // Step 3: Mock `generateJsonResponseFile` to return the non-empty temp file
         when(rchWebServiceFacade.generateJsonResponseFile(anyString(), eq(RchUserType.MOTHER), eq(stateId)))
                 .thenReturn(tempFile);
-        System.out.println("rchWebServiceFacade: " + rchWebServiceFacade);
-        System.out.println("tempFile: " + tempFile);
-        System.out.println("tempFile.getName(): " + (tempFile != null ? tempFile.getName() : "null"));
 
         when(rchWebServiceFacade.retryScpAndAudit(
-                eq(tempFile.getName()),  // String name
-                any(LocalDate.class),    // LocalDate from
-                any(LocalDate.class),    // LocalDate to
-                eq(stateId),             // Long stateId
-                any(RchUserType.class),  // RchUserType userType
-                anyInt()                 // int trialCount
+                eq(tempFile.getName()),
+                any(LocalDate.class),
+                any(LocalDate.class),
+                eq(stateId),
+                any(RchUserType.class),
+                anyInt()
         )).thenReturn(true);
 
 
         rchWsImportService.handleThirdApiEvent(thirdEvent);
 
-        // Step 7: Verify third API response file generation
-        /*assertNotNull("The response file should not be null", tempFile);
-        verify(rchWebServiceFacade).generateJsonResponseFile(eq(thirdApiResponse), eq(RchUserType.MOTHER), eq(stateId));*/
-
         assertTrue("The file should contain data", tempFile.length() > 0);
-
-        // Clean up temp file if needed
         tempFile.deleteOnExit();
     }
 
+    private void setupMocksAndInitialData() throws Exception {
+        State mockState = new State();
+        mockState.setCode(stateId);
+        mockState.setName("TestState");
+        when(stateDataService.findByCode(stateId)).thenReturn(mockState);
+
+        when(settingsFacade.getProperty(Constants.RCH_MOTHER_USER)).thenReturn("dummyUser");
+        when(rchWebServiceFacade.callEncryptApi(anyString(), anyString(), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(apiResponse);
+
+        String token = "dummyToken";
+        when(rchWebServiceFacade.generateAuthToken()).thenReturn(token);
+        when(rchWebServiceFacade.callKeelDeelApi(anyString(), anyString(), anyString()))
+                .thenReturn("{\"status\":\"success\"}");
+        when(rchWebServiceFacade.saveToFile(anyString(), anyString(), anyString()))
+                .thenReturn("dummyPath/tempFile.json");
+    }
+
+    private void verifyImportProcessInteractions() throws Exception {
+        verify(rchWebServiceFacade).callEncryptApi(eq(stateId.toString()), anyString(), any(LocalDate.class), any(LocalDate.class));
+
+        verify(rchWebServiceFacade).generateAuthToken();
+        verify(rchWebServiceFacade).callKeelDeelApi(eq("dummyToken"), eq("dummyKeel"), eq("dummyDeel"));
+
+        verify(rchWebServiceFacade).saveToFile(eq("{\"status\":\"success\"}"), eq("mother"), eq(stateId.toString()));
+    }
 }
 

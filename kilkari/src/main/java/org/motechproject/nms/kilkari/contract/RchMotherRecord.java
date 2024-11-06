@@ -281,20 +281,20 @@ public class RchMotherRecord {
     @JsonProperty("Entry_Type")
     public void setEntryType(Object entryType) {
         if (entryType instanceof Integer) {
-            // If the value is already an integer, just assign it directly
             this.entryType = (Integer) entryType;
         } else if (entryType instanceof String) {
-            String entryTypeStr = (String) entryType;
-            if ("ACTIVE".equalsIgnoreCase(entryTypeStr) || entryTypeStr.isEmpty()) {
-                // If the string is "ACTIVE" or empty, assign 1
-                this.entryType = 1;
-            } else {
-                // For any other string, assign 0
-                this.entryType = 9;
+            String entryTypeStr = ((String) entryType).toUpperCase();
+            switch (entryTypeStr) {
+                case "ACTIVE":
+                case "":
+                    this.entryType = 1;
+                    break;
+                default:
+                    this.entryType = 9;
+                    break;
             }
         } else {
-            // If the input is null or any other type, assign a default (you can choose what to do)
-            this.entryType = 1; // Assuming null means "ACTIVE"
+            this.entryType = 1;
         }
     }
 

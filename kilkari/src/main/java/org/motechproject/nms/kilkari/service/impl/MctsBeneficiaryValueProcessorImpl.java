@@ -188,28 +188,27 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
         if (value == null) {
             return null;
         }
-
-        DateTime referenceDate;
-
         try {
-            DateTimeParser[] parsers = {
-                    DateTimeFormat.forPattern("dd-MM-yyyy").getParser(),
-                    DateTimeFormat.forPattern("dd/MM/yyyy").getParser(),
-                    DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss").getParser(),
-                    DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").getParser(),
-                    DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZZ").getParser(),
-                    DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZZ").getParser()};
-
-            DateTimeFormatter formatter = new DateTimeFormatterBuilder().append(null, parsers).toFormatter();
-
-            referenceDate = formatter.parseDateTime(value);
-
+            DateTimeFormatter formatter = createDateTimeFormatter();
+            return formatter.parseDateTime(value);
         } catch (IllegalArgumentException e) {
-           return null;
+            return null;
         }
-
-        return referenceDate;
     }
+
+    private DateTimeFormatter createDateTimeFormatter() {
+        DateTimeParser[] parsers = {
+                DateTimeFormat.forPattern("dd-MM-yyyy").getParser(),
+                DateTimeFormat.forPattern("dd/MM/yyyy").getParser(),
+                DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss").getParser(),
+                DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").getParser(),
+                DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZZ").getParser(),
+                DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZZ").getParser()
+        };
+
+        return new DateTimeFormatterBuilder().append(null, parsers).toFormatter();
+    }
+
     @Override
     public LocalDate getLocalDateByString(String value) {
         if (value == null) {
