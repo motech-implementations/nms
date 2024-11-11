@@ -3,7 +3,6 @@ package org.motechproject.nms.kilkari.contract;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.motechproject.nms.kilkari.utils.EntryTypeStrategy;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

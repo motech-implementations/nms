@@ -1,4 +1,4 @@
-package org.motechproject.nms.kilkari.utils;
+package org.motechproject.nms.kilkari.contract;
 
 public class EntryTypeStrategy {
     public Integer determineEntryType(Object entryType) {
