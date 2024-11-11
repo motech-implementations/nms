@@ -13,6 +13,7 @@ import org.motechproject.nms.kilkari.repository.MctsChildDataService;
 import org.motechproject.nms.kilkari.repository.MctsMotherDataService;
 import org.motechproject.nms.kilkari.service.MctsBeneficiaryValueProcessor;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
+import org.motechproject.nms.kilkari.utils.DateTimeFomatterFactory;
 import org.motechproject.nms.region.domain.HealthBlock;
 import org.motechproject.nms.region.domain.HealthFacility;
 import org.motechproject.nms.region.domain.HealthSubFacility;
@@ -24,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 
 import java.util.Map;
 
@@ -189,24 +191,11 @@ public class MctsBeneficiaryValueProcessorImpl implements MctsBeneficiaryValuePr
             return null;
         }
         try {
-            DateTimeFormatter formatter = createDateTimeFormatter();
+            DateTimeFormatter formatter = DateTimeFomatterFactory.createFormatter();
             return formatter.parseDateTime(value);
         } catch (IllegalArgumentException e) {
             return null;
         }
-    }
-
-    private DateTimeFormatter createDateTimeFormatter() {
-        DateTimeParser[] parsers = {
-                DateTimeFormat.forPattern("dd-MM-yyyy").getParser(),
-                DateTimeFormat.forPattern("dd/MM/yyyy").getParser(),
-                DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss").getParser(),
-                DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").getParser(),
-                DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZZ").getParser(),
-                DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZZ").getParser()
-        };
-
-        return new DateTimeFormatterBuilder().append(null, parsers).toFormatter();
     }
 
     @Override

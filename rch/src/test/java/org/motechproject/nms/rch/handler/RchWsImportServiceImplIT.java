@@ -65,45 +65,30 @@ public class RchWsImportServiceImplIT extends BasePaxIT {
     private AlertService alertService; // Add this line
 
     private Long stateId = 1L;
-    private String apiResponse = "{\"keel\":\"dummyKeel\",\"deel\":\"dummyDeel\"}";
+    private static final String API_RESPONSE_KEEL = "testKeelValue";
+    private static final String API_RESPONSE_DEEL = "testDeelValue";
+    private static final String API_RESPONSE_JSON = "{\"keel\":\"" + API_RESPONSE_KEEL + "\",\"deel\":\"" + API_RESPONSE_DEEL + "\"}";
+    private static final String TEMP_FILE_PREFIX = "tempFile";
+    private static final String TEMP_FILE_SUFFIX = ".json";
+    private static final String SAMPLE_JSON_CONTENT = "{\"sampleKey\":\"sampleValue\"}";
+    private static final String FILE_PATH = "testPath/tempFile.json";
+    private static final String AUTH_TOKEN = "testAuthToken";
+    private static final String SUCCESS_RESPONSE = "{\"status\":\"success\"}";
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
+        setupMocksAndInitialData();
     }
 
     @Test
     public void testImportRchMothersDataFlow() throws Exception {
-       setupMocksAndInitialData();
-
-        // Step 4: Trigger the first Motech event to start the import process
-        Map<String, Object> params = new HashMap<>();
-        params.put("stateId", stateId);
-        params.put("fromDate", LocalDate.now().minusDays(7));
-        params.put("endDate", LocalDate.now());
-        MotechEvent importEvent = new MotechEvent(Constants.RCH_MOTHER_IMPORT_SUBJECT, params);
-
-        // Call the method
-        rchWsImportService.importRchMothersData(importEvent);
+        triggerImportProcess();
         verifyImportProcessInteractions();
 
-        Map<String, Object> param2 = new HashMap<>();
-        param2.put("state", stateId.toString());
-        param2.put("tempFilePath", "dummyPath/tempFile.json");
-        param2.put("stateName", "TestState");
-        param2.put("stateCode", stateId.toString());
-        MotechEvent thirdEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "mother", param2);
-        String thirdApiResponse = "{\"status\":\"success\"}";
-        when(rchWebServiceFacade.callThirdApi(anyString())).thenReturn(thirdApiResponse);
-
-        File tempFile = File.createTempFile("tempFile", ".json");
-        FileWriter writer = new FileWriter(tempFile);
-        writer.write("{\"sampleKey\":\"sampleValue\"}");
-        writer.close();
-
+        File tempFile = createTempJsonFile();
         when(rchWebServiceFacade.generateJsonResponseFile(anyString(), eq(RchUserType.MOTHER), eq(stateId)))
                 .thenReturn(tempFile);
-
         when(rchWebServiceFacade.retryScpAndAudit(
                 eq(tempFile.getName()),
                 any(LocalDate.class),
@@ -113,38 +98,72 @@ public class RchWsImportServiceImplIT extends BasePaxIT {
                 anyInt()
         )).thenReturn(true);
 
-
-        rchWsImportService.handleThirdApiEvent(thirdEvent);
-
-        assertTrue("The file should contain data", tempFile.length() > 0);
+        rchWsImportService.handleThirdApiEvent(createThirdEvent());
+        assertFileHasContent(tempFile);
         tempFile.deleteOnExit();
     }
 
-    private void setupMocksAndInitialData() throws Exception {
+    private void setupMocksAndInitialData() {
+        State mockState = createMockState();
+        when(stateDataService.findByCode(stateId)).thenReturn(mockState);
+
+        when(settingsFacade.getProperty(Constants.RCH_MOTHER_USER)).thenReturn("testUser");
+        when(rchWebServiceFacade.callEncryptApi(anyString(), anyString(), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(API_RESPONSE_JSON);
+        when(rchWebServiceFacade.generateAuthToken()).thenReturn(AUTH_TOKEN);
+        when(rchWebServiceFacade.callKeelDeelApi(anyString(), anyString(), anyString()))
+                .thenReturn(SUCCESS_RESPONSE);
+        when(rchWebServiceFacade.saveToFile(anyString(), anyString(), anyString()))
+                .thenReturn(FILE_PATH);
+    }
+
+    private State createMockState() {
         State mockState = new State();
         mockState.setCode(stateId);
         mockState.setName("TestState");
-        when(stateDataService.findByCode(stateId)).thenReturn(mockState);
+        return mockState;
+    }
 
-        when(settingsFacade.getProperty(Constants.RCH_MOTHER_USER)).thenReturn("dummyUser");
-        when(rchWebServiceFacade.callEncryptApi(anyString(), anyString(), any(LocalDate.class), any(LocalDate.class)))
-                .thenReturn(apiResponse);
+    private void triggerImportProcess() {
+        Map<String, Object> params = createImportEventParams();
+        MotechEvent importEvent = new MotechEvent(Constants.RCH_MOTHER_IMPORT_SUBJECT, params);
+        rchWsImportService.importRchMothersData(importEvent);
+    }
 
-        String token = "dummyToken";
-        when(rchWebServiceFacade.generateAuthToken()).thenReturn(token);
-        when(rchWebServiceFacade.callKeelDeelApi(anyString(), anyString(), anyString()))
-                .thenReturn("{\"status\":\"success\"}");
-        when(rchWebServiceFacade.saveToFile(anyString(), anyString(), anyString()))
-                .thenReturn("dummyPath/tempFile.json");
+    private Map<String, Object> createImportEventParams() {
+        Map<String, Object> params = new HashMap<>();
+        params.put("stateId", stateId);
+        params.put("fromDate", LocalDate.now().minusDays(7));
+        params.put("endDate", LocalDate.now());
+        return params;
     }
 
     private void verifyImportProcessInteractions() throws Exception {
         verify(rchWebServiceFacade).callEncryptApi(eq(stateId.toString()), anyString(), any(LocalDate.class), any(LocalDate.class));
-
         verify(rchWebServiceFacade).generateAuthToken();
-        verify(rchWebServiceFacade).callKeelDeelApi(eq("dummyToken"), eq("dummyKeel"), eq("dummyDeel"));
+        verify(rchWebServiceFacade).callKeelDeelApi(eq(AUTH_TOKEN), eq(API_RESPONSE_KEEL), eq(API_RESPONSE_DEEL));
+        verify(rchWebServiceFacade).saveToFile(eq(SUCCESS_RESPONSE), eq("mother"), eq(stateId.toString()));
+    }
 
-        verify(rchWebServiceFacade).saveToFile(eq("{\"status\":\"success\"}"), eq("mother"), eq(stateId.toString()));
+    private File createTempJsonFile() throws Exception {
+        File tempFile = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
+        try (FileWriter writer = new FileWriter(tempFile)) {
+            writer.write(SAMPLE_JSON_CONTENT);
+        }
+        return tempFile;
+    }
+
+    private MotechEvent createThirdEvent() {
+        Map<String, Object> params = new HashMap<>();
+        params.put("state", stateId.toString());
+        params.put("tempFilePath", FILE_PATH);
+        params.put("stateName", "TestState");
+        params.put("stateCode", stateId.toString());
+        return new MotechEvent(Constants.SECOND_EVENT_PREFIX + "mother", params);
+    }
+
+    private void assertFileHasContent(File file) {
+        assertTrue("The file should contain data", file.length() > 0);
     }
 }
 

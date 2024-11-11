@@ -3,6 +3,7 @@ package org.motechproject.nms.kilkari.contract;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.motechproject.nms.kilkari.utils.EntryTypeStrategy;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -280,22 +281,8 @@ public class RchMotherRecord {
     @XmlElement(name = "Entry_Type")
     @JsonProperty("Entry_Type")
     public void setEntryType(Object entryType) {
-        if (entryType instanceof Integer) {
-            this.entryType = (Integer) entryType;
-        } else if (entryType instanceof String) {
-            String entryTypeStr = ((String) entryType).toUpperCase();
-            switch (entryTypeStr) {
-                case "ACTIVE":
-                case "":
-                    this.entryType = 1;
-                    break;
-                default:
-                    this.entryType = 9;
-                    break;
-            }
-        } else {
-            this.entryType = 1;
-        }
+        EntryTypeStrategy strategy = new EntryTypeStrategy();
+        this.entryType = strategy.determineEntryType(entryType);
     }
 
     public String getExecDate() {
