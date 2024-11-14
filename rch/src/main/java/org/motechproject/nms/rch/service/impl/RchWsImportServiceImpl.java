@@ -225,7 +225,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
     public void importRchMothersData(MotechEvent motechEvent) {
         LOGGER.info("Starting import of RCH mother data");
 
-
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
         LocalDate startReferenceDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
         LocalDate endReferenceDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
@@ -240,6 +239,11 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         String stateName = state.getName();
         Long stateCode = state.getCode();
+
+
+
+        List<RchImportAudit> failedImports = rchImportAuditDataService.findByStateCodeAndDateRangeAndUserType(stateCode, startReferenceDate, endReferenceDate, RchUserType.MOTHER);
+        boolean isDuplicate = !failedImports.isEmpty();
         boolean success = false;
         int retryCount = 0;
 
@@ -251,7 +255,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
                     String error = String.format("Received null response from encrypt API for mother data for state %s (ID: %d)", stateName, stateId);
                     LOGGER.error(error);
 
-                    if (retryCount == 0) {
+                    if (!isDuplicate && retryCount == 1) {
                         rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
                         rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.MOTHER, stateId));
                     }
@@ -286,7 +290,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
                     String error = String.format("Received null response from keel-deel API for mother data for state %s (ID: %d)", stateName, stateId);
                     LOGGER.error(error);
 
-                    if (retryCount == 0) {
+                    if (!isDuplicate && retryCount == 1) {
                         rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
                         rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.MOTHER, stateId));
                     }
@@ -295,10 +299,11 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
             } catch (Exception e) {
                 String error = String.format("Failed to process RCH mother data for state %s (ID: %d) after retries: %s", stateName, stateId, e.getMessage());
-                LOGGER.error(error);
+                String truncatedErrorMessage = error.length() > 255 ? error.substring(0, 254) : error;
 
-                if (retryCount == 0) {
-                    rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
+
+                if (!isDuplicate && retryCount == 1) {
+                    rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, truncatedErrorMessage));
                     rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.MOTHER, stateId));
                 }
                 retryCount++;
@@ -316,28 +321,29 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         String stateName = (String) event.getParameters().get("stateName");
         String stateCode = (String) event.getParameters().get("stateCode");
         boolean status = false;
+        String thirdApiResponse = null;
 
         RchUserType userType = RchUserType.valueOf(entityType.toUpperCase());
 
         try {
-            // 1. Read the payload from the temp file
             String payload = rchWebServiceFacade.readPayloadFromTempFile(tempFilePath);
 
 
-            // 2. Call the third API using the payload
-            String thirdApiResponse = rchWebServiceFacade.callThirdApi(payload);
+            if(payload!=null) {
+                 thirdApiResponse = rchWebServiceFacade.callThirdApi(payload);
+            }
 
 
-            // 3. Save the response from the third API using generateJsonResponseFile
-            File responseFile = rchWebServiceFacade.generateJsonResponseFile(thirdApiResponse, userType, Long.valueOf(stateId));
+            if(thirdApiResponse!=null) {
+                File responseFile = rchWebServiceFacade.generateJsonResponseFile(thirdApiResponse, userType, Long.valueOf(stateId));
+
             if (responseFile != null) {
                 LOGGER.info("RCH {} response successfully written to file. Copying to remote directory.", userType);
                 status = rchWebServiceFacade.retryScpAndAudit(responseFile.getName(), from, to, Long.valueOf(stateId), userType, 0);
             } else {
                 LOGGER.error("Error writing {} response to file for state {}", userType, stateId);
-            }
+            }}
 
-            // 4. Post-file-processing based on status
             if (status) {
                 LOGGER.info(FILE_RECORD_SUCCESS, stateId);
             } else {
@@ -345,7 +351,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling third API event for state: {}", stateId, e);
             handleError(userType, Long.valueOf(stateId), stateName, Long.valueOf(stateCode), from, to, e.getMessage());
         }
     }
@@ -355,11 +360,14 @@ public class RchWsImportServiceImpl implements RchWsImportService {
      */
     private void handleError(RchUserType userType, Long stateId, String stateName, Long stateCode, LocalDate from, LocalDate to, String errorMessage) {
         try {
+            String truncatedErrorMessage = errorMessage.length() > 255 ? errorMessage.substring(0, 254) : errorMessage;
+
             String error = String.format("Cannot process RCH %s data for state %s with state ID: %d. Error: %s",
-                    userType, stateName, stateId, errorMessage);
+                    userType, stateName, stateId, truncatedErrorMessage);
             LOGGER.error(error);
+
             alertService.create(RCH_WEB_SERVICE, "RCH Web Service " + userType + " Import", errorMessage, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
-            rchImportAuditDataService.create(new RchImportAudit(from, to, userType, stateCode, stateName, 0, 0, error));
+            rchImportAuditDataService.create(new RchImportAudit(from, to, userType, stateCode, stateName, 0, 0, truncatedErrorMessage));
             rchImportFailRecordDataService.create(new RchImportFailRecord(to, userType, stateId));
         } catch (Exception e) {
             LOGGER.error("Error creating failure records: {}", e.getMessage(), e);
@@ -375,7 +383,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
         LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
         LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
-        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
 
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
@@ -412,7 +419,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         } catch (Exception e) {
             String error = String.format("Error processing RCH district data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
-            LOGGER.error(error, e);
             handleError(RchUserType.DISTRICT, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
@@ -457,19 +463,23 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         String stateName = (String) event.getParameters().get("stateName");
         String stateCode = (String) event.getParameters().get("stateCode");
         boolean status = false;
+        String thirdApiResponse = null;
 
         try {
             String payload = rchWebServiceFacade.readPayloadFromTempFile(tempFilePath);
 
-            String thirdApiResponse = rchWebServiceFacade.callThirdApi(payload);
+            if(payload!=null) {
+                 thirdApiResponse = rchWebServiceFacade.callThirdApi(payload);
 
+            }
+            if(thirdApiResponse!=null){
             File responseFile = rchWebServiceFacade.generateJsonResponseFile(thirdApiResponse, userType, Long.valueOf(stateId));
             if (responseFile != null) {
                 LOGGER.info("RCH {} response successfully written to file. Copying to remote directory.", userType);
                 status = rchWebServiceFacade.retryScpAndAudit(responseFile.getName(), from, to, Long.valueOf(stateId), userType, 0);
             } else {
                 LOGGER.error("Error writing {} response to file for state {}", userType, stateId);
-            }
+            }}
 
             if (status) {
                 LOGGER.info("{} data processed successfully for state ID: {}", userType, stateId);
@@ -478,7 +488,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             }
 
         } catch (Exception e) {
-            LOGGER.error("Error handling third API event for {} data for state: {}", userType, stateId, e);
             handleError(userType, Long.valueOf(stateId), stateName, Long.valueOf(stateCode), from, to, e.getMessage());
         }
     }
@@ -526,7 +535,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         } catch (Exception e) {
             String error = String.format("Error processing RCH taluka data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
-            LOGGER.error(error, e);
             handleError(RchUserType.TALUKA, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
@@ -576,7 +584,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         } catch (Exception e) {
             String error = String.format("Error processing RCH village data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
-            LOGGER.error(error, e);
             handleError(RchUserType.VILLAGE, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
@@ -626,7 +633,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         } catch (Exception e) {
             String error = String.format("Error processing RCH healthblock data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
-            LOGGER.error(error, e);
             handleError(RchUserType.HEALTHBLOCK, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
@@ -638,7 +644,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
         LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
         LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
-        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
+
 
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
@@ -674,7 +680,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         } catch (Exception e) {
             String error = String.format("Error processing RCH talukahealthblock data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
-            LOGGER.error(error, e);
             handleError(RchUserType.TALUKAHEALTHBLOCK, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
@@ -722,7 +727,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         } catch (Exception e) {
             String error = String.format("Error processing RCH healthfacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
-            LOGGER.error(error, e);
             handleError(RchUserType.HEALTHFACILITY, stateId, stateName, stateCode, startDate, endDate, error);
         }
 
@@ -771,7 +775,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         } catch (Exception e) {
             String error = String.format("Error processing RCH healthfacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
-            LOGGER.error(error, e);
             handleError(RchUserType.HEALTHSUBFACILITY, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
@@ -820,7 +823,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         } catch (Exception e) {
             String error = String.format("Error processing RCH villagehealthsubfacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
-            LOGGER.error(error, e);
             handleError(RchUserType.VILLAGEHEALTHSUBFACILITY, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
@@ -845,6 +847,13 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         String stateName = state.getName();
         Long stateCode = state.getCode();
+
+
+
+
+        List<RchImportAudit> failedImports = rchImportAuditDataService.findByStateCodeAndDateRangeAndUserType(stateCode, startReferenceDate, endReferenceDate, RchUserType.CHILD);
+        boolean isDuplicate = !failedImports.isEmpty();
+
         boolean success = false;
         int retryCount = 0;
 
@@ -855,7 +864,8 @@ public class RchWsImportServiceImpl implements RchWsImportService {
                 if (keelDeelData == null) {
                     String error = String.format("Received null response from encrypt API for child data for state %s (ID: %d)", stateName, stateId);
 
-                    if (retryCount == 0) {
+
+                    if (!isDuplicate && retryCount == 1) {
                         rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
                         rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
                     }
@@ -863,32 +873,34 @@ public class RchWsImportServiceImpl implements RchWsImportService {
                     continue;
                 }
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode encryptJson = objectMapper.readTree(keelDeelData);
-            String keel = encryptJson.get("keel").asText();
-            String deel = encryptJson.get("deel").asText();
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode encryptJson = objectMapper.readTree(keelDeelData);
+                String keel = encryptJson.get("keel").asText();
+                String deel = encryptJson.get("deel").asText();
 
-            String token = rchWebServiceFacade.generateAuthToken();
-            String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApi(token, keel, deel);
+                String token = rchWebServiceFacade.generateAuthToken();
+                String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApi(token, keel, deel);
 
                 if (keelDeelApiResponse != null) {
                     String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "child", stateId.toString());
 
-            Map<String, Object> params = new HashMap<>();
-            params.put("state", stateId.toString());
-            params.put("tempFilePath", tempFilePath);
-            params.put("fromDate",startReferenceDate);
-            params.put("endDate",endReferenceDate);
-            params.put("stateName",stateName);
-            params.put("stateCode",stateCode.toString());
-            MotechEvent thirdEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "child", params);
-            eventRelay.sendEventMessage(thirdEvent);
+
+                    Map<String, Object> params = new HashMap<>();
+                    params.put("state", stateId.toString());
+                    params.put("tempFilePath", tempFilePath);
+                    params.put("fromDate", startReferenceDate);
+                    params.put("endDate", endReferenceDate);
+                    params.put("stateName", stateName);
+                    params.put("stateCode", stateCode.toString());
+                    MotechEvent thirdEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "child", params);
+                    eventRelay.sendEventMessage(thirdEvent);
 
                     success = true;
                 } else {
                     String error = String.format("Received null response from keel-deel API for child data for state %s (ID: %d)", stateName, stateId);
 
-                    if (retryCount == 0) {
+
+                    if (!isDuplicate && retryCount == 1) {
                         rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
                         rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
                     }
@@ -897,9 +909,10 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             } catch (Exception e) {
                 String error = String.format("Failed to process RCH child data for state %s (ID: %d) after retries: %s", stateName, stateId, e.getMessage());
 
-                LOGGER.error(error);
-                if (retryCount == 0) {
-                    rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
+                String truncatedErrorMessage = error.length() > 255 ? error.substring(0, 254) : error;
+
+                if (!isDuplicate && retryCount == 1) {
+                    rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, truncatedErrorMessage));
                     rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
                 }
                 retryCount++;
@@ -927,6 +940,13 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         String stateName = state.getName();
         Long stateCode = state.getCode();
+
+
+
+
+        List<RchImportAudit> failedImports = rchImportAuditDataService.findByStateCodeAndDateRangeAndUserType(stateCode, startReferenceDate, endReferenceDate, RchUserType.ASHA);
+        boolean isDuplicate = !failedImports.isEmpty();
+
         boolean success = false;
         int retryCount = 0;
 
@@ -934,10 +954,22 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             try {
                 String keelDeelData = rchWebServiceFacade.callEncryptApi(stateId.toString(), settingsFacade.getProperty(Constants.RCH_ASHA_USER), startReferenceDate, endReferenceDate);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode encryptJson = objectMapper.readTree(keelDeelData);
-            String keel = encryptJson.get("keel").asText();
-            String deel = encryptJson.get("deel").asText();
+                if (keelDeelData == null) {
+                    String error = String.format("Received null response from encrypt API for ASHA data for state %s (ID: %d)", stateName, stateId);
+
+
+                    if (!isDuplicate && retryCount == 1) {
+                        rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, error));
+                        rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
+                    }
+                    retryCount++;
+                    continue;
+                }
+
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode encryptJson = objectMapper.readTree(keelDeelData);
+                String keel = encryptJson.get("keel").asText();
+                String deel = encryptJson.get("deel").asText();
 
                 String token = rchWebServiceFacade.generateAuthToken();
                 String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApi(token, keel, deel);
@@ -945,20 +977,22 @@ public class RchWsImportServiceImpl implements RchWsImportService {
                 if (keelDeelApiResponse != null) {
                     String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "asha", stateId.toString());
 
-            Map<String, Object> params = new HashMap<>();
-            params.put("state", stateId.toString());
-            params.put("tempFilePath", tempFilePath);
-            params.put("fromDate",startReferenceDate);
-            params.put("endDate",endReferenceDate);
-            params.put("stateName",stateName);
-            params.put("stateCode",stateCode.toString());
-            MotechEvent thirdEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "asha", params);
-            eventRelay.sendEventMessage(thirdEvent);
+                    Map<String, Object> params = new HashMap<>();
+                    params.put("state", stateId.toString());
+                    params.put("tempFilePath", tempFilePath);
+                    params.put("fromDate", startReferenceDate);
+                    params.put("endDate", endReferenceDate);
+                    params.put("stateName", stateName);
+                    params.put("stateCode", stateCode.toString());
+                    MotechEvent thirdEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "asha", params);
+                    eventRelay.sendEventMessage(thirdEvent);
 
                     success = true;
                 } else {
                     String error = String.format("Received null response from keel-deel API for ASHA data for state %s (ID: %d)", stateName, stateId);
-                    if (retryCount == 0) {
+
+
+                    if (!isDuplicate && retryCount == 1) {
                         rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, error));
                         rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
                     }
@@ -967,9 +1001,10 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
             } catch (Exception e) {
                 String error = String.format("Failed to process RCH ASHA data for state %s (ID: %d) after retries: %s", stateName, stateId, e.getMessage());
-                LOGGER.error(error);
-                if (retryCount == 0) {
-                    rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, error));
+                String truncatedErrorMessage = error.length() > 255 ? error.substring(0, 254) : error;
+
+                if (!isDuplicate && retryCount == 1) {
+                    rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, truncatedErrorMessage));
                     rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
                 }
                 retryCount++;
