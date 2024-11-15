@@ -490,7 +490,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()));
             } else {
                 LOGGER.debug("System at capacity, No new MCTS subscriptions allowed. Setting status to HOLD");
-                subscription.setStatus(SubscriptionStatus.HOLD);
+                subscription.setStatus(Subscription.getStatus(subscription, DateTime.now()).equals(SubscriptionStatus.PENDING_ACTIVATION) ? SubscriptionStatus.PENDING_ACTIVATION : SubscriptionStatus.HOLD);
             }
 
             LOGGER.info("Creating Subscription ()" + subscription.getSubscriptionId()+" with status "+subscription.getStatus().toString());
