@@ -75,6 +75,7 @@ public final class Constants {
 
     public static final String RCH_CHILD_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".child.import";
     public static final String RCH_MOTHER_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".mother.import";
+    public static final String SECOND_EVENT_PREFIX = "rch.second.";
     public static final String RCH_ASHA_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".asha.import";
     public static final String RCH_TALUKA_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".taluka.import";
     public static final String RCH_VILLAGE_IMPORT_SUBJECT = BASE_RCH_SUBJECT + ".village.import";
@@ -134,6 +135,7 @@ public final class Constants {
     public static final String TYPE_ID_HEALTH_SUB_FACILITY = "rch.typeid.health_sub_facility";
     public static final String TYPE_ID_HEALTH_VILLAGE = "rch.typeid.health_village";
     public static final String TYPE_ID_TALUKA_HEALTH_BLOCK = "rch.typeid.taluka_health_block";
+
 
 
     private Constants() {

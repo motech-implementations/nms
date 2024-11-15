@@ -19,4 +19,7 @@
 
     <bean id="rchServiceLocator" class="org.motechproject.nms.rch.soap.RchwebservicesLocator" autowire="byType" />
 
+    <bean id="restTemplate" class="org.springframework.web.client.RestTemplate"/>
+
+
 </beans>

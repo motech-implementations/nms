@@ -130,7 +130,7 @@ public final class FlwMapper {
         }
         if (record.get(FlwConstants.UPDATED_ON) != null && !record.get(FlwConstants.UPDATED_ON).toString().trim().isEmpty()) {
             try {
-                updatedOn = DateTime.parse(record.get(FlwConstants.UPDATED_ON).toString(), DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ"));
+                updatedOn = DateTime.parse(record.get(FlwConstants.UPDATED_ON).toString(), DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"));
             } catch (Exception e) {
                 LOGGER.debug("Updated_On asha column is not parsed");
             }

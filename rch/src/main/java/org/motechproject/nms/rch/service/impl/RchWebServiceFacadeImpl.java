@@ -1,5 +1,11 @@
 package org.motechproject.nms.rch.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.axis.Message;
 import org.apache.axis.MessageContext;
@@ -13,6 +19,15 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -91,8 +106,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.supercsv.cellprocessor.ift.CellProcessor;
@@ -114,9 +136,14 @@ import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.rmi.RemoteException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -178,6 +205,19 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String LOCATIONS_FILES_HAVING_ERROR_MESSAGE = "[{\"Message\"";
 
 
+    public static final String FIRST_API = "rch.api.first";
+    public static final String PROJECT_ID = "rch.credentials.project_id";
+    public static final String SECURE_CODE = "rch.firstapi.securecode";
+    public static final String TOKEN_API = "rch.api.token";
+    public static final String CLIENT_ID = "rch.client.id";
+    public static final String CLIENT_SECRET = "rch.client.secret";
+    private static final String MOTHER_FIRST_EVENT = "rch.mother.first";
+    private static final String CHILD_FIRST_EVENT = "rch.child.first";
+    private static final String ASHA_FIRST_EVENT = "rch.asha.first";
+    private static final String SECOND_EVENT_PREFIX = "rch.second.";
+    private static final String THIRD_EVENT_PREFIX = "rch.thirdF.";
+
+
     @Autowired
     @Qualifier("rchSettings")
     private SettingsFacade settingsFacade;
@@ -193,6 +233,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     @Autowired
     private RchImportFacilitatorDataService rchImportFacilitatorDataService;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Autowired
     private RchImportFacilitatorService rchImportFacilitatorService;
@@ -285,10 +328,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     }
 
-    private boolean retryScpAndAudit(String name, LocalDate from, LocalDate to, Long stateId, RchUserType userType, int trialCount) {
+    public boolean retryScpAndAudit(String name, LocalDate from, LocalDate to, Long stateId, RchUserType userType, int trialCount) {
         try {
             scpResponseToRemote(name);
-            LOGGER.info("RCH mother response file successfully copied to remote server");
+            LOGGER.info("RCH {} response file successfully copied to remote server",userType);
 
             RchImportFacilitator rchImportFacilitator = new RchImportFacilitator(name, from, to, stateId, userType, LocalDate.now(), true);
             rchImportFacilitatorService.createImportFileAudit(rchImportFacilitator);
@@ -315,7 +358,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 localResponseFile = scpResponseToLocal(name, remoteLocation);
                 String result=null;
                 if(userType==RchUserType.MOTHER||userType==RchUserType.CHILD||userType==RchUserType.ASHA){
-                    result= readResponsesFromXml(localResponseFile);
+                    result= readResponsesFromJsonForNapix(localResponseFile);
                 }
                 else{
                     result= readResponsesFromJson(localResponseFile);
@@ -339,10 +382,10 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     if (localResponseFile != null) {
 
                         String result=null;
-                        if(userType==RchUserType.MOTHER||userType==RchUserType.CHILD||userType==RchUserType.ASHA){
-                            result= readResponsesFromXml(localResponseFile);
-                        }
-                        else{
+                        if(userType==RchUserType.MOTHER || userType==RchUserType.CHILD || userType==RchUserType.ASHA){
+                            LOGGER.info("userType is MOTHER, so converting json to Mother object");
+                            result= readResponsesFromJsonForNapix(localResponseFile);
+                        } else{
                             result= readResponsesFromJson(localResponseFile);
                         }
                         State importState = stateDataService.findByCode(stateId);
@@ -379,12 +422,12 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         for (File file : files) {
             String name = file.getName();
             String[] namesSplit = name.split("_");
-            String date = namesSplit[5].replace(".xml", "");
+            String date = namesSplit[5].replace(".json", "");
             DateTimeFormatter formatter = DateTimeFormat.forPattern("dd-MM-yyyy");
             Long stateId = Long.valueOf(namesSplit[2]);
             RchUserType userType = RchUserType.valueOf(namesSplit[3].toUpperCase(Locale.ROOT));
             LocalDate startDate = LocalDate.parse(date, formatter);
-            LOGGER.info("Reading response of State {} of date {}", stateId, startDate);
+            LOGGER.info("Reading response of State {} of date {} through api", stateId, startDate);
             try {
                 List<RchImportFacilitator> rchImportFacilitatorTypes = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, startDate, userType);
                 File localResponseFile;
@@ -392,7 +435,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     localResponseFile = fullFileName(name, remoteLocation);
                     String result = null;
                     if (userType == RchUserType.MOTHER || userType == RchUserType.CHILD || userType == RchUserType.ASHA) {
-                        result = readResponsesFromXml(localResponseFile);
+                        result = readResponsesFromJsonForNapix(localResponseFile);
+                    } else{
+                        result= readResponsesFromJson(localResponseFile);
                     }
                     State importState = stateDataService.findByCode(stateId);
                     String stateName = importState.getName();
@@ -411,7 +456,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
                             String result = null;
                             if (userType == RchUserType.MOTHER || userType == RchUserType.CHILD || userType == RchUserType.ASHA) {
-                                result = readResponsesFromXml(localResponseFile);
+                                result = readResponsesFromJsonForNapix(localResponseFile);
+                            } else{
+                                result= readResponsesFromJson(localResponseFile);
                             }
                             State importState = stateDataService.findByCode(stateId);
                             String stateName = importState.getName();
@@ -1118,9 +1165,14 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private void motherFileProcess(String result, Long stateId, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
         try {
             if (result.contains(RECORDS)) {
-                RchMothersDataSet mothersDataSet = (result == null) ?
+                /*RchMothersDataSet mothersDataSet = (result == null) ?
                         null :
-                        (RchMothersDataSet) MarshallUtils.unmarshall(result, RchMothersDataSet.class);
+                        (RchMothersDataSet) MarshallUtils.unmarshall(result, RchMothersDataSet.class);*/
+                ObjectMapper objectMapper = new ObjectMapper();
+
+                // Ignore unknown fields in the JSON that do not map to our entity
+                objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                RchMothersDataSet mothersDataSet = new ObjectMapper().readValue(result, RchMothersDataSet.class);
 
                 LOGGER.info("Starting RCH mother import");
                 StopWatch stopWatch = new StopWatch();
@@ -1132,7 +1184,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, warning));
                 } else {
                     LOGGER.info("Received {} mother records from RCH for {} state", sizeNullSafe(mothersDataSet.getRecords()), stateName);
-
+                    LOGGER.info("Displaying 1st record of MotherDataSet: lmpdate as {}, birthDate as {}, execDate as {} but registrationDate as {}", mothersDataSet.getRecords().get(0).getLmpDate(),mothersDataSet.getRecords().get(0).getBirthDate(), mothersDataSet.getRecords().get(0).getExecDate(), mothersDataSet.getRecords().get(0).getRegistrationDate());
                     RchImportAudit audit = saveImportedMothersData(mothersDataSet, stateName, stateCode, startReferenceDate, endReferenceDate);
                     rchImportAuditDataService.create(audit);
                     stopWatch.stop();
@@ -1150,12 +1202,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.MOTHER, stateId));
                 rchImportFacilitatorService.updateRchImportFacilatorAudit(LocalDate.now(), RchUserType.MOTHER, stateId);
             }
-        } catch (JAXBException e) {
-            String error = String.format("Cannot deserialize RCH mother data from %s location.", stateId);
-            rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.MOTHER, stateId));
-            rchImportFacilitatorService.updateRchImportFacilatorAudit(LocalDate.now(), RchUserType.MOTHER, stateId);
-            throw new RchInvalidResponseStructureException(error, e);
         } catch (RchInvalidResponseStructureException e) {
             String error = String.format("Cannot read RCH mothers data from %s state with stateId: %d. Response Deserialization Error", stateName, stateId);
             LOGGER.error(error, e);
@@ -1233,9 +1279,12 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private void childFileProcess(String result, Long stateId, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
         try {
             if (result.contains(RECORDS)) {
-                RchChildrenDataSet childrenDataSet = (result == null) ?
+                /*RchChildrenDataSet childrenDataSet = (result == null) ?
                         null :
-                        (RchChildrenDataSet) MarshallUtils.unmarshall(result, RchChildrenDataSet.class);
+                        (RchChildrenDataSet) MarshallUtils.unmarshall(result, RchChildrenDataSet.class);*/
+                ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                RchChildrenDataSet childrenDataSet = new ObjectMapper().readValue(result, RchChildrenDataSet.class);
 
                 LOGGER.info("Starting RCH children import for stateId: {}", stateId);
                 StopWatch stopWatch = new StopWatch();
@@ -1247,6 +1296,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, warning));
                 } else {
                     LOGGER.info("Received {} children records from RCH for {} state", sizeNullSafe(childrenDataSet.getRecords()), stateName);
+                    LOGGER.info("Displaying 1st record of ChildDataSet: BirthDate as {}, EntryType as {}, execDate as {} but registrationDate as {}", childrenDataSet.getRecords().get(0).getBirthdate(),childrenDataSet.getRecords().get(0).getEntryType(), childrenDataSet.getRecords().get(0).getExecDate(), childrenDataSet.getRecords().get(0).getRegistrationDate());
 
                     RchImportAudit audit = saveImportedChildrenData(childrenDataSet, stateName, stateCode, startReferenceDate, endReferenceDate);
                     rchImportAuditDataService.create(audit);
@@ -1265,12 +1315,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
                 rchImportFacilitatorService.updateRchImportFacilatorAudit(LocalDate.now(), RchUserType.CHILD, stateId);
             }
-        } catch (JAXBException e) {
-            String error = String.format("Cannot deserialize RCH children data from %s location.", stateId);
-            rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.CHILD, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.CHILD, stateId));
-            rchImportFacilitatorService.updateRchImportFacilatorAudit(LocalDate.now(), RchUserType.CHILD, stateId);
-            throw new RchInvalidResponseStructureException(error, e);
         } catch (RchInvalidResponseStructureException e) {
             String error = String.format("Cannot read RCH children data from %s state with stateId:%d. Response Deserialization Error", stateName, stateCode);
             LOGGER.error(error, e);
@@ -1348,9 +1392,12 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private void ashaFileProcess(String result, Long stateId, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) {
         try {
             if (result.contains(RECORDS)) {
-                RchAnmAshaDataSet ashaDataSet = (result == null) ?
+                /*RchAnmAshaDataSet ashaDataSet = (result == null) ?
                         null :
-                        (RchAnmAshaDataSet) MarshallUtils.unmarshall(result, RchAnmAshaDataSet.class);
+                        (RchAnmAshaDataSet) MarshallUtils.unmarshall(result, RchAnmAshaDataSet.class);*/
+                ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                RchAnmAshaDataSet ashaDataSet = new ObjectMapper().readValue(result, RchAnmAshaDataSet.class);
 
                 LOGGER.info("Starting RCH FLW import for stateId: {}", stateId);
                 StopWatch stopWatch = new StopWatch();
@@ -1362,6 +1409,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                     rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, warning));
                 } else {
                     LOGGER.info("Received {} FLW records from RCH for {} state", sizeNullSafe(ashaDataSet.getRecords()), stateName);
+                    LOGGER.info("Received {} FLW updated on for first record", ashaDataSet.getRecords().get(0).getUpdatedOn());
 
                     RchImportAudit audit = saveImportedAshaData(ashaDataSet, stateName, stateCode, startReferenceDate, endReferenceDate);
                     rchImportAuditDataService.create(audit);
@@ -1380,12 +1428,6 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                 rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
                 rchImportFacilitatorService.updateRchImportFacilatorAudit(LocalDate.now(), RchUserType.ASHA, stateId);
             }
-        } catch (JAXBException e) {
-            String error = String.format("Cannot deserialize RCH FLW data from %s location.", stateId);
-            rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.ASHA, stateCode, stateName, 0, 0, error));
-            rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.ASHA, stateId));
-            rchImportFacilitatorService.updateRchImportFacilatorAudit(LocalDate.now(), RchUserType.ASHA, stateId);
-            throw new RchInvalidResponseStructureException(error, e);
         } catch (RchInvalidResponseStructureException e) {
             String error = String.format("Cannot read RCH FLW data from %s state with stateId:%d. Response Deserialization Error", stateName, stateCode);
             LOGGER.error(error, e);
@@ -2195,11 +2237,11 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private String targetFileName(String timeStamp, RchUserType userType, Long stateId) {
         switch (userType) {
             case MOTHER:
-                return String.format("RCH_StateID_%d_Mother_Response_%s.xml", stateId, timeStamp);
+                return String.format("RCH_StateID_%d_Mother_Response_%s.json", stateId, timeStamp);
             case CHILD:
-                return String.format("RCH_StateID_%d_Child_Response_%s.xml", stateId, timeStamp);
+                return String.format("RCH_StateID_%d_Child_Response_%s.json", stateId, timeStamp);
             case ASHA:
-                return String.format("RCH_StateID_%d_Asha_Response_%s.xml", stateId, timeStamp);
+                return String.format("RCH_StateID_%d_Asha_Response_%s.json", stateId, timeStamp);
             case TALUKA:
                 return String.format("RCH_StateID_%d_Taluka_Response_%s.json", stateId, timeStamp);
             case HEALTHBLOCK:
@@ -2240,7 +2282,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         }
         return localResponseFile;
     }
-     private File generateJsonResponseFile(String  APIresponse, RchUserType userType, Long stateId) {
+     public File generateJsonResponseFile(String  APIresponse, RchUserType userType, Long stateId) {
 
         String targetFileName = targetFileName(TIME_FORMATTER.print(DateTime.now()), userType, stateId);
         File localResponseDir = localResponseDir();
@@ -2261,6 +2303,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private RchImportAudit saveImportedMothersData(RchMothersDataSet mothersDataSet, String stateName, Long stateCode, LocalDate startReferenceDate, LocalDate endReferenceDate) { //NOPMD NcssMethodCount
         LOGGER.info("Starting RCH mother import for state {}", stateName);
         List<RchMotherRecord> motherRecords = mothersDataSet.getRecords();
+        LOGGER.info(" 1st record of MotherRecord: lmpdate as {}, birthDate as {}, execDate as {} but registrationDate as {}", motherRecords.get(0).getLmpDate(),motherRecords.get(0).getBirthDate(), motherRecords.get(0).getExecDate(), motherRecords.get(0).getRegistrationDate());
         List<Map<String, Object>> validMotherRecords = new ArrayList<>();
         validMotherRecords = getLMPValidRecords(motherRecords);
         List<List<Map<String, Object>>> rchMotherRecordsSet = cleanRchMotherRecords(validMotherRecords);
@@ -2642,8 +2685,8 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
                 String a = t1.getGfStatus();
                 String b = t2.getGfStatus();
-                LocalDateTime d1 = LocalDateTime.parse(t1.getUpdatedOn(), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
-                LocalDateTime d2 = LocalDateTime.parse(t2.getUpdatedOn(), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
+                LocalDateTime d1 = LocalDateTime.parse(t1.getUpdatedOn(), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"));
+                LocalDateTime d2 = LocalDateTime.parse(t2.getUpdatedOn(), java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"));
 
                 if (a.equalsIgnoreCase("Active") && b.equalsIgnoreCase("Active")) {
                     if (d1.isAfter(d2)) {
@@ -3042,11 +3085,26 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private String readResponsesFromJson(File file) throws RchFileManipulationException {
         try {
             String string=FileUtils.readFileToString(file);
+            string = string.replaceAll("(?<!\\\\)(?<!\\\\\\\\)(\\\\)(?!\\\\)(?!\\\\\\\\)", "");
+            string=string.replace("{\"response\":\"","");
+            string=string.replace("]}\"}","]}");
             string=string.replace("{\"RCH Data\":","");
             string=string.replace("]}","]");
             return string;
-
         } catch (Exception e) {
+            throw new RchFileManipulationException("Failed to read response file.", e); //NOPMD
+        }
+    }
+
+    private String readResponsesFromJsonForNapix(File file) throws RchFileManipulationException {
+        try {
+            String string = new String(Files.readAllBytes(Paths.get(file.toURI())));
+           // String string=FileUtils.readFileToString(file, "UTF-8");
+            string=string.replace("{\"response\":\"","");
+            string=string.replace("]}\"}","]}");
+            string = string.replaceAll("(?<!\\\\)(?<!\\\\\\\\)(\\\\)(?!\\\\)(?!\\\\\\\\)", "");
+            return string;
+            } catch (Exception e) {
             throw new RchFileManipulationException("Failed to read response file.", e); //NOPMD
         }
     }
@@ -3952,4 +4010,265 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
                ? resultString.substring(0, resultString.length() - 1)
                : resultString;
    }
+
+    /**
+     * Generic method to call the first API (Encrypt API) for Mother, Child, or ASHA.
+     */
+    @Override
+    public String callEncryptApi(String state, String typeOfData,LocalDate startDate,LocalDate endDate) {
+        LOGGER.debug("inside call encryptapi method");
+        String firstApiUrl = settingsFacade.getProperty(FIRST_API);
+        LOGGER.debug("this is first api url: {}",firstApiUrl);
+        String key = String.valueOf(Instant.now().toEpochMilli());
+
+//        String plainText = "{\"ProjectID\":\"" + settingsFacade.getProperty(PROJECT_ID) + "\",\"ID\":\"mcts-MOTECH\",\"SecureCode\":\""+ settingsFacade.getProperty(SECURE_CODE) +"\",\"FromDate\":\"2024-10-17\",\"ToDate\":\"2024-10-19\",\"STID\":\"" + state + "\",\"DTID\":\"0\",\"TypeOfData\":\"" + typeOfData + "\"}";
+
+        Date startDateUtil = java.sql.Date.valueOf(String.valueOf(startDate));
+        Date endDateUtil = java.sql.Date.valueOf(String.valueOf(endDate));
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String formattedStartDate = sdf.format(startDateUtil);
+        String formattedEndDate = sdf.format(endDateUtil);
+
+        String plainText = "{\"ProjectID\":\"" + settingsFacade.getProperty(PROJECT_ID) +
+                "\",\"ID\":\"mcts-MOTECH\",\"SecureCode\":\"" + settingsFacade.getProperty(SECURE_CODE) +
+                "\",\"FromDate\":\"" + formattedStartDate +
+                "\",\"ToDate\":\"" + formattedEndDate +
+                "\",\"STID\":\"" + state +
+                "\",\"DTID\":\"0\",\"TypeOfData\":\"" + typeOfData + "\"}";
+
+
+
+        Map<String, String> requestBody = new HashMap<>();
+        requestBody.put("plainText", plainText);
+        requestBody.put("key", key);
+
+
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity(firstApiUrl, requestEntity, String.class);
+        if (responseEntity.getStatusCode() == HttpStatus.OK) {
+            return responseEntity.getBody();
+
+        } else {
+            throw new RuntimeException("Error fetching keel and deel from first API: " + responseEntity.getStatusCode());
+        }
+    }
+
+    /**
+     * Generic method to save the data to a temp file.
+     */
+    @Override
+    public String saveToFile(String data, String type, String state) {
+        String fileName = "RCH_" +state + "_" + type + "_" + java.time.LocalDate.now() + "_tmp.json";
+        String tmpFolderPath = settingsFacade.getProperty("rch.folder.tmp");
+        Path filePath = Paths.get(tmpFolderPath, fileName);
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath.toFile()))) {
+            writer.write(data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return filePath.toString();
+    }
+
+    /**
+     * Generate token using the token API (common for all entities).
+     */
+    @Override
+    public String generateAuthToken() {
+        LOGGER.debug("we are inside the generate auth token");
+        String tokenApiUrl = settingsFacade.getProperty(TOKEN_API);
+        LOGGER.debug("this is tokenapiUrl: {}",tokenApiUrl);
+        String clientId = settingsFacade.getProperty(CLIENT_ID);
+        String clientSecret = settingsFacade.getProperty(CLIENT_SECRET);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "client_credentials");
+        body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
+        body.add("scope", "napix");
+
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(body, headers);
+        String tokenResponse = restTemplate.postForObject(tokenApiUrl, requestEntity, String.class);
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(tokenResponse);
+            return jsonNode.path("access_token").asText();
+
+        } catch (Exception e) {
+
+            throw new RuntimeException("Failed to parse token response", e);
+        }
+    }
+
+
+
+
+    @Override
+    public  String callKeelDeelApi(String token, String keel, String deel)  {
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        String responseString = null;
+        try {
+            HttpPost request = new HttpPost(settingsFacade.getProperty("rch.api.second"));
+            request.setHeader("Authorization", "Bearer " + token);
+            request.setHeader("Content-Type", "application/json");
+
+            String jsonPayload = String.format("{\"keel\":\"%s\", \"deel\":\"%s\"}", keel, deel);
+            StringEntity entity = new StringEntity(jsonPayload, ContentType.APPLICATION_JSON);
+            request.setEntity(entity);
+
+            responseString = new BasicResponseHandler().handleResponse(httpClient.execute(request));
+        } catch (HttpResponseException e) {
+            throw new RuntimeException(e);
+        } catch (ClientProtocolException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return responseString;
+
+    }
+
+
+    @Override
+    public String callThirdApi(String payload) {
+        String thirdApiUrl = settingsFacade.getProperty("rch.api.third");
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        String responseString = null;
+
+        try {
+            HttpPost request = new HttpPost(thirdApiUrl);
+            request.setHeader("Content-Type", "application/json");
+
+            StringEntity entity = new StringEntity(payload,ContentType.APPLICATION_JSON);
+            request.setEntity(entity);
+
+            responseString = new BasicResponseHandler().handleResponse(httpClient.execute(request));
+
+        } catch (IOException e) {
+            LOGGER.error("Error calling third API: ", e);
+        }finally {
+            try {
+                httpClient.close();
+            } catch (IOException e) {
+                LOGGER.error("Error closing HttpClient", e);
+            }
+        }
+        return responseString;
+    }
+
+
+
+    /**
+     * Method to read the payload from the temp file.
+     */
+    @Override
+    public String readPayloadFromTempFile(String tempFilePath) {
+        StringBuilder payloadBuilder = new StringBuilder();
+        String line;
+        BufferedReader reader = null;
+
+        try {
+            reader = new BufferedReader(new FileReader(tempFilePath));
+            while ((line = reader.readLine()) != null) {
+                payloadBuilder.append(line).append(System.lineSeparator()); // Append the line and a line separator
+            }
+        } catch (IOException e) {
+            LOGGER.error("Error reading from file: {}", tempFilePath, e);
+            return null;
+        }finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    LOGGER.error("Error closing file reader", e);
+                }
+            }
+        }
+
+        return payloadBuilder.toString();
+    }
+
+
+
+    @Override
+    public String callEncryptApiLocations(String stateId, String typeId) {
+        String encryptApiUrl = settingsFacade.getProperty("rch.api.first");
+        String key = String.valueOf(Instant.now().toEpochMilli());
+
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("Username", settingsFacade.getProperty(Constants.LOCATION_USER_NAME));
+        parameters.put("Api_Token", settingsFacade.getProperty(Constants.LOCATION_API_TOKEN));
+        parameters.put("Typeid", typeId);
+        parameters.put("State_code", stateId);
+        parameters.put("TimeStamp", settingsFacade.getProperty(Constants.LOCATION_TIME_STAMP));
+        parameters.put("District_Code", settingsFacade.getProperty(Constants.LOCATION_DISTRICT_CODE));
+        parameters.put("Taluka_Code", settingsFacade.getProperty(Constants.LOCATION_TALUKA_CODE));
+        parameters.put("HealthBlock_Id", settingsFacade.getProperty(Constants.LOCATION_HEALTH_BLOCK_ID));
+        parameters.put("Health_Facility_type", settingsFacade.getProperty(Constants.LOCATION_HEALTH_FACILITY_TYPE));
+        parameters.put("HealtfacilityID", settingsFacade.getProperty(Constants.LOCATION_HEALTH_FACILITY_ID));
+        parameters.put("HealtSubfacilityID", settingsFacade.getProperty(Constants.LOCATION_HEALTH_SUB_FACILITY_ID));
+        parameters.put("Village_Id", settingsFacade.getProperty(Constants.LOCATION_VILLAGE_ID));
+
+        String plainText = null;
+        try {
+            plainText = new ObjectMapper().writeValueAsString(parameters);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        Map<String, String> requestBody = new HashMap<>();
+        requestBody.put("plainText", plainText);
+        requestBody.put("key", key);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity(encryptApiUrl, requestEntity, String.class);
+
+        if (responseEntity.getStatusCode() == HttpStatus.OK) {
+            return responseEntity.getBody();
+        } else {
+            throw new RuntimeException("Encryption API call failed with status: " + responseEntity.getStatusCode());
+        }
+    }
+
+
+    @Override
+    public  String callKeelDeelApiLocations(String token, String keel, String deel)  {
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        String responseString = null;
+        try {
+            HttpPost request = new HttpPost(settingsFacade.getProperty("rch.location.second_api"));
+            request.setHeader("Authorization", "Bearer " + token);
+            request.setHeader("Content-Type", "application/json");
+
+            // Payload for Keel and Deel API
+            LOGGER.debug("this is keel and deel insdie api call method: {}, {},token: {}",keel,deel,token);
+            String jsonPayload = String.format("{\"keel\":\"%s\", \"deel\":\"%s\"}", keel, deel);
+            StringEntity entity = new StringEntity(jsonPayload, ContentType.APPLICATION_JSON);
+            request.setEntity(entity);
+
+            responseString = new BasicResponseHandler().handleResponse(httpClient.execute(request));
+        } catch (HttpResponseException e) {
+            throw new RuntimeException(e);
+        } catch (ClientProtocolException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return responseString;
+
+    }
+
+
 }
