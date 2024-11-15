@@ -244,7 +244,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ABORT_STILLBIRTH_DEATH, false);
         }
 
-        List<DeactivatedBeneficiary> deactivatedUsers = null;
+        // List<DeactivatedBeneficiary> deactivatedUsers = null;
         synchronized (this) {
             records.addAndGet(1);
             Long chunkSize = Long.parseLong(settingsFacade.getProperty(CHUNK_SIZE));
@@ -258,7 +258,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             }
             LOGGER.info("capacity available"+SubscriptionServiceImpl.isCapacityAvailable.get());
             LOGGER.debug("MotherImportRejection::importMotherRecord Start synchronized block " + beneficiaryId);
-            deactivatedUsers = deactivatedBeneficiaryService.findDeactivatedBeneficiariesOtherThanManualDeactivation(beneficiaryId);
+            /*deactivatedUsers = deactivatedBeneficiaryService.findDeactivatedBeneficiariesOtherThanManualDeactivation(beneficiaryId);
             LOGGER.debug("MotherImportRejection::importMotherRecord Got deactived users " + beneficiaryId);
             if (deactivatedUsers != null && deactivatedUsers.size() > 0) {
                 for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
@@ -270,7 +270,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                         }
                     }
                 }
-            }
+            }*/
 
             LOGGER.debug("MotherImportRejection::importMotherRecord Handled Deactived Users " + beneficiaryId);
             Subscription subscription;
@@ -287,10 +287,10 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 }
             } else {
 
-                if (childAlreadyPresent(beneficiaryId, importOrigin)) {
+                /*if (childAlreadyPresent(beneficiaryId, importOrigin)) {
                     LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block " + beneficiaryId);
                     return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ACTIVE_CHILD_PRESENT, false);
-                }
+                }*/
 
                 // validate caseNo
                 if (!validateCaseNo(caseNo, mother)) {
@@ -533,7 +533,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 SubscriptionServiceImpl.isCapacityAvailable.set(currentActive < maxActiveSubscriptions);
             }
             LOGGER.info("capacity available"+SubscriptionServiceImpl.isCapacityAvailable.get());
-            if (childById != null && subscriptionService.getActiveSubscription(subscriberService.getSubscriberByBeneficiary(childById), SubscriptionPackType.PREGNANCY) != null && subscriptionService.getActiveSubscription(subscriberService.getSubscriberByBeneficiary(childById), SubscriptionPackType.PREGNANCY).getStatus() == SubscriptionStatus.ACTIVE) {
+            /*if (childById != null && subscriptionService.getActiveSubscription(subscriberService.getSubscriberByBeneficiary(childById), SubscriptionPackType.PREGNANCY) != null && subscriptionService.getActiveSubscription(subscriberService.getSubscriberByBeneficiary(childById), SubscriptionPackType.PREGNANCY).getStatus() == SubscriptionStatus.ACTIVE) {
                 LOGGER.debug("Active mother. We ignore the deactivated case scenario.");
             } else {
                 deactivatedUsers = deactivatedBeneficiaryService.findDeactivatedBeneficiariesOtherThanManualDeactivation(childId);
@@ -547,7 +547,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                         }
                     }
                 }
-            }
+            }*/
             child.setRegistrationDate(regDate);
             if(ashaId==null || ashaId.isEmpty()){
                 child.setAshaId(null);
