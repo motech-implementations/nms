@@ -372,7 +372,12 @@ public class SubscriberServiceImpl implements SubscriberService {
         } else { // subscriberByBeneficiary != null aka. RCH mother exists in motech
             if (subscribersByMsisdn.isEmpty()) {  //no subscriber attached to the new number
                 // We got here because beneficiary's phone number changed
-                if (subscriberByRchId.getCaseNo() == null) {
+                Subscription childSubscription = subscriptionService.getActiveSubscription(subscriberByRchId, SubscriptionPackType.CHILD);
+                if(childSubscription != null){
+                    subscriptionErrorDataService.create(new SubscriptionError(msisdn, motherUpdate.getRchId(), SubscriptionRejectionReason.ALREADY_SUBSCRIBED, pack.getType(), "Active subscription exists with different caseNo", SubscriptionOrigin.RCH_IMPORT));
+                    return null;
+                }
+                else if (subscriberByRchId.getCaseNo() == null) {
                     subscriberByRchId.setCaseNo(caseNo);
                     motherUpdate.setMaxCaseNo(caseNo);
                 } else if (subscriberByRchId.getCaseNo() > caseNo) {
