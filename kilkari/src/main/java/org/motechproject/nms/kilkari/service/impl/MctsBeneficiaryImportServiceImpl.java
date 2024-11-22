@@ -206,7 +206,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         //new rejection reason less_than_12_week
         boolean isServiceable=validateIsServiceable(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, importOrigin);
 
-        if (!isServiceable && (action.equals("CREATE") || mother.getMaxCaseNo() < caseNo)) {
+        if (!isServiceable && (action.equals("CREATE") || (mother.getMaxCaseNo() != null ? mother.getMaxCaseNo() : 0) < caseNo)) {
             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.LESS_THAN_12_WEEK, false);
         }
 
