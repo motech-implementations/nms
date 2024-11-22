@@ -434,15 +434,8 @@ public class SubscriberServiceImpl implements SubscriberService {
                     }
                 }
 
-                    Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
-                    Subscription latestDeactivatedSubscription = subscriptionService.getLatestDeactivatedSubscription(subscriberByRchId, pack.getType());
-
-                    if (subscription == null && latestDeactivatedSubscription != null) {
-                    if (latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.INVALID_NUMBER) && !subscriberByRchId.getCallingNumber().equals(msisdn)) {
-                        subscription = latestDeactivatedSubscription;
-                        }
-                    }
                     subscriberByRchId.setCallingNumber(msisdn);
+                    Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                     subscriberByRchId.setLastMenstrualPeriod(lmp);
                     motherUpdate.setName(name);
                     motherUpdate.setDateOfBirth(motherDOB);
