@@ -254,7 +254,7 @@ public class SubscriberServiceImpl implements SubscriberService {
         List<Subscriber> subscriberByMsisdns = getSubscriber(msisdn);
         Subscriber subscriberByMctsId = getSubscriberByBeneficiary(motherUpdate);
 
-        if (subscriberByMctsId == null) {   // No existing subscriber(number) attached to mother MCTS id
+        if (subscriberByMctsId == null ) {   // No existing subscriber(number) attached to mother MCTS id
             if (subscriberByMsisdns.isEmpty()) {   // No subscriber attached to the number
                 // create subscriber, beneficiary, subscription and return
                 return createSubscriber(msisdn, motherUpdate, lmp, pack, language, circle);
