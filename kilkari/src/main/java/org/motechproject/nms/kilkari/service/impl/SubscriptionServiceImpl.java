@@ -650,7 +650,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return null;
     }
 
-    public Subscription getLatestDeactivatedSubscription(Subscriber subscriber, SubscriptionPackType type) {
+    public Subscription getLatestDeactivatedSubscription(Subscriber subscriber, SubscriptionPackType type, boolean includeCompleted) {
         Iterator<Subscription> subscriptionIterator = subscriber.getSubscriptions().iterator();
         Subscription existingSubscription;
         List<Subscription> deactivatedSubscriptions = new ArrayList<>();
@@ -659,10 +659,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             existingSubscription = subscriptionIterator.next();
             if (existingSubscription.getSubscriptionPack().getType() == type) {
                 if (type == SubscriptionPackType.PREGNANCY &&
-                        (existingSubscription.getStatus() == SubscriptionStatus.DEACTIVATED)) {
+                        ((existingSubscription.getStatus() == SubscriptionStatus.DEACTIVATED) ||
+                        (includeCompleted && existingSubscription.getStatus() == SubscriptionStatus.COMPLETED))) {
                     deactivatedSubscriptions.add(existingSubscription);
                 }
-                if (type == SubscriptionPackType.CHILD && existingSubscription.getStatus() == SubscriptionStatus.DEACTIVATED) {
+                if (type == SubscriptionPackType.CHILD && ((existingSubscription.getStatus() == SubscriptionStatus.DEACTIVATED) ||
+                        (includeCompleted && existingSubscription.getStatus() == SubscriptionStatus.COMPLETED))) {
                     deactivatedSubscriptions.add(existingSubscription);
                 }
             }
@@ -1004,9 +1006,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                 "WHERE s.id > :offset AND " +
                                 "(firstMessageDayOfWeek = :dow OR " +
                                 "(secondMessageDayOfWeek = :dow AND p.messagesPerWeek = 2)) AND " +
-                                "status = 'ACTIVE' AND " +
-                                "IVR_SERVICE IS TRUE "+
-                                "AND (serviceStatus IN ('IVR', 'IVR_AND_WHATSAPP') OR serviceStatus IS NULL) "+
+                                "status = 'ACTIVE' AND "+
+                                " (serviceStatus IN ('IVR', 'IVR_AND_WHATSAPP') OR serviceStatus IS NULL) "+
                                 "ORDER BY s.id " +
                                 "LIMIT :max";
                 LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);

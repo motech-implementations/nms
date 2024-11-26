@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
@@ -128,7 +129,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     public void setChildRecords(int i){this.childRecords.set(i);}
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public MotherImportRejection importMotherRecord(Map<String, Object> record, SubscriptionOrigin importOrigin, LocationFinder locationFinder) { //NOPMD NcssMethodCount
         LOGGER.debug("MotherImportRejection::importMotherRecord Start ");
         if (pregnancyPack == null) {
@@ -378,7 +379,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public ChildImportRejection importChildRecord(Map<String, Object> record, SubscriptionOrigin importOrigin, LocationFinder locationFinder) { //NOPMD NcssMethodCount
         if (childPack == null) {
             childPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.CHILD);
