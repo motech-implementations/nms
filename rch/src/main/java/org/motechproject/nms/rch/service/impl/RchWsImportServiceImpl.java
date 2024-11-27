@@ -16,13 +16,13 @@ import org.motechproject.nms.rch.domain.RchImportAudit;
 import org.motechproject.nms.rch.domain.RchImportFacilitator;
 import org.motechproject.nms.rch.domain.RchImportFailRecord;
 import org.motechproject.nms.rch.domain.RchUserType;
-import org.motechproject.nms.rch.exception.RchWebServiceException;
 import org.motechproject.nms.rch.repository.RchImportAuditDataService;
 import org.motechproject.nms.rch.repository.RchImportFacilitatorDataService;
 import org.motechproject.nms.rch.repository.RchImportFailRecordDataService;
 import org.motechproject.nms.rch.service.RchWebServiceFacade;
 import org.motechproject.nms.rch.service.RchWsImportService;
 import org.motechproject.nms.rch.utils.Constants;
+import org.motechproject.nms.rch.utils.ExecutionHelper;
 import org.motechproject.nms.region.domain.State;
 import org.motechproject.nms.region.repository.StateDataService;
 import org.motechproject.server.config.SettingsFacade;
@@ -219,6 +219,44 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         LOGGER.info("Initiated import workflow from RCH for villagesubfacility");
     }
 
+    private void executeScpCommand(String tempFilePath,boolean isRemoteLocal) {
+        String localDir = settingsFacade.getProperty("rch.folder.tmp");
+        String remoteDir = settingsFacade.getProperty("rch.folder.tmp.remote");
+
+        String command;
+
+        if(isRemoteLocal){
+         command = "scp " + settingsFacade.getProperty("rch.remote.url") +  tempFilePath + " " + localDir;
+        }else {
+             command = String.format("scp %s %s", tempFilePath, remoteDir);
+        }
+        int maxRetries = 3;
+        long timeout = Long.parseLong(settingsFacade.getProperty("rch.scp_timeout"));
+
+        executeWithRetries(command, maxRetries, timeout);
+    }
+
+    private void executeWithRetries(String command, int maxRetries, long timeout) {
+        ExecutionHelper execHelper = new ExecutionHelper();
+        int attempt = 0;
+
+        while (attempt < maxRetries) {
+            attempt++;
+            try {
+                execHelper.exec(command, timeout);
+                LOGGER.info("SCP command executed successfully on attempt {}.", attempt);
+                return;
+            } catch (Exception e) {
+                if (attempt < maxRetries) {
+                    LOGGER.warn("Attempt {} of {} failed. Retrying...", attempt, maxRetries, e);
+                } else {
+                    LOGGER.error("SCP command failed after {} attempts. No more retries.", maxRetries, e);
+                    return;
+                }
+            }
+        }
+    }
+
     @MotechListener(subjects = { Constants.RCH_MOTHER_IMPORT_SUBJECT })
     @Transactional
     @Override
@@ -273,6 +311,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
                 if (keelDeelApiResponse != null) {
                     String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "mother", stateId.toString());
+                    executeScpCommand(tempFilePath,false);
 
                     Map<String, Object> params = new HashMap<>();
                     params.put("state", stateId.toString());
@@ -326,31 +365,33 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         RchUserType userType = RchUserType.valueOf(entityType.toUpperCase());
 
         try {
+
+            executeScpCommand(tempFilePath, true);
             String payload = rchWebServiceFacade.readPayloadFromTempFile(tempFilePath);
 
-
-            if(payload!=null) {
-                 thirdApiResponse = rchWebServiceFacade.callThirdApi(payload);
+            if (payload != null) {
+                thirdApiResponse = rchWebServiceFacade.callThirdApi(payload);
             }
 
-
-            if(thirdApiResponse!=null) {
+            if (thirdApiResponse != null) {
                 File responseFile = rchWebServiceFacade.generateJsonResponseFile(thirdApiResponse, userType, Long.valueOf(stateId));
 
-            if (responseFile != null) {
-                LOGGER.info("RCH {} response successfully written to file. Copying to remote directory.", userType);
-                status = rchWebServiceFacade.retryScpAndAudit(responseFile.getName(), from, to, Long.valueOf(stateId), userType, 0);
-            } else {
-                LOGGER.error("Error writing {} response to file for state {}", userType, stateId);
-            }}
+                if (responseFile != null) {
+                    LOGGER.info("RCH {} third api response successfully written to file. Copying to remote directory.", userType);
+                    status = rchWebServiceFacade.retryScpAndAudit(responseFile.getName(), from, to, Long.valueOf(stateId), userType, 0);
+                } else {
+                    LOGGER.error("Error writing {} third api response to file for state {}", userType, stateId);
+                }
+            }
 
             if (status) {
                 LOGGER.info(FILE_RECORD_SUCCESS, stateId);
             } else {
-                handleError(userType, Long.valueOf(stateId), stateName, Long.valueOf(stateCode), from, to, "Failed to process third API response.");
+                handleError(userType, Long.valueOf(stateId), stateName, Long.valueOf(stateCode), from, to, "Error during SCP file transfer.");
             }
 
-        } catch (Exception e) {
+        }
+         catch (Exception e) {
             handleError(userType, Long.valueOf(stateId), stateName, Long.valueOf(stateCode), from, to, e.getMessage());
         }
     }
@@ -406,6 +447,8 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
 
             String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "district", stateId.toString());
+
+            executeScpCommand(tempFilePath,false);
 
             Map<String, Object> params = new HashMap<>();
             params.put("state", stateId.toString());
@@ -466,6 +509,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         String thirdApiResponse = null;
 
         try {
+           executeScpCommand(tempFilePath,true);
             String payload = rchWebServiceFacade.readPayloadFromTempFile(tempFilePath);
 
             if(payload!=null) {
@@ -484,7 +528,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             if (status) {
                 LOGGER.info("{} data processed successfully for state ID: {}", userType, stateId);
             } else {
-                handleError(userType, Long.valueOf(stateId), stateName, Long.valueOf(stateCode), from, to, "Failed to process third API response.");
+                handleError(userType, Long.valueOf(stateId), stateName, Long.valueOf(stateCode), from, to, "Error during SCP file transfer.");
             }
 
         } catch (Exception e) {
@@ -522,6 +566,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
 
             String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "taluka", stateId.toString());
+            executeScpCommand(tempFilePath,false);
 
             Map<String, Object> params = new HashMap<>();
             params.put("state", stateId.toString());
@@ -546,7 +591,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         Long stateId = (Long) motechEvent.getParameters().get(Constants.STATE_ID_PARAM);
         LocalDate startDate = (LocalDate) motechEvent.getParameters().get(Constants.START_DATE_PARAM);
         LocalDate endDate = (LocalDate) motechEvent.getParameters().get(Constants.END_DATE_PARAM);
-        URL endpoint = (URL) motechEvent.getParameters().get(Constants.ENDPOINT_PARAM);
 
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
@@ -571,6 +615,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
 
             String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "village", stateId.toString());
+            executeScpCommand(tempFilePath,false);
 
             Map<String, Object> params = new HashMap<>();
             params.put("state", stateId.toString());
@@ -620,6 +665,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
 
             String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "healthblock", stateId.toString());
+            executeScpCommand(tempFilePath,false);
 
             Map<String, Object> params = new HashMap<>();
             params.put("state", stateId.toString());
@@ -667,6 +713,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
 
             String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "talukahealthblock", stateId.toString());
+            executeScpCommand(tempFilePath,false);
 
             Map<String, Object> params = new HashMap<>();
             params.put("state", stateId.toString());
@@ -714,6 +761,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
 
             String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "healthfacility", stateId.toString());
+            executeScpCommand(tempFilePath,false);
 
             Map<String, Object> params = new HashMap<>();
             params.put("state", stateId.toString());
@@ -762,6 +810,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
 
             String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "healthsubfacility", stateId.toString());
+            executeScpCommand(tempFilePath,false);
 
             Map<String, Object> params = new HashMap<>();
             params.put("state", stateId.toString());
@@ -810,6 +859,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
 
             String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "villagehealthsubfacility", stateId.toString());
+            executeScpCommand(tempFilePath,false);
 
             Map<String, Object> params = new HashMap<>();
             params.put("state", stateId.toString());
@@ -883,7 +933,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
                 if (keelDeelApiResponse != null) {
                     String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "child", stateId.toString());
-
+                    executeScpCommand(tempFilePath,false);
 
                     Map<String, Object> params = new HashMap<>();
                     params.put("state", stateId.toString());
@@ -941,9 +991,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         String stateName = state.getName();
         Long stateCode = state.getCode();
 
-
-
-
         List<RchImportAudit> failedImports = rchImportAuditDataService.findByStateCodeAndDateRangeAndUserType(stateCode, startReferenceDate, endReferenceDate, RchUserType.ASHA);
         boolean isDuplicate = !failedImports.isEmpty();
 
@@ -976,6 +1023,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
                 if (keelDeelApiResponse != null) {
                     String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "asha", stateId.toString());
+                    executeScpCommand(tempFilePath,false);
 
                     Map<String, Object> params = new HashMap<>();
                     params.put("state", stateId.toString());

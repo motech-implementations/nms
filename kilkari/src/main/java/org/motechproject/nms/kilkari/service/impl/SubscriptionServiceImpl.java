@@ -1005,8 +1005,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                 "(firstMessageDayOfWeek = :dow OR " +
                                 "(secondMessageDayOfWeek = :dow AND p.messagesPerWeek = 2)) AND " +
                                 "status = 'ACTIVE' AND " +
-                                "IVR_SERVICE IS TRUE "+
-                                "AND (serviceStatus IN ('IVR', 'IVR_AND_WHATSAPP') OR serviceStatus IS NULL) "+
+                                " (serviceStatus IN ('IVR', 'IVR_AND_WHATSAPP') OR serviceStatus IS NULL) "+
                                 "ORDER BY s.id " +
                                 "LIMIT :max";
                 LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
@@ -1194,9 +1193,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             public String getSqlQuery() {
                 String query = "select subscriptionId from (select subscriptionId from nms_mcts_mothers a LEFT JOIN " +
                         "nms_subscribers b on b.mother_id_oid=a.id LEFT JOIN nms_subscriptions c on c.subscriber_id_oid = b.id where rchId like 'JH%' " +
-                        "and subscriptionPack_id_OID = 1 and IVR_SERVICE IS TRUE UNION ALL select subscriptionId from nms_mcts_children a LEFT JOIN " +
+                        "and subscriptionPack_id_OID = 1 UNION ALL select subscriptionId from nms_mcts_children a LEFT JOIN " +
                         "nms_subscribers b on b.child_id_oid=a.id LEFT JOIN nms_subscriptions c on c.subscriber_id_oid = b.id " +
-                        "where rchId like 'JH%' and subscriptionPack_id_OID = 2 and IVR_SERVICE IS TRUE AND (serviceStatus IN ('IVR', 'IVR_AND_WHATSAPP') OR serviceStatus IS NULL)) as  a;";
+                        "where rchId like 'JH%' and subscriptionPack_id_OID = 2 AND (serviceStatus IN ('IVR', 'IVR_AND_WHATSAPP') OR serviceStatus IS NULL)) as  a;";
                 LOGGER.debug(KilkariConstants.SQL_QUERY_LOG, query);
                 return query;
             }
