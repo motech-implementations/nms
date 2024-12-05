@@ -718,13 +718,15 @@ public class SubscriberServiceImpl implements SubscriberService {
                 Subscription latestDeactivatedSubscription = subscriptionService.getLatestDeactivatedSubscription(subscriberByRchId, pack.getType(), true);
 
                 if (subscription == null && latestDeactivatedSubscription != null) {
-                    if(latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.DEACTIVATED) && !(latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.LOW_LISTENERSHIP) || latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED))) {
-                        subscription = latestDeactivatedSubscription;
-                    } else if (latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.COMPLETED)) {
+                    if (latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.COMPLETED) ||
+                            latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.DEACTIVATED) &&
+                                    !(latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.LOW_LISTENERSHIP) || latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED) || latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.INVALID_NUMBER)) ){
                         subscriberByRchId.setDateOfBirth(dob);
                         subscriberByRchId.setModificationDate(DateTime.now());
                         return null;
-                    }
+                }else if(latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.DEACTIVATED) && (latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.INVALID_NUMBER))) {
+                    subscription = latestDeactivatedSubscription;
+                     }
                 }
                 subscriberByRchId.setDateOfBirth(dob);
                 subscriberByRchId.setModificationDate(DateTime.now());
@@ -746,6 +748,14 @@ public class SubscriberServiceImpl implements SubscriberService {
                             if (subscriberByRchId.getMother() == null) {
                                 subscriberByRchId.setMother(childUpdate.getMother());
                             }
+                            Subscription latestDeactivatedSubscription = subscriptionService.getLatestDeactivatedSubscription(subscriberByRchId, pack.getType(), true);
+
+                            if (latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.COMPLETED) ||
+                                    ((latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.DEACTIVATED) && !(latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.LOW_LISTENERSHIP) || latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED))))) {
+                                subscriberByRchId.setDateOfBirth(dob);
+                                subscriberByRchId.setModificationDate(DateTime.now());
+                                return null;
+                            }
                             subscriberByRchId.setDateOfBirth(dob);
                             subscriberByRchId.setModificationDate(DateTime.now());
                             finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
@@ -765,12 +775,14 @@ public class SubscriberServiceImpl implements SubscriberService {
                             Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                             Subscription latestDeactivatedSubscription = subscriptionService.getLatestDeactivatedSubscription(subscriberByRchId, pack.getType(), true);
                             if (subscription == null && latestDeactivatedSubscription != null) {
-                                if(latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.DEACTIVATED) && !(latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.LOW_LISTENERSHIP) || latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED))) {
-                                    subscription = latestDeactivatedSubscription;
-                                }else if (latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.COMPLETED)){
+                                if (latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.COMPLETED) ||
+                                        latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.DEACTIVATED) &&
+                                                !(latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.LOW_LISTENERSHIP) || latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED) || latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.INVALID_NUMBER)) ){
                                     subscriberByRchId.setDateOfBirth(dob);
                                     subscriberByRchId.setModificationDate(DateTime.now());
                                     return null;
+                                }else if(latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.DEACTIVATED) && (latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.INVALID_NUMBER))) {
+                                    subscription = latestDeactivatedSubscription;
                                 }
                             }
                             subscriberByRchId.setDateOfBirth(dob);
@@ -782,9 +794,9 @@ public class SubscriberServiceImpl implements SubscriberService {
                 else if(childUpdate.getMother()!=null){
                     Subscriber subscriber = getSubscriberListByMother(childUpdate.getMother().getId());
                     Subscription subscription = subscriptionService.getActiveSubscription(subscriber, pack.getType());
-                    Subscription latestDeactivatedSubscription = subscriptionService.getLatestDeactivatedSubscription(subscriber, pack.getType(), true);
+                    Subscription latestDeactivatedSubscription = subscriptionService.getLatestDeactivatedSubscription(subscriberByRchId, pack.getType(), true);
 
-                    if (subscription == null && latestDeactivatedSubscription != null) {
+                    if (Objects.equals(subscriber.getId(), subscriberByRchId.getId()) && subscription == null && latestDeactivatedSubscription != null) {
                         if(latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.DEACTIVATED) && !(latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.LOW_LISTENERSHIP) || latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED))) {
                             subscription = latestDeactivatedSubscription;
                         }
@@ -805,6 +817,16 @@ public class SubscriberServiceImpl implements SubscriberService {
                             Subscription subscription = subscriptionService.getActiveSubscription(subscriberByRchId, pack.getType());
                             if (subscriberByRchId.getMother() == null) {
                                 subscriberByRchId.setMother(childUpdate.getMother());
+                            }
+                            Subscription latestDeactivatedSubscription = subscriptionService.getLatestDeactivatedSubscription(subscriberByRchId, pack.getType(), true);
+
+                            if (subscription == null && latestDeactivatedSubscription != null) {
+                                if (latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.COMPLETED) ||
+                                        ((latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.DEACTIVATED) && !(latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.LOW_LISTENERSHIP) || latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED))))) {
+                                    subscriberByRchId.setDateOfBirth(dob);
+                                    subscriberByRchId.setModificationDate(DateTime.now());
+                                    return null;
+                                }
                             }
                             if ((subscriberByRchId.getDateOfBirth().getDayOfYear() != dob.getDayOfYear()) && subscription!=null){
                                 subscriptionService.deleteCallRetry(subscription.getSubscriptionId());
@@ -829,14 +851,16 @@ public class SubscriberServiceImpl implements SubscriberService {
                             Subscription latestDeactivatedSubscription = subscriptionService.getLatestDeactivatedSubscription(subscriberByRchId, pack.getType(), true);
 
                             if (subscription == null && latestDeactivatedSubscription != null) {
-                                if(latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.DEACTIVATED) && !(latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.LOW_LISTENERSHIP) || latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED))) {
-                                    subscription = latestDeactivatedSubscription;
-                                } else if (latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.COMPLETED)) {
+                                if (latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.COMPLETED) ||
+                                        latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.DEACTIVATED) &&
+                                                !(latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.LOW_LISTENERSHIP) || latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED) || latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.INVALID_NUMBER)) ){
                                     subscriberByRchId.setDateOfBirth(dob);
                                     subscriberByRchId.setModificationDate(DateTime.now());
                                     return null;
                                 }
-                            }
+                                }else if(latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.DEACTIVATED) && (latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.INVALID_NUMBER))) {
+                                    subscription = latestDeactivatedSubscription;
+                                }
                             subscriberByRchId.setDateOfBirth(dob);
                             subscriberByRchId.setModificationDate(DateTime.now());
                             finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
