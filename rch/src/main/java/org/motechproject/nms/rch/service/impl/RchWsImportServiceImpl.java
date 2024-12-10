@@ -311,18 +311,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
                 if (keelDeelApiResponse != null) {
                     String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "mother", stateId.toString());
-                    executeScpCommand(tempFilePath,false);
-
-                    Map<String, Object> params = new HashMap<>();
-                    params.put("state", stateId.toString());
-                    params.put("tempFilePath", tempFilePath);
-                    params.put("fromDate", startReferenceDate);
-                    params.put("endDate", endReferenceDate);
-                    params.put("stateName", stateName);
-                    params.put("stateCode", stateCode.toString());
-
-                    MotechEvent thirdEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "mother", params);
-                    eventRelay.sendEventMessage(thirdEvent);
+                    processThirdApiEvent(stateId.toString(), startReferenceDate, endReferenceDate, tempFilePath, "mother", stateName, stateCode.toString());
 
                     success = true; // Mark as successful
                 } else {
@@ -359,14 +348,19 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         String entityType = event.getSubject().split("\\.")[2]; // Determines if it's mother, child, or asha
         String stateName = (String) event.getParameters().get("stateName");
         String stateCode = (String) event.getParameters().get("stateCode");
+
+        processThirdApiEvent(stateId, from, to, tempFilePath, entityType, stateName, stateCode);
+    }
+
+    private void processThirdApiEvent(String stateId, LocalDate from, LocalDate to, String tempFilePath,
+                                      String entityType, String stateName, String stateCode) {
         boolean status = false;
         String thirdApiResponse = null;
 
         RchUserType userType = RchUserType.valueOf(entityType.toUpperCase());
 
         try {
-
-            executeScpCommand(tempFilePath, true);
+            // executeScpCommand(tempFilePath, true);
             String payload = rchWebServiceFacade.readPayloadFromTempFile(tempFilePath);
 
             if (payload != null) {
@@ -377,10 +371,10 @@ public class RchWsImportServiceImpl implements RchWsImportService {
                 File responseFile = rchWebServiceFacade.generateJsonResponseFile(thirdApiResponse, userType, Long.valueOf(stateId));
 
                 if (responseFile != null) {
-                    LOGGER.info("RCH {} third api response successfully written to file. Copying to remote directory.", userType);
+                    LOGGER.info("RCH {} third API response successfully written to file. Copying to remote directory.", userType);
                     status = rchWebServiceFacade.retryScpAndAudit(responseFile.getName(), from, to, Long.valueOf(stateId), userType, 0);
                 } else {
-                    LOGGER.error("Error writing {} third api response to file for state {}", userType, stateId);
+                    LOGGER.error("Error writing {} third API response to file for state {}", userType, stateId);
                 }
             }
 
@@ -390,8 +384,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
                 handleError(userType, Long.valueOf(stateId), stateName, Long.valueOf(stateCode), from, to, "Error during SCP file transfer.");
             }
 
-        }
-         catch (Exception e) {
+        } catch (Exception e) {
             handleError(userType, Long.valueOf(stateId), stateName, Long.valueOf(stateCode), from, to, e.getMessage());
         }
     }
@@ -447,18 +440,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
 
             String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "district", stateId.toString());
-
-            executeScpCommand(tempFilePath,false);
-
-            Map<String, Object> params = new HashMap<>();
-            params.put("state", stateId.toString());
-            params.put("tempFilePath", tempFilePath);
-            params.put("fromDate", startDate);
-            params.put("endDate", endDate);
-            params.put("stateName", stateName);
-            params.put("stateCode", stateCode.toString());
-            MotechEvent nextEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "district", params);
-            eventRelay.sendEventMessage(nextEvent);
+            processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.DISTRICT);
 
         } catch (Exception e) {
             String error = String.format("Error processing RCH district data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
@@ -505,25 +487,34 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         String tempFilePath = (String) event.getParameters().get("tempFilePath");
         String stateName = (String) event.getParameters().get("stateName");
         String stateCode = (String) event.getParameters().get("stateCode");
+
+        executeScpCommand(tempFilePath, true);
+
+        processLocationThirdApiEvent(stateId, from, to, tempFilePath, stateName, stateCode, userType);
+    }
+
+
+    private void processLocationThirdApiEvent(String stateId, LocalDate from, LocalDate to, String tempFilePath,
+                                 String stateName, String stateCode, RchUserType userType) {
         boolean status = false;
         String thirdApiResponse = null;
 
         try {
-           executeScpCommand(tempFilePath,true);
             String payload = rchWebServiceFacade.readPayloadFromTempFile(tempFilePath);
 
-            if(payload!=null) {
-                 thirdApiResponse = rchWebServiceFacade.callThirdApi(payload);
-
+            if (payload != null) {
+                thirdApiResponse = rchWebServiceFacade.callThirdApi(payload);
             }
-            if(thirdApiResponse!=null){
-            File responseFile = rchWebServiceFacade.generateJsonResponseFile(thirdApiResponse, userType, Long.valueOf(stateId));
-            if (responseFile != null) {
-                LOGGER.info("RCH {} response successfully written to file. Copying to remote directory.", userType);
-                status = rchWebServiceFacade.retryScpAndAudit(responseFile.getName(), from, to, Long.valueOf(stateId), userType, 0);
-            } else {
-                LOGGER.error("Error writing {} response to file for state {}", userType, stateId);
-            }}
+
+            if (thirdApiResponse != null) {
+                File responseFile = rchWebServiceFacade.generateJsonResponseFile(thirdApiResponse, userType, Long.valueOf(stateId));
+                if (responseFile != null) {
+                    LOGGER.info("RCH {} response successfully written to file. Copying to remote directory.", userType);
+                    status = rchWebServiceFacade.retryScpAndAudit(responseFile.getName(), from, to, Long.valueOf(stateId), userType, 0);
+                } else {
+                    LOGGER.error("Error writing {} response to file for state {}", userType, stateId);
+                }
+            }
 
             if (status) {
                 LOGGER.info("{} data processed successfully for state ID: {}", userType, stateId);
@@ -566,17 +557,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
 
             String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "taluka", stateId.toString());
-            executeScpCommand(tempFilePath,false);
-
-            Map<String, Object> params = new HashMap<>();
-            params.put("state", stateId.toString());
-            params.put("tempFilePath", tempFilePath);
-            params.put("fromDate", startDate);
-            params.put("endDate", endDate);
-            params.put("stateName", stateName);
-            params.put("stateCode", stateCode.toString());
-            MotechEvent nextEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "taluka", params);
-            eventRelay.sendEventMessage(nextEvent);
+            processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.TALUKA);
 
         } catch (Exception e) {
             String error = String.format("Error processing RCH taluka data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
@@ -615,17 +596,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
 
             String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "village", stateId.toString());
-            executeScpCommand(tempFilePath,false);
-
-            Map<String, Object> params = new HashMap<>();
-            params.put("state", stateId.toString());
-            params.put("tempFilePath", tempFilePath);
-            params.put("fromDate", startDate);
-            params.put("endDate", endDate);
-            params.put("stateName", stateName);
-            params.put("stateCode", stateCode.toString());
-            MotechEvent nextEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "village", params);
-            eventRelay.sendEventMessage(nextEvent);
+            processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.VILLAGE);
 
         } catch (Exception e) {
             String error = String.format("Error processing RCH village data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
@@ -665,17 +636,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
 
             String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "healthblock", stateId.toString());
-            executeScpCommand(tempFilePath,false);
-
-            Map<String, Object> params = new HashMap<>();
-            params.put("state", stateId.toString());
-            params.put("tempFilePath", tempFilePath);
-            params.put("fromDate", startDate);
-            params.put("endDate", endDate);
-            params.put("stateName", stateName);
-            params.put("stateCode", stateCode.toString());
-            MotechEvent nextEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "healthblock", params);
-            eventRelay.sendEventMessage(nextEvent);
+            processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.HEALTHBLOCK);
 
         } catch (Exception e) {
             String error = String.format("Error processing RCH healthblock data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
@@ -713,17 +674,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
 
             String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "talukahealthblock", stateId.toString());
-            executeScpCommand(tempFilePath,false);
-
-            Map<String, Object> params = new HashMap<>();
-            params.put("state", stateId.toString());
-            params.put("tempFilePath", tempFilePath);
-            params.put("fromDate", startDate);
-            params.put("endDate", endDate);
-            params.put("stateName", stateName);
-            params.put("stateCode", stateCode.toString());
-            MotechEvent nextEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "talukahealthblock", params);
-            eventRelay.sendEventMessage(nextEvent);
+            processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.TALUKAHEALTHBLOCK);
 
         } catch (Exception e) {
             String error = String.format("Error processing RCH talukahealthblock data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
@@ -761,17 +712,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
 
             String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "healthfacility", stateId.toString());
-            executeScpCommand(tempFilePath,false);
-
-            Map<String, Object> params = new HashMap<>();
-            params.put("state", stateId.toString());
-            params.put("tempFilePath", tempFilePath);
-            params.put("fromDate", startDate);
-            params.put("endDate", endDate);
-            params.put("stateName", stateName);
-            params.put("stateCode", stateCode.toString());
-            MotechEvent nextEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "healthfacility", params);
-            eventRelay.sendEventMessage(nextEvent);
+            processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.HEALTHFACILITY);
 
         } catch (Exception e) {
             String error = String.format("Error processing RCH healthfacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
@@ -810,17 +751,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
 
             String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "healthsubfacility", stateId.toString());
-            executeScpCommand(tempFilePath,false);
-
-            Map<String, Object> params = new HashMap<>();
-            params.put("state", stateId.toString());
-            params.put("tempFilePath", tempFilePath);
-            params.put("fromDate", startDate);
-            params.put("endDate", endDate);
-            params.put("stateName", stateName);
-            params.put("stateCode", stateCode.toString());
-            MotechEvent nextEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "healthsubfacility", params);
-            eventRelay.sendEventMessage(nextEvent);
+            processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.HEALTHSUBFACILITY);
 
         } catch (Exception e) {
             String error = String.format("Error processing RCH healthfacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
@@ -859,17 +790,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             String keelDeelApiResponse = rchWebServiceFacade.callKeelDeelApiLocations(token, keel, deel);
 
             String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "villagehealthsubfacility", stateId.toString());
-            executeScpCommand(tempFilePath,false);
-
-            Map<String, Object> params = new HashMap<>();
-            params.put("state", stateId.toString());
-            params.put("tempFilePath", tempFilePath);
-            params.put("fromDate", startDate);
-            params.put("endDate", endDate);
-            params.put("stateName", stateName);
-            params.put("stateCode", stateCode.toString());
-            MotechEvent nextEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "villagehealthsubfacility", params);
-            eventRelay.sendEventMessage(nextEvent);
+            processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.VILLAGEHEALTHSUBFACILITY);
 
         } catch (Exception e) {
             String error = String.format("Error processing RCH villagehealthsubfacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
@@ -933,17 +854,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
                 if (keelDeelApiResponse != null) {
                     String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "child", stateId.toString());
-                    executeScpCommand(tempFilePath,false);
-
-                    Map<String, Object> params = new HashMap<>();
-                    params.put("state", stateId.toString());
-                    params.put("tempFilePath", tempFilePath);
-                    params.put("fromDate", startReferenceDate);
-                    params.put("endDate", endReferenceDate);
-                    params.put("stateName", stateName);
-                    params.put("stateCode", stateCode.toString());
-                    MotechEvent thirdEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "child", params);
-                    eventRelay.sendEventMessage(thirdEvent);
+                    processThirdApiEvent(stateId.toString(), startReferenceDate, endReferenceDate, tempFilePath, "child", stateName, stateCode.toString());
 
                     success = true;
                 } else {
@@ -1023,17 +934,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
                 if (keelDeelApiResponse != null) {
                     String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "asha", stateId.toString());
-                    executeScpCommand(tempFilePath,false);
-
-                    Map<String, Object> params = new HashMap<>();
-                    params.put("state", stateId.toString());
-                    params.put("tempFilePath", tempFilePath);
-                    params.put("fromDate", startReferenceDate);
-                    params.put("endDate", endReferenceDate);
-                    params.put("stateName", stateName);
-                    params.put("stateCode", stateCode.toString());
-                    MotechEvent thirdEvent = new MotechEvent(Constants.SECOND_EVENT_PREFIX + "asha", params);
-                    eventRelay.sendEventMessage(thirdEvent);
+                    processThirdApiEvent(stateId.toString(), startReferenceDate, endReferenceDate, tempFilePath, "asha", stateName, stateCode.toString());
 
                     success = true;
                 } else {
