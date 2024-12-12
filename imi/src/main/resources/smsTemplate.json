@@ -8,6 +8,7 @@
       "message": "<messageContent>"
     },
     "clientCorrelator": "<correlationId>",
+    "messageType": "<messageType>",
     "receiptRequest": {
       "notifyURL": "<notificationUrl>",
       "callbackData": ""
