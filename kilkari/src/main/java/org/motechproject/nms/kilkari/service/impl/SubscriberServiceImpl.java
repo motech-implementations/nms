@@ -749,12 +749,13 @@ public class SubscriberServiceImpl implements SubscriberService {
                                 subscriberByRchId.setMother(childUpdate.getMother());
                             }
                             Subscription latestDeactivatedSubscription = subscriptionService.getLatestDeactivatedSubscription(subscriberByRchId, pack.getType(), true);
-
-                            if (latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.COMPLETED) ||
-                                    ((latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.DEACTIVATED) && !(latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.LOW_LISTENERSHIP) || latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED))))) {
-                                subscriberByRchId.setDateOfBirth(dob);
-                                subscriberByRchId.setModificationDate(DateTime.now());
-                                return null;
+                            if (subscription == null && latestDeactivatedSubscription != null) {
+                                if (latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.COMPLETED) ||
+                                        ((latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.DEACTIVATED) && !(latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.LOW_LISTENERSHIP) || latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED))))) {
+                                    subscriberByRchId.setDateOfBirth(dob);
+                                    subscriberByRchId.setModificationDate(DateTime.now());
+                                    return null;
+                                }
                             }
                             subscriberByRchId.setDateOfBirth(dob);
                             subscriberByRchId.setModificationDate(DateTime.now());
