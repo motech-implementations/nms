@@ -86,7 +86,7 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
         return sender.sendNotificationRequest(httpPost, HttpStatus.SC_CREATED, ALERT_ID, ALERT_NAME);
     }
 
-    private HttpPost prepareSmsRequest(Long callingNumber, Map<String, String> smsParams) {
+    public HttpPost prepareSmsRequest(Long callingNumber, Map<String, String> smsParams) {
 
         String senderId = settingsFacade.getProperty(SMS_SENDER_ID);
         String endpoint = settingsFacade.getProperty(SMS_NOTIFICATION_URL);
