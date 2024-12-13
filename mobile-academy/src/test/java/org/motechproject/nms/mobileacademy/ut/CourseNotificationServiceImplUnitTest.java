@@ -4,7 +4,6 @@ import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -102,46 +101,9 @@ public class CourseNotificationServiceImplUnitTest {
         courseNotificationServiceImpl.updateSmsStatus(event);
 
         // Assert
-//        verify(courseCompletionRecordDataService).update(ccr);
         assertNull(ccr.getLastDeliveryStatus());
         verifyNoMoreInteractions(schedulerService);
     }
-
-//    @Test
-//    public void testUpdateSmsStatus_RetryOnFailure() throws Exception {
-//        // Arrange
-//        String deliveryStatus = "DELIVERY_IMPOSSIBLE";
-//        String callingNumber = "9876543210";
-//        long flwId = 1L;
-//
-//        CourseNotificationServiceImpl courseNotificationServiceMocked = mock(CourseNotificationServiceImpl.class);
-//
-//        FrontLineWorker flw = mock(FrontLineWorker.class);
-//        when(flw.getId()).thenReturn(flwId);
-//        when(frontLineWorkerService.getByContactNumber(Long.parseLong(callingNumber))).thenReturn(flw);
-//
-//        CourseCompletionRecord ccr = new CourseCompletionRecord(1L, 24, "scoresByChapter\":{\"11\":4, \"1\":4, \"2\":4, \"3\":4, \"4\":4, \"5\":4, \"6\":4, \"7\":4, \"8\":4, \"9\":4, \"10\":4}");
-//        ccr.setNotificationRetryCount(0);
-//        when(courseCompletionRecordDataService.findByFlwId(flwId)).thenReturn(Collections.singletonList(ccr));
-//
-//        when(settingsFacade.getProperty("sms.retry.count")).thenReturn("3");
-//        MotechEvent event = mockMotechEvent(callingNumber, deliveryStatus);
-//
-//        // Mock SMS params using reflection
-//        Map<String, String> smsParams = new HashMap<>();
-//        smsParams.put("key", "value");
-//
-////         Use reflection to access the private method
-//        Method buildSmsParamsMethod = CourseNotificationServiceImpl.class.getDeclaredMethod("buildSmsParams", long.class, CourseCompletionRecord.class);
-//        buildSmsParamsMethod.setAccessible(true);
-//        when(courseNotificationServiceMocked.buildSmsParams(flwId, ccr)).thenReturn(smsParams);
-//
-//        // Act
-//        courseNotificationServiceImpl.updateSmsStatus(event);
-//
-//        // Assert
-//        verify(schedulerService).safeScheduleRepeatingJob(any(RepeatingSchedulableJob.class));
-//    }
 
     @Test
     public void testUpdateSmsStatus_NoCourseCompletionRecord() {
