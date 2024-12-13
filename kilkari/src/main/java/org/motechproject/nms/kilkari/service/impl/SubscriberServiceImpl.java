@@ -797,7 +797,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                     Subscription subscription = subscriptionService.getActiveSubscription(subscriber, pack.getType());
                     Subscription latestDeactivatedSubscription = subscriptionService.getLatestDeactivatedSubscription(subscriberByRchId, pack.getType(), true);
 
-                    if (Objects.equals(subscriber.getId(), subscriberByRchId.getId()) && subscription == null && latestDeactivatedSubscription != null) {
+                    if (Objects.equals(subscriber.getId(), subscriberByRchId.getId()) && subscription == null && latestDeactivatedSubscription != null && !Objects.equals(subscriber.getCallingNumber(), msisdn) ) {
                         if(latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.DEACTIVATED) && !(latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.LOW_LISTENERSHIP) || latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED))) {
                             subscription = latestDeactivatedSubscription;
                         }
