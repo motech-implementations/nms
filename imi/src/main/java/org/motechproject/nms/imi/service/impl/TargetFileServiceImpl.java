@@ -842,7 +842,8 @@ public class TargetFileServiceImpl implements TargetFileService {
                         SubscriptionTimeSlot timeSlot = timeSlotMap.get(callRetry.getSubscriptionId());
                         String timeStamp1 = timeSlot != null ? timeSlot.getTimeStamp1() != null ? timeSlot.getTimeStamp1().toString() : "" : "";
                         String timeStamp2 = timeSlot != null ? timeSlot.getTimeStamp2() != null ? timeSlot.getTimeStamp2().toString() : "" : "";
-                        String timeStamp3 = timeSlot != null ? timeSlot.getTimeStamp3() != null ? timeSlot.getTimeStamp3().toString() : "" : "";
+                        // String timeStamp3 = timeSlot != null ? timeSlot.getTimeStamp3() != null ? timeSlot.getTimeStamp3().toString() : "" : "";
+                        String timeStamp3 = "";
 
                         writeSubscriptionRow(
                                 requestId.toString(),
@@ -904,7 +905,8 @@ public class TargetFileServiceImpl implements TargetFileService {
                         SubscriptionTimeSlot timeSlot = timeSlotMap.get(callRetry.getSubscriptionId());
                         String timeStamp1 = timeSlot != null ? timeSlot.getTimeStamp1() != null ? timeSlot.getTimeStamp1().toString() : "" : "";
                         String timeStamp2 = timeSlot != null ? timeSlot.getTimeStamp2() != null ? timeSlot.getTimeStamp2().toString() : "" : "";
-                        String timeStamp3 = timeSlot != null ? timeSlot.getTimeStamp3() != null ? timeSlot.getTimeStamp3().toString() : "" : "";
+                       // String timeStamp3 = timeSlot != null ? timeSlot.getTimeStamp3() != null ? timeSlot.getTimeStamp3().toString() : "" : "";
+                        String timeStamp3 = ""; // Only two slots for retry calls
 
                         if (split && subscriptionIdsJh.contains(callRetry.getSubscriptionId())) {
                             writeSubscriptionRow(
