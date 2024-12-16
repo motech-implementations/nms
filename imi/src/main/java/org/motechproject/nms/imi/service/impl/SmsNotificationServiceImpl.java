@@ -50,6 +50,8 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
 
     private static final String ALERT_NAME = "Sms notification failed";
 
+    private static final String SMS_MESSAGE_TYPE = "imi.sms.messageType";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(SmsNotificationServiceImpl.class);
 
     private AlertService alertService;
@@ -84,7 +86,7 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
         return sender.sendNotificationRequest(httpPost, HttpStatus.SC_CREATED, ALERT_ID, ALERT_NAME);
     }
 
-    private HttpPost prepareSmsRequest(Long callingNumber, Map<String, String> smsParams) {
+    public HttpPost prepareSmsRequest(Long callingNumber, Map<String, String> smsParams) {
 
         String senderId = settingsFacade.getProperty(SMS_SENDER_ID);
         String endpoint = settingsFacade.getProperty(SMS_NOTIFICATION_URL);
@@ -93,9 +95,14 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
         String smsEntityId = smsParams.get("smsEntityId");
         String smsTelemarketerId = smsParams.get("smsTelemarketerId");
         String smsTemplateId = smsParams.get("smsTemplateId");
+        String messageType = smsParams.get("smsMessageType");
+
+        LOGGER.info("senderId:{}, endpoint:{}, callbackEndpoint:{}, smsContent:{}, smsEntityId:{}, " +
+                "smsTelemarketerId:{}, smsTemplateId:{}, messageType:{}", senderId, endpoint, callbackEndpoint,
+                smsContent, smsEntityId, smsTelemarketerId, smsTemplateId, messageType);
 
 
-        if (senderId == null || endpoint == null || smsContent == null || smsEntityId == null || smsTelemarketerId == null || smsTemplateId == null || callbackEndpoint == null) {
+        if (senderId == null || endpoint == null || smsContent == null || smsEntityId == null || smsTelemarketerId == null || smsTemplateId == null || callbackEndpoint == null || messageType == null) {
 
             Map<String, String> alertData = new HashMap<>();
             alertData.put(SMS_SENDER_ID, senderId);
@@ -105,6 +112,7 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
             alertData.put(SMS_TELEMARKETER_ID, smsTelemarketerId);
             alertData.put(SMS_TEMPLATE_ID, smsTemplateId);
             alertData.put(CALLBACK_URL, callbackEndpoint);
+            alertData.put(SMS_MESSAGE_TYPE,messageType);
 
             LOGGER.error("Unable to find sms settings. Check IMI sms gateway settings");
             alertService.create("settingsFacade", "properties", "Could not get sms settings",
@@ -138,6 +146,7 @@ public class SmsNotificationServiceImpl implements SmsNotificationService {
         template = template.replace("<smsTelemarketerId>", smsTelemarketerId);
         template = template.replace("<notificationUrl>", callbackEndpoint);
         template = template.replace("<correlationId>", DateTime.now().toString());
+        template = template.replace("<messageType>", messageType);
 
         LOGGER.info("Sms Template"+ template);
 

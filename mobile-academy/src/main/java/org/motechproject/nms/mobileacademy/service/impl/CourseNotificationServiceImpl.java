@@ -48,6 +48,7 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
     private static final String ADDRESS = "address";
     private static final String SMS_CONTENT_PREFIX = "sms.content.";
     private static final String SMS_TEMPLATE_ID_PREFIX = "sms.templateId.";
+    private static final String SMS_MESSAGE_TYPE_PREFIX = "sms.messageType.";
     private static final String SMS_DEFAULT_LANGUAGE_PROPERTY = "default";
     private static final Logger LOGGER = LoggerFactory.getLogger(CourseNotificationServiceImpl.class);
 
@@ -265,12 +266,20 @@ public class CourseNotificationServiceImpl implements CourseNotificationService 
         String smsEntityId = settingsFacade.getProperty("sms.entityId.default");
         String smsTelemarketerId = settingsFacade.getProperty("sms.telemarketerId.default");
         String smsTemplateId = settingsFacade.getProperty(SMS_TEMPLATE_ID_PREFIX + smsLanguageProperty);
+        if(smsTemplateId == null){
+            smsTemplateId = settingsFacade.getProperty("sms.templateId.default");
+        }
+        String messageType = settingsFacade.getProperty(SMS_MESSAGE_TYPE_PREFIX + smsLanguageProperty);
+        if(messageType == null){
+            messageType = settingsFacade.getProperty("sms.messageType.default");
+        }
 
         Map<String, String> smsParams = new HashMap<String, String>();
         smsParams.put("smsContent", smsContent);
         smsParams.put("smsEntityId", smsEntityId);
         smsParams.put("smsTelemarketerId", smsTelemarketerId);
         smsParams.put("smsTemplateId", smsTemplateId);
+        smsParams.put("smsMessageType", messageType);
 
         return smsParams;
     }
