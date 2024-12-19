@@ -34,7 +34,6 @@ public class SubscriptionDto {
     private final String subscriptionPackName;
     private final int messagesPerWeek;
 
-    // Private constructor to enforce the use of the Builder
     private SubscriptionDto(Builder builder) {
         this.id = builder.id;
         this.activationDate = builder.activationDate;
@@ -170,12 +169,10 @@ public class SubscriptionDto {
 
 
     public SubscriptionPackMessage nextScheduledMessage(DateTime date) {
-        // Validate the subscription is active or completed
         if (!"ACTIVE".equals(status) && !"COMPLETED".equals(status)) {
             throw new IllegalStateException(String.format("Subscription with ID %s is not active", subscriptionId));
         }
 
-        // get days into pack
         int daysIntoPack = Days.daysBetween(new DateTime(startDate), date).getDays();
         if (daysIntoPack < 0) {
             throw new IllegalStateException(
@@ -191,22 +188,18 @@ public class SubscriptionDto {
             }
         }
 
-        // If check for welcome message condition
         if (needsWelcomeMessageViaObd) {
             return getWelcomeMessage();
         }
 
-        // get next message and week index
         int currentWeek = daysIntoPack / 7 + 1;
         if (messagesPerWeek == 1) {
             return getMessageByWeekAndMessageId(currentWeek, 1);
         } else {
             // messages per week == 2
             if (daysIntoPack % 7 < 4) {
-                // use this week's first message
                 return getMessageByWeekAndMessageId(currentWeek, 1);
             } else {
-                // use this week's second message
                 return getMessageByWeekAndMessageId(currentWeek, 2);
             }
         }
@@ -223,7 +216,6 @@ public class SubscriptionDto {
         return new SubscriptionPackMessage("w1_1", "w1_1.wav", 120);
     }
 
-    // Static Builder class
     public static class Builder {
         private long id;
         private Date activationDate;
@@ -281,7 +273,6 @@ public class SubscriptionDto {
 
 
 
-        // Build method to create the DTO
         public SubscriptionDto build() {
             return new SubscriptionDto(this);
         }
