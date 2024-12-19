@@ -27,6 +27,7 @@ import org.motechproject.nms.imi.service.contract.TargetFileNotification;
 import org.motechproject.nms.imi.web.contract.FileProcessedStatusRequest;
 import org.motechproject.nms.kilkari.domain.*;
 import org.motechproject.nms.kilkari.domain.WhatsAppOptSMS;
+import org.motechproject.nms.kilkari.dto.SubscriptionDto;
 import org.motechproject.nms.kilkari.repository.WhatsAppOptSMSDataService;
 import org.motechproject.nms.kilkari.service.CallRetryService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
@@ -267,6 +268,19 @@ public class TargetFileServiceImpl implements TargetFileService {
         throw new IllegalStateException("Unexpected SubscriptionOrigin value");
     }
 
+    public String serviceIdFromOrigins(boolean freshCall, String origin) {
+
+        if (origin.equalsIgnoreCase("MCTS_IMPORT") || origin.equalsIgnoreCase("RCH_IMPORT")) {
+            return freshCall ? freshCheckDND : retryCheckDND;
+        }
+
+        if (origin.equalsIgnoreCase("IVR")) {
+            return freshCall ? freshNoCheckDND : retryNoCheckDND;
+        }
+
+        throw new IllegalStateException("Unexpected SubscriptionOrigin value");
+    }
+
     public String serviceIdFromOriginJh(boolean freshCall, SubscriptionOrigin origin) {
 
         if (origin == SubscriptionOrigin.MCTS_IMPORT || origin == SubscriptionOrigin.RCH_IMPORT) {
@@ -274,6 +288,19 @@ public class TargetFileServiceImpl implements TargetFileService {
         }
 
         if (origin == SubscriptionOrigin.IVR) {
+            return freshCall ? freshNoCheckDNDJh : retryNoCheckDNDJh;
+        }
+
+        throw new IllegalStateException("Unexpected SubscriptionOrigin value");
+    }
+
+    public String serviceIdFromOriginsJh(boolean freshCall, String origin) {
+
+        if (origin.equalsIgnoreCase("MCTS_IMPORT") || origin.equalsIgnoreCase("RCH_IMPORT")) {
+            return freshCall ? freshCheckDNDJh : retryCheckDNDJh;
+        }
+
+        if (origin.equalsIgnoreCase("IVR")) {
             return freshCall ? freshNoCheckDNDJh : retryNoCheckDNDJh;
         }
 
@@ -577,50 +604,54 @@ public class TargetFileServiceImpl implements TargetFileService {
         int recordsWrittenSpecific = 0;
         int recordsWrittenJh = 0;
         Long offset = 0L;
+        int weeks;
+
         List<Long> specificStateList = getSpecificStateList();
-        do {
-            List<Subscription> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, offset, maxQueryBlock);
-            LOGGER.info("Subs_block_size"  + subscriptions.size());
-            if (subscriptions.size() == 0) {
-                break;
-            }
 
-            List<String> subscriptionIds = new ArrayList<>();
-            for (Subscription subscription : subscriptions) {
-                subscriptionIds.add(subscription.getSubscriptionId());
-            }
+        List<SubscriptionTimeSlot> timeSlots = null;
 
-            List<SubscriptionTimeSlot> timeSlots = null;
+        try {
+            timeSlots = subscriptionTimeSlotService.findAllTimeSlots();
 
-            try {
-                timeSlots = subscriptionTimeSlotService.findTimeSlotsForSubscriptionsById(subscriptionIds);
-
-                }catch (Exception e){
-                LOGGER.error("Error finding time slots for subscriptions", e);
-                }
-            if(timeSlots==null){
-                continue;
-            }
+        }catch (Exception e){
+            LOGGER.error("Error finding time slots for subscriptions", e);
+        }
+        if(timeSlots==null){
+            LOGGER.warn("No time slots available, proceeding without time slot data.");
+        }
 
 
-            Map<String, SubscriptionTimeSlot> timeSlotMap = new HashMap<>();
+        Map<String, SubscriptionTimeSlot> timeSlotMap = new HashMap<>();
+        if(timeSlots!=null){
             for (SubscriptionTimeSlot timeSlot : timeSlots) {
                 timeSlotMap.put(timeSlot.getSubscriptionId(), timeSlot);
-            }
+            }}
 
-            for (Subscription subscription : subscriptions) {
-//                LOGGER.debug("Handling Subscription " + subscription.getId());
+
+
+    List<SubscriptionDto> subscriptions = subscriptionService.findActiveSubscriptionsForDay(dow, offset, maxQueryBlock);
+
+            LOGGER.info("Subs_block_size" + subscriptions.size());
+
+
+            for (SubscriptionDto subscription : subscriptions) {
                 offset = subscription.getId();
 
-                Subscriber subscriber = subscription.getSubscriber();
-                Long stateID = subscriber.getMother() == null ? subscriber.getChild().getState().getId() : subscriber.getMother().getState().getId();
+//                Subscriber subscriber = subscription.getSubscriber();
+                Long stateID = subscription.getStateId();
 
                 RequestId requestId = new RequestId(subscription.getSubscriptionId(), TIME_FORMATTER.print(timestamp));
 
                 try {
-                    SubscriptionPack pack = subscription.getSubscriptionPack();
-                    int daysIntoPack = Days.daysBetween(subscription.getStartDate(), timestamp).getDays();
-                    if (daysIntoPack == pack.getWeeks() * 7) {
+//                    SubscriptionPack pack = subscription.getSubscriptionPack();
+                    int daysIntoPack = Days.daysBetween(new DateTime(subscription.getStartDate()), timestamp).getDays();
+//                    LOGGER.info("this is the weeks: {}",pack.getWeeks());
+                    if(subscription.getSubscriptionPackIdOid()==1){
+                        weeks =72;
+                    }else {
+                        weeks=48;
+                    }
+                    if (daysIntoPack == weeks * 7) {
                         //
                         // Do not add subscriptions on their last day to the fresh call list since we
                         // will try to fetch message for current +1 week, which wouldn't exist
@@ -633,6 +664,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                     }
 
                     SubscriptionPackMessage msg = subscription.nextScheduledMessage(timestamp);
+//                    LOGGER.info("this is the mesg we are getting : {}",msg);
 
                     SubscriptionTimeSlot timeSlot = timeSlotMap.get(subscription.getSubscriptionId());
                     String timeStamp1 = timeSlot != null ? timeSlot.getTimeStamp1() != null ? timeSlot.getTimeStamp1().toString() : "" : "";
@@ -640,32 +672,33 @@ public class TargetFileServiceImpl implements TargetFileService {
                     String timeStamp3 = timeSlot != null ? timeSlot.getTimeStamp3() != null ? timeSlot.getTimeStamp3().toString() : "" : "";
 
 
+//                    LOGGER.info("this is the calling number: {}",subscriber.getCallingNumber().toString());
 
                     if(split && subscriptionIdsJh.contains(subscription.getSubscriptionId())) {
                             writeSubscriptionRow(
                                     requestId.toString(),
-                                    serviceIdFromOriginJh(true, subscription.getOrigin()),
-                                    subscriber.getCallingNumber().toString(),
+                                    serviceIdFromOriginsJh(true, subscription.getOrigin()),
+                                    subscription.getCallingNumber(),
                                     HIGH_PRIORITY, //todo: how do we choose a priority?
                                     callFlowUrl,
                                     msg.getMessageFileName(),
                                     msg.getWeekId(),
-                                    // we are happy with empty language and circle since they are optional
-                                    subscriber.getLanguage() == null ? "" : subscriber.getLanguage().getCode(),
-                                    subscriber.getCircle() == null ? "" : subscriber.getCircle().getName(),
-                                    subscription.getOrigin().getCode(),
+                      // we are happy with empty language and circle since they are optional
+                                    subscription.getLanguageCode(),
+                                    subscription.getCircleName(),
+                                    getCode(subscription.getOrigin()),
                                     wr.get(Jh),
-                                    subscription.isNeedsWelcomeOptInForWP(),
+                                    subscription.isNeedsWelcomeOptInForWp(),
                                     timeStamp1,
                                     timeStamp2,
                                     timeStamp3);
                             recordsWrittenJh++;
                         }
                     else if(specificStateList.contains(stateID)){
-                        recordsWrittenSpecific = getRecordsWritten(callFlowUrl, wr, recordsWrittenSpecific, subscription, subscriber, requestId, msg, specific_non_Jh,timeStamp1,timeStamp2,timeStamp3);
+                        recordsWrittenSpecific = getRecordsWritten(callFlowUrl, wr, recordsWrittenSpecific, subscription,requestId,msg,  specific_non_Jh,timeStamp1,timeStamp2,timeStamp3);
                     }
                     else {
-                        recordsWritten = getRecordsWritten(callFlowUrl, wr, recordsWritten, subscription, subscriber, requestId, msg, non_Jh,timeStamp1,timeStamp2,timeStamp3);
+                        recordsWritten = getRecordsWritten(callFlowUrl, wr, recordsWritten, subscription, requestId, msg, non_Jh,timeStamp1,timeStamp2,timeStamp3);
 
                     }
                 } catch (IllegalStateException se) {
@@ -676,7 +709,7 @@ public class TargetFileServiceImpl implements TargetFileService {
                 }
             }
 
-        } while (true);
+
 
         LOGGER.info(WROTE+non_Jh, recordsWritten);
         recordsMap.put(non_Jh, recordsWritten);
@@ -688,21 +721,33 @@ public class TargetFileServiceImpl implements TargetFileService {
         return recordsMap;
     }
 
-    private int getRecordsWritten(String callFlowUrl, HashMap<String, OutputStreamWriter> wr, int recordsWrittenJh, Subscription subscription, Subscriber subscriber, RequestId requestId, SubscriptionPackMessage msg, String specific_non_jh,String timeStamp1,String timeStamp2,String timeStamp3) throws IOException {
+    public final String getCode(String code) {
+        if (code.equalsIgnoreCase("IVR")) {
+            return "I";
+        } else if (code.equalsIgnoreCase("MCTS_IMPORT") ){
+            return "M";
+        } else {
+            return "R";
+        }
+    }
+
+
+
+    private int getRecordsWritten(String callFlowUrl, HashMap<String, OutputStreamWriter> wr, int recordsWrittenJh, SubscriptionDto subscription,  RequestId requestId, SubscriptionPackMessage msg,  String specific_non_jh,String timeStamp1,String timeStamp2,String timeStamp3) throws IOException {
         writeSubscriptionRow(
                 requestId.toString(),
-                serviceIdFromOrigin(true, subscription.getOrigin()),
-                subscriber.getCallingNumber().toString(),
+                serviceIdFromOrigins(true, subscription.getOrigin()),
+                subscription.getCallingNumber(),
                 NORMAL_PRIORITY, //todo: how do we choose a priority?
                 callFlowUrl,
                 msg.getMessageFileName(),
                 msg.getWeekId(),
                 // we are happy with empty language and circle since they are optional
-                subscriber.getLanguage() == null ? "" : subscriber.getLanguage().getCode(),
-                subscriber.getCircle() == null ? "" : subscriber.getCircle().getName(),
-                subscription.getOrigin().getCode(),
+                subscription.getLanguageCode(),
+                subscription.getCircleName(),
+                getCode(subscription.getOrigin()),
                 wr.get(specific_non_jh),
-                subscription.isNeedsWelcomeOptInForWP(),
+                subscription.isNeedsWelcomeOptInForWp(),
                 timeStamp1,
                 timeStamp2,
                 timeStamp3);
@@ -800,6 +845,23 @@ public class TargetFileServiceImpl implements TargetFileService {
         HashMap<String, Integer> retryCount = new HashMap<>();
         List<Long> specificState = getSpecificStateList();
 
+        List<SubscriptionTimeSlot> timeSlots = null;
+        try {
+            timeSlots = subscriptionTimeSlotService.findAllTimeSlots();
+        } catch (Exception e) {
+            LOGGER.error("Error finding time slots for subscriptions", e);
+        }
+
+        if (timeSlots == null) {
+            LOGGER.warn("No time slots available, proceeding without time slot data.");
+        }
+
+        Map<String, SubscriptionTimeSlot> timeSlotMap = new HashMap<>();
+        if(timeSlots!=null){
+            for (SubscriptionTimeSlot timeSlot : timeSlots) {
+                timeSlotMap.put(timeSlot.getSubscriptionId(), timeSlot);
+            }}
+
         for (String writer : wr.keySet()) {
             if (writer.equals(specific_non_Jh)) {
                 Long offset = 0L;
@@ -812,27 +874,9 @@ public class TargetFileServiceImpl implements TargetFileService {
                         break;
                     }
 
-                    List<String> subscriptionIds = new ArrayList<>();
-                    for (CallRetry callRetry : callRetries) {
-                        subscriptionIds.add(callRetry.getSubscriptionId());
-                    }
 
 
-                    List<SubscriptionTimeSlot> timeSlots = null;
-                    try {
-                        timeSlots = subscriptionTimeSlotService.findTimeSlotsForSubscriptionsById(subscriptionIds);
-                    } catch (Exception e) {
-                        LOGGER.error("Error finding time slots for subscriptions", e);
-                    }
 
-                    if (timeSlots == null) {
-                        continue;
-                    }
-
-                    Map<String, SubscriptionTimeSlot> timeSlotMap = new HashMap<>();
-                    for (SubscriptionTimeSlot timeSlot : timeSlots) {
-                        timeSlotMap.put(timeSlot.getSubscriptionId(), timeSlot);
-                    }
 
 
                     for (CallRetry callRetry : callRetries) {
@@ -873,28 +917,6 @@ public class TargetFileServiceImpl implements TargetFileService {
 
                     if (callRetries.size() == 0) {
                         break;
-                    }
-                    List<String> subscriptionIds = new ArrayList<>();
-                    for (CallRetry callRetry : callRetries) {
-                        subscriptionIds.add(callRetry.getSubscriptionId());
-                    }
-
-
-                    List<SubscriptionTimeSlot> timeSlots = null;
-                    try {
-                        timeSlots = subscriptionTimeSlotService.findTimeSlotsForSubscriptionsById(subscriptionIds);
-                    } catch (Exception e) {
-                        LOGGER.error("Error finding time slots for subscriptions", e);
-                    }
-
-                    if (timeSlots == null) {
-//                        LOGGER.warn("No time slots found for subscriptions: {}", subscriptionIds);
-                        continue;
-                    }
-
-                    Map<String, SubscriptionTimeSlot> timeSlotMap = new HashMap<>();
-                    for (SubscriptionTimeSlot timeSlot : timeSlots) {
-                        timeSlotMap.put(timeSlot.getSubscriptionId(), timeSlot);
                     }
 
 
