@@ -10,6 +10,7 @@ import org.motechproject.nms.kilkari.domain.Subscription;
 import org.motechproject.nms.kilkari.domain.SubscriptionOrigin;
 import org.motechproject.nms.kilkari.domain.SubscriptionPack;
 import org.motechproject.nms.kilkari.domain.SubscriptionPackType;
+import org.motechproject.nms.kilkari.dto.SubscriptionDto;
 import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.region.domain.Circle;
 import org.motechproject.nms.region.domain.Language;
@@ -151,7 +152,7 @@ public interface SubscriptionService {
      * @param rowCount The maximum number of rows to return
      * @return The list of subscriptions due for a message
      */
-    List<Subscription> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, long offset, int rowCount);
+    List<SubscriptionDto> findActiveSubscriptionsForDay(DayOfTheWeek dayOfTheWeek, long offset, int rowCount);
 
     List<String> findJhSubscriptionIds();
 
