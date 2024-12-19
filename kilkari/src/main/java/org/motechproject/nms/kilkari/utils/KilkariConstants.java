@@ -147,11 +147,6 @@ public final class KilkariConstants {
     public static final String CHILD_REGISTRATION_DATE = "ChildRegistrationDate";
     public  static final String WP_STATES = "rch.wp.states";
 
-
-    public static final String DB_URL_JDBC = "db.url";
-    public static final String DB_USER_JDBC = "db.user";
-    public static final String DB_PASSWORD_JDBC = "db.password";
-
     private KilkariConstants() {
     }
 }

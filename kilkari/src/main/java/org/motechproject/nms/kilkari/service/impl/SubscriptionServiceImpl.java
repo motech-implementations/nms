@@ -64,6 +64,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private SubscriberMsisdnTrackerDataService subscriberMsisdnTrackerDataService;
     public static AtomicBoolean isCapacityAvailable = new AtomicBoolean(true);
     private static final String HIGH_PRIORITY_BLOCK = "kilkari.highPriority.blockId";
+    public static final String DB_URL_JDBC = "db.url";
+    public static final String DB_USER_JDBC = "db.user";
+    public static final String DB_PASSWORD_JDBC = "db.password";
+
 
 
     @Autowired
@@ -1021,12 +1025,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                                 "s.creationDate, s.creator, s.modificationDate, s.modifiedBy, s.owner, s.needsWelcomeOptInForWP,sub.callingNumber, " +
                                 "COALESCE(lang.code, '') AS languageCode," +
                                 "COALESCE(circ.name, '') AS circleName," +
-                                "COALESCE(statemother.id, statechild.id) AS stateID," +
-                                "pack.weeks, " +
-                                "pack.name AS subscriptionPackName," +
-                                "pack.messagesPerWeek " +
+                                "COALESCE(statemother.id, statechild.id) AS stateID " +
                                 "FROM nms_subscriptions s " +
-               "INNER JOIN nms_subscription_packs AS pack ON s.subscriptionPack_id_OID = pack.id " +
                "INNER JOIN nms_subscribers AS sub ON s.subscriber_id_OID = sub.id " +
                "LEFT JOIN nms_mcts_mothers AS mother ON sub.mother_id_OID = mother.id " +
                "LEFT JOIN nms_states  AS statemother ON mother.state_id_OID = statemother.id " +
@@ -1044,7 +1044,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
        PreparedStatement stmt = null;
        Connection connection =null;
 
-       try{ connection = DriverManager.getConnection(settingsFacade.getProperty(KilkariConstants.DB_URL_JDBC), settingsFacade.getProperty(KilkariConstants.DB_USER_JDBC), settingsFacade.getProperty(KilkariConstants.DB_PASSWORD_JDBC));
+       try{ connection = DriverManager.getConnection(settingsFacade.getProperty(DB_URL_JDBC), settingsFacade.getProperty(DB_USER_JDBC), settingsFacade.getProperty(DB_PASSWORD_JDBC));
              stmt = connection.prepareStatement(query) ;
 
            stmt.setString(1, String.valueOf(dow));
@@ -1110,9 +1110,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     .setLanguageCode(resultSet.getString("languageCode"))
                     .setCircleName(resultSet.getString("circleName"))
                     .setStateId(resultSet.getLong("stateID"))
-                    .setWeeks(resultSet.getInt("weeks"))
-                    .setSubscriptionPackName(resultSet.getString("subscriptionPackName"))
-                    .setMessagesPerWeek(resultSet.getInt("messagesPerWeek"))
                     .build();
 
     }

@@ -604,6 +604,8 @@ public class TargetFileServiceImpl implements TargetFileService {
         int recordsWrittenSpecific = 0;
         int recordsWrittenJh = 0;
         Long offset = 0L;
+        int weeks;
+
         List<Long> specificStateList = getSpecificStateList();
 
         List<SubscriptionTimeSlot> timeSlots = null;
@@ -644,7 +646,12 @@ public class TargetFileServiceImpl implements TargetFileService {
 //                    SubscriptionPack pack = subscription.getSubscriptionPack();
                     int daysIntoPack = Days.daysBetween(new DateTime(subscription.getStartDate()), timestamp).getDays();
 //                    LOGGER.info("this is the weeks: {}",pack.getWeeks());
-                    if (daysIntoPack == subscription.getWeeks() * 7) {
+                    if(subscription.getSubscriptionPackIdOid()==1){
+                        weeks =72;
+                    }else {
+                        weeks=48;
+                    }
+                    if (daysIntoPack == weeks * 7) {
                         //
                         // Do not add subscriptions on their last day to the fresh call list since we
                         // will try to fetch message for current +1 week, which wouldn't exist

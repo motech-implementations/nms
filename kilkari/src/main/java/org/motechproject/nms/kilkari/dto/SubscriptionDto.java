@@ -169,9 +169,6 @@ public class SubscriptionDto {
 
 
     public SubscriptionPackMessage nextScheduledMessage(DateTime date) {
-        if (!"ACTIVE".equals(status) && !"COMPLETED".equals(status)) {
-            throw new IllegalStateException(String.format("Subscription with ID %s is not active", subscriptionId));
-        }
 
         int daysIntoPack = Days.daysBetween(new DateTime(startDate), date).getDays();
         if (daysIntoPack < 0) {
@@ -179,30 +176,14 @@ public class SubscriptionDto {
                     String.format("Subscription with ID %s is not due for any scheduled message. Start date in the future", subscriptionId));
         }
 
-        // If completed, send last message in pack for 7 day window after completion
-        if ("COMPLETED".equals(status)) {
-            if (daysIntoPack < (weeks * 7 + 7)) {
-                return getMessageByWeekAndMessageId(weeks, messagesPerWeek);
-            } else {
-                throw new IllegalStateException("Trying to get last subscription message more than a week after the subscription has completed.");
-            }
-        }
-
         if (needsWelcomeMessageViaObd) {
             return getWelcomeMessage();
         }
 
         int currentWeek = daysIntoPack / 7 + 1;
-        if (messagesPerWeek == 1) {
+
             return getMessageByWeekAndMessageId(currentWeek, 1);
-        } else {
-            // messages per week == 2
-            if (daysIntoPack % 7 < 4) {
-                return getMessageByWeekAndMessageId(currentWeek, 1);
-            } else {
-                return getMessageByWeekAndMessageId(currentWeek, 2);
-            }
-        }
+
     }
 
     public SubscriptionPackMessage getMessageByWeekAndMessageId(int week, int day) {
