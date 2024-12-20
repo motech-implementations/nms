@@ -56,6 +56,7 @@ import java.util.*;
 @Service("targetFileService")
 public class TargetFileServiceImpl implements TargetFileService {
     private static final String LOCAL_OBD_DIR = "imi.local_obd_dir";
+    private static final String LOCAL_OBDTEST_DIR = "imi.local_obdtest_dir";
     private static final String LOCAL_WHATSAPP_SMS_OBD_DIR = "imi.local_whatsapp_sms_obd_dir";
     private static final String LOCAL_OBD_DIR_WHATSAPP = "imi.local_obd_dir_whatsapp";
     private static final String TARGET_FILE_TIME = "imi.target_file_time";
@@ -1428,6 +1429,10 @@ public class TargetFileServiceImpl implements TargetFileService {
         return new File(settingsFacade.getProperty(LOCAL_OBD_DIR));
     }
 
+    private File localObdTestDir() {
+        return new File(settingsFacade.getProperty(LOCAL_OBDTEST_DIR));
+    }
+
     private List<Long> getSpecificStateList(){
         String locationProp = settingsFacade.getProperty(SPECIFIC_STATE_ID);
         if (StringUtils.isBlank(locationProp)) {
@@ -1587,7 +1592,7 @@ public class TargetFileServiceImpl implements TargetFileService {
         DateTime today = DateTime.now();
         String targetFileName = targetFileName(TIME_FORMATTER.print(today));
         String targetFileNameHungama = targetFileName(TIME_FORMATTER.print(today)+"IVR");
-        File localTargetDir = localObdDir();
+        File localTargetDir = localObdTestDir();
         String checksum;
         String checksumHungama;
         File targetFile = new File(localTargetDir, targetFileName);
@@ -1608,7 +1613,7 @@ public class TargetFileServiceImpl implements TargetFileService {
         HashMap<String, TargetFileNotification> tfn = new HashMap<>();
         if(split){
             String targetFileNameJh = targetFileName(TIME_FORMATTER.print(today)+"JH");
-            File localTargetDirJh = localObdDir();
+            File localTargetDirJh = localObdTestDir();
             String checksumJh;
             File targetFileJh = new File(localTargetDirJh, targetFileNameJh);
 
