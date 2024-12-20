@@ -1160,17 +1160,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     }
 
-    private Subscriber fetchSubscriber(long subscriberId) {
-        // Add JDBC logic to fetch Subscriber by ID from the database
-        return null;
-    }
-
-    private SubscriptionPack fetchSubscriptionPack(long subscriptionPackId) {
-        // Add JDBC logic to fetch SubscriptionPack by ID from the database
-        return null;
-    }
-
-
 
     @Override
     public List<Subscription> findActiveSubscriptionsForDayWP(final DayOfTheWeek dow, final long offset,
