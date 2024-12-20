@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
@@ -128,7 +129,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     public void setChildRecords(int i){this.childRecords.set(i);}
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public MotherImportRejection importMotherRecord(Map<String, Object> record, SubscriptionOrigin importOrigin, LocationFinder locationFinder) { //NOPMD NcssMethodCount
         LOGGER.debug("MotherImportRejection::importMotherRecord Start ");
         if (pregnancyPack == null) {
@@ -206,7 +207,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         //new rejection reason less_than_12_week
         boolean isServiceable=validateIsServiceable(lmp, SubscriptionPackType.PREGNANCY, msisdn, beneficiaryId, importOrigin);
 
-        if (!isServiceable && (action.equals("CREATE") || mother.getMaxCaseNo() < caseNo)) {
+        if (!isServiceable && (action.equals("CREATE") || (mother.getMaxCaseNo() != null ? mother.getMaxCaseNo() : 0) < caseNo)) {
             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.LESS_THAN_12_WEEK, false);
         }
 
@@ -244,7 +245,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ABORT_STILLBIRTH_DEATH, false);
         }
 
-        List<DeactivatedBeneficiary> deactivatedUsers = null;
+        // List<DeactivatedBeneficiary> deactivatedUsers = null;
         synchronized (this) {
             records.addAndGet(1);
             Long chunkSize = Long.parseLong(settingsFacade.getProperty(CHUNK_SIZE));
@@ -258,7 +259,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             }
             LOGGER.info("capacity available"+SubscriptionServiceImpl.isCapacityAvailable.get());
             LOGGER.debug("MotherImportRejection::importMotherRecord Start synchronized block " + beneficiaryId);
-            deactivatedUsers = deactivatedBeneficiaryService.findDeactivatedBeneficiariesOtherThanManualDeactivation(beneficiaryId);
+            /*deactivatedUsers = deactivatedBeneficiaryService.findDeactivatedBeneficiariesOtherThanManualDeactivation(beneficiaryId);
             LOGGER.debug("MotherImportRejection::importMotherRecord Got deactived users " + beneficiaryId);
             if (deactivatedUsers != null && deactivatedUsers.size() > 0) {
                 for (DeactivatedBeneficiary deactivatedUser : deactivatedUsers) {
@@ -270,13 +271,13 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                         }
                     }
                 }
-            }
+            }*/
 
             LOGGER.debug("MotherImportRejection::importMotherRecord Handled Deactived Users " + beneficiaryId);
             Subscription subscription;
             if (importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
                 //validate if an ACTIVE child is already present for the mother. If yes, ignore the update
-                if (childAlreadyPresent(beneficiaryId, importOrigin)) {
+                if (childAlreadyPresent(beneficiaryId, importOrigin, caseNo)) {
                     LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block " + beneficiaryId);
                     return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ACTIVE_CHILD_PRESENT, false);
                 }
@@ -287,15 +288,15 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 }
             } else {
 
-                if (childAlreadyPresent(beneficiaryId, importOrigin)) {
-                    LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block " + beneficiaryId);
-                    return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ACTIVE_CHILD_PRESENT, false);
-                }
-
                 // validate caseNo
                 if (!validateCaseNo(caseNo, mother)) {
                     LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block " + beneficiaryId);
                     return motherRejectionRch(convertMapToRchMother(record), false, RejectionReasons.INVALID_CASE_NO.toString(), action);
+                }
+
+                if (childAlreadyPresent(beneficiaryId, importOrigin, caseNo)) {
+                    LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block " + beneficiaryId);
+                    return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ACTIVE_CHILD_PRESENT, false);
                 }
 
                 StringBuffer mapKey = new StringBuffer(record.get(KilkariConstants.STATE_ID).toString());
@@ -378,7 +379,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
     }
 
     @Override // NO CHECKSTYLE Cyclomatic Complexity
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public ChildImportRejection importChildRecord(Map<String, Object> record, SubscriptionOrigin importOrigin, LocationFinder locationFinder) { //NOPMD NcssMethodCount
         if (childPack == null) {
             childPack = subscriptionService.getSubscriptionPack(SubscriptionPackType.CHILD);
@@ -533,7 +534,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 SubscriptionServiceImpl.isCapacityAvailable.set(currentActive < maxActiveSubscriptions);
             }
             LOGGER.info("capacity available"+SubscriptionServiceImpl.isCapacityAvailable.get());
-            if (childById != null && subscriptionService.getActiveSubscription(subscriberService.getSubscriberByBeneficiary(childById), SubscriptionPackType.PREGNANCY) != null && subscriptionService.getActiveSubscription(subscriberService.getSubscriberByBeneficiary(childById), SubscriptionPackType.PREGNANCY).getStatus() == SubscriptionStatus.ACTIVE) {
+            /*if (childById != null && subscriptionService.getActiveSubscription(subscriberService.getSubscriberByBeneficiary(childById), SubscriptionPackType.PREGNANCY) != null && subscriptionService.getActiveSubscription(subscriberService.getSubscriberByBeneficiary(childById), SubscriptionPackType.PREGNANCY).getStatus() == SubscriptionStatus.ACTIVE) {
                 LOGGER.debug("Active mother. We ignore the deactivated case scenario.");
             } else {
                 deactivatedUsers = deactivatedBeneficiaryService.findDeactivatedBeneficiariesOtherThanManualDeactivation(childId);
@@ -547,7 +548,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                         }
                     }
                 }
-            }
+            }*/
             child.setRegistrationDate(regDate);
             if(ashaId==null || ashaId.isEmpty()){
                 child.setAshaId(null);
@@ -648,7 +649,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
         return true;
     }
 
-    private boolean childAlreadyPresent(final String motherBenificiaryId, final SubscriptionOrigin importOrigin) {
+    private boolean childAlreadyPresent(final String motherBenificiaryId, final SubscriptionOrigin importOrigin, long caseNo) {
         //Found mother by beneficiary id. If there is no mother already present,then import will
         //go to the next check. Else we get the subscriber by the mother id
         //and check if the child subscription is ACTIVE. If yes we do not update the mother.
@@ -682,7 +683,8 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                             if (subscription.getSubscriptionPack().getType().equals(SubscriptionPackType.CHILD)
                                     && (SubscriptionStatus.ACTIVE.equals(status) || SubscriptionStatus.PENDING_ACTIVATION.equals(status) || SubscriptionStatus.HOLD.equals(status))
                                     && subscriber.getChild().getMother() != null
-                                    && subscriber.getChild().getMother().getRchId().equals(motherBenificiaryId)) {
+                                    && subscriber.getChild().getMother().getRchId().equals(motherBenificiaryId)
+                                    && caseNo > (subscriber.getCaseNo()==null? 0 : subscriber.getCaseNo())) {
                                 return true;
                             }
                         }

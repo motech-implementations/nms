@@ -130,7 +130,7 @@ public interface SubscriptionService {
      */
     Subscription getActiveSubscription(Subscriber subscriber, SubscriptionPackType type);
 
-    Subscription getLatestDeactivatedSubscription(Subscriber subscriber, SubscriptionPackType type);
+    Subscription getLatestDeactivatedSubscription(Subscriber subscriber, SubscriptionPackType type, boolean includeCompleted);
 
     List<Subscription> getActiveSubscriptionBySubscriber(Subscriber subscriber);
 
