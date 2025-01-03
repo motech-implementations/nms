@@ -1082,11 +1082,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                "LEFT JOIN nms_circles AS circ ON sub.circle_id_OID = circ.id " +
                "WHERE s.firstMessageDayOfWeek = ? AND s.status = 'ACTIVE' " +
                "AND serviceStatus IN ('IVR', 'IVR_AND_WHATSAPP') " +
-               "ORDER BY s.id ";
+               "ORDER BY s.id LIMIT ? OFFSET ? ";
 
        LOGGER.debug("Executing query: {}", query);
 
-       ResultSet resultSet = null;
+      // ResultSet resultSet = null;
        PreparedStatement stmt = null;
        Connection connection =null;
 
@@ -1094,23 +1094,21 @@ public class SubscriptionServiceImpl implements SubscriptionService {
              stmt = connection.prepareStatement(query) ;
 
            stmt.setString(1, String.valueOf(dow));
+           stmt.setInt(2, rowCount);
+           stmt.setLong(3, offset);
 
-
-            resultSet = stmt.executeQuery();
+           try (ResultSet resultSet = stmt.executeQuery()) {
                while (resultSet.next()) {
-                   long id =resultSet.getLong("id");
                    SubscriptionDto subscriptionDto = populateSubscription(resultSet);
                    subscriptions.add(subscriptionDto);
                }
+           }
 
 
        } catch (Exception e) {
            LOGGER.error("Error executing query: {}", query, e);
        }finally {
            try {
-               if (resultSet != null) {
-                   resultSet.close();
-               }
                if (stmt != null) {
                    stmt.close();
                }

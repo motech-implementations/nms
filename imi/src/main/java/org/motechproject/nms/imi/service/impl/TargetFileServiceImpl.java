@@ -632,7 +632,7 @@ public class TargetFileServiceImpl implements TargetFileService {
 
 
 
-    List<SubscriptionDto> subscriptions = subscriptionService.findActiveSubscriptionsForDayApi(dow, offset, maxQueryBlock);
+    List<SubscriptionDto> subscriptions = findAllSubscriptionsForDayApi(dow, maxQueryBlock);
 
             LOGGER.info("Subs_block_size" + subscriptions.size());
 
@@ -902,6 +902,28 @@ public class TargetFileServiceImpl implements TargetFileService {
                 timeStamp3);
         recordsWrittenJh++;
         return recordsWrittenJh;
+    }
+
+    private List<SubscriptionDto> findAllSubscriptionsForDayApi(DayOfTheWeek dow, int batchSize) {
+        List<SubscriptionDto> allSubscriptions = new ArrayList<>();
+        long offset = 0; // Start from the first record
+        boolean hasMoreRecords = true;
+
+        while (hasMoreRecords) {
+            List<SubscriptionDto> batchSubscriptions = subscriptionService.findActiveSubscriptionsForDayApi(dow, offset, batchSize);
+
+            if (batchSubscriptions.isEmpty()) {
+                hasMoreRecords = false; // No more records to fetch
+            } else {
+                allSubscriptions.addAll(batchSubscriptions);
+                offset += batchSize; // Increment offset for the next batch
+            }
+
+            LOGGER.info("Fetched {} records so far.", allSubscriptions.size());
+        }
+
+        LOGGER.info("Total subscriptions fetched: {}", allSubscriptions.size());
+        return allSubscriptions;
     }
 
     private void writeWhatsAppHeader(OutputStreamWriter writer) throws IOException {
