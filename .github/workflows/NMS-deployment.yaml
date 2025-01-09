@@ -21,25 +21,14 @@ jobs:
 
       # Step 3: Build the JAR
       - name: Build with Maven
-        run: mvn clean install -f NMSReportingSuite/pom.xml
+        run: mvn clean install
 
-      # Step 4: Build FrontEnd
-      - name: Install Frontend Dependencies and Build with Grunt
-        run: |
-          cd app
-          npm install
-          grunt package
-
-      # Step 5: Store deployment data
+      # Step 4: Store deployment data
       - uses: actions/upload-artifact@v4
         with:
-          name: my-artifact
+          name: nms-jars
           path: |
-            NMSReportingSuite/target/*.war
-            app/index.html
-            app/scripts/
-            app/views/
-            app/styles/
-            app/dist/
+            csv/target/*.jar
+            kilkari/target/*.jar
 
 
