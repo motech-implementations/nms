@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>motech</artifactId>
+        <groupId>org.motechproject</groupId>
+        <version>0.27.8</version>
+        <relativePath>../../../</relativePath>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <properties>
+        <modules.root.dir>${basedir}/../../..</modules.root.dir>
+    </properties>
+
+    <artifactId>motech-pax-it</artifactId>
+    <version>0.27.8</version>
+    <packaging>bundle</packaging>
+    <name>MOTECH Pax Testing</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>motech-pax-it-container</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>motech-testing-utils</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-container-native</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-junit4</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-link-mvn</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.url</groupId>
+            <artifactId>pax-url-aether</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.ops4j.base</groupId>
+            <artifactId>ops4j-base-util-property</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>org.motechproject.spring-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient-osgi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore-osgi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.http.jetty</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.eventadmin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>org.motechproject.com.google.guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.javax-inject</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>org.motechproject.org.springframework.security.spring-security-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.spring-security-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.junit</artifactId>
+            <!-- Override parent scope -->
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>3.5.1</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Import-Package>
+                            org.junit,
+                            com.sun.net.httpserver, javax.xml.parsers, org.apache.commons.io, org.apache.commons.lang,  org.apache.commons.lang3,org.apache.commons.lang.reflect,
+                            org.apache.http, org.apache.http.auth, org.apache.http.client, org.apache.http.client.entity, org.apache.http.client.methods,
+                            org.apache.http.entity, org.apache.http.impl.client, org.apache.http.message, org.apache.http.protocol, org.apache.http.util,
+                            org.motechproject.commons.api, org.motechproject.testing.utils, org.ops4j.pax.exam, org.ops4j.pax.exam.options,
+                            org.ops4j.pax.exam.options.extra, org.osgi.framework, org.slf4j, org.springframework.context, org.springframework.core.io,
+                            org.springframework.security.authentication,
+                            org.springframework.security.core,
+                            org.springframework.security.core.authority, org.springframework.security.core.context,
+                            org.springframework.security.core.userdetails,
+                            org.springframework.web.context, org.w3c.dom, org.xml.sax,
+                            org.hamcrest, org.junit.internal, org.junit.runners,
+                            junit.framework, junit.runner, org.junit.internal.builders,
+                            org.junit.internal.requests,
+                            org.junit.internal.runners,
+                            org.junit.runner.manipulation, org.junit.runners.model,
+                            junit.extensions,
+                            org.junit.internal.runners.model, org.junit.internal.runners.rules,
+                            org.junit.internal.runners.statements, org.junit.rules,
+                            org.junit.runners.parameterized,
+                            org.junit.validator,
+                            org.junit.internal.matchers, org.junit.matchers,
+                            org.hamcrest.core,
+                        </Import-Package>
+                        <Export-Package>
+                            org.motechproject.testing.osgi;version=${project.version},
+                            org.motechproject.testing.osgi.helper;version=${project.version},
+                            org.motechproject.testing.osgi.http;version=${project.version},
+                            org.motechproject.testing.osgi.wait;version=${project.version},
+                            org.junit,
+                            org.junit.internal,
+                            org.junit.runner, org.junit.runner.notification,
+                            junit.framework,
+                            junit.runner,
+                            org.junit.internal.builders,
+                            org.junit.internal.requests,
+                            org.junit.internal.runners,
+                            junit.extensions,
+                            org.junit.runner.manipulation,
+                            org.junit.runners,
+                            org.junit.internal.runners.model,
+                            org.junit.internal.runners.rules,
+                            org.junit.internal.runners.statements,
+                            org.junit.rules,
+                            org.junit.internal.matchers,
+                            org.junit.matchers,
+                            org.junit.runners.model,
+                            org.junit.runners.parameterized,
+                            org.junit.validator,
+
+
+                        </Export-Package>
+                        <Embed-Dependency>motech-osgi-platform;inline=true</Embed-Dependency>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
