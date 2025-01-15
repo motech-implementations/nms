@@ -859,9 +859,10 @@ public class SubscriberServiceImpl implements SubscriberService {
                                     subscriberByRchId.setModificationDate(DateTime.now());
                                     return null;
                                 }
-                                }else if(latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.DEACTIVATED) && (latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.INVALID_NUMBER))) {
+                                else if(latestDeactivatedSubscription.getStatus().equals(SubscriptionStatus.DEACTIVATED) && (latestDeactivatedSubscription.getDeactivationReason().equals(DeactivationReason.INVALID_NUMBER))) {
                                     subscription = latestDeactivatedSubscription;
                                 }
+                            }
                             subscriberByRchId.setDateOfBirth(dob);
                             subscriberByRchId.setModificationDate(DateTime.now());
                             finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
