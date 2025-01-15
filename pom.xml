@@ -835,6 +835,7 @@
                 <artifactId>motech-pax-it</artifactId>
                 <version>${motech.version}</version>
                 <scope>test</scope>
+                <systemPath>${project.basedir}/libs/motech-pax-it-0.27.8.jar</systemPath>
             </dependency>
             <dependency>
                 <groupId>org.openid4java</groupId>
