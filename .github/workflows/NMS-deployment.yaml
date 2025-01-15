@@ -23,6 +23,7 @@ jobs:
       - name : Installing local dependency
         run : |
               mvn install:install-file -Dfile=libs/motech-pax-it-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-pax-it -Dversion=0.27.8 -Dpackaging=jar
+              mvn install:install-file -Dfile=libs/motech-scheduler-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-pax-it -Dversion=0.27.8 -Dpackaging=jar
               mvn clean install
 
       # Step 4: Store deployment data
