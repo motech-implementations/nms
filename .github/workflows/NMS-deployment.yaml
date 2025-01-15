@@ -26,6 +26,7 @@ jobs:
               mvn install:install-file -Dfile=libs/motech-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech -Dversion=0.27.8 -Dpackaging=pom
               mvn install:install-file -Dfile=libs/motech-scheduler-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-scheduler -Dversion=0.27.8 -Dpackaging=jar
               mvn install:install-file -Dfile=libs/motech-scheduler-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-scheduler -Dversion=0.27.8 -Dpackaging=pom
+              mvn install:install-file -Dfile=libs/motech-0.27.8.pom -DgroupId=org.motechproject  -Dversion=0.27.8 -Dpackaging=pom
               mvn clean install -f pom.xml
 
       # Step 4: Store deployment data
