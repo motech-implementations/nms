@@ -21,11 +21,12 @@ jobs:
 
       - name : Installing local dependency
         run : mvn install:install-file \   
-              -Dfile=./libs/motech-pax-it-0.27.8.jar \   
+              -Dfile=motech-pax-it-0.27.8.jar \   
               -DgroupId=org.motechproject \   
               -DartifactId=motech-pax-it \   
               -Dversion=0.27.8 \   
               -Dpackaging=jar
+        working-directory: libs
 
       # Step 3: Build the JAR
       - name: Build with Maven
