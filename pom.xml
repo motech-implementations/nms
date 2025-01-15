@@ -91,11 +91,11 @@
             <artifactId>org.apache.felix.framework</artifactId>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp -->
-        <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>3.2.0</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.squareup.okhttp3</groupId>-->
+<!--            <artifactId>okhttp</artifactId>-->
+<!--            <version>3.2.0</version>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>org.osgi</groupId>
@@ -834,7 +834,7 @@
                 <groupId>org.motechproject</groupId>
                 <artifactId>motech-pax-it</artifactId>
                 <version>${motech.version}</version>
-                <scope>system</scope>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.openid4java</groupId>
@@ -1085,7 +1085,7 @@
                 </dependencies>
                 <configuration>
                     <skipTests>${unitTests.skip}</skipTests>
-                    <argLine>-XX:-UseSplitVerifier</argLine>
+<!--                    <argLine>-XX:-UseSplitVerifier</argLine>-->
                     <!-- bug in powermock on java7 -->
                     <forkMode>once</forkMode>
                     <!-- bug in surefire; won't pass argline for never -->
