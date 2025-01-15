@@ -834,7 +834,7 @@
                 <groupId>org.motechproject</groupId>
                 <artifactId>motech-pax-it</artifactId>
                 <version>${motech.version}</version>
-                <scope>compile</scope>
+                <scope>system</scope>
             </dependency>
             <dependency>
                 <groupId>org.openid4java</groupId>
