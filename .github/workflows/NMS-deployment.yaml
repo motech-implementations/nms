@@ -19,35 +19,20 @@ jobs:
           java-version: '8'
           distribution: 'temurin'
 
-      # step 3: Set up cache
-      - name: Setup cache for meaven
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-
-      # Step 4: Build the JAR
       - name : Installing local dependency
-        run : |
-          mvn clean install -f pom.xml
+        run : mvn install:install-file -Dfile=libs/motech-pax-it-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-pax-it -Dversion=0.27.8 -Dpackaging=jar
+#        working-directory: libs
 
-      # Step 5: Store deployment data
+      # Step 3: Build the JAR
+      - name: Build with Maven
+        run: mvn clean install
+
+      # Step 4: Store deployment data
       - uses: actions/upload-artifact@v4
         with:
           name: nms-jars
           path: |
-            api/target/*.jar
             csv/target/*.jar
-            flw/target/*.jar
-            flwUpdate/target/*.jar
-            imi/target/*.jar
             kilkari/target/*.jar
-            mcts/target/*.jar
-            mobile-academy/target/*.jar
-            props/target/*.jar
-            rch/target/*.jar
-            region/target/*.jar
-            rejection-handler/target/*.jar
-            testing/target/*.jar
-            tracking/target/*.jar 
+
+
