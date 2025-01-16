@@ -42,6 +42,8 @@ jobs:
               mvn install:install-file -Dfile=libs/motech-platform-server-config-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-platform-server-config -Dversion=0.27.8 -Dpackaging=pom
               mvn install:install-file -Dfile=libs/motech-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech -Dversion=0.27.8 -Dpackaging=pom
               mvn install:install-file -Dfile=libs/external-osgi-bundles-1.0.14.pom -DgroupId=org.motechproject -DartifactId=external-osgi-bundles -Dversion=1.0.14 -Dpackaging=pom
+              mvn install:install-file -Dfile=libs/org.motechproject.com.googlecode.lambdaj-2.3.3-r034.jar -DgroupId=com.googlecode.lambdaj -DartifactId=org.motechproject.com.googlecode.lambdaj -Dversion=2.3.3-r034 -Dpackaging=jar 
+              mvn install:install-file -Dfile=libs/org.motechproject.com.googlecode.lambdaj-2.3.3-r034.pom -DgroupId=com.googlecode.lambdaj -DartifactId=org.motechproject.com.googlecode.lambdaj -Dversion=2.3.3-r034 -Dpackaging=pom
               mvn clean install -f pom.xml
 
       # Step 4: Store deployment data
