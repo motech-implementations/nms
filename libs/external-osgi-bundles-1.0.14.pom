@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.motechproject</groupId>
+    <artifactId>external-osgi-bundles</artifactId>
+    <version>1.0.14</version> <!-- do not use parameter in version as maven fails to resolve it -->
+    <packaging>pom</packaging>
+    <name>MOTECH-external-bundles</name>
+
+    <description>
+        MOTECH is a software system from Grameen Foundation that harnesses the ubiquity
+        of mobile phones to deliver and receive information from patient and caregivers.
+    </description>
+
+    <properties>
+        <jdk.version>1.8</jdk.version>
+        <release.tag>r034</release.tag>
+    </properties>
+
+    <modules>
+        <module>activemq</module>
+        <!--<module>ektorp</module>-->
+        <module>gson</module>
+        <module>jackson</module>
+        <module>guava</module>
+        <!--<module>jsmpp</module>-->
+        <!--<module>junit</module>-->
+        <!--<module>kxml2</module>-->
+        <module>lambdaj</module>
+        <!--<module>quartz</module>-->
+        <!--<module>quartz-couchdb-store</module>-->
+        <!--<module>smslib</module>-->
+        <!--<module>stax</module>-->
+        <!--<module>hibernate</module>-->
+        <!--<module>xpp3</module>-->
+        <!--<module>mvel</module>-->
+        <!--<module>c3p0-fragment-bundle</module>-->
+        <!--<module>json</module>-->
+        <!--<module>jettison</module>-->
+        <module>aether-api</module>
+        <!--<module>xforms</module>-->
+        <!--<module>postgresql</module>-->
+        <!--<module>wiser</module>-->
+        <!--<module>liquibase</module>-->
+        <!--<module>reflectutils</module>-->
+        <!--<module>simplexml</module>-->
+        <!--<module>commons-configuration</module>-->
+        <module>javax-time</module>
+        <module>reflections</module>
+        <module>bucket4j</module>
+        <!--<module>spring-batch-core</module>-->
+        <!--<module>spring-batch-infrastructure</module>-->
+        <!--<module>spring-amqp</module>-->
+        <module>spring-retry</module>
+        <!--<module>spring-orm</module>-->
+        <!--<module>unitils</module>-->
+        <!--<module>poi-ooxml-schemas</module>-->
+        <!--<module>saxon-he</module>-->
+        <module>spring-security-core</module>
+        <module>spring-security-openid</module>
+        <module>spring-integration-core</module>
+        <module>spring-integration-jms</module>
+        <module>openid4java</module>
+        <module>spring-web</module>
+        <module>gemini-blueprint-extender</module>
+    </modules>
+
+    <build>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>source-assembly</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                            <configuration>
+                                <descriptors>
+                                    <descriptor>assembly/src.xml</descriptor>
+                                </descriptors>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>list-dependencies</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>resolve</goal>
+                        </goals>
+                        <configuration>
+                            <outputFile>target/dependencies.list</outputFile>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.0</version>
+                <configuration>
+                    <source>${jdk.version}</source>
+                    <target>${jdk.version}</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>1motech-repo</id>
+            <name>1MOTECH Maven Repository</name>
+            <url>http://repo.springsource.org/libs-milestone/</url>
+        </repository>
+        <repository>
+            <id>motech-repo</id>
+            <name>MOTECH Maven Repository</name>
+            <url>http://nexus.motechproject.org/content/repositories/public</url>
+        </repository>
+        <repository>
+            <id>com.springsource.repository.bundles.release</id>
+            <name>SpringSource Enterprise Bundle Repository - SpringSource Bundle Releases</name>
+            <url>http://repository.springsource.com/maven/bundles/release</url>
+        </repository>
+        <repository>
+            <id>com.springsource.repository.bundles.external</id>
+            <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
+            <url>http://repository.springsource.com/maven/bundles/external</url>
+        </repository>
+
+        <repository>
+            <id>mvnrepository</id>
+            <name>Maven Repository </name>
+            <url>http://repo1.maven.org/maven2</url>
+        </repository>
+        <repository>
+            <id>mvnrepository_Atlassian3rdPOld</id>
+            <name>mvnrepository_Atlassian3rdPOld</name>
+            <url>https://maven.atlassian.com/3rdparty/</url>
+        </repository>
+
+    </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>motech.nexus</id>
+            <name>MOTECH Releases Repository</name>
+            <url>http://nexus.motechproject.org/content/repositories/releases</url>
+            <uniqueVersion>false</uniqueVersion>
+        </repository>
+        <snapshotRepository>
+            <id>motech.nexus</id>
+            <name>MOTECH Snapshots Repository</name>
+            <url>http://nexus.motechproject.org/content/repositories/snapshots</url>
+            <uniqueVersion>false</uniqueVersion>
+        </snapshotRepository>
+    </distributionManagement>
+</project>
