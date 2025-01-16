@@ -24,6 +24,8 @@ jobs:
         run : |
               mvn install:install-file -Dfile=libs/motech-pax-it-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-pax-it -Dversion=0.27.8 -Dpackaging=jar
               mvn install:install-file -Dfile=libs/motech-pax-it-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-pax-it -Dversion=0.27.8 -Dpackaging=pom
+              mvn install:install-file -Dfile=libs/motech-osgi-platform-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-osgi-platform -Dversion=0.27.8 -Dpackaging=jar
+              mvn install:install-file -Dfile=libs/motech-osgi-platform-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-osgi-platform -Dversion=0.27.8 -Dpackaging=pom
               mvn install:install-file -Dfile=libs/motech-pax-it-container-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-pax-it-container -Dversion=0.27.8 -Dpackaging=jar
               mvn install:install-file -Dfile=libs/motech-pax-it-container-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-pax-it-container -Dversion=0.27.8 -Dpackaging=pom
               mvn install:install-file -Dfile=libs/motech-testing-utils-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-testing-utils -Dversion=0.27.8 -Dpackaging=jar
