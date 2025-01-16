@@ -75,6 +75,8 @@ jobs:
           mvn install:install-file -Dfile=libs/motech-platform-dataservices-migration-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-platform-dataservices-migration -Dversion=0.27.8 -Dpackaging=pom
           mvn install:install-file -Dfile=libs/org.motechproject.javax.time-0.6.3-r034.jar -DgroupId=javax.time -DartifactId=org.motechproject.javax.time -Dversion=0.6.3-r034 -Dpackaging=jar
           mvn install:install-file -Dfile=libs/org.motechproject.javax.time-0.6.3-r034.pom -DgroupId=javax.time -DartifactId=org.motechproject.javax.time -Dversion=0.6.3-r034 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/time-api-0.6.3.jar -DgroupId=javax.time -DartifactId=time-api -Dversion=0.6.3 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/time-api-0.6.3.pom -DgroupId=javax.time -DartifactId=time-api -Dversion=0.6.3 -Dpackaging=pom
           mvn clean install -f pom.xml
 
       # Step 4: Store deployment data
