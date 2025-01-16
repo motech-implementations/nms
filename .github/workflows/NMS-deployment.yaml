@@ -19,35 +19,70 @@ jobs:
           java-version: '8'
           distribution: 'temurin'
 
-      # step 3: Set up cache
-      - name: Setup cache for meaven
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-
-      # Step 4: Build the JAR
+      # Step 3: Build the JAR
       - name : Installing local dependency
         run : |
+          mvn install:install-file -Dfile=libs/motech-pax-it-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-pax-it -Dversion=0.27.8 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/motech-pax-it-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-pax-it -Dversion=0.27.8 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/motech-platform-config-core-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-platform-config-core -Dversion=0.27.8 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/motech-platform-config-core-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-platform-config-core -Dversion=0.27.8 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/motech-platform-commons-sql-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-platform-commons-sql -Dversion=0.27.8 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/motech-platform-commons-sql-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-platform-commons-sql -Dversion=0.27.8 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/motech-platform-dataservices-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-platform-dataservices -Dversion=0.27.8 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/motech-platform-dataservices-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-platform-dataservices -Dversion=0.27.8 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/motech-osgi-platform-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-osgi-platform -Dversion=0.27.8 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/motech-osgi-platform-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-osgi-platform -Dversion=0.27.8 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/motech-pax-it-container-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-pax-it-container -Dversion=0.27.8 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/motech-pax-it-container-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-pax-it-container -Dversion=0.27.8 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/motech-testing-utils-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-testing-utils -Dversion=0.27.8 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/motech-testing-utils-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-testing-utils -Dversion=0.27.8 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/org.motechproject.com.google.guava-20.0-r034.jar -DgroupId=com.google.guava -DartifactId=org.motechproject.com.google.guava -Dversion=20.0-r034 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/org.motechproject.com.google.guava-20.0-r034.pom -DgroupId=com.google.guava -DartifactId=org.motechproject.com.google.guava -Dversion=20.0-r034 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/org.motechproject.spring-web-4.3.12.RELEASE-r034.jar -DgroupId=org.motechproject -DartifactId=org.motechproject.spring-web -Dversion=4.3.12.RELEASE-r034 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/org.motechproject.spring-web-4.3.12.RELEASE-r034.pom -DgroupId=org.motechproject -DartifactId=org.motechproject.spring-web -Dversion=4.3.12.RELEASE-r034 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/org.motechproject.gemini-blueprint-extender-2.1.0.RELEASE-r034.jar -DgroupId=org.eclipse.gemini.blueprint -DartifactId=org.motechproject.gemini-blueprint-extender -Dversion=2.1.0.RELEASE-r034 -Dpackaging=jar 
+          mvn install:install-file -Dfile=libs/org.motechproject.gemini-blueprint-extender-2.1.0.RELEASE-r034.pom -DgroupId=org.eclipse.gemini.blueprint -DartifactId=org.motechproject.gemini-blueprint-extender -Dversion=2.1.0.RELEASE-r034 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/motech-scheduler-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-scheduler -Dversion=0.27.8 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/motech-scheduler-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-scheduler -Dversion=0.27.8 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/motech-platform-server-config-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-platform-server-config -Dversion=0.27.8 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/motech-platform-server-config-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-platform-server-config -Dversion=0.27.8 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/motech-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech -Dversion=0.27.8 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/external-osgi-bundles-1.0.14.pom -DgroupId=org.motechproject -DartifactId=external-osgi-bundles -Dversion=1.0.14 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/org.motechproject.com.googlecode.lambdaj-2.3.3-r034.jar -DgroupId=com.googlecode.lambdaj -DartifactId=org.motechproject.com.googlecode.lambdaj -Dversion=2.3.3-r034 -Dpackaging=jar 
+          mvn install:install-file -Dfile=libs/org.motechproject.com.googlecode.lambdaj-2.3.3-r034.pom -DgroupId=com.googlecode.lambdaj -DartifactId=org.motechproject.com.googlecode.lambdaj -Dversion=2.3.3-r034 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/motech-platform-commons-date-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-platform-commons-date -Dversion=0.27.8 -Dpackaging=jar 
+          mvn install:install-file -Dfile=libs/motech-platform-commons-date-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-platform-commons-date -Dversion=0.27.8 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/motech-platform-commons-api-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-platform-commons-api -Dversion=0.27.8 -Dpackaging=jar  
+          mvn install:install-file -Dfile=libs/motech-platform-commons-api-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-platform-commons-api -Dversion=0.27.8 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/org.motechproject.com.google.code.gson-2.8.0-r034.jar -DgroupId=com.google.code.gson -DartifactId=org.motechproject.com.google.code.gson -Dversion=2.8.0-r034 -Dpackaging=jar  
+          mvn install:install-file -Dfile=libs/org.motechproject.com.google.code.gson-2.8.0-r034.pom -DgroupId=com.google.code.gson -DartifactId=org.motechproject.com.google.code.gson -Dversion=2.8.0-r034 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/spring-security-core-4.2.4.RELEASE.jar -DgroupId=org.springframework.security -DartifactId=org.motechproject.org.springframework.security.spring-security-core -Dversion=4.2.4.RELEASE-r034 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/spring-security-core-4.2.4.RELEASE.pom -DgroupId=org.springframework.security -DartifactId=org.motechproject.org.springframework.security.spring-security-core -Dversion=4.2.4.RELEASE-r034 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/org.motechproject.org.apache.activemq-5.14.2-r034.jar -DgroupId=org.apache.activemq -DartifactId=org.motechproject.org.apache.activemq -Dversion=5.14.2-r034 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/org.motechproject.org.apache.activemq-5.14.2-r034.pom -DgroupId=org.apache.activemq -DartifactId=org.motechproject.org.apache.activemq -Dversion=5.14.2-r034 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/com.springsource.javax.transaction-1.1.0.jar -DgroupId=javax.transaction -DartifactId=com.springsource.javax.transaction -Dversion=1.1.0 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/com.springsource.javax.transaction-1.1.0.pom -DgroupId=javax.transaction -DartifactId=com.springsource.javax.transaction -Dversion=1.1.0 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/motech-platform-osgi-web-util-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-platform-osgi-web-util -Dversion=0.27.8 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/motech-platform-osgi-web-util-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-platform-osgi-web-util -Dversion=0.27.8 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/motech-platform-osgi-extender-fragment-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-platform-osgi-extender-fragment -Dversion=0.27.8 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/motech-platform-osgi-extender-fragment-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-platform-osgi-extender-fragment -Dversion=0.27.8 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/motech-platform-server-api-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-platform-server-api -Dversion=0.27.8 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/motech-platform-server-api-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-platform-server-api -Dversion=0.27.8 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/org.motechproject.aether-api-1.13.1-r029.jar -DgroupId=org.sonatype.aether -DartifactId=org.motechproject.aether-api -Dversion=1.13.1-r029 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/org.motechproject.aether-api-1.13.1-r029.pom -DgroupId=org.sonatype.aether -DartifactId=org.motechproject.aether-api -Dversion=1.13.1-r029 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/external-osgi-bundles-1.0.9.pom -DgroupId=org.motechproject -DartifactId=external-osgi-bundles -Dversion=1.0.9 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/motech-platform-dataservices-migration-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-platform-dataservices-migration -Dversion=0.27.8 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/motech-platform-dataservices-migration-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-platform-dataservices-migration -Dversion=0.27.8 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/org.motechproject.javax.time-0.6.3-r034.jar -DgroupId=javax.time -DartifactId=org.motechproject.javax.time -Dversion=0.6.3-r034 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/org.motechproject.javax.time-0.6.3-r034.pom -DgroupId=javax.time -DartifactId=org.motechproject.javax.time -Dversion=0.6.3-r034 -Dpackaging=pom
           mvn clean install -f pom.xml
 
-      # Step 5: Store deployment data
+      # Step 4: Store deployment data
       - uses: actions/upload-artifact@v4
         with:
           name: nms-jars
           path: |
-            api/target/*.jar
             csv/target/*.jar
-            flw/target/*.jar
-            flwUpdate/target/*.jar
-            imi/target/*.jar
             kilkari/target/*.jar
-            mcts/target/*.jar
-            mobile-academy/target/*.jar
-            props/target/*.jar
-            rch/target/*.jar
-            region/target/*.jar
-            rejection-handler/target/*.jar
-            testing/target/*.jar
-            tracking/target/*.jar 
+
+
