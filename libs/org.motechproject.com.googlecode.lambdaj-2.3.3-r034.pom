@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.googlecode.lambdaj</groupId>
+    <artifactId>org.motechproject.com.googlecode.lambdaj</artifactId>
+    <version>${lambdaj.version}-${release.tag}</version>
+    <packaging>bundle</packaging>
+
+    <name>lambdaj</name>
+    <description>The pseudo-functional collection manipulation library</description>
+
+    <parent>
+        <groupId>org.motechproject</groupId>
+        <artifactId>external-osgi-bundles</artifactId>
+        <version>1.0.14</version>
+    </parent>
+
+    <properties>
+        <modules.root.dir>${basedir}/..</modules.root.dir>
+        <lambdaj.version>2.3.3</lambdaj.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.googlecode.lambdaj</groupId>
+            <artifactId>lambdaj</artifactId>
+            <version>${lambdaj.version}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>hamcrest-all</artifactId>
+                    <groupId>org.hamcrest</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>objenesis</artifactId>
+                    <groupId>org.objenesis</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>cglib-nodep</artifactId>
+                    <groupId>cglib</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.hamcrest</artifactId>
+            <version>1.3_1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.objenesis</groupId>
+            <artifactId>objenesis</artifactId>
+            <version>2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.cglib</artifactId>
+            <version>2.2.2_1</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack-sources</id>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/sources</outputDirectory>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.googlecode.lambdaj</groupId>
+                                    <artifactId>lambdaj</artifactId>
+                                    <version>${lambdaj.version}</version>
+                                    <classifier>sources</classifier>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>3.5.1</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Export-Package>
+                            ch.lambdaj;version=${project.version},
+                            ch.lambdaj.collection;version=${project.version},
+                            ch.lambdaj.function;version=${project.version},
+                            ch.lambdaj.function.aggregate;version=${project.version},
+                            ch.lambdaj.function.argument;version=${project.version},
+                            ch.lambdaj.function.closure;version=${project.version},
+                            ch.lambdaj.function.compare;version=${project.version},
+                            ch.lambdaj.function.convert;version=${project.version},
+                            ch.lambdaj.function.matcher;version=${project.version},
+                            ch.lambdaj.group;version=${project.version},
+                            ch.lambdaj.proxy;version=${project.version},
+                            ch.lambdaj.util;version=${project.version},
+                            ch.lambdaj.util.iterator;version=${project.version}
+                        </Export-Package>
+                        <Bundle-Vendor>Google Lambdaj Project</Bundle-Vendor>
+                        <Bundle-DocURL>http://code.google.com/p/lambdaj</Bundle-DocURL>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Embed-Dependency>lambdaj;inline=true</Embed-Dependency>
+                        <Embed-Transitive>false</Embed-Transitive>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
