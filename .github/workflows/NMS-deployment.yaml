@@ -50,8 +50,8 @@ jobs:
           mvn install:install-file -Dfile=libs/motech-platform-commons-api-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-platform-commons-api -Dversion=0.27.8 -Dpackaging=pom
           mvn install:install-file -Dfile=libs/org.motechproject.com.google.code.gson-2.8.0-r034.jar -DgroupId=com.google.code.gson -DartifactId=org.motechproject.com.google.code.gson -Dversion=2.8.0-r034 -Dpackaging=jar  
           mvn install:install-file -Dfile=libs/org.motechproject.com.google.code.gson-2.8.0-r034.pom -DgroupId=com.google.code.gson -DartifactId=org.motechproject.com.google.code.gson -Dversion=2.8.0-r034 -Dpackaging=pom
-          mvn install:install-file -Dfile=libs/spring-security-core-4.2.4.RELEASE.jar -DgroupId=org.springframework.security -DartifactId=spring-security-core -Dversion=4.2.4.RELEASE -Dpackaging=jar
-          mvn install:install-file -Dfile=libs/spring-security-core-4.2.4.RELEASE.pom -DgroupId=org.springframework.security -DartifactId=spring-security-core -Dversion=4.2.4.RELEASE -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/spring-security-core-4.2.4.RELEASE.jar -DgroupId=org.springframework.security -DartifactId=org.motechproject.org.springframework.security.spring-security-core -Dversion=4.2.4.RELEASE-r034 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/spring-security-core-4.2.4.RELEASE.pom -DgroupId=org.springframework.security -DartifactId=org.motechproject.org.springframework.security.spring-security-core -Dversion=4.2.4.RELEASE-r034 -Dpackaging=pom
           mvn clean install -f pom.xml
 
       # Step 4: Store deployment data
