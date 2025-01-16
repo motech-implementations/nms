@@ -24,6 +24,8 @@ jobs:
         run : |
           mvn install:install-file -Dfile=libs/motech-pax-it-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-pax-it -Dversion=0.27.8 -Dpackaging=jar
           mvn install:install-file -Dfile=libs/motech-pax-it-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-pax-it -Dversion=0.27.8 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/motech-platform-commons-sql-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-platform-commons-sql -Dversion=0.27.8 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/motech-platform-commons-sql-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-platform-commons-sql -Dversion=0.27.8 -Dpackaging=pom
           mvn install:install-file -Dfile=libs/motech-platform-dataservices-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-platform-dataservices -Dversion=0.27.8 -Dpackaging=jar
           mvn install:install-file -Dfile=libs/motech-platform-dataservices-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-platform-dataservices -Dversion=0.27.8 -Dpackaging=pom
           mvn install:install-file -Dfile=libs/motech-osgi-platform-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-osgi-platform -Dversion=0.27.8 -Dpackaging=jar
