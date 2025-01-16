@@ -60,6 +60,8 @@ jobs:
           mvn install:install-file -Dfile=libs/spring-security-core-4.2.4.RELEASE.pom -DgroupId=org.springframework.security -DartifactId=org.motechproject.org.springframework.security.spring-security-core -Dversion=4.2.4.RELEASE-r034 -Dpackaging=pom
           mvn install:install-file -Dfile=libs/org.motechproject.org.apache.activemq-5.14.2-r034.jar -DgroupId=org.apache.activemq -DartifactId=org.motechproject.org.apache.activemq -Dversion=5.14.2-r034 -Dpackaging=jar
           mvn install:install-file -Dfile=libs/org.motechproject.org.apache.activemq-5.14.2-r034.pom -DgroupId=org.apache.activemq -DartifactId=org.motechproject.org.apache.activemq -Dversion=5.14.2-r034 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/com.springsource.javax.transaction-1.1.0.jar -DgroupId=javax.transaction -DartifactId=com.springsource.javax.transaction -Dversion=1.1.0 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/com.springsource.javax.transaction-1.1.0.pom -DgroupId=javax.transaction -DartifactId=com.springsource.javax.transaction -Dversion=1.1.0 -Dpackaging=pom
           mvn clean install -f pom.xml
 
       # Step 4: Store deployment data
