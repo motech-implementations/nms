@@ -64,6 +64,8 @@ jobs:
           mvn install:install-file -Dfile=libs/com.springsource.javax.transaction-1.1.0.pom -DgroupId=javax.transaction -DartifactId=com.springsource.javax.transaction -Dversion=1.1.0 -Dpackaging=pom
           mvn install:install-file -Dfile=libs/motech-platform-osgi-web-util-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-platform-osgi-web-util -Dversion=0.27.8 -Dpackaging=jar
           mvn install:install-file -Dfile=libs/motech-platform-osgi-web-util-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-platform-osgi-web-util -Dversion=0.27.8 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/motech-platform-osgi-extender-fragment-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-platform-osgi-extender-fragment -Dversion=0.27.8 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/motech-platform-osgi-extender-fragment-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-platform-osgi-extender-fragment -Dversion=0.27.8 -Dpackaging=pom
           mvn clean install -f pom.xml
 
       # Step 4: Store deployment data
