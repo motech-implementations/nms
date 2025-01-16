@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>motech</artifactId>
+        <groupId>org.motechproject</groupId>
+        <version>0.27.8</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>motech-osgi-platform</artifactId>
+    <version>0.27.8</version>
+    <name>MOTECH OSGi Platform</name>
+    <packaging>bundle</packaging>
+
+    <properties>
+        <modules.root.dir>${basedir}/../..</modules.root.dir>
+    </properties>
+
+    <description>
+        This module contains the OSGi platform configuration for the Motech server.
+        Used both by the actual server and integration tests.
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <!--<dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>org.motechproject.org.codehaus.jackson</artifactId>
+        </dependency>-->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.gemini.blueprint</groupId>
+            <artifactId>gemini-blueprint-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-pool</groupId>
+            <artifactId>commons-pool</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>3.5.1</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+
+                        <Bundle-Activator>
+                            org.motechproject.server.osgi.PlatformActivator
+                        </Bundle-Activator>
+                        <Import-Package>
+                            org.eclipse.gemini.blueprint,
+                            <!--org.codehaus.jackson.annotate,-->
+                            com.fasterxml.jackson.core,
+                            com.fasterxml.jackson.annotation,
+                            org.eclipse.gemini.blueprint.context.event,
+                            org.eclipse.gemini.blueprint.util,
+                            org.osgi.framework,
+                            org.osgi.service.event,
+                            org.osgi.service.http,
+                            org.slf4j,
+                            org.springframework.context,
+                            org.springframework.context.event,
+                            org.springframework.core,
+                            org.springframework.util,
+                            org.apache.commons.logging,
+                            org.apache.commons.logging.impl,
+                            org.springframework.aop.framework,
+                            org.springframework.beans,
+                            org.springframework.beans.factory,
+                            org.springframework.beans.factory.config,
+                            org.springframework.beans.propertyeditors,
+                            org.springframework.core.convert,
+                            org.springframework.core.io,
+                            org.springframework.core.io.support,
+                            org.xml.sax,
+                            org.aopalliance.aop,
+                            org.aopalliance.intercept,
+                            org.springframework.aop,
+                            org.springframework.aop.framework.adapter,
+                            org.springframework.aop.support,
+                            org.springframework.aop.target,
+                            org.springframework.cglib.core,
+                            org.springframework.cglib.proxy,
+                            org.springframework.cglib.transform.impl,
+                            org.springframework.core.annotation,
+                            org.springframework.objenesis,
+                            org.apache.commons.pool,
+                            org.apache.commons.pool.impl,
+                            org.apache.commons.pool2,
+                            org.apache.commons.pool2.impl,
+                            javax.management
+
+                        </Import-Package>
+                        <Export-Package>
+                            org.motechproject.server.osgi.event;version=${project.version},
+                            org.motechproject.server.osgi.status;version=${project.version},
+                            org.motechproject.server.osgi.util;version=${project.version},
+                            org.eclipse.gemini.blueprint,
+                            org.eclipse.gemini.blueprint.context.event,
+                            org.eclipse.gemini.blueprint.util,
+                            org.apache.commons.logging,
+                            org.eclipse.gemini.blueprint.util.internal,
+                            org.apache.commons.pool,
+                            org.apache.commons.pool.impl,
+                            org.apache.commons.pool2,
+                            org.apache.commons.pool2.impl,
+                            org.springframework.aop,
+                            org.springframework.aop.framework,
+                            org.springframework.aop.framework.adapter,
+                            org.springframework.aop.support,
+                            org.springframework.aop.target,
+                            org.apache.commons.logging.impl,
+                            org.slf4j.spi,
+                            <!--javax.servlet,-->
+                        </Export-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-bundles</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${user.home}/.motech/bundles</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>target</directory>
+                                    <includes>
+                                        <include>*.jar</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
