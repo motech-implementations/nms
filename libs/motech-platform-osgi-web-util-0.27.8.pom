@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>motech</artifactId>
+        <groupId>org.motechproject</groupId>
+        <version>0.27.8</version>
+        <relativePath>../../</relativePath>
+    </parent>
+
+    <artifactId>motech-platform-osgi-web-util</artifactId>
+    <name>MOTECH OSGI Web Util</name>
+    <description>MOTECH Osgi Web Util</description>
+    <version>0.27.8</version>
+    <packaging>bundle</packaging>
+
+    <properties>
+        <modules.root.dir>${basedir}/../..</modules.root.dir>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>motech-platform-commons-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>motech-platform-config-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>motech-platform-osgi-extender-fragment</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>motech-platform-server-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.motechproject</groupId>
+            <artifactId>org.motechproject.spring-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.spring-webmvc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+        <!--<dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>org.motechproject.org.codehaus.jackson</artifactId>
+        </dependency>-->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.gemini.blueprint</groupId>
+            <artifactId>gemini-blueprint-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+                <groupId>org.eclipse.gemini.blueprint</groupId>
+                <artifactId>gemini-blueprint-mock</artifactId>
+                <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>motech-pax-it</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.spring-context-support</artifactId>
+        </dependency>
+
+
+
+
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>3.5.1</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Resource-Path>osgi-web-util</Resource-Path>
+                        <Blueprint-Enabled>true</Blueprint-Enabled>
+                        <Export-Package>
+                            org.motechproject.osgi.web;version=${project.version},
+                            org.motechproject.osgi.web.exception;version=${project.version},
+                            org.motechproject.osgi.web.ext;version=${project.version},
+                            org.motechproject.osgi.web.domain;version=${project.version},
+                            org.motechproject.osgi.web.service;version=${project.version},
+                            org.motechproject.osgi.web.settings;version=${project.version},
+                            org.motechproject.osgi.web.util;version=${project.version},
+
+                        </Export-Package>
+                        <Import-Package>
+                            org.osgi.util.tracker;version="0.0.0",
+                            org.osgi.framework;version="0.0.0",
+                            org.motechproject.server.api,
+                            <!--javax.annotation,-->
+                            javax.servlet;version=3.1.0,
+                            javax.servlet.http;version=3.1.0,
+                            javax.xml.parsers,
+                            org.apache.commons.collections,
+                            org.apache.commons.io, org.apache.commons.lang,
+                            org.apache.commons.lang3,
+                            org.apache.log4j, org.apache.log4j.xml,
+                            <!--org.codehaus.jackson.annotate,-->
+                            com.fasterxml.jackson.core,
+                            com.fasterxml.jackson.annotation,
+                            org.eclipse.gemini.blueprint.context,
+                            org.eclipse.gemini.blueprint.context.support,
+                            org.eclipse.gemini.blueprint.util,
+                            org.motechproject.commons.api,
+                            org.motechproject.config.core, org.motechproject.config.core.domain,
+                            org.motechproject.config.core.service, org.osgi.service.http, org.slf4j,
+                            org.springframework.beans.factory.annotation, org.springframework.context,
+                            org.springframework.context.event, org.springframework.stereotype,
+                            org.springframework.web.context,
+                            org.springframework.web.servlet,
+                            org.springframework.web.servlet.view,
+                            org.w3c.dom, org.xml.sax,
+                            org.apache.commons.io.filefilter,
+                            org.springframework.core.io,
+                            org.apache.commons.validator,
+                            org.apache.commons.collections4,
+                        </Import-Package>
+                        <Bundle-Activator>
+                            org.motechproject.osgi.web.BlueprintActivator
+                        </Bundle-Activator>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-bundles</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${user.home}/.motech/bundles</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>target</directory>
+                                    <includes>
+                                        <include>*.jar</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>IT</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>2.17</version>
+                        <configuration>
+                            <encoding>UTF-8</encoding>
+                            <forkCount>1</forkCount>
+                            <reuseForks>false</reuseForks>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>integration-test</id>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>verify</id>
+                                <goals>
+                                    <goal>verify</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+</project>
