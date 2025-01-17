@@ -79,6 +79,8 @@ jobs:
           mvn install:install-file -Dfile=libs/time-api-0.6.3.pom -DgroupId=javax.time -DartifactId=time-api -Dversion=0.6.3 -Dpackaging=pom
           mvn install:install-file -Dfile=libs/org.motechproject.reflections-0.9.11-r034.jar -DgroupId=org.reflections -DartifactId=org.motechproject.reflections -Dversion=0.9.11-r034 -Dpackaging=jar
           mvn install:install-file -Dfile=libs/org.motechproject.reflections-0.9.11-r034.pom -DgroupId=org.reflections -DartifactId=org.motechproject.reflections -Dversion=0.9.11-r034 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/com.springsource.org.apache.commons.httpclient-3.1.0.jar -DgroupId=org.apache.commons -DartifactId=com.springsource.org.apache.commons.httpclient -Dversion=3.1.0 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/com.springsource.org.apache.commons.httpclient-3.1.0.pom -DgroupId=org.apache.commons -DartifactId=com.springsource.org.apache.commons.httpclient -Dversion=3.1.0 -Dpackaging=pom
           mvn clean install -f pom.xml
 
       # Step 4: Store deployment data
