@@ -100,6 +100,8 @@ jobs:
           mvn install:install-file -Dfile=libs/metrics-0.27.8.pom -DgroupId=org.motechproject -DartifactId=metrics -Dversion=0.27.8 -Dpackaging=pom
           mvn install:install-file -Dfile=libs/pmd-rules-0.3.jar -DgroupId=org.motechproject -DartifactId=pmd-rules -Dversion=0.3 -Dpackaging=jar
           mvn install:install-file -Dfile=libs/pmd-rules-0.3.pom -DgroupId=org.motechproject -DartifactId=pmd-rules -Dversion=0.3 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/org.motechproject.com.github.vladimir-bukhtoyarov-4.1.1-r034.jar -DgroupId=com.github.vladimir-bukhtoyarov -DartifactId=org.motechproject.com.github.vladimir-bukhtoyarov -Dversion=4.1.1-r034 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/org.motechproject.com.github.vladimir-bukhtoyarov-4.1.1-r034.pom -DgroupId=com.github.vladimir-bukhtoyarov -DartifactId=org.motechproject.com.github.vladimir-bukhtoyarov -Dversion=4.1.1-r034 -Dpackaging=pom
           mvn clean install -f pom.xml
 
       # Step 4: Store deployment data
