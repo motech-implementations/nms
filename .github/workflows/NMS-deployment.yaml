@@ -89,6 +89,8 @@ jobs:
           mvn install:install-file -Dfile=libs/org.motechproject.org.springframework.integration.spring-integration-core-4.3.12.RELEASE-r034.pom -DgroupId=org.springframework.integration -DartifactId=org.motechproject.org.springframework.integration.spring-integration-core -Dversion=4.3.12.RELEASE-r034 -Dpackaging=pom
           mvn install:install-file -Dfile=libs/org.motechproject.org.springframework.integration.spring-integration-jms-4.3.12.RELEASE-r034.jar -DgroupId=org.springframework.integration -DartifactId=org.motechproject.org.springframework.integration.spring-integration-jms -Dversion=4.3.12.RELEASE-r034 -Dpackaging=jar
           mvn install:install-file -Dfile=libs/org.motechproject.org.springframework.integration.spring-integration-jms-4.3.12.RELEASE-r034.pom -DgroupId=org.springframework.integration -DartifactId=org.motechproject.org.springframework.integration.spring-integration-jms -Dversion=4.3.12.RELEASE-r034 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/motech-scheduler-migration-0.27.8.jar -DgroupId=org.motechproject -DartifactId=motech-scheduler-migration -Dversion=0.27.8 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/motech-scheduler-migration-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-scheduler-migration -Dversion=0.27.8 -Dpackaging=pom
           mvn clean install -f pom.xml
 
       # Step 4: Store deployment data
