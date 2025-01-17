@@ -111,7 +111,17 @@ jobs:
         with:
           name: nms-jars
           path: |
+            api/target/*.jar
             csv/target/*.jar
+            flw/target/*.jar
+            flwUpdate/target/*.jar
+            imi/target/*.jar
             kilkari/target/*.jar
-
-
+            mcts/target/*.jar
+            mobile-academy/target/*.jar
+            props/target/*.jar
+            rch/target/*.jar
+            region/target/*.jar
+            rejection-handler/target/*.jar
+            testing/target/*.jar
+            tracking/target/*.jar 
