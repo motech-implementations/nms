@@ -5,7 +5,7 @@
     <parent>
         <artifactId>nms</artifactId>
         <groupId>org.motechproject.nms</groupId>
-        <version>1.0.38.3</version>
+        <version>1.0.38.1</version>
         <relativePath>../</relativePath>
     </parent>
 
