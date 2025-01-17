@@ -96,6 +96,8 @@ jobs:
           mvn install:install-file -Dfile=libs/alerts-0.27.8.jar -DgroupId=org.motechproject -DartifactId=alerts -Dversion=0.27.8 -Dpackaging=jar
           mvn install:install-file -Dfile=libs/alerts-0.27.8.pom -DgroupId=org.motechproject -DartifactId=alerts -Dversion=0.27.8 -Dpackaging=pom
           mvn install:install-file -Dfile=libs/modules-0.27.8.pom -DgroupId=org.motechproject -DartifactId=modules -Dversion=0.27.8 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/metrics-0.27.8.jar -DgroupId=org.motechproject -DartifactId=metrics -Dversion=0.27.8 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/metrics-0.27.8.pom -DgroupId=org.motechproject -DartifactId=metrics -Dversion=0.27.8 -Dpackaging=pom
           mvn clean install -f pom.xml
 
       # Step 4: Store deployment data
