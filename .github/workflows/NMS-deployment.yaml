@@ -93,6 +93,8 @@ jobs:
           mvn install:install-file -Dfile=libs/motech-scheduler-migration-0.27.8.pom -DgroupId=org.motechproject -DartifactId=motech-scheduler-migration -Dversion=0.27.8 -Dpackaging=pom
           mvn install:install-file -Dfile=libs/motech-c3p0-fragment-bundle-0.16-r029.jar -DgroupId=org.motechproject -DartifactId=motech-c3p0-fragment-bundle -Dversion=0.16-r029 -Dpackaging=jar
           mvn install:install-file -Dfile=libs/motech-c3p0-fragment-bundle-0.16-r029.pom -DgroupId=org.motechproject -DartifactId=motech-c3p0-fragment-bundle -Dversion=0.16-r029 -Dpackaging=pom
+          mvn install:install-file -Dfile=libs/alerts-0.27.8.jar -DgroupId=org.motechproject -DartifactId=alerts -Dversion=0.27.8 -Dpackaging=jar
+          mvn install:install-file -Dfile=libs/alerts-0.27.8.pom -DgroupId=org.motechproject -DartifactId=alerts -Dversion=0.27.8 -Dpackaging=pom
           mvn clean install -f pom.xml
 
       # Step 4: Store deployment data
