@@ -413,7 +413,14 @@ public class SubscriberServiceImpl implements SubscriberService {
                 motherUpdate.setLastMenstrualPeriod(lmp);
                 motherUpdate.setUpdatedDateNic(lastUpdatedDateNic);
                 motherUpdate.setRegistrationDate(motherRegistrationDate);
-                if(subscription != null){subscriptionService.updateCallRetry(subscription.getSubscriptionId(),msisdn);}
+
+                if(subscription != null){
+                    if ( !((subscriberByRchId.getLastMenstrualPeriod().getDayOfYear() == lmp.getDayOfYear()) && (subscriberByRchId.getLastMenstrualPeriod().getYear() == lmp.getYear()))) {
+                        subscriptionService.deleteCallRetry(subscription.getSubscriptionId());
+                    }else {
+                        subscriptionService.updateCallRetry(subscription.getSubscriptionId(), msisdn);
+                    }
+                }
                 return updateOrCreateSubscription(subscriberByRchId, subscription, lmp, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, greaterCase);
             } else {  // we have a subscriber by phone# and also one with the RCH id
                 if (subscriptionService.activeSubscriptionByMsisdnRch(subscribersByMsisdn,msisdn, SubscriptionPackType.PREGNANCY, motherUpdate.getRchId(), null)) {
@@ -731,7 +738,13 @@ public class SubscriberServiceImpl implements SubscriberService {
                 subscriberByRchId.setDateOfBirth(dob);
                 subscriberByRchId.setModificationDate(DateTime.now());
                 // Delete that record from retry table as beneficiary gets their mobile number update
-                if(subscription != null){subscriptionService.updateCallRetry(subscription.getSubscriptionId(),msisdn);}
+                if(subscription != null){
+                    if ((subscriberByRchId.getDateOfBirth().getDayOfYear() != dob.getDayOfYear())){
+                        subscriptionService.deleteCallRetry(subscription.getSubscriptionId());
+                    }else {
+                        subscriptionService.updateCallRetry(subscription.getSubscriptionId(), msisdn);
+                    }
+                }
                 finalSubscription = updateOrCreateSubscription(subscriberByRchId, subscription, dob, pack, language, circle, SubscriptionOrigin.RCH_IMPORT, false);
             } else {
                 //subscriber found with provided msisdn
