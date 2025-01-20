@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - deployment
+      - deployment-testing
 
 jobs:
   build-and-deploy:
