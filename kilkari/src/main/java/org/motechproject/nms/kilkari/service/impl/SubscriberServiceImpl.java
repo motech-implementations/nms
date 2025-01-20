@@ -1001,6 +1001,10 @@ public class SubscriberServiceImpl implements SubscriberService {
                 return deactivatedSubscripion;
             }
         } else if (subscription != null && !subscription.getDeactivationReason().equals(DeactivationReason.INVALID_NUMBER)){
+            Set<Subscription> activeSubscriptions = subscriber.getActiveAndPendingSubscriptions();
+            if (activeSubscriptions != null && !activeSubscriptions.isEmpty()) {
+                activeSubscriptions.forEach(sub -> sub.setModificationDate(DateTime.now()));
+            }
             subscription.setModificationDate(DateTime.now());
             return subscription;
         } else {
