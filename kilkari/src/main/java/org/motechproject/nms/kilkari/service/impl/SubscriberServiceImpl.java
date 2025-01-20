@@ -1001,6 +1001,7 @@ public class SubscriberServiceImpl implements SubscriberService {
                 return deactivatedSubscripion;
             }
         } else if (subscription != null && !subscription.getDeactivationReason().equals(DeactivationReason.INVALID_NUMBER)){
+            subscription.setModificationDate(DateTime.now());
             return subscription;
         } else {
             return subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), language, circle, pack, origin);
