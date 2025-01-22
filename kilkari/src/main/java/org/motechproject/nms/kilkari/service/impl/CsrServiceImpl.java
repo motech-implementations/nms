@@ -357,9 +357,9 @@ LOGGER.info("this is the data inside: {},{},{]",subscription,existingCallRetry, 
                             LOGGER.info("inside call retry condition");
                             callRetryDataService.delete(callRetry);
                         }
-                    }else if(callRetry == null && !subscription.getFirstMessageDayOfWeek().equals(DayOfTheWeek.getDayOfTheWeekFromTimestamp(csrDto.getTargetFileTimeStamp())) && "1".equals(extractRouteNumber(csrDto.getServiceId()))) {
+                    }else if(callRetry == null && !csrDto.getWeekId().equals("w1_1") && !subscription.getFirstMessageDayOfWeek().equals(DayOfTheWeek.getDayOfTheWeekFromTimestamp(csrDto.getTargetFileTimeStamp())) && "1".equals(extractRouteNumber(csrDto.getServiceId()))) {
                         LOGGER.info("inside fresh call condition after rch update");
-                    }else if(callRetry == null && "2".equals(extractRouteNumber(csrDto.getServiceId()))){
+                    }else if(callRetry == null && !csrDto.getWeekId().equals("w1_1") && "2".equals(extractRouteNumber(csrDto.getServiceId()))){
                         LOGGER.info("inside retry call condition after rch update");
                     }else {
                         LOGGER.info("this is the data2: {}",csrDto.getTargetFileTimeStamp());
