@@ -40,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.jdo.Query;
 import javax.validation.ConstraintViolationException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionMcts;
 import static org.motechproject.nms.kilkari.utils.RejectedObjectConverter.childRejectionRch;
@@ -1075,6 +1076,7 @@ public class SubscriberServiceImpl implements SubscriberService {
     }
 
     @Override
+    @Transactional
     public void deactivateAllSubscriptionsForSubscriber(long callingNumber, DeactivationReason deactivationReason) {
         LOGGER.info("Receieved Release Number {} for Deactivation.", callingNumber);
         List<Subscriber> subscriberByMsisdns = this.getSubscriber(callingNumber);
@@ -1166,6 +1168,45 @@ public class SubscriberServiceImpl implements SubscriberService {
             }
             if(activeSubscribers==0) return subscriberList.get(0);
             else return subscriber;
+        }
+    }
+
+    @Override
+    @Transactional
+    public void processChunkOfDeactivation(List<String[]> chunk, AtomicInteger successCount, List<String> failureMessages) {
+        for (String[] record : chunk) {
+            if (!isValidRecord(record, failureMessages)) {
+                continue;
+            }
+            try {
+                long msisdn = Long.parseLong(record[0]);
+                String deactivationReason = record[1];
+                deactivateAllSubscriptionsForSubscriber(msisdn, DeactivationReason.valueOf(deactivationReason));
+                successCount.incrementAndGet();
+            } catch (Exception e) {
+                failureMessages.add("Failed to process msisdn " + record[0] + ": " + e.getMessage());
+            }
+        }
+    }
+
+    private boolean isValidRecord(String[] record, List<String> failureMessages) {
+        if (record == null || record.length < 2) {
+            failureMessages.add("Invalid record format: " + Arrays.toString(record));
+            return false;
+        }
+        if (!isValidMsisdn(record[0])) {
+            failureMessages.add("Invalid MSISDN: " + record[0]);
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isValidMsisdn(String msisdn) {
+        try {
+            Long.parseLong(msisdn);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
         }
     }
 
