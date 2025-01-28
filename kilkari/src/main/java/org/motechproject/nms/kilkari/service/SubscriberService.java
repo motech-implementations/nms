@@ -14,6 +14,7 @@ import org.motechproject.nms.rejectionhandler.domain.ChildImportRejection;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Service interface for managing Kilkari subscribers
@@ -116,4 +117,6 @@ public interface SubscriberService {
      * @return new or updated subscription, null if create/update fails
      */
     ChildImportRejection updateRchChildSubscriber(Long msisdn, MctsChild child, DateTime dob, Map<String, Object> record, String action);
+
+    void processChunkOfDeactivation(List<String[]> chunk, AtomicInteger successCount, List<String> failureMessages);
 }

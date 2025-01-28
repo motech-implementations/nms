@@ -24,6 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,8 +34,14 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * KilkariController
@@ -46,6 +54,7 @@ public class KilkariController extends BaseController {
      4.2.5.1.5 Body Elements
      */
     public static final int SUBSCRIPTION_ID_LENGTH = 36;
+    private static final int DEFAULT_THREAD_COUNT = 8;
     public static final Set<String> SUBSCRIPTION_PACK_SET = new HashSet<>(Arrays.asList("48WeeksPack", "72WeeksPack"));
 
     @Autowired
@@ -332,4 +341,79 @@ public class KilkariController extends BaseController {
 
         log("RESPONSE: /kilkari/subscription (DELETE)", "Success");
     }
+
+    @RequestMapping(value = "/manualDeactivations", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Map<String, Object>> bulkDeactivation(@RequestParam("file") MultipartFile file) {
+        Map<String, Object> response = new HashMap<>();
+        if (file.isEmpty()) {
+            response.put("error", "File is empty");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        List<String> failureMessages = Collections.synchronizedList(new ArrayList<>());
+        AtomicInteger successCount = new AtomicInteger(0);
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+            List<String[]> records = readFileContent(br);
+
+            if (records.isEmpty()) {
+                response.put("error", "File contains no valid data.");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            int threadCount = Math.min(DEFAULT_THREAD_COUNT, Runtime.getRuntime().availableProcessors());
+            int chunkSize = (int) Math.ceil((double) records.size() / threadCount);
+
+            ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+            List<Future<Void>> futures = new ArrayList<>();
+
+            for (int i = 0; i < threadCount; i++) {
+                int start = i * chunkSize;
+                int end = Math.min(start + chunkSize, records.size());
+                if (start >= records.size()) {break;}
+                List<String[]> chunk = records.subList(start, end);
+
+                Future<Void> future = executor.submit(new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        subscriberService.processChunkOfDeactivation(chunk, successCount, failureMessages);
+                        return null;
+                    }
+                });
+                futures.add(future);
+            }
+
+            for (Future<Void> future : futures) {
+                future.get();
+            }
+            executor.shutdown();
+
+        } catch (IOException e) {
+            return handleException(response, "Failed to read the file", e);
+        } catch (InterruptedException | ExecutionException e) {
+            return handleException(response, "Error during processing", e);
+        }
+        response.put("successCount", successCount.get());
+        response.put("failureMessages", failureMessages);
+        return ResponseEntity.ok(response);
+    }
+
+    private List<String[]> readFileContent(BufferedReader reader) throws IOException {
+        List<String[]> records = new ArrayList<>();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            if (!line.trim().isEmpty()) {
+                records.add(line.split(","));
+            }
+        }
+        return records;
+    }
+
+    private ResponseEntity<Map<String, Object>> handleException(Map<String, Object> response, String message, Exception e) {
+        response.put("error", message);
+        response.put("details", e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
 }
