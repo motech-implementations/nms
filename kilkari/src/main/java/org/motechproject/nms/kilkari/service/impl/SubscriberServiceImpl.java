@@ -1017,10 +1017,11 @@ public class SubscriberServiceImpl implements SubscriberService {
                 return null;
             }
         } else if (subscription == null  && deactivatedSubscripion != null  && (DeactivationReason.LOW_LISTENERSHIP == deactivatedSubscripion.getDeactivationReason() ||  DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED == deactivatedSubscripion.getDeactivationReason())) {
+            Subscription childSubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.CHILD);
             if(greaterCaseNo){
                 return subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), language, circle, pack, origin);
             }
-            if (!greaterCaseNo && differenceInWeeks < 60) {
+            if (!greaterCaseNo && differenceInWeeks < 60 && childSubscription == null) {
                 return reactivateSubscription(subscriber, deactivatedSubscripion, dateTime);
             } else {
                 return deactivatedSubscripion;
