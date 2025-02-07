@@ -37,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.jdo.JDOUserException;
 import javax.jdo.Query;
 import javax.validation.ConstraintViolationException;
 import java.util.*;
@@ -168,11 +169,18 @@ public class SubscriberServiceImpl implements SubscriberService {
     public Subscriber create(Subscriber subscriber) {
         try {
             return subscriberDataService.create(subscriber);
-        } catch (ConstraintViolationException e) {
-            LOGGER.error("4: List of constraints: {}", e.getConstraintViolations());
+        } catch (JDOUserException e) {
+            LOGGER.error("JDO error creating subscriber - MSISDN: {}, Mother RchId: {}",
+                    subscriber.getCallingNumber(),
+                    subscriber.getMother() != null ? subscriber.getMother().getRchId() : "null",
+                    e);
             throw e;
-        }
+        } catch (ConstraintViolationException e) {
+        LOGGER.error("4: List of constraints: {}", e.getConstraintViolations());
+        throw e;
     }
+    }
+
 
     @Override
     @Transactional
@@ -327,14 +335,20 @@ public class SubscriberServiceImpl implements SubscriberService {
         }
     }
 
-    @Override // NO CHECKSTYLE Cyclomatic Complexity
+    @Override
     public Subscription updateRchMotherSubscriber(Long msisdn, MctsMother motherUpdate, DateTime lmp, Long caseNo, Boolean deactivate, Map<String, Object> record, String action, String name,DateTime motherDOB,LocalDate lastUpdatedDateNic , DateTime motherRegistrationDate) { //NOPMD NcssMethodCount
         District district = motherUpdate.getDistrict(); // district should never be null here since we validate upstream on setLocation
+        LOGGER.info("this is the district: {}",district);
         Circle circle = district.getCircle();
+        LOGGER.info("this is the circle: {}",circle);
         Language language = district.getLanguage();
+        LOGGER.info("this is the language: {}",language);
         SubscriptionPack pack = subscriptionPackDataService.byType(SubscriptionPackType.PREGNANCY);
+        LOGGER.info("this is the pack: {}",pack);
         List<Subscriber> subscribersByMsisdn = getSubscriber(msisdn);
+        LOGGER.info("this is the subscribersByMsisdn: {}",subscribersByMsisdn);
         Subscriber subscriberByRchId = getSubscriberByBeneficiary(motherUpdate);
+        LOGGER.info("this is the subscriberByRchId: {}",subscriberByRchId);
         boolean greaterCase = false;
 
         if (subscriberByRchId == null) { // No existing subscriber(number) attached to mother RCH id
@@ -347,11 +361,13 @@ public class SubscriberServiceImpl implements SubscriberService {
                 // create subscriber, beneficiary, subscription and return
                 Subscriber subscriberByMsisdn = new Subscriber(msisdn, language);
                 subscriberByMsisdn.setLastMenstrualPeriod(lmp);
+
                 motherUpdate.setLastMenstrualPeriod(lmp);
                 subscriberByMsisdn.setMother(motherUpdate);
                 subscriberByMsisdn.setCaseNo(caseNo);
                 motherUpdate.setMaxCaseNo(caseNo);
                 motherUpdate.setRegistrationDate(motherRegistrationDate);
+                LOGGER.info("this is the subscriberByMsisdn: {}",subscriberByMsisdn);
                 create(subscriberByMsisdn);
                 return subscriptionService.createSubscription(subscriberByMsisdn, msisdn, language, circle, pack, SubscriptionOrigin.RCH_IMPORT);
             } else {  // subscriber (number) is already in use

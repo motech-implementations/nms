@@ -120,6 +120,7 @@ import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.xml.sax.helpers.AttributesImpl;
 import javax.jdo.Query;
+import javax.net.ssl.SSLException;
 import javax.xml.bind.JAXBException;
 import javax.xml.namespace.QName;
 import javax.xml.rpc.ServiceException;
@@ -199,6 +200,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     private static final String BULK_REJECTION_ERROR_MESSAGE = "Error while bulk updating rejection records";
     private static final double THOUSAND = 1000d;
     private static final String FILES_MISSING_ON_A = "No files saved a due to ";
+    private static final String FILES_MISSING_ON_A_ERROR_MESSAGE = "No {} files saved a due to ";
     private static final String FILES_MISSING_ON_B = "No files saved b due to ";
     private static final String FILES_MISSING_ON_C = "No files saved c due to ";
     private static final String SCP_LOCAL_TO_REMOTE_REMOTELOCATION = "empty";
@@ -211,11 +213,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     public static final String TOKEN_API = "rch.api.token";
     public static final String CLIENT_ID = "rch.client.id";
     public static final String CLIENT_SECRET = "rch.client.secret";
-    private static final String MOTHER_FIRST_EVENT = "rch.mother.first";
-    private static final String CHILD_FIRST_EVENT = "rch.child.first";
-    private static final String ASHA_FIRST_EVENT = "rch.asha.first";
-    private static final String SECOND_EVENT_PREFIX = "rch.second.";
-    private static final String THIRD_EVENT_PREFIX = "rch.thirdF.";
+
+    private final int MAX_ALLOWED_RETRY = 3;
+    private final long SLEEP_TIME = 1000L;
 
 
     @Autowired
@@ -910,7 +910,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.DISTRICT, stateCode, stateName, 0, 0, createErrorMessage(FILES_MISSING_ON_A, e)));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.DISTRICT, stateId));
             rchImportFacilitatorService.updateRchImportFacilatorAudit(LocalDate.now(), RchUserType.DISTRICT, stateId);
-            LOGGER.error(FILES_MISSING_ON_A, RchUserType.DISTRICT, e);
+            LOGGER.error(FILES_MISSING_ON_A_ERROR_MESSAGE, RchUserType.DISTRICT, e);
         }
     }
 
@@ -1009,7 +1009,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKA, stateCode, stateName, 0, 0, createErrorMessage(FILES_MISSING_ON_A, e)));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKA, stateId));
             rchImportFacilitatorService.updateRchImportFacilatorAudit(LocalDate.now(), RchUserType.TALUKA, stateId);
-            LOGGER.error(FILES_MISSING_ON_A, RchUserType.TALUKA, e);
+            LOGGER.error(FILES_MISSING_ON_A_ERROR_MESSAGE, RchUserType.TALUKA, e);
         }
     }
 
@@ -1105,7 +1105,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGE, stateCode, stateName, 0, 0, createErrorMessage(FILES_MISSING_ON_A, e)));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGE, stateId));
             rchImportFacilitatorService.updateRchImportFacilatorAudit(LocalDate.now(), RchUserType.VILLAGE, stateId);
-            LOGGER.error(FILES_MISSING_ON_A, RchUserType.VILLAGE, e);
+            LOGGER.error(FILES_MISSING_ON_A_ERROR_MESSAGE, RchUserType.VILLAGE, e);
         }
     }
 
@@ -1214,7 +1214,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, createErrorMessage(FILES_MISSING_ON_A, e)));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endReferenceDate, RchUserType.MOTHER, stateId));
             rchImportFacilitatorService.updateRchImportFacilatorAudit(LocalDate.now(), RchUserType.MOTHER, stateId);
-            LOGGER.error(FILES_MISSING_ON_A, RchUserType.MOTHER, e);
+            LOGGER.error(FILES_MISSING_ON_A_ERROR_MESSAGE, RchUserType.MOTHER, e);
         }
     }
 
@@ -1583,7 +1583,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHBLOCK, stateCode, stateName, 0, 0, createErrorMessage(FILES_MISSING_ON_A, e)));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHBLOCK, stateId));
             rchImportFacilitatorService.updateRchImportFacilatorAudit(LocalDate.now(), RchUserType.HEALTHBLOCK, stateId);
-            LOGGER.error(FILES_MISSING_ON_A, RchUserType.HEALTHBLOCK, e);
+            LOGGER.error(FILES_MISSING_ON_A_ERROR_MESSAGE, RchUserType.HEALTHBLOCK, e);
         }
     }
 
@@ -1728,7 +1728,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.TALUKAHEALTHBLOCK, stateCode, stateName, 0, 0, createErrorMessage(FILES_MISSING_ON_A, e)));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.TALUKAHEALTHBLOCK, stateId));
             rchImportFacilitatorService.updateRchImportFacilatorAudit(LocalDate.now(), RchUserType.TALUKAHEALTHBLOCK, stateId);
-            LOGGER.error(FILES_MISSING_ON_A, RchUserType.TALUKAHEALTHBLOCK, e);
+            LOGGER.error(FILES_MISSING_ON_A_ERROR_MESSAGE, RchUserType.TALUKAHEALTHBLOCK, e);
         }
     }
 
@@ -1971,7 +1971,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.HEALTHFACILITY, stateCode, stateName, 0, 0, createErrorMessage(FILES_MISSING_ON_A, e)));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.HEALTHFACILITY, stateId));
             rchImportFacilitatorService.updateRchImportFacilatorAudit(LocalDate.now(), RchUserType.HEALTHFACILITY, stateId);
-            LOGGER.error(FILES_MISSING_ON_A, RchUserType.HEALTHFACILITY, e);
+            LOGGER.error(FILES_MISSING_ON_A_ERROR_MESSAGE, RchUserType.HEALTHFACILITY, e);
         }
     }
 
@@ -2157,7 +2157,7 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
             rchImportAuditDataService.create(new RchImportAudit(startDate, endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateCode, stateName, 0, 0, createErrorMessage(FILES_MISSING_ON_A, e)));
             rchImportFailRecordDataService.create(new RchImportFailRecord(endDate, RchUserType.VILLAGEHEALTHSUBFACILITY, stateId));
             rchImportFacilitatorService.updateRchImportFacilatorAudit(LocalDate.now(), RchUserType.VILLAGEHEALTHSUBFACILITY, stateId);
-            LOGGER.error(FILES_MISSING_ON_A, RchUserType.VILLAGEHEALTHSUBFACILITY, e);
+            LOGGER.error(FILES_MISSING_ON_A_ERROR_MESSAGE, RchUserType.VILLAGEHEALTHSUBFACILITY, e);
         }
     }
 
@@ -4140,25 +4140,28 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
     @Override
     public String callThirdApi(String payload) {
         String thirdApiUrl = settingsFacade.getProperty("rch.api.third");
-        CloseableHttpClient httpClient = HttpClients.createDefault();
         String responseString = null;
+        int retryCount = 0;
 
-        try {
-            HttpPost request = new HttpPost(thirdApiUrl);
-            request.setHeader("Content-Type", "application/json");
+        while (retryCount < MAX_ALLOWED_RETRY) {
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                HttpPost request = new HttpPost(thirdApiUrl);
+                request.setHeader("Content-Type", "application/json");
+                request.setEntity(new StringEntity(payload, ContentType.APPLICATION_JSON));
 
-            StringEntity entity = new StringEntity(payload,ContentType.APPLICATION_JSON);
-            request.setEntity(entity);
-
-            responseString = new BasicResponseHandler().handleResponse(httpClient.execute(request));
-
-        } catch (IOException e) {
-            LOGGER.error("Error calling third API: ", e);
-        }finally {
-            try {
-                httpClient.close();
-            } catch (IOException e) {
-                LOGGER.error("Error closing HttpClient", e);
+                responseString = new BasicResponseHandler().handleResponse(httpClient.execute(request));
+                break;
+            } catch (SSLException e) {
+                LOGGER.info("Got An SSL Exception, retrying... attempt {}", retryCount + 1);
+                retryCount++;
+                try {
+                    Thread.sleep(SLEEP_TIME);
+                } catch (InterruptedException ie) {
+                    throw new RuntimeException(ie);
+                }
+            } catch (Exception e) {
+                LOGGER.error("Error calling third API: ", e);
+                break;
             }
         }
         return responseString;
