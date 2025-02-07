@@ -336,20 +336,14 @@ public class SubscriberServiceImpl implements SubscriberService {
         }
     }
 
-    @Override
+    @Override // NO CHECKSTYLE Cyclomatic Complexity
     public Subscription updateRchMotherSubscriber(Long msisdn, MctsMother motherUpdate, DateTime lmp, Long caseNo, Boolean deactivate, Map<String, Object> record, String action, String name,DateTime motherDOB,LocalDate lastUpdatedDateNic , DateTime motherRegistrationDate) { //NOPMD NcssMethodCount
         District district = motherUpdate.getDistrict(); // district should never be null here since we validate upstream on setLocation
-        LOGGER.info("this is the district: {}",district);
         Circle circle = district.getCircle();
-        LOGGER.info("this is the circle: {}",circle);
         Language language = district.getLanguage();
-        LOGGER.info("this is the language: {}",language);
         SubscriptionPack pack = subscriptionPackDataService.byType(SubscriptionPackType.PREGNANCY);
-        LOGGER.info("this is the pack: {}",pack);
         List<Subscriber> subscribersByMsisdn = getSubscriber(msisdn);
-        LOGGER.info("this is the subscribersByMsisdn: {}",subscribersByMsisdn);
         Subscriber subscriberByRchId = getSubscriberByBeneficiary(motherUpdate);
-        LOGGER.info("this is the subscriberByRchId: {}",subscriberByRchId);
         boolean greaterCase = false;
 
         if (subscriberByRchId == null) { // No existing subscriber(number) attached to mother RCH id
@@ -362,13 +356,11 @@ public class SubscriberServiceImpl implements SubscriberService {
                 // create subscriber, beneficiary, subscription and return
                 Subscriber subscriberByMsisdn = new Subscriber(msisdn, language);
                 subscriberByMsisdn.setLastMenstrualPeriod(lmp);
-
                 motherUpdate.setLastMenstrualPeriod(lmp);
                 subscriberByMsisdn.setMother(motherUpdate);
                 subscriberByMsisdn.setCaseNo(caseNo);
                 motherUpdate.setMaxCaseNo(caseNo);
                 motherUpdate.setRegistrationDate(motherRegistrationDate);
-                LOGGER.info("this is the subscriberByMsisdn: {}",subscriberByMsisdn);
                 create(subscriberByMsisdn);
                 return subscriptionService.createSubscription(subscriberByMsisdn, msisdn, language, circle, pack, SubscriptionOrigin.RCH_IMPORT);
             } else {  // subscriber (number) is already in use
