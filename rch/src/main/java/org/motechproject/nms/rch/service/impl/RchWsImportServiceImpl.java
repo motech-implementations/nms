@@ -517,7 +517,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.DISTRICT);
 
         } catch (Exception e) {
-            String error = String.format("Error processing RCH district data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
+            String error = String.format("Cannot process RCH district data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             handleError(RchUserType.DISTRICT, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
@@ -634,7 +634,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.TALUKA);
 
         } catch (Exception e) {
-            String error = String.format("Error processing RCH taluka data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
+            String error = String.format("Cannot process RCH taluka data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             handleError(RchUserType.TALUKA, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
@@ -673,7 +673,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.VILLAGE);
 
         } catch (Exception e) {
-            String error = String.format("Error processing RCH village data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
+            String error = String.format("Cannot process RCH village data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             handleError(RchUserType.VILLAGE, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
@@ -713,7 +713,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.HEALTHBLOCK);
 
         } catch (Exception e) {
-            String error = String.format("Error processing RCH healthblock data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
+            String error = String.format("Cannot process RCH HealthBlock data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             handleError(RchUserType.HEALTHBLOCK, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
@@ -751,7 +751,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.TALUKAHEALTHBLOCK);
 
         } catch (Exception e) {
-            String error = String.format("Error processing RCH talukahealthblock data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
+            String error = String.format("Cannot process RCH TalukaHealthBlock data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             handleError(RchUserType.TALUKAHEALTHBLOCK, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
@@ -789,7 +789,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.HEALTHFACILITY);
 
         } catch (Exception e) {
-            String error = String.format("Error processing RCH healthfacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
+            String error = String.format("Cannot process RCH HealthFacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             handleError(RchUserType.HEALTHFACILITY, stateId, stateName, stateCode, startDate, endDate, error);
         }
 
@@ -828,7 +828,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.HEALTHSUBFACILITY);
 
         } catch (Exception e) {
-            String error = String.format("Error processing RCH healthfacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
+            String error = String.format("Cannot process RCH healthfacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             handleError(RchUserType.HEALTHSUBFACILITY, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
@@ -867,7 +867,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.VILLAGEHEALTHSUBFACILITY);
 
         } catch (Exception e) {
-            String error = String.format("Error processing RCH villagehealthsubfacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
+            String error = String.format("Cannot process RCH villagehealthsubfacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             handleError(RchUserType.VILLAGEHEALTHSUBFACILITY, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }

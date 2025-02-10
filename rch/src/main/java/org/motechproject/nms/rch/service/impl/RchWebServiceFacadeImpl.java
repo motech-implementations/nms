@@ -4048,7 +4048,25 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
-        ResponseEntity<String> responseEntity = restTemplate.postForEntity(firstApiUrl, requestEntity, String.class);
+        ResponseEntity<String> responseEntity = null;
+        int retryCount = 0;
+        while (retryCount < MAX_ALLOWED_RETRY) {
+            try {
+                responseEntity = restTemplate.postForEntity(firstApiUrl, requestEntity, String.class);
+                break;
+            } catch (Exception e) {
+                retryCount++;
+                if (retryCount >= MAX_ALLOWED_RETRY) {
+                    throw new RuntimeException("Failed after maximum retries", e);
+                }
+                try {
+                    Thread.sleep(SLEEP_TIME);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Thread interrupted during sleep", ie);
+                }
+            }
+        }
         if (responseEntity.getStatusCode() == HttpStatus.OK) {
             return responseEntity.getBody();
 
@@ -4095,17 +4113,30 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
         body.add("scope", "napix");
 
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(body, headers);
-        String tokenResponse = restTemplate.postForObject(tokenApiUrl, requestEntity, String.class);
+        int retryCount = 0;
 
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(tokenResponse);
-            return jsonNode.path("access_token").asText();
-
-        } catch (Exception e) {
-
-            throw new RuntimeException("Failed to parse token response", e);
+        while (retryCount < MAX_ALLOWED_RETRY) {
+            try {
+                String tokenResponse = restTemplate.postForObject(tokenApiUrl, requestEntity, String.class);
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode jsonNode = objectMapper.readTree(tokenResponse);
+                return jsonNode.path("access_token").asText();
+            } catch (Exception e) {
+                if (e instanceof SSLException) {
+                    retryCount++;
+                    LOGGER.warn("SSLException encountered, retrying... attempt {}", retryCount);
+                    try {
+                        Thread.sleep(SLEEP_TIME);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException("Thread interrupted during retry delay", ie);
+                    }
+                } else {
+                    throw new RuntimeException("Failed to parse token response", e);
+                }
+            }
         }
+        throw new RuntimeException("Failed to obtain auth token after " + MAX_ALLOWED_RETRY + " attempts due to SSLException");
     }
 
 
@@ -4113,24 +4144,33 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     @Override
     public  String callKeelDeelApi(String token, String keel, String deel)  {
-        CloseableHttpClient httpClient = HttpClients.createDefault();
+        String keelDeelApi = settingsFacade.getProperty("rch.api.second");
         String responseString = null;
-        try {
-            HttpPost request = new HttpPost(settingsFacade.getProperty("rch.api.second"));
-            request.setHeader("Authorization", "Bearer " + token);
-            request.setHeader("Content-Type", "application/json");
+        int retryCount = 0;
 
-            String jsonPayload = String.format("{\"keel\":\"%s\", \"deel\":\"%s\"}", keel, deel);
-            StringEntity entity = new StringEntity(jsonPayload, ContentType.APPLICATION_JSON);
-            request.setEntity(entity);
+        while (retryCount < MAX_ALLOWED_RETRY) {
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                HttpPost request = new HttpPost(keelDeelApi);
+                request.setHeader("Authorization", "Bearer " + token);
+                request.setHeader("Content-Type", "application/json");
 
-            responseString = new BasicResponseHandler().handleResponse(httpClient.execute(request));
-        } catch (HttpResponseException e) {
-            throw new RuntimeException(e);
-        } catch (ClientProtocolException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+                String jsonPayload = String.format("{\"keel\":\"%s\", \"deel\":\"%s\"}", keel, deel);
+                StringEntity entity = new StringEntity(jsonPayload, ContentType.APPLICATION_JSON);
+                request.setEntity(entity);
+
+                responseString = new BasicResponseHandler().handleResponse(httpClient.execute(request));
+                break;
+            } catch (SSLException e) {
+                LOGGER.info("Got An SSL Exception while executing Keel-Deel RCH, retrying... attempt {}", retryCount + 1);
+                retryCount++;
+                try {
+                    Thread.sleep(SLEEP_TIME);
+                } catch (InterruptedException ie) {
+                    throw new RuntimeException(ie);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         return responseString;
 
@@ -4236,7 +4276,25 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
         HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
 
-        ResponseEntity<String> responseEntity = restTemplate.postForEntity(encryptApiUrl, requestEntity, String.class);
+        ResponseEntity<String> responseEntity = null;
+        int retryCount = 0;
+        while (retryCount < MAX_ALLOWED_RETRY) { // NOPMD
+            try {
+                responseEntity = restTemplate.postForEntity(encryptApiUrl, requestEntity, String.class);
+                break;
+            } catch (Exception e) {
+                retryCount++;
+                if (retryCount >= MAX_ALLOWED_RETRY) {
+                    throw new RuntimeException("Failed after maximum retries", e);
+                }
+                try {
+                    Thread.sleep(SLEEP_TIME);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Thread interrupted during sleep", ie);
+                }
+            }
+        }
 
         if (responseEntity.getStatusCode() == HttpStatus.OK) {
             return responseEntity.getBody();
@@ -4248,30 +4306,36 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     @Override
     public  String callKeelDeelApiLocations(String token, String keel, String deel)  {
-        CloseableHttpClient httpClient = HttpClients.createDefault();
+        String keelDeelApi = settingsFacade.getProperty("rch.location.second_api");
         String responseString = null;
-        try {
-            HttpPost request = new HttpPost(settingsFacade.getProperty("rch.location.second_api"));
-            request.setHeader("Authorization", "Bearer " + token);
-            request.setHeader("Content-Type", "application/json");
+        int retryCount = 0;
 
-            // Payload for Keel and Deel API
-            LOGGER.debug("this is keel and deel insdie api call method: {}, {},token: {}",keel,deel,token);
-            String jsonPayload = String.format("{\"keel\":\"%s\", \"deel\":\"%s\"}", keel, deel);
-            StringEntity entity = new StringEntity(jsonPayload, ContentType.APPLICATION_JSON);
-            request.setEntity(entity);
+        while (retryCount < MAX_ALLOWED_RETRY) {
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                HttpPost request = new HttpPost(keelDeelApi);
+                request.setHeader("Authorization", "Bearer " + token);
+                request.setHeader("Content-Type", "application/json");
 
-            responseString = new BasicResponseHandler().handleResponse(httpClient.execute(request));
-        } catch (HttpResponseException e) {
-            throw new RuntimeException(e);
-        } catch (ClientProtocolException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+                // Payload for Keel and Deel API
+                LOGGER.debug("this is keel and deel insdie api call method: {}, {},token: {}",keel,deel,token);
+                String jsonPayload = String.format("{\"keel\":\"%s\", \"deel\":\"%s\"}", keel, deel);
+                StringEntity entity = new StringEntity(jsonPayload, ContentType.APPLICATION_JSON);
+                request.setEntity(entity);
+
+                responseString = new BasicResponseHandler().handleResponse(httpClient.execute(request));
+                break;
+            } catch (SSLException e) {
+                LOGGER.info("Got An SSL Exception while executing Keel Deel Locations, retrying... attempt {}", retryCount + 1);
+                retryCount++;
+                try {
+                    Thread.sleep(SLEEP_TIME);
+                } catch (InterruptedException ie) {
+                    throw new RuntimeException(ie);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         return responseString;
-
     }
-
-
 }
