@@ -352,7 +352,9 @@ public class RchWebServiceFacadeImpl implements RchWebServiceFacade {
 
     private void retryScpFromRemoteToLocal(String name, String remoteLocation, LocalDate from, LocalDate to, Long stateId, RchUserType userType, int trialCount) {
         try {
-            List<RchImportFacilitator> rchImportFacilitatorTypes = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, LocalDate.now(), userType);
+            // Local date is set to yesterday for child and mother due to switch in cron job time to next day
+            LocalDate importDate = (userType == RchUserType.CHILD || userType == RchUserType.MOTHER) ? LocalDate.now().minusDays(1) : LocalDate.now();
+            List<RchImportFacilitator> rchImportFacilitatorTypes = rchImportFacilitatorService.findByImportDateStateIdAndRchUserType(stateId, importDate, userType);
             File localResponseFile;
             if (rchImportFacilitatorTypes.isEmpty() && name != null) {
                 localResponseFile = scpResponseToLocal(name, remoteLocation);
