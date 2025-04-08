@@ -240,9 +240,6 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
                         healthFacility.get(LocationConstants.HEALTHBLOCK_ID).toString());
                 Long healthFacilityCode = (Long) healthFacility.get(LocationConstants.HEALTHFACILITY_ID);
                 String healthFacilityName = (String) healthFacility.get(LocationConstants.HEALTHFACILITY_NAME);
-                if (healthFacilityName != null) {
-                    healthFacilityName = healthFacilityName.replace(":", "");
-                }
 
                 if (taluka != null && healthBlock != null && healthFacilityCode != null) {
                     if (!((Long) (0L)).equals(healthFacilityCode) && (healthFacilityName != null && !healthFacilityName.trim().isEmpty()) && healthBlock.getDistrict().getId().equals(taluka.getDistrict().getId())) {
@@ -252,7 +249,8 @@ public class HealthFacilityServiceImpl implements HealthFacilityService {
                         stringBuilder.append("(");
                         stringBuilder.append(healthFacilityCode + ", ");
                         stringBuilder.append(QUOTATION +
-                                StringEscapeUtils.escapeSql(healthFacilityName) + QUOTATION_COMMA);
+                                StringEscapeUtils.escapeSql(healthFacility.get(LocationConstants.HEALTHFACILITY_NAME) == null ?
+                                        "" : healthFacility.get(LocationConstants.HEALTHFACILITY_NAME).toString()) + QUOTATION_COMMA);
                         stringBuilder.append(state.getId() + ", ");
                         stringBuilder.append(district.getId() + ", ");
                         stringBuilder.append(healthBlock.getId() + ", ");

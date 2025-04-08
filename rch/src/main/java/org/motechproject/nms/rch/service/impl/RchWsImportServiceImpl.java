@@ -33,8 +33,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.jdo.annotations.Transactional;
-import javax.net.ssl.SSLException;
-import javax.xml.bind.ValidationException;
 import java.io.File;
 import java.net.URL;
 import java.util.*;
@@ -46,7 +44,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
     private static final String RCH_WEB_SERVICE = "RCH Web Service";
     private static final String FILE_RECORD_SUCCESS = "RCH Responses for state id {} recorded to file successfully.";
     private static final String LOG_STATEID = "stateId = {}";
-    private final long SLEEP_TIME = 1000L;
 
     @Autowired
     private StateDataService stateDataService;
@@ -116,14 +113,9 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         for (Long stateId : stateIds) {
             sendImportEventForAUserType(stateId, RchUserType.MOTHER, referenceDate, endpoint, Constants.RCH_MOTHER_IMPORT_SUBJECT);
-            try {
-                Thread.sleep(SLEEP_TIME); // Add a delay of 10 second between each event
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                LOGGER.error("Thread interrupted while sleeping between events", e);
-            }
         }
         LOGGER.info("Initiated import workflow from RCH for mothers");
+
     }
     @Override
     public void importChildFromRch(List<Long> stateIds, LocalDate referenceDate, URL endpoint) {
@@ -132,12 +124,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         for (Long stateId : stateIds) {
             sendImportEventForAUserType(stateId, RchUserType.CHILD, referenceDate, endpoint, Constants.RCH_CHILD_IMPORT_SUBJECT);
-            try {
-                Thread.sleep(SLEEP_TIME); // Add a delay of 10 second between each event
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                LOGGER.error("Thread interrupted while sleeping between events", e);
-            }
         }
         LOGGER.info("Initiated import workflow from RCH for children");
     }
@@ -148,12 +134,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         for (Long stateId : stateIds) {
             sendImportEventForAUserType(stateId, RchUserType.ASHA, referenceDate, endpoint, Constants.RCH_ASHA_IMPORT_SUBJECT);
-            try {
-                Thread.sleep(SLEEP_TIME); // Add a delay of 10 second between each event
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                LOGGER.error("Thread interrupted while sleeping between events", e);
-            }
         }
         LOGGER.info("Initiated import workflow from RCH for asha");
     }
@@ -165,12 +145,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         for (Long stateId : stateIds) {
             sendImportEventForAUserType(stateId, RchUserType.TALUKA, referenceDate, endpoint, Constants.RCH_TALUKA_IMPORT_SUBJECT);
-            try {
-                Thread.sleep(SLEEP_TIME); // Add a delay of 10 second between each event
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                LOGGER.error("Thread interrupted while sleeping between events", e);
-            }
         }
         LOGGER.info("Initiated import workflow from RCH for taluka");
     }
@@ -181,12 +155,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         for (Long stateId : stateIds) {
             sendImportEventForAUserType(stateId, RchUserType.VILLAGE, referenceDate, endpoint, Constants.RCH_VILLAGE_IMPORT_SUBJECT);
-            try {
-                Thread.sleep(SLEEP_TIME); // Add a delay of 10 second between each event
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                LOGGER.error("Thread interrupted while sleeping between events", e);
-            }
         }
         LOGGER.info("Initiated import workflow from RCH for villages");
     }
@@ -197,12 +165,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         for (Long stateId : stateIds) {
             sendImportEventForAUserType(stateId, RchUserType.HEALTHBLOCK, referenceDate, endpoint, Constants.RCH_HEALTHBLOCK_IMPORT_SUBJECT);
-            try {
-                Thread.sleep(SLEEP_TIME); // Add a delay of 10 second between each event
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                LOGGER.error("Thread interrupted while sleeping between events", e);
-            }
         }
         LOGGER.info("Initiated import workflow from RCH for health blocks");
     }
@@ -213,12 +175,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         for (Long stateId : stateIds) {
             sendImportEventForAUserType(stateId, RchUserType.HEALTHFACILITY, referenceDate, endpoint, Constants.RCH_HEALTHFACILITY_IMPORT_SUBJECT);
-            try {
-                Thread.sleep(SLEEP_TIME); // Add a delay of 10 second between each event
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                LOGGER.error("Thread interrupted while sleeping between events", e);
-            }
         }
         LOGGER.info("Initiated import workflow from RCH for Healthfacility");
     }
@@ -229,12 +185,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         for (Long stateId : stateIds) {
             sendImportEventForAUserType(stateId, RchUserType.HEALTHSUBFACILITY, referenceDate, endpoint, Constants.RCH_HEALTHSUBFACILITY_IMPORT_SUBJECT);
-            try {
-                Thread.sleep(SLEEP_TIME); // Add a delay of 10 second between each event
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                LOGGER.error("Thread interrupted while sleeping between events", e);
-            }
         }
         LOGGER.info("Initiated import workflow from RCH for Healthsubfacility");
     }
@@ -245,12 +195,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         for (Long stateId : stateIds) {
             sendImportEventForAUserType(stateId, RchUserType.DISTRICT, referenceDate, endpoint, Constants.RCH_DISTRICT_IMPORT_SUBJECT);
-            try {
-                Thread.sleep(SLEEP_TIME); // Add a delay of 10 second between each event
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                LOGGER.error("Thread interrupted while sleeping between events", e);
-            }
         }
         LOGGER.info("Initiated import workflow from RCH for District");
     }
@@ -261,12 +205,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         for (Long stateId : stateIds) {
             sendImportEventForAUserType(stateId, RchUserType.TALUKAHEALTHBLOCK, referenceDate, endpoint, Constants.RCH_TALUKA_HEALTHBLOCK_IMPORT_SUBJECT);
-            try {
-                Thread.sleep(SLEEP_TIME); // Add a delay of 10 second between each event
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                LOGGER.error("Thread interrupted while sleeping between events", e);
-            }
         }
         LOGGER.info("Initiated import workflow from RCH for TalukaHealthblock");
     }
@@ -277,12 +215,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
         for (Long stateId : stateIds) {
             sendImportEventForAUserType(stateId, RchUserType.VILLAGEHEALTHSUBFACILITY, referenceDate, endpoint, Constants.RCH_VILLAGEHEALTHSUBFACILITY_IMPORT_SUBJECT);
-            try {
-                Thread.sleep(SLEEP_TIME); // Add a delay of 10 second between each event
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                LOGGER.error("Thread interrupted while sleeping between events", e);
-            }
         }
         LOGGER.info("Initiated import workflow from RCH for villagesubfacility");
     }
@@ -338,6 +270,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
             String error = String.format("State with code %s does not exist in database. Skipping RCH Mother import for this state", stateId);
+            LOGGER.error(error);
             rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateId, null, 0, 0, error));
             return;
         }
@@ -358,6 +291,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
                 if (keelDeelData == null) {
                     String error = String.format("Received null response from encrypt API for mother data for state %s (ID: %d)", stateName, stateId);
+                    LOGGER.error(error);
 
                     if (!isDuplicate && retryCount == 1) {
                         rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
@@ -379,9 +313,10 @@ public class RchWsImportServiceImpl implements RchWsImportService {
                     String tempFilePath = rchWebServiceFacade.saveToFile(keelDeelApiResponse, "mother", stateId.toString());
                     processThirdApiEvent(stateId.toString(), startReferenceDate, endReferenceDate, tempFilePath, "mother", stateName, stateCode.toString());
 
-                    success = true;
+                    success = true; // Mark as successful
                 } else {
                     String error = String.format("Received null response from keel-deel API for mother data for state %s (ID: %d)", stateName, stateId);
+                    LOGGER.error(error);
 
                     if (!isDuplicate && retryCount == 1) {
                         rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, error));
@@ -394,15 +329,6 @@ public class RchWsImportServiceImpl implements RchWsImportService {
                 String error = String.format("Failed to process RCH mother data for state %s (ID: %d) after retries: %s", stateName, stateId, e.getMessage());
                 String truncatedErrorMessage = error.length() > 255 ? error.substring(0, 254) : error;
 
-                if ((e.getCause() instanceof ValidationException || e.getCause() instanceof SSLException) && retryCount != 1) {
-                    LOGGER.warn("ValidatorException or SSLException encountered. Retrying after delay...");
-                    try {
-                        Thread.sleep(SLEEP_TIME);
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        LOGGER.error("Thread interrupted while sleeping between retries", ie);
-                    }
-                }
 
                 if (!isDuplicate && retryCount == 1) {
                     rchImportAuditDataService.create(new RchImportAudit(startReferenceDate, endReferenceDate, RchUserType.MOTHER, stateCode, stateName, 0, 0, truncatedErrorMessage));
@@ -472,13 +398,13 @@ public class RchWsImportServiceImpl implements RchWsImportService {
 
             String error = String.format("Cannot process RCH %s data for state %s with state ID: %d. Error: %s",
                     userType, stateName, stateId, truncatedErrorMessage);
-            LOGGER.info(error);
+            LOGGER.error(error);
 
             alertService.create(RCH_WEB_SERVICE, "RCH Web Service " + userType + " Import", errorMessage, AlertType.CRITICAL, AlertStatus.NEW, 0, null);
             rchImportAuditDataService.create(new RchImportAudit(from, to, userType, stateCode, stateName, 0, 0, truncatedErrorMessage));
             rchImportFailRecordDataService.create(new RchImportFailRecord(to, userType, stateId));
         } catch (Exception e) {
-            LOGGER.info("Error creating failure records: {}", e.getMessage());
+            LOGGER.error("Error creating failure records: {}", e.getMessage(), e);
         }
     }
 
@@ -495,7 +421,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
             String error = String.format("State with code %s doesn't exist in the database. Skipping district import for this state.", stateId);
-            LOGGER.info(error);
+            LOGGER.error(error);
             return;
         }
 
@@ -517,7 +443,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.DISTRICT);
 
         } catch (Exception e) {
-            String error = String.format("Cannot process RCH district data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
+            String error = String.format("Error processing RCH district data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             handleError(RchUserType.DISTRICT, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
@@ -586,7 +512,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
                     LOGGER.info("RCH {} response successfully written to file. Copying to remote directory.", userType);
                     status = rchWebServiceFacade.retryScpAndAudit(responseFile.getName(), from, to, Long.valueOf(stateId), userType, 0);
                 } else {
-                    LOGGER.info("Error writing {} response to file for state {}", userType, stateId);
+                    LOGGER.error("Error writing {} response to file for state {}", userType, stateId);
                 }
             }
 
@@ -613,7 +539,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
             String error = String.format("State with code %s doesn't exist in database. Skipping Taluka import for this state", stateId);
-            LOGGER.info(error);
+            LOGGER.error(error);
             return;
         }
 
@@ -634,7 +560,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.TALUKA);
 
         } catch (Exception e) {
-            String error = String.format("Cannot process RCH taluka data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
+            String error = String.format("Error processing RCH taluka data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             handleError(RchUserType.TALUKA, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
@@ -650,7 +576,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
             String error = String.format("State with code %s doesn't exist in database. Skipping Village import for this state", stateId);
-            LOGGER.info(error);
+            LOGGER.error(error);
             return;
         }
 
@@ -673,7 +599,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.VILLAGE);
 
         } catch (Exception e) {
-            String error = String.format("Cannot process RCH village data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
+            String error = String.format("Error processing RCH village data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             handleError(RchUserType.VILLAGE, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
@@ -690,7 +616,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
             String error = String.format("State with code %s doesn't exist in database. Skipping HealthBlock import for this state", stateId);
-            LOGGER.info(error);
+            LOGGER.error(error);
             return;
         }
 
@@ -713,7 +639,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.HEALTHBLOCK);
 
         } catch (Exception e) {
-            String error = String.format("Cannot process RCH HealthBlock data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
+            String error = String.format("Error processing RCH healthblock data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             handleError(RchUserType.HEALTHBLOCK, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
@@ -730,7 +656,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
         State state = stateDataService.findByCode(stateId);
         if (state == null) {
             String error = String.format("State with code %s doesn't exist in database. Skipping taluka-healthblock import for this state", stateId);
-            LOGGER.info(error);
+            LOGGER.error(error);
             return;
         }
 
@@ -751,7 +677,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.TALUKAHEALTHBLOCK);
 
         } catch (Exception e) {
-            String error = String.format("Cannot process RCH TalukaHealthBlock data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
+            String error = String.format("Error processing RCH talukahealthblock data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             handleError(RchUserType.TALUKAHEALTHBLOCK, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
@@ -789,7 +715,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.HEALTHFACILITY);
 
         } catch (Exception e) {
-            String error = String.format("Cannot process RCH HealthFacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
+            String error = String.format("Error processing RCH healthfacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             handleError(RchUserType.HEALTHFACILITY, stateId, stateName, stateCode, startDate, endDate, error);
         }
 
@@ -828,7 +754,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.HEALTHSUBFACILITY);
 
         } catch (Exception e) {
-            String error = String.format("Cannot process RCH healthfacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
+            String error = String.format("Error processing RCH healthfacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             handleError(RchUserType.HEALTHSUBFACILITY, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
@@ -867,7 +793,7 @@ public class RchWsImportServiceImpl implements RchWsImportService {
             processLocationThirdApiEvent(stateId.toString(), startDate, endDate, tempFilePath, stateName, stateCode.toString(), RchUserType.VILLAGEHEALTHSUBFACILITY);
 
         } catch (Exception e) {
-            String error = String.format("Cannot process RCH villagehealthsubfacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
+            String error = String.format("Error processing RCH villagehealthsubfacility data for state %s (ID: %d): %s", stateName, stateId, e.getMessage());
             handleError(RchUserType.VILLAGEHEALTHSUBFACILITY, stateId, stateName, stateCode, startDate, endDate, error);
         }
     }
