@@ -37,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.jdo.JDOUserException;
 import javax.jdo.Query;
 import javax.validation.ConstraintViolationException;
 import java.util.*;
@@ -169,11 +170,18 @@ public class SubscriberServiceImpl implements SubscriberService {
     public Subscriber create(Subscriber subscriber) {
         try {
             return subscriberDataService.create(subscriber);
-        } catch (ConstraintViolationException e) {
-            LOGGER.error("4: List of constraints: {}", e.getConstraintViolations());
+        } catch (JDOUserException e) {
+            LOGGER.error("JDO error creating subscriber - MSISDN: {}, Mother RchId: {}",
+                    subscriber.getCallingNumber(),
+                    subscriber.getMother() != null ? subscriber.getMother().getRchId() : "null",
+                    e);
             throw e;
-        }
+        } catch (ConstraintViolationException e) {
+        LOGGER.error("4: List of constraints: {}", e.getConstraintViolations());
+        throw e;
     }
+    }
+
 
     @Override
     @Transactional

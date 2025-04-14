@@ -245,6 +245,25 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
             return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ABORT_STILLBIRTH_DEATH, false);
         }
 
+        if (!importOrigin.equals(SubscriptionOrigin.MCTS_IMPORT)) {
+            StringBuffer mapKey = new StringBuffer(record.get(KilkariConstants.STATE_ID).toString());
+            String districtCode = record.get(KilkariConstants.DISTRICT_ID).toString();
+            State state = locationFinder.getStateHashMap().get(mapKey.toString());
+            mapKey.append("_");
+            mapKey.append(districtCode);
+            District district = locationFinder.getDistrictHashMap().get(mapKey.toString());
+            LOGGER.debug("district : {}, state : {}", district != null ? district.getCode() : null, state != null ? state.getCode() : null);
+            mother.setState(state);
+            mother.setDistrict(district);
+        }
+
+        try {
+            mctsBeneficiaryValueProcessor.setLocationFieldsCSV(locationFinder, record, mother);
+        } catch (InvalidLocationException le) {
+            LOGGER.error(le.toString());
+            return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.INVALID_LOCATION, false);
+        }
+
         // List<DeactivatedBeneficiary> deactivatedUsers = null;
         synchronized (this) {
             records.addAndGet(1);
@@ -299,15 +318,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                     return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.ACTIVE_CHILD_PRESENT, false);
                 }
 
-                StringBuffer mapKey = new StringBuffer(record.get(KilkariConstants.STATE_ID).toString());
-                String districtCode = record.get(KilkariConstants.DISTRICT_ID).toString();
-                State state = locationFinder.getStateHashMap().get(mapKey.toString());
-                mapKey.append("_");
-                mapKey.append(districtCode);
-                District district = locationFinder.getDistrictHashMap().get(mapKey.toString());
-                LOGGER.debug("district : {}, state : {}", district!=null ? district.getCode() : null, state!=null ? state.getCode() : null);
-                mother.setState(state);
-                mother.setDistrict(district);
+
                 subscription = subscriberService.updateRchMotherSubscriber(msisdn, mother, lmp, caseNo, deactivate, record, action,name,motherDOB,lastUpdatedDateNic, motherRegistrationDate);
                 if (subscription == null) {
                     LOGGER.debug("MotherImportRejection::importMotherRecord End synchronized block " + beneficiaryId);
@@ -315,12 +326,7 @@ public class MctsBeneficiaryImportServiceImpl implements MctsBeneficiaryImportSe
                 }
             }
 
-            try {
-                mctsBeneficiaryValueProcessor.setLocationFieldsCSV(locationFinder, record, mother);
-            } catch (InvalidLocationException le) {
-                LOGGER.error(le.toString());
-                return createUpdateMotherRejections(flagForMcts, record, action, RejectionReasons.INVALID_LOCATION, false);
-            }
+
 
             LOGGER.debug("MotherImportRejection::importMotherRecord Handled Subscriptions   " + beneficiaryId);
             // We rejected the update/create for the subscriber
