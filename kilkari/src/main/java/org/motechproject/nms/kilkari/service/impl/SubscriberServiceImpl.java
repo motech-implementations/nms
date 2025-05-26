@@ -996,7 +996,13 @@ public class SubscriberServiceImpl implements SubscriberService {
             if(greaterCaseNo){
                 return subscriptionService.createSubscription(subscriber, subscriber.getCallingNumber(), language, circle, pack, origin);
             }
-            if (!greaterCaseNo && differenceInWeeks < 60) {
+            if (differenceInWeeks < 60) {
+                //check for active child before reactivating
+                Subscription activeChildSubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.CHILD);
+                if(activeChildSubscription != null) {
+                    LOGGER.debug("Active child subscription found, not reactivating.");
+                    return null;
+                }
                 return reactivateSubscription(subscriber, deactivatedSubscripion, dateTime);
             } else {
                 return deactivatedSubscripion;

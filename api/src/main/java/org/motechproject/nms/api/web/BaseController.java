@@ -387,7 +387,7 @@ public class BaseController {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public BadRequest handleException(HttpMessageNotReadableException e, HttpServletRequest request) {
         log(String.format(LOG_RESPONSE_FORMAT, request.getRequestURI()), e.getMessage());
-        return new BadRequest(e.getMessage());
+        return new BadRequest("JSON parse error");
     }
 
     protected Service getServiceFromName(String serviceName) {
