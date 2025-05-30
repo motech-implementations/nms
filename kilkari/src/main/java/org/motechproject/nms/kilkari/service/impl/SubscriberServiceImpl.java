@@ -981,6 +981,15 @@ public class SubscriberServiceImpl implements SubscriberService {
             subscriptionService.updateStartDate(subscription, dateTime);
             return subscription;
         } else if (subscription != null && subscription.getDeactivationReason().equals(DeactivationReason.INVALID_NUMBER)) {
+            //Check for ACTIVE CHILD subscription before reactivating
+            if(subscription.getSubscriptionPack().getType().equals(SubscriptionPackType.PREGNANCY)) {
+                Subscription activeChildSubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.CHILD);
+                if (activeChildSubscription != null) {
+                    LOGGER.debug("Active child subscription found, not reactivating invalid number subscription");
+                    subscription.setModificationDate(DateTime.now());
+                    return null;
+                }
+            }
             return reactivateSubscription(subscriber, deactivatedSubscripion, dateTime);
         } else if (subscription == null && deactivatedSubscripion != null && pack.getType() == SubscriptionPackType.CHILD) {
             if (DeactivationReason.LOW_LISTENERSHIP == deactivatedSubscripion.getDeactivationReason() ||  DeactivationReason.WEEKLY_CALLS_NOT_ANSWERED == deactivatedSubscripion.getDeactivationReason()) {
@@ -1000,7 +1009,13 @@ public class SubscriberServiceImpl implements SubscriberService {
                 //check for active child before reactivating
                 Subscription activeChildSubscription = subscriptionService.getActiveSubscription(subscriber, SubscriptionPackType.CHILD);
                 if(activeChildSubscription != null) {
-                    LOGGER.debug("Active child subscription found, not reactivating.");
+                    LOGGER.debug("Active child subscription found, not reactivating");
+                    deactivatedSubscripion.setModificationDate(DateTime.now());
+                    if (deactivatedSubscripion.getSubscriber().getMother() != null) {
+                        deactivatedSubscripion.getSubscriber().getMother().setModificationDate(DateTime.now());
+                    } else {
+                        LOGGER.warn("Subscriber's mother is null. Modification date cannot be set");
+                    }
                     return null;
                 }
                 return reactivateSubscription(subscriber, deactivatedSubscripion, dateTime);
