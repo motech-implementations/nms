@@ -24,6 +24,7 @@ import org.motechproject.nms.kilkari.service.CsrService;
 import org.motechproject.nms.kilkari.service.CsrVerifierService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
+import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.StatusCode;
 import org.motechproject.nms.props.domain.WhatsAppOptInStatusCode;
@@ -322,10 +323,13 @@ public class CsrServiceImpl implements CsrService {
 
                 case FAILED:
                     String weekId = getWeekIdForSubscription(subscription.getStartDate());
+                    DayOfTheWeek dayOfTheWeek = subscription.getFirstMessageDayOfWeek();
+                    DayOfTheWeek tomorrow = DayOfTheWeek.today().nextDay();
+
                     //If there was a DOB/LMP update during RCH import, number of weeks into subscription would have changed.
                     //No need to reschedule this call. Exception for w1, because regardless of which week the subscription starts in, user
                     //always gets w1 message initially
-                    if(!csrDto.getWeekId().equals("w1_1")&&!weekId.equals(csrDto.getWeekId())){
+                    if ((!csrDto.getWeekId().equals("w1_1") && !weekId.equals(csrDto.getWeekId())) || dayOfTheWeek.equals(tomorrow)){
                         if(callRetry!=null){
                             callRetryDataService.delete(callRetry);
                         }
