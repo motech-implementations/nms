@@ -147,8 +147,6 @@ public class CsrServiceImpl implements CsrService {
      private void doReschedule(Subscription subscription, CallRetry existingCallRetry, CallSummaryRecordDto csrDto) {
 
         boolean invalidNr = StatusCode.fromInt(csrDto.getStatusCode()).equals(StatusCode.OBD_FAILED_INVALIDNUMBER);
-LOGGER.info("inside doreshedule method");
-LOGGER.info("this is the data inside: {},{},{]",subscription,existingCallRetry, csrDto);
         if (existingCallRetry == null && SubscriptionStatus.ACTIVE.equals(subscription.getStatus())) {
             LOGGER.info("inside condition 1");
             // We've never retried this call, let's do it
@@ -171,14 +169,12 @@ LOGGER.info("this is the data inside: {},{},{]",subscription,existingCallRetry, 
 
         if ((subscription.getSubscriptionPack().retryCount() == 1) ||
                 (existingCallRetry !=null && existingCallRetry.getCallStage() == CallStage.RETRY_LAST)) {
-            LOGGER.info("inside condition 2");
             // This call should not be retried
 
             // Deactivate subscription for persistent invalid numbers
             // See https://github.com/motech-implementations/mim/issues/169
             if (existingCallRetry != null && existingCallRetry.getInvalidNumberCount() != null &&
                     existingCallRetry.getInvalidNumberCount() == subscription.getSubscriptionPack().retryCount()) {
-                LOGGER.info("inside condition 3");
                 subscription.setStatus(SubscriptionStatus.DEACTIVATED);
                 subscription.setDeactivationReason(DeactivationReason.INVALID_NUMBER);
                 subscriptionDataService.update(subscription);
@@ -186,10 +182,8 @@ LOGGER.info("this is the data inside: {},{},{]",subscription,existingCallRetry, 
             }
             if (existingCallRetry != null && existingCallRetry.isOpt_in_call_eligibility()
                     && existingCallRetry.getCallStage() == CallStage.RETRY_LAST && existingCallRetry.getWeekId().equals("w1_1")) {
-                LOGGER.info("inside condition 4");
                 boolean optInCall = existingCallRetry.getContentFileName().equals("opt_in.wav");
                 if(!optInCall) {
-                    LOGGER.info("inside condition 5");
                     /*callRetryDataService.delete(existingCallRetry);
                     callRetryDataService.create(new CallRetry(
                                     subscription.getSubscriptionId(),
@@ -208,12 +202,8 @@ LOGGER.info("this is the data inside: {},{},{]",subscription,existingCallRetry, 
                     existingCallRetry.setContentFileName("opt_in.wav");
                     callRetryDataService.update(existingCallRetry);
                 } else {
-                    LOGGER.info("inside condition 6");
                     completeSubscriptionIfNeeded(subscription, csrDto.getContentFileName());
                     callRetryDataService.delete(existingCallRetry);
-                    LOGGER.info("subscription is : {}", subscription);
-                    LOGGER.info("csrDto is : {}", csrDto);
-                    LOGGER.info("whatsAppOptSMSDataService is  : {}", whatsAppOptSMSDataService);
                     // write message table logic here
                     whatsAppOptSMSDataService.create(new WhatsAppOptSMS(csrDto.getCircleName(),
                             "SMS_CONTENT",
@@ -230,7 +220,6 @@ LOGGER.info("this is the data inside: {},{},{]",subscription,existingCallRetry, 
                 return;
             }
             if (existingCallRetry != null) {
-                LOGGER.info("inside condition 7");
                 callRetryDataService.delete(existingCallRetry);
             }
 
@@ -243,7 +232,6 @@ LOGGER.info("this is the data inside: {},{},{]",subscription,existingCallRetry, 
 
         // This call should indeed be re-rescheduled
         if (existingCallRetry != null) {
-            LOGGER.info("inside condition 8");
             existingCallRetry.setCallStage(existingCallRetry.getCallStage().nextStage());
             existingCallRetry.setInvalidNumberCount(existingCallRetry.getInvalidNumberCount() == null ? 0 :
                     (existingCallRetry.getInvalidNumberCount() + (invalidNr ? 1 : 0)));
@@ -307,9 +295,7 @@ LOGGER.info("this is the data inside: {},{},{]",subscription,existingCallRetry, 
         String subscriptionId = "###INVALID###";
         try {
             CallSummaryRecordDto csrDto = CallSummaryRecordDto.fromParams(event.getParameters());
-            LOGGER.info("this is csr dto : {}",csrDto);
             subscriptionId = csrDto.getSubscriptionId();
-            LOGGER.info("this is the subscriptionId: {}",subscriptionId);
             csrVerifierService.verify(csrDto);
 
             Subscription subscription = subscriptionDataService.findBySubscriptionId(subscriptionId);
@@ -318,13 +304,10 @@ LOGGER.info("this is the data inside: {},{},{]",subscription,existingCallRetry, 
             }
 
             CallRetry callRetry = callRetryDataService.findBySubscriptionId(subscriptionId);
-            LOGGER.info("this is call retry: {}",callRetry);
-            LOGGER.info("this is the final status: {}",FinalCallStatus.fromInt(csrDto.getFinalStatus()));
             switch (FinalCallStatus.fromInt(csrDto.getFinalStatus())) {
                 case SUCCESS:
                     completeSubscriptionIfNeeded(subscription, csrDto.getContentFileName());
                     if (callRetry != null) {
-
                         if (!callRetry.getContentFileName().equals("opt_in.wav")) {
                             callRetryDataService.delete(callRetry);
                         }
@@ -341,20 +324,8 @@ LOGGER.info("this is the data inside: {},{},{]",subscription,existingCallRetry, 
                     //If there was a DOB/LMP update during RCH import, number of weeks into subscription would have changed.
                     //No need to reschedule this call. Exception for w1, because regardless of which week the subscription starts in, user
                     //always gets w1 message initially
-                    LOGGER.info("this is the data: {},{}",csrDto.getWeekId(),weekId);
-
-
-
-
-                    LOGGER.info("this is data in db for week: {}",subscription.getFirstMessageDayOfWeek());
-                    LOGGER.info("this is data in csrdto: {}",DayOfTheWeek.getDayOfTheWeekFromTimestamp(csrDto.getTargetFileTimeStamp()));
-                    LOGGER.info("this is the condition1: {}",!subscription.getFirstMessageDayOfWeek().equals(DayOfTheWeek.getDayOfTheWeekFromTimestamp(csrDto.getTargetFileTimeStamp())));
-                    LOGGER.info("this is condition 2: {}", "1".equals(extractRouteNumber(csrDto.getServiceId())));
-                    LOGGER.info("this is condition 2  and return : {}",extractRouteNumber(csrDto.getServiceId()));
-                    LOGGER.info("this is service id: {}",csrDto.getServiceId());
                     if(!csrDto.getWeekId().equals("w1_1")&&!weekId.equals(csrDto.getWeekId())){
                         if(callRetry!=null){
-                            LOGGER.info("inside call retry condition");
                             callRetryDataService.delete(callRetry);
                         }
                     }else if(callRetry == null && !csrDto.getWeekId().equals("w1_1") && !subscription.getFirstMessageDayOfWeek().equals(DayOfTheWeek.getDayOfTheWeekFromTimestamp(csrDto.getTargetFileTimeStamp())) && "1".equals(extractRouteNumber(csrDto.getServiceId()))) {
@@ -365,7 +336,6 @@ LOGGER.info("this is the data inside: {},{},{]",subscription,existingCallRetry, 
                         LOGGER.info("this is the data2: {}",csrDto.getTargetFileTimeStamp());
                         if (callRetry == null ||
                                 !csrDto.getTargetFileTimeStamp().equals(callRetry.getTargetFiletimestamp())){
-                            LOGGER.info("inside fresh or retryupdate else condition");
                             doReschedule(subscription, callRetry, csrDto);
                         }
                     }
@@ -410,10 +380,8 @@ LOGGER.info("this is the data inside: {},{},{]",subscription,existingCallRetry, 
 
     private String extractRouteNumber(String serviceId) {
         if (serviceId != null && serviceId.contains("Retryonroute")) {
-            LOGGER.info("inside this1");
             int startIndex = serviceId.indexOf("Retryonroute") + "Retryonroute".length();
             if (startIndex < serviceId.length()) {
-                LOGGER.info("inside this2");
                 return String.valueOf(serviceId.charAt(startIndex));
             }
         }

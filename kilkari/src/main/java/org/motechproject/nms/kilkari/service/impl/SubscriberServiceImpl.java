@@ -410,13 +410,6 @@ public class SubscriberServiceImpl implements SubscriberService {
 
 
                 if(subscription != null){
-                    LOGGER.info("we are inside not null condition");
-                    LOGGER.info("1st value: {}",subscriberByRchId.getLastMenstrualPeriod().getDayOfYear());
-                    LOGGER.info("second value: {}",lmp.getDayOfYear());
-                    LOGGER.info("third value: {}",subscriberByRchId.getLastMenstrualPeriod().getYear());
-                    LOGGER.info("second value: {}",lmp.getYear());
-                    LOGGER.info("this is the first case: {}",(subscriberByRchId.getLastMenstrualPeriod().getDayOfYear() == lmp.getDayOfYear()));
-                    LOGGER.info("this is the second case2: {}",(subscriberByRchId.getLastMenstrualPeriod().getYear() == lmp.getYear()));
                     if ( !((subscriberByRchId.getLastMenstrualPeriod().getDayOfYear() == lmp.getDayOfYear()) && (subscriberByRchId.getLastMenstrualPeriod().getYear() == lmp.getYear()))) {
                         LOGGER.info("inside delete condition");
                         subscriptionService.deleteCallRetry(subscription.getSubscriptionId());
