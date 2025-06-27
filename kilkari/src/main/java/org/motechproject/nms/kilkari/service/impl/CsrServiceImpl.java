@@ -24,9 +24,11 @@ import org.motechproject.nms.kilkari.service.CsrService;
 import org.motechproject.nms.kilkari.service.CsrVerifierService;
 import org.motechproject.nms.kilkari.service.SubscriptionService;
 import org.motechproject.nms.kilkari.utils.KilkariConstants;
+import org.motechproject.nms.props.domain.DayOfTheWeek;
 import org.motechproject.nms.props.domain.FinalCallStatus;
 import org.motechproject.nms.props.domain.StatusCode;
 import org.motechproject.nms.props.domain.WhatsAppOptInStatusCode;
+import org.motechproject.server.config.SettingsFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 import static java.lang.Math.min;
 
@@ -145,7 +148,6 @@ public class CsrServiceImpl implements CsrService {
      private void doReschedule(Subscription subscription, CallRetry existingCallRetry, CallSummaryRecordDto csrDto) {
 
         boolean invalidNr = StatusCode.fromInt(csrDto.getStatusCode()).equals(StatusCode.OBD_FAILED_INVALIDNUMBER);
-
         if (existingCallRetry == null && SubscriptionStatus.ACTIVE.equals(subscription.getStatus())) {
             // We've never retried this call, let's do it
             callRetryDataService.create(new CallRetry(
@@ -167,7 +169,6 @@ public class CsrServiceImpl implements CsrService {
 
         if ((subscription.getSubscriptionPack().retryCount() == 1) ||
                 (existingCallRetry !=null && existingCallRetry.getCallStage() == CallStage.RETRY_LAST)) {
-
             // This call should not be retried
 
             // Deactivate subscription for persistent invalid numbers
@@ -199,13 +200,13 @@ public class CsrServiceImpl implements CsrService {
                             )
                     );*/
                     existingCallRetry.setContentFileName("opt_in.wav");
+                    if(!Objects.equals(existingCallRetry.getMsisdn(), subscription.getSubscriber().getCallingNumber())){
+                        existingCallRetry.setMsisdn(subscription.getSubscriber().getCallingNumber());
+                    }
                     callRetryDataService.update(existingCallRetry);
                 } else {
                     completeSubscriptionIfNeeded(subscription, csrDto.getContentFileName());
                     callRetryDataService.delete(existingCallRetry);
-                    LOGGER.info("subscription is : {}", subscription);
-                    LOGGER.info("csrDto is : {}", csrDto);
-                    LOGGER.info("whatsAppOptSMSDataService is  : {}", whatsAppOptSMSDataService);
                     // write message table logic here
                     whatsAppOptSMSDataService.create(new WhatsAppOptSMS(csrDto.getCircleName(),
                             "SMS_CONTENT",
@@ -237,6 +238,9 @@ public class CsrServiceImpl implements CsrService {
             existingCallRetry.setCallStage(existingCallRetry.getCallStage().nextStage());
             existingCallRetry.setInvalidNumberCount(existingCallRetry.getInvalidNumberCount() == null ? 0 :
                     (existingCallRetry.getInvalidNumberCount() + (invalidNr ? 1 : 0)));
+            if(!Objects.equals(existingCallRetry.getMsisdn(), subscription.getSubscriber().getCallingNumber())){
+                existingCallRetry.setMsisdn(subscription.getSubscriber().getCallingNumber());
+            }
             callRetryDataService.update(existingCallRetry);
         }
 
@@ -289,7 +293,6 @@ public class CsrServiceImpl implements CsrService {
     @MotechListener(subjects = {KilkariConstants.NMS_IMI_KK_PROCESS_CSR_SUBJECT}) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void processCallSummaryRecord(MotechEvent event) { //NOPMD NcssMethodCount
-
         Timer timer = new Timer();
         String whatHappened = "##";
 
@@ -329,9 +332,13 @@ public class CsrServiceImpl implements CsrService {
                         if(callRetry!=null){
                             callRetryDataService.delete(callRetry);
                         }
-                    } else {
+                    }else if(callRetry == null && !csrDto.getWeekId().equals("w1_1") && !subscription.getFirstMessageDayOfWeek().equals(DayOfTheWeek.getDayOfTheWeekFromTimestamp(csrDto.getTargetFileTimeStamp())) && "1".equals(extractRouteNumber(csrDto.getServiceId()))) {
+                        LOGGER.info("Fresh call condition after rch update");
+                    }else if(callRetry == null && !csrDto.getWeekId().equals("w1_1") && "2".equals(extractRouteNumber(csrDto.getServiceId()))){
+                        LOGGER.info("Retry call condition after rch update");
+                    }else {
                         if (callRetry == null ||
-                                !csrDto.getTargetFileTimeStamp().equals(callRetry.getTargetFiletimestamp())) {
+                                !csrDto.getTargetFileTimeStamp().equals(callRetry.getTargetFiletimestamp())){
                             doReschedule(subscription, callRetry, csrDto);
                         }
                     }
@@ -372,6 +379,16 @@ public class CsrServiceImpl implements CsrService {
         LOGGER.debug(String.format("processCallSummaryRecord %s %s %s", subscriptionId, whatHappened, timer.time()));
     }
 
+    private String extractRouteNumber(String serviceId) {
+        if (serviceId != null && serviceId.contains("Retryonroute")) {
+            int startIndex = serviceId.indexOf("Retryonroute") + "Retryonroute".length();
+            if (startIndex < serviceId.length()) {
+                return String.valueOf(serviceId.charAt(startIndex));
+            }
+        }
+        return "";
+    }
+
     @MotechListener(subjects = {KilkariConstants.NMS_IMI_KK_WHATSAPP_SMS_PROCESS_CSR_SUBJECT}) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void processWhatsAppSMSCsr(MotechEvent event) { //NOPMD NcssMethodCount
@@ -381,16 +398,13 @@ public class CsrServiceImpl implements CsrService {
 
         String subscriptionId = "###INVALID###";
         try {
-            LOGGER.debug("test 20 - WhatsAppOptSMSCsrDto.fromParams");
             WhatsAppOptSMSCsrDto csrDto = WhatsAppOptSMSCsrDto.fromParams(event.getParameters());
             subscriptionId = csrDto.getRequestId();
 //            csrVerifierService.verify(csrDto);
-            LOGGER.debug("test 21 - subscriptionDataService.findBySubscriptionIdAndStatus");
             Subscription subscription = subscriptionDataService.findBySubscriptionIdAndStatus(subscriptionId, SubscriptionStatus.ACTIVE);
             if (subscription == null) {
                 throw new NoSuchSubscriptionException(subscriptionId);
             }
-            LOGGER.debug("test 22 - updateSubscriptionServiceStatusForWhatsAppSMS");
             updateSubscriptionServiceStatusForWhatsAppSMS(subscription, csrDto.getResponse(), (List<Subscription>) event.getParameters().get("subscriptions"));
 
         } catch (NoSuchSubscriptionException e) {
@@ -419,18 +433,15 @@ public class CsrServiceImpl implements CsrService {
 
         String subscriptionId = "###INVALID###";
         try {
-            LOGGER.debug("test 20 - WhatsAppOptCsrDto.fromParams");
             WhatsAppOptCsrDto csrDto = WhatsAppOptCsrDto.fromParams(event.getParameters());
             LOGGER.debug("csrDto: {}", csrDto);
             subscriptionId = csrDto.getExternalId();
 //            csrVerifierService.verify(csrDto);
-            LOGGER.debug("test 21 - subscriptionDataService.findBySubscriptionIdAndStatus");
             Subscription subscription = subscriptionDataService.findBySubscriptionIdAndStatus(subscriptionId, SubscriptionStatus.ACTIVE);
             LOGGER.debug("subscription: {}", subscription);
             if (subscription == null) {
                 throw new NoSuchSubscriptionException(subscriptionId);
             }
-            LOGGER.debug("test 22 - updateSubscriptionServiceStatusForWhatsApp");
             updateSubscriptionServiceStatusForWhatsApp(subscription, csrDto.getMessageStatus(), (List<Subscription>) event.getParameters().get("subscriptions"));
             LOGGER.debug("subscription: {}", subscription);
         } catch (NoSuchSubscriptionException e) {
