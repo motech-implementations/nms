@@ -36,6 +36,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 import static java.lang.Math.min;
 
@@ -148,7 +149,6 @@ public class CsrServiceImpl implements CsrService {
 
         boolean invalidNr = StatusCode.fromInt(csrDto.getStatusCode()).equals(StatusCode.OBD_FAILED_INVALIDNUMBER);
         if (existingCallRetry == null && SubscriptionStatus.ACTIVE.equals(subscription.getStatus())) {
-            LOGGER.info("inside condition 1");
             // We've never retried this call, let's do it
             callRetryDataService.create(new CallRetry(
                     subscription.getSubscriptionId(),
@@ -200,6 +200,9 @@ public class CsrServiceImpl implements CsrService {
                             )
                     );*/
                     existingCallRetry.setContentFileName("opt_in.wav");
+                    if(!Objects.equals(existingCallRetry.getMsisdn(), subscription.getSubscriber().getCallingNumber())){
+                        existingCallRetry.setMsisdn(subscription.getSubscriber().getCallingNumber());
+                    }
                     callRetryDataService.update(existingCallRetry);
                 } else {
                     completeSubscriptionIfNeeded(subscription, csrDto.getContentFileName());
@@ -235,6 +238,9 @@ public class CsrServiceImpl implements CsrService {
             existingCallRetry.setCallStage(existingCallRetry.getCallStage().nextStage());
             existingCallRetry.setInvalidNumberCount(existingCallRetry.getInvalidNumberCount() == null ? 0 :
                     (existingCallRetry.getInvalidNumberCount() + (invalidNr ? 1 : 0)));
+            if(!Objects.equals(existingCallRetry.getMsisdn(), subscription.getSubscriber().getCallingNumber())){
+                existingCallRetry.setMsisdn(subscription.getSubscriber().getCallingNumber());
+            }
             callRetryDataService.update(existingCallRetry);
         }
 
@@ -287,8 +293,6 @@ public class CsrServiceImpl implements CsrService {
     @MotechListener(subjects = {KilkariConstants.NMS_IMI_KK_PROCESS_CSR_SUBJECT}) //NO CHECKSTYLE Cyclomatic Complexity
     @Transactional
     public void processCallSummaryRecord(MotechEvent event) { //NOPMD NcssMethodCount
-
-        LOGGER.info("inside process call summary record");
         Timer timer = new Timer();
         String whatHappened = "##";
 
@@ -329,11 +333,10 @@ public class CsrServiceImpl implements CsrService {
                             callRetryDataService.delete(callRetry);
                         }
                     }else if(callRetry == null && !csrDto.getWeekId().equals("w1_1") && !subscription.getFirstMessageDayOfWeek().equals(DayOfTheWeek.getDayOfTheWeekFromTimestamp(csrDto.getTargetFileTimeStamp())) && "1".equals(extractRouteNumber(csrDto.getServiceId()))) {
-                        LOGGER.info("inside fresh call condition after rch update");
+                        LOGGER.info("Fresh call condition after rch update");
                     }else if(callRetry == null && !csrDto.getWeekId().equals("w1_1") && "2".equals(extractRouteNumber(csrDto.getServiceId()))){
-                        LOGGER.info("inside retry call condition after rch update");
+                        LOGGER.info("Retry call condition after rch update");
                     }else {
-                        LOGGER.info("this is the data2: {}",csrDto.getTargetFileTimeStamp());
                         if (callRetry == null ||
                                 !csrDto.getTargetFileTimeStamp().equals(callRetry.getTargetFiletimestamp())){
                             doReschedule(subscription, callRetry, csrDto);
@@ -343,13 +346,11 @@ public class CsrServiceImpl implements CsrService {
                     break;
 
                 case REJECTED:
-                    LOGGER.info("inside rejected");
                     handleDndForSubscription(subscription);
                     whatHappened = "RE";
                     break;
 
                 default:
-                    LOGGER.info("inside default");
                     String error = String.format("Invalid FinalCallStatus: %s", csrDto.getFinalStatus());
                     LOGGER.error(error);
                     alertService.create(subscriptionId, KilkariConstants.NMS_IMI_KK_PROCESS_CSR_SUBJECT, error, AlertType.CRITICAL,
@@ -397,16 +398,13 @@ public class CsrServiceImpl implements CsrService {
 
         String subscriptionId = "###INVALID###";
         try {
-            LOGGER.debug("test 20 - WhatsAppOptSMSCsrDto.fromParams");
             WhatsAppOptSMSCsrDto csrDto = WhatsAppOptSMSCsrDto.fromParams(event.getParameters());
             subscriptionId = csrDto.getRequestId();
 //            csrVerifierService.verify(csrDto);
-            LOGGER.debug("test 21 - subscriptionDataService.findBySubscriptionIdAndStatus");
             Subscription subscription = subscriptionDataService.findBySubscriptionIdAndStatus(subscriptionId, SubscriptionStatus.ACTIVE);
             if (subscription == null) {
                 throw new NoSuchSubscriptionException(subscriptionId);
             }
-            LOGGER.debug("test 22 - updateSubscriptionServiceStatusForWhatsAppSMS");
             updateSubscriptionServiceStatusForWhatsAppSMS(subscription, csrDto.getResponse(), (List<Subscription>) event.getParameters().get("subscriptions"));
 
         } catch (NoSuchSubscriptionException e) {
@@ -435,18 +433,15 @@ public class CsrServiceImpl implements CsrService {
 
         String subscriptionId = "###INVALID###";
         try {
-            LOGGER.debug("test 20 - WhatsAppOptCsrDto.fromParams");
             WhatsAppOptCsrDto csrDto = WhatsAppOptCsrDto.fromParams(event.getParameters());
             LOGGER.debug("csrDto: {}", csrDto);
             subscriptionId = csrDto.getExternalId();
 //            csrVerifierService.verify(csrDto);
-            LOGGER.debug("test 21 - subscriptionDataService.findBySubscriptionIdAndStatus");
             Subscription subscription = subscriptionDataService.findBySubscriptionIdAndStatus(subscriptionId, SubscriptionStatus.ACTIVE);
             LOGGER.debug("subscription: {}", subscription);
             if (subscription == null) {
                 throw new NoSuchSubscriptionException(subscriptionId);
             }
-            LOGGER.debug("test 22 - updateSubscriptionServiceStatusForWhatsApp");
             updateSubscriptionServiceStatusForWhatsApp(subscription, csrDto.getMessageStatus(), (List<Subscription>) event.getParameters().get("subscriptions"));
             LOGGER.debug("subscription: {}", subscription);
         } catch (NoSuchSubscriptionException e) {

@@ -411,11 +411,9 @@ public class SubscriberServiceImpl implements SubscriberService {
 
                 if(subscription != null){
                     if ( !((subscriberByRchId.getLastMenstrualPeriod().getDayOfYear() == lmp.getDayOfYear()) && (subscriberByRchId.getLastMenstrualPeriod().getYear() == lmp.getYear()))) {
-                        LOGGER.info("inside delete condition");
                         subscriptionService.deleteCallRetry(subscription.getSubscriptionId());
 
                     }else {
-                        LOGGER.info("we are inside else null condition");
                         subscriptionService.updateCallRetry(subscription.getSubscriptionId(), msisdn);
                     }
                 }
